@@ -23,6 +23,10 @@
 #ifndef HEXCHAT_FE_H
 #define HEXCHAT_FE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* for storage of /menu entries */
 typedef struct
 {
@@ -53,13 +57,13 @@ int fe_timeout_add (int interval, void *callback, void *userdata);
 void fe_timeout_remove (int tag);
 void fe_new_window (struct session *sess, int focus);
 void fe_new_server (struct server *serv);
-void fe_add_rawlog (struct server *serv, char *text, int len, int outbound);
+void fe_add_rawlog (struct server *serv, const char *text, int len, int outbound);
 #define FE_MSG_WAIT 1
 #define FE_MSG_INFO 2
 #define FE_MSG_WARN 4
 #define FE_MSG_ERROR 8
 #define FE_MSG_MARKUP 16
-void fe_message (char *msg, int flags);
+void fe_message (const char *msg, int flags);
 #define FIA_READ 1
 #define FIA_WRITE 2
 #define FIA_EX 4
@@ -182,5 +186,8 @@ void fe_tray_set_tooltip (const char *text);
 void fe_tray_set_balloon (const char *title, const char *text);
 void fe_open_chan_list (server *serv, char *filter, int do_refresh);
 const char *fe_get_default_font ();
+#ifdef __cplusplus
+}
+#endif
 
 #endif

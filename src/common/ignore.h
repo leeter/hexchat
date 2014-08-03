@@ -20,6 +20,10 @@
 #ifndef HEXCHAT_IGNORE_H
 #define HEXCHAT_IGNORE_H
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 extern GSList *ignore_list;
 
 extern int ignored_ctcp;
@@ -43,6 +47,12 @@ struct ignore
 	unsigned int type;	/* one of more of IG_* ORed together */
 };
 
+typedef enum
+{
+	CTCP,
+	PRIV
+} FLOOD_WHAT;
+
 struct ignore *ignore_exists (char *mask);
 int ignore_add (char *mask, int type, gboolean overwrite);
 void ignore_showlist (session *sess);
@@ -52,6 +62,10 @@ void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);
 void ignore_gui_update (int level);
-int flood_check (char *nick, char *ip, server *serv, session *sess, int what);
+int flood_check (char *nick, char *ip, server *serv, session *sess, FLOOD_WHAT what);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

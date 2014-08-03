@@ -81,9 +81,6 @@
     <ClInclude Include="urlgrab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="userlistgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="xtext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -93,15 +90,12 @@
     <ClInclude Include="setup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="userlistgui.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ascii.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="banlist.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="chanlist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="chanview.c">
@@ -116,25 +110,13 @@
     <ClCompile Include="editlist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fe-gtk.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="fkeys.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gtkutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ignoregui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="joind.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="maingui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="menu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="notifygui.c">
@@ -173,13 +155,31 @@
     <ClCompile Include="urlgrab.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="userlistgui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="xtext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="resources.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fe-gtk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="banlist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="userlistgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ignoregui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="maingui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chanlist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
