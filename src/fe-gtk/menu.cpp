@@ -41,7 +41,7 @@
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/outbound.h"
-#include "../common/ignore.h"
+#include "../common/ignore.hpp"
 #include "../common/fe.h"
 #include "../common/server.h"
 #include "../common/servlist.h"
@@ -49,19 +49,18 @@
 #include "../common/util.h"
 #include "../common/text.h"
 #include "xtext.h"
-#include "ascii.h"
+#include "ascii.hpp"
 #include "banlist.h"
 #include "chanlist.h"
 #include "editlist.h"
 #include "fkeys.h"
 #include "gtkutil.h"
 #include "maingui.h"
-#include "notifygui.h"
+#include "notifygui.hpp"
 #include "pixmaps.h"
 #include "rawlog.h"
 #include "palette.h"
-#include "plugingui.h"
-#include <search.h>
+#include "plugingui.hpp"
 #include "textgui.h"
 #include "urlgrab.h"
 #include "menu.h"
@@ -1802,7 +1801,7 @@ static struct mymenu mymenu[] = {
 	{N_("Character Chart..."), ascii_open, 0, M_MENUITEM, 0, 0, 1},
 	{N_("Direct Chat..."), menu_dcc_chat_win, 0, M_MENUITEM, 0, 0, 1},
 	{N_("File _Transfers..."), menu_dcc_win, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Friends List..."), notify_opengui, 0, M_MENUITEM, 0, 0, 1},
+	{N_("Friends List..."), hexchat::gui::notify::notify_opengui, 0, M_MENUITEM, 0, 0, 1},
 	{N_("Ignore List..."), ignore_gui_open, 0, M_MENUITEM, 0, 0, 1},
 	{N_("_Plugins and Scripts..."), menu_pluginlist, 0, M_MENUITEM, 0, 0, 1},
 	{N_("_Raw Log..."), menu_rawlog, 0, M_MENUITEM, 0, 0, 1},	/* 61 */

@@ -36,12 +36,13 @@
 #include "util.h"
 #include "outbound.h"
 #include "cfgfiles.h"
-#include "ignore.h"
+#include "ignore.hpp"
 #include "server.h"
 #include "servlist.h"
 #include "modes.h"
 #include "notify.h"
 #include "text.h"
+#include "dcc.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;
 #include "hexchat-plugin.h"
@@ -59,6 +60,7 @@ typedef struct session hexchat_context;
 #endif
 
 #define DEBUG(x) {x;}
+namespace dcc = hexchat::dcc;
 
 /* crafted to be an even 32 bytes */
 struct t_hexchat_hook
@@ -80,13 +82,14 @@ struct t_hexchat_list
 	GSList *next;		/* next pos */
 	GSList *head;		/* for LIST_USERS only */
 	struct notify_per_server *notifyps;	/* notify_per_server * */
+	bool is_vector;
 };
 
-typedef int (hexchat_cmd_cb) (char *word[], char *word_eol[], void *user_data);
-typedef int (hexchat_serv_cb) (char *word[], char *word_eol[], void *user_data);
-typedef int (hexchat_print_cb) (char *word[], void *user_data);
-typedef int (hexchat_serv_attrs_cb) (char *word[], char *word_eol[], hexchat_event_attrs *attrs, void *user_data);
-typedef int (hexchat_print_attrs_cb) (char *word[], hexchat_event_attrs *attrs, void *user_data);
+typedef int (hexchat_cmd_cb)(const char * const word[], const char * const word_eol[], void *user_data);
+typedef int (hexchat_serv_cb)(const char * const word[], const char * const word_eol[], void *user_data);
+typedef int (hexchat_print_cb)(const char * const word[], void *user_data);
+typedef int (hexchat_serv_attrs_cb) (const char * const word[], const char * const word_eol[], hexchat_event_attrs *attrs, void *user_data);
+typedef int (hexchat_print_attrs_cb)(const char * const word[], hexchat_event_attrs *attrs, void *user_data);
 typedef int (hexchat_fd_cb) (int fd, int flags, void *user_data);
 typedef int (hexchat_timer_cb) (void *user_data);
 typedef int (hexchat_init_func) (hexchat_plugin *, char **, char **, char **, char *);
@@ -118,7 +121,7 @@ enum
 	HOOK_DELETED      = 1 << 7  /* marked for deletion */
 };
 
-extern "C"{ GSList *plugin_list = NULL; } /* export for plugingui.c */
+GSList *plugin_list = NULL;  /* export for plugingui.c */
 static GSList *hook_list = NULL;
 
 
@@ -514,7 +517,7 @@ plugin_reload (session *sess, char *name, int by_filename)
 #endif
 
 static GSList *
-plugin_hook_find (GSList *list, int type, char *name)
+plugin_hook_find (GSList *list, int type, const char *name)
 {
 	hexchat_hook *hook;
 
@@ -539,7 +542,7 @@ plugin_hook_find (GSList *list, int type, char *name)
 /* check for plugin hooks and run them */
 
 static int
-plugin_hook_run (session *sess, char *name, char *word[], char *word_eol[],
+plugin_hook_run(session *sess, const char *name, const char *const word[], const char *const word_eol[],
 				 hexchat_event_attrs *attrs, int type)
 {
 	GSList *list, *next;
@@ -651,7 +654,7 @@ plugin_emit_server (session *sess, char *name, char *word[], char *word_eol[],
 /* see if any plugins are interested in this print event */
 
 int
-plugin_emit_print (session *sess, char *word[], time_t server_time)
+plugin_emit_print(session *sess, const char *const word[], time_t server_time)
 {
 	hexchat_event_attrs attrs;
 
@@ -1270,7 +1273,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 {
 	hexchat_list *list;
 
-	list = static_cast<hexchat_list*>(malloc (sizeof (hexchat_list)));
+	list = new(std::nothrow) hexchat_list();
 	if (!list)
 		return NULL;
 	list->pos = NULL;
@@ -1289,7 +1292,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 
 	case 0xb90bfdd2:	/* ignore */
 		list->type = LIST_IGNORE;
-		list->next = ignore_list;
+		list->next = get_ignore_list();
 		break;
 
 	case 0xc2079749:	/* notify */
@@ -1320,7 +1323,7 @@ hexchat_list_free (hexchat_plugin *ph, hexchat_list *xlist)
 {
 	if (xlist->type == LIST_USERS)
 		g_slist_free (xlist->head);
-	free (xlist);
+	delete xlist;
 }
 
 int
@@ -1471,11 +1474,11 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x3d9ad31e:	/* destfile */
-			return ((struct DCC *)data)->destfile;
+			return ((dcc::DCC *)data)->destfile;
 		case 0x2ff57c:	/* file */
-			return ((struct DCC *)data)->file;
+			return ((dcc::DCC *)data)->file;
 		case 0x339763: /* nick */
-			return ((struct DCC *)data)->nick;
+			return ((dcc::DCC *)data)->nick;
 		}
 		break;
 
@@ -1483,7 +1486,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x3306ec:	/* mask */
-			return ((struct ignore *)data)->mask;
+			return ((struct ignore *)data)->mask.c_str();
 		}
 		break;
 
@@ -1538,27 +1541,27 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x34207553: /* address32 */
-			return ((struct DCC *)data)->addr;
+			return ((dcc::DCC *)data)->addr;
 		case 0x181a6: /* cps */
-			return ((struct DCC *)data)->cps;
+			return ((dcc::DCC *)data)->cps;
 		case 0x349881: /* port */
-			return ((struct DCC *)data)->port;
+			return ((dcc::DCC *)data)->port;
 		case 0x1b254: /* pos */
-			return ((struct DCC *)data)->pos & 0xffffffff;
+			return ((dcc::DCC *)data)->pos & 0xffffffff;
 		case 0xe8a945f6: /* poshigh */
-			return (((struct DCC *)data)->pos >> 32) & 0xffffffff;
+			return (((dcc::DCC *)data)->pos >> 32) & 0xffffffff;
 		case 0xc84dc82d: /* resume */
-			return ((struct DCC *)data)->resumable & 0xffffffff;
+			return ((dcc::DCC *)data)->resumable & 0xffffffff;
 		case 0xded4c74f: /* resumehigh */
-			return (((struct DCC *)data)->resumable >> 32) & 0xffffffff;
+			return (((dcc::DCC *)data)->resumable >> 32) & 0xffffffff;
 		case 0x35e001: /* size */
-			return ((struct DCC *)data)->size & 0xffffffff;
+			return ((dcc::DCC *)data)->size & 0xffffffff;
 		case 0x3284d523: /* sizehigh */
-			return (((struct DCC *)data)->size >> 32) & 0xffffffff;
+			return (((dcc::DCC *)data)->size >> 32) & 0xffffffff;
 		case 0xcacdcff2: /* status */
-			return ((struct DCC *)data)->dccstat;
+			return ((dcc::DCC *)data)->dccstat;
 		case 0x368f3a: /* type */
-			return ((struct DCC *)data)->type;
+			return ((dcc::DCC *)data)->type;
 		}
 		break;
 

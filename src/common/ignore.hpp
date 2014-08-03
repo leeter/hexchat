@@ -17,14 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_IGNORE_H
-#define HEXCHAT_IGNORE_H
+#ifndef HEXCHAT_IGNORE_HPP
+#define HEXCHAT_IGNORE_HPP
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include <string>
+#include <vector>
 
-extern GSList *ignore_list;
+//extern GSList *ignore_list;
 
 extern int ignored_ctcp;
 extern int ignored_priv;
@@ -43,29 +42,26 @@ extern int ignored_invi;
 
 struct ignore
 {
-	char *mask;
+	std::string mask;
 	unsigned int type;	/* one of more of IG_* ORed together */
 };
 
-typedef enum
+enum class flood_check_type
 {
 	CTCP,
 	PRIV
-} FLOOD_WHAT;
+};
 
-struct ignore *ignore_exists (char *mask);
-int ignore_add (char *mask, int type, gboolean overwrite);
+GSList * get_ignore_list();
+struct ignore *ignore_exists (const std::string& mask);
+int ignore_add(const std::string& mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
-int ignore_del (char *mask, struct ignore *ig);
-int ignore_check (char *mask, int type);
+bool ignore_del(const std::string& mask, struct ignore *ig);
+bool ignore_check(const std::string& mask, int type);
 void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);
 void ignore_gui_update (int level);
-int flood_check (char *nick, char *ip, server *serv, session *sess, FLOOD_WHAT what);
-
-#ifdef __cplusplus
-}
-#endif
+int flood_check (char *nick, char *ip, server *serv, session *sess, flood_check_type what);
 
 #endif

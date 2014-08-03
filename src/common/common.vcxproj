@@ -17,11 +17,11 @@
     <ClInclude Include="cfgfiles.h" />
     <ClInclude Include="chanopt.h" />
     <ClInclude Include="ctcp.h" />
-    <ClInclude Include="dcc.h" />
+    <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.h" />
     <ClInclude Include="history.h" />
     <ClInclude Include="identd.hpp" />
-    <ClInclude Include="ignore.h" />
+    <ClInclude Include="ignore.hpp" />
     <ClInclude Include="inbound.h" />
     <ClInclude Include="inet.h" />
     <ClInclude Include="marshal.h" />
@@ -60,7 +60,7 @@
     <ClCompile Include="marshal.c" />
     <ClCompile Include="modes.cpp" />
     <ClCompile Include="msproxy.c" />
-    <ClCompile Include="network.c" />
+    <ClCompile Include="network.cpp" />
     <ClCompile Include="notify.cpp" />
     <ClCompile Include="outbound.cpp" />
     <ClCompile Include="plugin-timer.cpp" />

@@ -20,16 +20,10 @@
     <ClInclude Include="ctcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dcc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="fe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="history.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ignore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inbound.h">
@@ -113,12 +107,15 @@
     <ClInclude Include="ssl.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dcc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ignore.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="msproxy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="network.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="marshal.c">
@@ -191,6 +188,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="notify.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -25,9 +25,7 @@
 #include <sys/stat.h>
 
 #define WANTSOCKET
-extern "C"{
 #include "inet.h"
-}
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -43,7 +41,7 @@ extern "C"{
 #include "util.h"
 #include "cfgfiles.h"
 #include "chanopt.h"
-#include "ignore.h"
+#include "ignore.hpp"
 #include "hexchat-plugin.h"
 #include "plugin.h"
 #include "plugin-timer.hpp"
@@ -54,6 +52,7 @@ extern "C"{
 #include "text.h"
 #include "url.h"
 #include "hexchatc.h"
+#include "dcc.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
 #include <glib-object.h>			/* for g_type_init() */
@@ -72,6 +71,8 @@ extern "C"{
 #include <proxy.h>
 #endif
 
+namespace dcc = hexchat::dcc;
+
 GSList *popup_list = 0;
 GSList *button_list = 0;
 GSList *dlgbutton_list = 0;
@@ -80,7 +81,6 @@ GSList *ctcp_list = 0;
 GSList *replace_list = 0;
 GSList *sess_list = 0;
 GSList *dcc_list = 0;
-GSList *ignore_list = 0;
 GSList *usermenu_list = 0;
 GSList *urlhandler_list = 0;
 GSList *tabmenu_list = 0;
@@ -382,7 +382,7 @@ hexchat_misc_checks (void)		/* this gets called every 1/2 second */
 	lagcheck_update ();			/* every 500ms */
 
 	if (count % 2)
-		dcc_check_timeouts ();	/* every 1 second */
+		dcc::dcc_check_timeouts ();	/* every 1 second */
 
 	if (count >= 60)				/* every 30 seconds */
 	{

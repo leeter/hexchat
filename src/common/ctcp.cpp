@@ -29,13 +29,15 @@
 #include "util.h"
 #include "modes.h"
 #include "outbound.h"
-#include "ignore.h"
+#include "ignore.hpp"
 #include "inbound.h"
-#include "dcc.h"
+#include "dcc.hpp"
 #include "text.h"
 #include "ctcp.h"
 #include "server.h"
 #include "hexchatc.h"
+
+namespace dcc = hexchat::dcc;
 
 namespace {
 static void
@@ -105,7 +107,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 		if (!ctcp_check (sess, nick, word, word_eol, word[4] + ctcp_offset))
 		{
 			if (!ignore_check (word[1], IG_DCC))
-				handle_dcc (sess, nick, word, word_eol, tags_data);
+				dcc::handle_dcc (sess, nick, word, word_eol, tags_data);
 		}
 		return;
 	}

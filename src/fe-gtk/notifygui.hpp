@@ -17,17 +17,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_ASCII_H
-#define HEXCHAT_ASCII_H
+#ifndef HEXCHAT_NOTIFYGUI_HPP
+#define HEXCHAT_NOTIFYGUI_HPP
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+namespace hexchat{
+namespace fe{
+namespace notify{
+	void fe_notify_ask(char *name, char *networks);
+} // ::hexchat::fe::notify
+} // ::hexchat::fe
 
-void ascii_open (void);
+namespace gui{
+namespace notify{
 
-#ifdef __cplusplus
-}
-#endif
+void notify_gui_update (void);
+void notify_opengui (void);
+
+} // ::hexchat::gui::notify
+} // ::hexchat::gui
+} // ::hexchat
 
 #endif

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+#include <cstring>
 #include "../common/hexchat-plugin.h"
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
@@ -29,6 +29,7 @@
 #include "pixmaps.h"
 #include "maingui.h"
 #include "menu.h"
+#include "plugin-tray.h"
 
 #ifndef WIN32
 #include <unistd.h>
@@ -125,7 +126,7 @@ tray_count_channels (void)
 
 	for (list = sess_list; list; list = list->next)
 	{
-		sess = list->data;
+		sess = static_cast<session*>(list->data);
 		if (sess->server->connected && sess->channel[0] &&
 			 sess->type == SESS_CHANNEL)
 			cons++;
@@ -504,7 +505,7 @@ tray_find_away_status (void)
 
 	for (list = serv_list; list; list = list->next)
 	{
-		serv = list->data;
+		serv = static_cast<server*>(list->data);
 
 		if (serv->is_away || serv->reconnect_away)
 			away++;
@@ -529,7 +530,7 @@ tray_foreach_server (GtkWidget *item, char *cmd)
 
 	for (list = serv_list; list; list = list->next)
 	{
-		serv = list->data;
+		serv = static_cast<server*>(list->data);
 		if (serv->connected)
 			handle_command (serv->server_session, cmd, FALSE);
 	}
@@ -595,11 +596,10 @@ tray_check_hide (GtkWidget *menu)
 		tray_menu_destroy (menu, NULL);
 	}
 }
-
+extern "C"{ void setup_open(void); }
 static void
 tray_menu_settings (GtkWidget * wid, gpointer none)
 {
-	extern void setup_open (void);
 	setup_open ();
 }
 #endif
@@ -699,7 +699,7 @@ tray_init (void)
 }
 
 static int
-tray_hilight_cb (char *word[], void *userdata)
+tray_hilight_cb(const char *const word[], void *userdata)
 {
 	/*if (tray_status == TS_HIGHLIGHT)
 		return HEXCHAT_EAT_NONE;*/
@@ -726,7 +726,7 @@ tray_hilight_cb (char *word[], void *userdata)
 }
 
 static int
-tray_message_cb (char *word[], void *userdata)
+tray_message_cb(const char *const word[], void *userdata)
 {
 	if (/*tray_status == TS_MESSAGE ||*/ tray_status == TS_HIGHLIGHT)
 		return HEXCHAT_EAT_NONE;
@@ -751,7 +751,7 @@ tray_message_cb (char *word[], void *userdata)
 }
 
 static void
-tray_priv (char *from, char *text)
+tray_priv (const char *from, const char *text)
 {
 	const char *network;
 
@@ -781,7 +781,7 @@ tray_priv (char *from, char *text)
 }
 
 static int
-tray_priv_cb (char *word[], void *userdata)
+tray_priv_cb(const char *const word[], void *userdata)
 {
 	tray_priv (word[1], word[2]);
 
@@ -789,7 +789,7 @@ tray_priv_cb (char *word[], void *userdata)
 }
 
 static int
-tray_invited_cb (char *word[], void *userdata)
+tray_invited_cb(const char *const word[], void *userdata)
 {
 	if (!prefs.hex_away_omit_alerts || tray_find_away_status () != 1)
 		tray_priv (word[2], "Invited");
@@ -798,7 +798,7 @@ tray_invited_cb (char *word[], void *userdata)
 }
 
 static int
-tray_dcc_cb (char *word[], void *userdata)
+tray_dcc_cb(const char *const word[], void *userdata)
 {
 	const char *network;
 
@@ -830,7 +830,7 @@ tray_dcc_cb (char *word[], void *userdata)
 }
 
 static int
-tray_focus_cb (char *word[], void *userdata)
+tray_focus_cb(const char *const word[], void *userdata)
 {
 	tray_stop_flash ();
 	tray_reset_counts ();
@@ -865,11 +865,11 @@ tray_apply_setup (void)
 }
 
 int
-tray_plugin_init (hexchat_plugin *plugin_handle, char **plugin_name,
+tray_plugin_init (void* plugin_handle, char **plugin_name,
 				char **plugin_desc, char **plugin_version, char *arg)
 {
 	/* we need to save this for use with any hexchat_* functions */
-	ph = plugin_handle;
+	ph = static_cast<hexchat_plugin *>(plugin_handle);
 
 	*plugin_name = "";
 	*plugin_desc = "";
@@ -900,7 +900,7 @@ tray_plugin_init (hexchat_plugin *plugin_handle, char **plugin_name,
 }
 
 int
-tray_plugin_deinit (hexchat_plugin *plugin_handle)
+tray_plugin_deinit (void *plugin_handle)
 {
 #ifdef WIN32
 	tray_cleanup ();

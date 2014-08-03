@@ -25,7 +25,7 @@
 #include "fe-gtk.h"
 
 #include "../common/hexchat.h"
-#include "../common/ignore.h"
+#include "../common/ignore.hpp"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
 #include "gtkutil.h"
@@ -336,8 +336,8 @@ ignore_gui_open ()
 	GtkWidget *view;
 	GtkListStore *store;
 	GtkTreeIter iter;
-	GSList *temp = ignore_list;
-	char *mask;
+	GSList *temp = get_ignore_list();
+	const char *mask;
 	gboolean priv, chan, notice, ctcp, dcc, invite, unignore;
 
 	if (ignorewin)
@@ -390,7 +390,7 @@ ignore_gui_open ()
 	{
 		struct ignore *ignore = static_cast<struct ignore *>(temp->data);
 
-		mask = ignore->mask;
+		mask = ignore->mask.c_str();
 		chan = (ignore->type & IG_CHAN);
 		priv = (ignore->type & IG_PRIV);
 		notice = (ignore->type & IG_NOTI);

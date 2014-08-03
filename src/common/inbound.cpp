@@ -39,7 +39,7 @@
 
 #include "hexchat.h"
 #include "util.h"
-#include "ignore.h"
+#include "ignore.hpp"
 #include "fe.h"
 #include "modes.h"
 #include "notify.h"
@@ -50,7 +50,9 @@
 #include "text.h"
 #include "hexchatc.h"
 #include "chanopt.h"
+#include "dcc.hpp"
 
+namespace dcc = hexchat::dcc;
 
 void
 clear_channel (session *sess)
@@ -173,7 +175,7 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 		/*0=ctcp  1=priv will set hex_gui_autoopen_dialog=0 here is flud detected */
 		if (!sess)
 		{
-			if (flood_check (from, ip, serv, current_sess, PRIV))
+			if (flood_check(from, ip, serv, current_sess, flood_check_type::PRIV))
 				/* Create a dialog session */
 				sess = inbound_open_dialog (serv, from, tags_data);
 			else
@@ -225,9 +227,10 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 /* used for Alerts section. Masks can be separated by commas and spaces. */
 
 gboolean
-alert_match_word (char *word, char *masks)
+alert_match_word (const char *word, const char *masks)
 {
-	char *p = masks;
+	char * mutable_masks = strdup(masks),* mutable_word = strdup(word);
+	char *p = mutable_masks;
 	char endchar;
 	int res;
 
@@ -241,7 +244,7 @@ alert_match_word (char *word, char *masks)
 		{
 			endchar = *p;
 			*p = 0;
-			res = match (masks, word);
+			res = match (mutable_masks, mutable_word);
 			*p = endchar;
 
 			if (res)
@@ -253,6 +256,8 @@ alert_match_word (char *word, char *masks)
 		}
 		p++;
 	}
+	free(mutable_word);
+	free(mutable_masks);
 }
 
 gboolean
@@ -357,7 +362,7 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 			if (!sess && prefs.hex_gui_autoopen_dialog)
 			{
 				/* but only if it wouldn't flood */
-				if (flood_check (from, ip, serv, current_sess, PRIV))
+				if (flood_check(from, ip, serv, current_sess, flood_check_type::PRIV))
 					sess = inbound_open_dialog (serv, from, tags_data);
 				else
 					sess = serv->server_session;
@@ -536,7 +541,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 		list = list->next;
 	}
 
-	dcc_change_nick (serv, nick, newnick);
+	dcc::dcc_change_nick (serv, nick, newnick);
 
 	if (me)
 		fe_set_nick (serv, newnick);

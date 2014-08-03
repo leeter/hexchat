@@ -18,7 +18,6 @@
  */
 
 #include "userlist.h"
-#include "dcc.h"
 
 #ifndef HEXCHAT_FE_H
 #define HEXCHAT_FE_H
@@ -84,8 +83,7 @@ void fe_add_chan_list (struct server *serv, char *chan, char *users,
 void fe_chan_list_end (struct server *serv);
 gboolean fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rplcode);
 gboolean fe_ban_list_end (struct session *sess, int rplcode);
-void fe_notify_update (char *name);
-void fe_notify_ask (char *name, char *networks);
+void fe_notify_update(char *name);
 void fe_text_clear (struct session *sess, int lines);
 void fe_close_window (struct session *sess);
 void fe_progressbar_start (struct session *sess);
@@ -101,9 +99,6 @@ void fe_userlist_numbers (struct session *sess);
 void fe_userlist_clear (struct session *sess);
 void fe_userlist_set_selected (struct session *sess);
 void fe_uselect (session *sess, char *word[], int do_clear, int scroll_to);
-void fe_dcc_add (struct DCC *dcc);
-void fe_dcc_update (struct DCC *dcc);
-void fe_dcc_remove (struct DCC *dcc);
 int fe_dcc_open_recv_win (int passive);
 int fe_dcc_open_send_win (int passive);
 int fe_dcc_open_chat_win (int passive);
