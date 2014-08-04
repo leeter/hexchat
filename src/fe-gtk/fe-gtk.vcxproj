@@ -139,7 +139,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClCompile Include="ascii.cpp" />
     <ClCompile Include="banlist.cpp" />
     <ClCompile Include="chanlist.cpp" />
-    <ClCompile Include="chanview.c" />
+    <ClCompile Include="chanview.cpp" />
     <ClCompile Include="custom-list.c" />
     <ClCompile Include="dccgui.cpp" />
     <ClCompile Include="editlist.c" />

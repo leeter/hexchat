@@ -95,9 +95,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="chanview.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="custom-list.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="urlgrab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chanview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
