@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <fcntl.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef WIN32
 #include <io.h>
@@ -92,7 +92,7 @@ rawlog_key_cb (GtkWidget * wid, GdkEventKey * key, gpointer userdata)
 		key->state & STATE_SHIFT &&
 		key->state & STATE_CTRL)
 	{
-		gtk_xtext_copy_selection (userdata);
+		gtk_xtext_copy_selection (static_cast<GtkXText*>(userdata));
 	}
 	return FALSE;
 }
@@ -163,7 +163,7 @@ fe_add_rawlog (server *serv, const char *text, int len, int outbound)
 		else
 			new_text = g_strconcat ("\0033>>\017 ", split_text[i], NULL);
 
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, new_text, strlen (new_text));
+		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, reinterpret_cast<unsigned char*>(new_text), strlen (new_text));
 
 		g_free (new_text);
 	}
