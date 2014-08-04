@@ -62,7 +62,7 @@
 #include "palette.h"
 #include "plugingui.hpp"
 #include "textgui.h"
-#include "urlgrab.h"
+#include "urlgrab.hpp"
 #include "menu.h"
 #include "servlistgui.h"
 #include "userlistgui.hpp"

@@ -31,7 +31,7 @@
 #include "gtkutil.h"
 #include "menu.h"
 #include "maingui.h"
-#include "urlgrab.h"
+#include "urlgrab.hpp"
 namespace{
 /* model for the URL treeview */
 enum

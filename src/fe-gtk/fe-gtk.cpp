@@ -53,7 +53,7 @@
 #include "textgui.h"
 #include "fkeys.h"
 #include "plugin-tray.h"
-#include "urlgrab.h"
+#include "urlgrab.hpp"
 #include "setup.h"
 
 #ifdef USE_LIBCANBERRA
