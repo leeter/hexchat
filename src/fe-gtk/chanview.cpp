@@ -19,8 +19,8 @@
 
 /* abstract channel view: tabs or tree or anything you like */
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
@@ -70,9 +70,9 @@ struct _chanview
 	chan *(*func_get_parent) (chan *);
 	void (*func_cleanup) (chanview *);
 
-	unsigned int sorted:1;
-	unsigned int vertical:1;
-	unsigned int use_icons:1;
+	bool sorted;
+	bool vertical;
+	bool use_icons;
 };
 
 struct _chan
@@ -104,7 +104,7 @@ typedef struct
 static void chanview_populate(chanview *cv);
 
 /* ignore "toggled" signal? */
-static int ignore_toggle = FALSE;
+static bool ignore_toggle = false;
 static int tab_left_is_moving = 0;
 static int tab_right_is_moving = 0;
 
@@ -597,20 +597,20 @@ static void
 tab_pressed_cb(GtkToggleButton *tab, chan *ch)
 {
 	chan *old_tab;
-	int is_switching = TRUE;
+	bool is_switching = true;
 	chanview *cv = ch->cv;
 
-	ignore_toggle = TRUE;
+	ignore_toggle = true;
 	/* de-activate the old tab */
 	old_tab = cv->focused;
 	if (old_tab && old_tab->impl)
 	{
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(old_tab->impl), FALSE);
 		if (old_tab == ch)
-			is_switching = FALSE;
+			is_switching = false;
 	}
 	gtk_toggle_button_set_active(tab, TRUE);
-	ignore_toggle = FALSE;
+	ignore_toggle = false;
 	cv->focused = ch;
 
 	if (/*tab->active*/is_switching)
