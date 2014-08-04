@@ -184,7 +184,9 @@ fe_url_add (const char *urltext)
 	}
 }
 
-
+namespace hexchat{
+namespace gui{
+namespace url{
 void
 url_opengui ()
 {
@@ -227,3 +229,7 @@ url_opengui ()
 		fe_url_add ("URL Grabber is disabled.");
 	}
 }
+
+} // ::hexchat::gui::url
+} // ::hexchat::gui
+} // ::hexchat

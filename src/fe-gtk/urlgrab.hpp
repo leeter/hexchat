@@ -17,17 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_URLGRAB_H
-#define HEXCHAT_URLGRAB_H
+#ifndef HEXCHAT_URLGRAB_HPP
+#define HEXCHAT_URLGRAB_HPP
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
+namespace hexchat{
+namespace gui{
+namespace url{
 void url_opengui (void);
-
-#ifdef __cplusplus
-}
-#endif
+} // ::hexchat::gui::url
+} // ::hexchat::gui
+} // ::hexchat
 
 #endif
