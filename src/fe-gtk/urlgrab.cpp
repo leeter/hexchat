@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include "fe-gtk.h"
 
@@ -32,7 +32,7 @@
 #include "menu.h"
 #include "maingui.h"
 #include "urlgrab.h"
-
+namespace{
 /* model for the URL treeview */
 enum
 {
@@ -149,6 +149,14 @@ url_button_save (void)
 							url_save_callback, NULL, NULL, NULL, FRF_WRITE);
 }
 
+static int
+populate_cb(char *urltext, gpointer userdata)
+{
+	fe_url_add(urltext);
+	return TRUE;
+}
+}
+
 void
 fe_url_add (const char *urltext)
 {
@@ -176,12 +184,6 @@ fe_url_add (const char *urltext)
 	}
 }
 
-static int
-populate_cb (char *urltext, gpointer userdata)
-{
-	fe_url_add (urltext);
-	return TRUE;
-}
 
 void
 url_opengui ()
@@ -218,7 +220,7 @@ url_opengui ()
 	gtk_widget_show (urlgrabberwindow);
 
 	if (prefs.hex_url_grabber)
-		tree_foreach (url_tree, (tree_traverse_func *)populate_cb, NULL);
+		tree_foreach (static_cast<tree*>(url_tree), (tree_traverse_func *)populate_cb, NULL);
 	else
 	{
 		gtk_list_store_clear (GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view))));
