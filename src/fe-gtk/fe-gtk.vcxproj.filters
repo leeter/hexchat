@@ -134,9 +134,6 @@
     <ClCompile Include="textgui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="urlgrab.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="xtext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="servlistgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="urlgrab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
