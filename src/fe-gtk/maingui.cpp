@@ -47,7 +47,7 @@
 #include "menu.h"
 #include "fkeys.h"
 #include "userlistgui.hpp"
-#include "chanview.h"
+#include "chanview.hpp"
 #include "pixmaps.h"
 #include "plugin-tray.h"
 #include "xtext.h"

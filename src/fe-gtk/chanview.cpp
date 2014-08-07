@@ -27,7 +27,7 @@
 #include "fe-gtk.h"
 #include "maingui.h"
 #include "gtkutil.h"
-#include "chanview.h"
+#include "chanview.hpp"
 
 /* treeStore columns */
 #define COL_NAME 0		/* (char *) */
