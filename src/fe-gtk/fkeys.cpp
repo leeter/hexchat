@@ -293,7 +293,7 @@ key_modifier_get_valid (GdkModifierType mod)
 	ret = mod & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_META_MASK);
 #else
 	/* These masks work on both Windows and Unix */
-	ret = mod & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK);
+	ret = static_cast<GdkModifierType>(mod & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK));
 #endif
 
 	return ret;
@@ -310,7 +310,7 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 	list = sess_list;
 	while (list)
 	{
-		sess = list->data;
+		sess = static_cast<session*>(list->data);
 		if (sess->gui->input_box == wid)
 		{
 			if (sess->gui->is_tab)
@@ -335,7 +335,7 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 	{
 		kb = (struct key_binding*)list->data;
 
-		if (kb->keyval == evt->keyval && kb->mod == key_modifier_get_valid (evt->state))
+		if (kb->keyval == evt->keyval && kb->mod == key_modifier_get_valid (static_cast<GdkModifierType>(evt->state)))
 		{
 			if (kb->action < 0 || kb->action > KEY_MAX_ACTIONS)
 				return 0;
@@ -384,7 +384,7 @@ static GtkWidget *key_dialog = NULL;
 static inline GtkTreeModel *
 get_store (void)
 {
-	return gtk_tree_view_get_model (g_object_get_data (G_OBJECT (key_dialog), "view"));
+	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (key_dialog), "view")));
 }
 
 static void
@@ -393,7 +393,7 @@ key_dialog_print_text (GtkXText *xtext, char *text)
 	unsigned int old = prefs.hex_stamp_text;
 	prefs.hex_stamp_text = 0;	/* temporarily disable stamps */
 	gtk_xtext_clear (GTK_XTEXT (xtext)->buffer, 0);
-	PrintTextRaw (GTK_XTEXT (xtext)->buffer, text, 0, 0);
+	PrintTextRaw (GTK_XTEXT (xtext)->buffer, reinterpret_cast<unsigned char*>(text), 0, 0);
 	prefs.hex_stamp_text = old;
 }
 
@@ -476,7 +476,7 @@ key_dialog_entry_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new
 static gboolean
 key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (key_dialog), "view");
+	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkTreeModel *store;
 	GtkTreeIter iter1, iter2;
 	GtkTreeSelection *sel;
@@ -608,7 +608,7 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 static void
 key_dialog_add (GtkWidget *wid, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (key_dialog), "view");
+	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkTreeViewColumn *col;
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
@@ -627,7 +627,7 @@ key_dialog_add (GtkWidget *wid, gpointer userdata)
 static void
 key_dialog_delete (GtkWidget *wid, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (key_dialog), "view");
+	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
 	GtkTreeIter iter;
 	GtkTreePath *path;
@@ -854,7 +854,7 @@ key_save_kbs (void)
 
 	while (list)
 	{
-		kb = list->data;
+		kb = static_cast<key_binding *>(list->data);
 
 		accel_text = gtk_accelerator_name (kb->keyval, kb->mod);
 
@@ -907,7 +907,7 @@ key_load_kbs_helper_mod (char *buf, GdkModifierType *out)
 
 	if (strcmp (buf, "None") == 0)
 	{
-		*out = 0;
+		*out = GdkModifierType();
 		return 0;
 	}
 	for (n = 0; n < len; n++)
@@ -928,7 +928,7 @@ key_load_kbs_helper_mod (char *buf, GdkModifierType *out)
 		}
 	}
 
-	*out = mod;
+	*out = static_cast<GdkModifierType>(mod);
 	return 0;
 }
 
@@ -940,7 +940,7 @@ key_load_kbs (void)
 	struct key_binding *kb = NULL;
 	int fd, len, state = 0, pnt = 0;
 	guint keyval;
-	GdkModifierType mod = 0;
+	GdkModifierType mod = GdkModifierType();
 	off_t size;
 
 	fd = hexchat_open_file ("keybindings.conf", O_RDONLY, 0, 0);
@@ -957,7 +957,7 @@ key_load_kbs (void)
 			return 1;
 		}
 
-		ibuf = malloc (st.st_size);
+		ibuf = static_cast<char*>(malloc (st.st_size));
 		read (fd, ibuf, st.st_size);
 		size = st.st_size;
 		close (fd);
@@ -1069,11 +1069,11 @@ key_load_kbs (void)
 				len -= 3;
 				if (state == KBSTATE_DT1)
 				{
-					kb->data1 = g_malloc (len);
+					kb->data1 = static_cast<char*>(g_malloc (len));
 					memcpy (kb->data1, &buf[3], len);
 				} else
 				{
-					kb->data2 = g_malloc (len);
+					kb->data2 = static_cast<char*>(g_malloc(len));
 					memcpy (kb->data2, &buf[3], len);
 				}
 			} else if (buf[2] == '!')
@@ -1517,7 +1517,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			gcomp = g_completion_new((GCompletionFunc)gcomp_nick_func);
 			tmp_list = userlist_double_list(sess); /* create a temp list so we can free the memory */
 			if (prefs.hex_completion_sort == 1)	/* sort in last-talk order? */
-				tmp_list = g_list_sort (tmp_list, (void *)talked_recent_cmp);
+				tmp_list = g_list_sort (tmp_list, (GCompareFunc)talked_recent_cmp);
 		}
 		else
 		{
@@ -1560,7 +1560,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 		{
 			while(list) /* find the current entry */
 			{
-				if(rfc_ncasecmp(list->data, ent, elen) == 0)
+				if(rfc_ncasecmp(static_cast<char*>(list->data), ent, elen) == 0)
 				{
 					found = 1;
 					break;
@@ -1631,7 +1631,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 					while (list)
 					{
 						len = strlen (buf);	/* current buffer */
-						elen = strlen (list->data);	/* next item to add */
+						elen = strlen (static_cast<const char*>(list->data));	/* next item to add */
 						if (len + elen + 2 >= COMP_BUF) /* +2 is space + null */
 						{
 							PrintText (sess, buf);
@@ -1648,7 +1648,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 				}
 				/* Only one matching entry */
 				g_free(result);
-				result = list->data;
+				result = static_cast<char*>(list->data);
 			}
 		}
 	}
