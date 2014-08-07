@@ -101,9 +101,6 @@
     <ClCompile Include="editlist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fkeys.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="gtkutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rawlog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fkeys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
