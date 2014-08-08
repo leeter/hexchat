@@ -35,7 +35,7 @@
 #define COL_ATTR 2		/* (PangoAttrList *) */
 #define COL_PIXBUF 3		/* (GdkPixbuf *) */
 
-struct _chanview
+struct chanview
 {
 	/* impl scratch area */
 	char implscratch[sizeof (void *) * 8];
@@ -75,7 +75,7 @@ struct _chanview
 	bool use_icons;
 };
 
-struct _chan
+struct chan
 {
 	chanview *cv;	/* our owner */
 	GtkTreeIter iter;
@@ -242,7 +242,7 @@ tab_scroll_left_up_clicked(GtkWidget *widget, chanview *cv)
 	{
 		tab_left_is_moving = 1;
 
-		for (i = gtk_adjustment_get_value(adj); ((i > new_value) && (tab_left_is_moving)); i -= 0.1)
+		for (i = gtk_adjustment_get_value(adj); ((i > new_value) && (tab_left_is_moving)); i -= 0.1f)
 		{
 			gtk_adjustment_set_value(adj, i);
 			while (g_main_context_pending(NULL))
@@ -292,7 +292,7 @@ tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
 	{
 		tab_right_is_moving = 1;
 
-		for (i = gtk_adjustment_get_value(adj); ((i < new_value) && (tab_right_is_moving)); i += 0.1)
+		for (i = gtk_adjustment_get_value(adj); ((i < new_value) && (tab_right_is_moving)); i += 0.1f)
 		{
 			gtk_adjustment_set_value(adj, i);
 			while (g_main_context_pending(NULL))
@@ -1443,7 +1443,7 @@ chanview_box_destroy_cb (GtkWidget *box, chanview *cv)
 }
 
 chanview *
-chanview_new (int type, int trunc_len, gboolean sort, gboolean use_icons,
+chanview_new (int type, int trunc_len, bool sort, bool use_icons,
 				  GtkStyle *style)
 {
 	chanview *cv;
@@ -1612,7 +1612,7 @@ chanview_get_orientation (chanview *cv)
 }
 
 void
-chanview_set_orientation (chanview *cv, gboolean vertical)
+chanview_set_orientation (chanview *cv, bool vertical)
 {
 	if (vertical != cv->vertical)
 	{
