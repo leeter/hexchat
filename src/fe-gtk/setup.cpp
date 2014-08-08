@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -36,13 +36,15 @@
 #include "pixmaps.h"
 #include "menu.h"
 #include "plugin-tray.h"
+#include "gtk_helpers.hpp"
+#include "setup.h"
 
 #ifdef WIN32
 #include "../common/fe.h"
 #endif
 #include "sexy-spell-entry.h"
 
-GtkStyle *create_input_style (GtkStyle *);
+extern "C"{ GtkStyle *create_input_style(GtkStyle *); }
 
 #define LABEL_INDENT 12
 
@@ -72,7 +74,7 @@ enum
 	ST_ALERTHEAD
 };
 
-typedef struct
+struct setting
 {
 	int type;
 	char *label;
@@ -80,7 +82,7 @@ typedef struct
 	char *tooltip;
 	char const *const *list;
 	int extra;
-} setting;
+};
 
 #ifdef WIN32
 static const char *const langsmenu[] =
@@ -397,23 +399,23 @@ static const setting alert_settings[] =
 
 	{ST_ALERTHEAD},
 #if !defined (WIN32) && !defined (__APPLE__)
-	{ST_3OGGLE, N_("Show tray balloons on:"), 0, 0, (void *)balloonlist, 0},
+	{ST_3OGGLE, N_("Show tray balloons on:"), 0, 0, (const char* const*)balloonlist, 0},
 #endif
-	{ST_3OGGLE, N_("Blink tray icon on:"), 0, 0, (void *)trayblinklist, 0},
+	{ST_3OGGLE, N_("Blink tray icon on:"), 0, 0, (const char* const*)trayblinklist, 0},
 #ifdef HAVE_GTK_MAC
-	{ST_3OGGLE, N_("Bounce dock icon on:"), 0, 0, (void *)taskbarlist, 0},
+	{ST_3OGGLE, N_("Bounce dock icon on:"), 0, 0, (const char* const*)taskbarlist, 0},
 #else
 #ifndef __APPLE__
-	{ST_3OGGLE, N_("Blink task bar on:"), 0, 0, (void *)taskbarlist, 0},
+	{ ST_3OGGLE, N_("Blink task bar on:"), 0, 0, (const char* const*)taskbarlist, 0 },
 #endif
 #endif
 #ifdef WIN32
-	{ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play the \"Instant Message Notification\" system sound upon the selected events"), (void *)beeplist, 0},
+	{ ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play the \"Instant Message Notification\" system sound upon the selected events"), (const char* const*)beeplist, 0 },
 #else
 #ifdef USE_LIBCANBERRA
-	{ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play \"message-new-instant\" from the freedesktop.org sound theme upon the selected events"), (void *)beeplist, 0},
+	{ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play \"message-new-instant\" from the freedesktop.org sound theme upon the selected events"), (const char* const*)beeplist, 0},
 #else
-	{ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play a GTK beep upon the selected events"), (void *)beeplist, 0},
+	{ST_3OGGLE, N_("Make a beep sound on:"), 0, N_("Play a GTK beep upon the selected events"), (const char* const*)beeplist, 0},
 #endif
 #endif
 
@@ -449,9 +451,9 @@ static const setting alert_settings_unity[] =
 	{ST_HEADER,	N_("Alerts"),0,0,0},
 
 	{ST_ALERTHEAD},
-	{ST_3OGGLE, N_("Show tray balloons on:"), 0, 0, (void *)balloonlist, 0},
-	{ST_3OGGLE, N_("Blink task bar on:"), 0, 0, (void *)taskbarlist, 0},
-	{ST_3OGGLE, N_("Make a beep sound on:"), 0, 0, (void *)beeplist, 0},
+	{ ST_3OGGLE, N_("Show tray balloons on:"), 0, 0, (const char* const*)balloonlist, 0 },
+	{ ST_3OGGLE, N_("Blink task bar on:"), 0, 0, (const char* const*)taskbarlist, 0 },
+	{ ST_3OGGLE, N_("Make a beep sound on:"), 0, 0, (const char* const*)beeplist, 0 },
 
 	{ST_TOGGLE,	N_("Omit alerts when marked as being away"), P_OFFINTNL(hex_away_omit_alerts), 0, 0, 0},
 	{ST_TOGGLE,	N_("Omit alerts while the window is focused"), P_OFFINTNL(hex_gui_focus_omitalerts), 0, 0, 0},
@@ -604,7 +606,7 @@ static const setting network_settings[] =
 	{ST_TOGGLE,	N_("Use Authentication (HTTP or Socks5 only)"), P_OFFINTNL(hex_net_proxy_auth), 0, 0, 0},
 #endif
 	{ST_ENTRY,	N_("Username:"), P_OFFSETNL(hex_net_proxy_user), 0, 0, sizeof prefs.hex_net_proxy_user},
-	{ST_ENTRY,	N_("Password:"), P_OFFSETNL(hex_net_proxy_pass), 0, GINT_TO_POINTER(1), sizeof prefs.hex_net_proxy_pass},
+	{ ST_ENTRY, N_("Password:"), P_OFFSETNL(hex_net_proxy_pass), 0, (const char* const*)GINT_TO_POINTER(1), sizeof prefs.hex_net_proxy_pass },
 
 	{ST_END, 0, 0, 0, 0, 0}
 };
@@ -638,7 +640,7 @@ setup_headlabel (GtkWidget *tab, int row, int col, char *text)
 	label = gtk_label_new (NULL);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (tab), label, col, col + 1, row, row + 1, 0, 0, 4, 0);
+	gtk_table_attach(GTK_TABLE(tab), label, col, col + 1, row, row + 1, GtkAttachOptions(), GtkAttachOptions(), 4, 0);
 }
 
 static void
@@ -664,28 +666,28 @@ setup_create_3oggle (GtkWidget *tab, int row, const setting *set)
 		gtk_widget_set_tooltip_text (label, _(set->tooltip));
 	}
 	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	wid = gtk_check_button_new ();
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[0]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
 							G_CALLBACK (setup_3oggle_cb), ((int *)&setup_prefs) + offsets[0]);
-	gtk_table_attach (GTK_TABLE (tab), wid, 3, 4, row, row + 1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(tab), wid, 3, 4, row, row + 1, GtkAttachOptions(), GtkAttachOptions(), 0, 0);
 
 	wid = gtk_check_button_new ();
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[1]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
 							G_CALLBACK (setup_3oggle_cb), ((int *)&setup_prefs) + offsets[1]);
-	gtk_table_attach (GTK_TABLE (tab), wid, 4, 5, row, row + 1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(tab), wid, 4, 5, row, row + 1, GtkAttachOptions(), GtkAttachOptions(), 0, 0);
 
 	wid = gtk_check_button_new ();
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[2]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
 							G_CALLBACK (setup_3oggle_cb), ((int *)&setup_prefs) + offsets[2]);
-	gtk_table_attach (GTK_TABLE (tab), wid, 5, 6, row, row + 1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(tab), wid, 5, 6, row, row + 1, GtkAttachOptions(), GtkAttachOptions(), 0, 0);
 }
 
 static void
@@ -696,11 +698,11 @@ setup_toggle_cb (GtkToggleButton *but, const setting *set)
 	setup_set_int (&setup_prefs, set, gtk_toggle_button_get_active (but));
 
 	/* does this toggle also enable/disable another widget? */
-	disable_wid = g_object_get_data (G_OBJECT (but), "nxt");
+	disable_wid = static_cast<GtkWidget*>(g_object_get_data (G_OBJECT (but), "nxt"));
 	if (disable_wid)
 	{
 		gtk_widget_set_sensitive (disable_wid, gtk_toggle_button_get_active (but));
-		label = g_object_get_data (G_OBJECT (disable_wid), "lbl");
+		label = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(disable_wid), "lbl"));
 		gtk_widget_set_sensitive (label, gtk_toggle_button_get_active (but));
 	}
 }
@@ -724,7 +726,7 @@ setup_create_toggleR (GtkWidget *tab, int row, const setting *set)
 	if (set->tooltip)
 		gtk_widget_set_tooltip_text (wid, _(set->tooltip));
 	gtk_table_attach (GTK_TABLE (tab), wid, 4, 5, row, row + 1,
-							GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
 }
 
 static GtkWidget *
@@ -740,7 +742,7 @@ setup_create_toggleL (GtkWidget *tab, int row, const setting *set)
 	if (set->tooltip)
 		gtk_widget_set_tooltip_text (wid, _(set->tooltip));
 	gtk_table_attach (GTK_TABLE (tab), wid, 2, row==6 ? 6 : 4, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	return wid;
 }
@@ -774,11 +776,11 @@ setup_create_spin (GtkWidget *table, int row, const setting *set)
 	label = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), label, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	align = gtk_alignment_new (0.0, 0.5, 0.0, 0.0);
 	gtk_table_attach (GTK_TABLE (table), align, 3, 4, row, row + 1,
-							GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
 
 	rbox = gtk_hbox_new (0, 0);
 	gtk_container_add (GTK_CONTAINER (align), rbox);
@@ -839,7 +841,7 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 	wid = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	wid = gtk_hscale_new_with_range (0., 255., 1.);
 	gtk_scale_set_value_pos (GTK_SCALE (wid), GTK_POS_RIGHT);
@@ -847,7 +849,7 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 	g_signal_connect (G_OBJECT(wid), "value_changed",
 							G_CALLBACK (setup_hscale_cb), (gpointer)set);
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1,
-							GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_FILL, 0, 0);
 
 #ifndef WIN32 /* Windows always supports this */
 	/* Only used for transparency currently */
@@ -898,11 +900,11 @@ setup_create_radio (GtkWidget *table, int row, const setting *set)
 	wid = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	hbox = gtk_hbox_new (0, 0);
 	gtk_table_attach (GTK_TABLE (table), hbox, 3, 4, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
 
 	i = 0;
 	group = NULL;
@@ -1007,7 +1009,7 @@ setup_create_menu (GtkWidget *table, int row, const setting *set)
 	wid = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	cbox = gtk_combo_box_text_new ();
 
@@ -1022,7 +1024,7 @@ setup_create_menu (GtkWidget *table, int row, const setting *set)
 	box = gtk_hbox_new (0, 0);
 	gtk_box_pack_start (GTK_BOX (box), cbox, 0, 0, 0);
 	gtk_table_attach (GTK_TABLE (table), box, 3, 4, row, row + 1,
-							GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
 }
 
 static void
@@ -1065,7 +1067,7 @@ setup_fontsel_cb (GtkWidget *button, GtkFontSelectionDialog *dialog)
 	GtkWidget *entry;
 	char *font_name;
 
-	entry = g_object_get_data (G_OBJECT (button), "e");
+	entry = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(button), "e"));
 	font_name = gtk_font_selection_dialog_get_font_name (dialog);
 
 	gtk_entry_set_text (GTK_ENTRY (entry), font_name);
@@ -1153,7 +1155,7 @@ setup_create_label (GtkWidget *table, int row, const setting *set)
 {
 	gtk_table_attach (GTK_TABLE (table), setup_create_italic_label (_(set->label)),
 							set->extra ? 1 : 3, 5, row, row + 1, GTK_FILL,
-							GTK_SHRINK | GTK_FILL, 0, 0);
+							static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
 }
 
 static GtkWidget *
@@ -1165,7 +1167,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	label = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), label, 2, 3, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
+		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
 
 	wid = gtk_entry_new ();
 	g_object_set_data (G_OBJECT (wid), "lbl", label);
@@ -1191,11 +1193,11 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 
 	if (set->type == ST_ENTRY)
 		gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1,
-								GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_FILL, 0, 0);
 	else
 	{
 		gtk_table_attach (GTK_TABLE (table), wid, 3, 5, row, row + 1,
-								GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+			static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 0);
 		bwid = gtk_button_new_with_label (_("Browse..."));
 		gtk_table_attach (GTK_TABLE (table), bwid, 5, 6, row, row + 1,
 								GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
@@ -1348,10 +1350,10 @@ setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 	GdkColor old_color;
 	GtkStyle *style;
 
-	col = g_object_get_data (G_OBJECT (button), "c");
+	col = static_cast<GdkColor*>(g_object_get_data (G_OBJECT (button), "c"));
 	old_color = *col;
 
-	button = g_object_get_data (G_OBJECT (button), "b");
+	button = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(button), "b"));
 
 	if (!GTK_IS_WIDGET (button))
 	{
@@ -1528,8 +1530,10 @@ setup_create_color_page (void)
 static GtkWidget *sndfile_entry;
 static int ignore_changed = FALSE;
 
+extern "C"{
 extern struct text_event te[]; /* text.c */
 extern char *sound_files[];
+}
 
 static void
 setup_snd_populate (GtkTreeView * treeview)
@@ -1961,7 +1965,7 @@ setup_apply_entry_style (GtkWidget *entry)
 	gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]);
 	gtk_widget_modify_font (entry, input_style->font_desc);
 }
-
+extern "C" char cursor_color_rc[];
 static void
 setup_apply_to_sess (session_gui *gui)
 {
@@ -1972,7 +1976,6 @@ setup_apply_to_sess (session_gui *gui)
 
 	if (prefs.hex_gui_input_style)
 	{
-		extern char cursor_color_rc[];
 		char buf[256];
 		sprintf (buf, cursor_color_rc,
 				(colors[COL_FG].red >> 8),
@@ -2040,7 +2043,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 	list = sess_list;
 	while (list)
 	{
-		sess = list->data;
+		sess = static_cast<session*>(list->data);
 		if (sess->gui->is_tab)
 		{
 			/* only apply to main tabwindow once */

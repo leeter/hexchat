@@ -93,6 +93,9 @@
     <ClInclude Include="chanview.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gtk_helpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="custom-list.c">

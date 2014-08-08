@@ -596,7 +596,8 @@ tray_check_hide (GtkWidget *menu)
 		tray_menu_destroy (menu, NULL);
 	}
 }
-extern "C"{ void setup_open(void); }
+
+void setup_open(void);
 static void
 tray_menu_settings (GtkWidget * wid, gpointer none)
 {

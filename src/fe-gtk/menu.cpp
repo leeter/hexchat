@@ -1112,7 +1112,7 @@ menu_open_server_list (GtkWidget *wid, gpointer none)
 	fe_serverlist_open (current_sess);
 }
 
-extern "C"{ void setup_open(void); }
+void setup_open(void);
 static void
 menu_settings (GtkWidget * wid, gpointer none)
 {
