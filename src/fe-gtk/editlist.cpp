@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -55,7 +55,7 @@ static GSList *editlist_list = NULL;
 static GtkTreeModel *
 get_store (void)
 {
-	return gtk_tree_view_get_model (g_object_get_data (G_OBJECT (editlist_win), "view"));
+	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (editlist_win), "view")));
 }
 
 static void
@@ -164,7 +164,7 @@ editlist_load (GtkListStore *store, GSList *list)
 static void
 editlist_delete (GtkWidget *wid, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (editlist_win), "view");
+	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
 	GtkTreeIter iter;
 	GtkTreePath *path;
@@ -185,7 +185,7 @@ editlist_delete (GtkWidget *wid, gpointer userdata)
 static void
 editlist_add (GtkWidget *wid, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (editlist_win), "view");
+	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	GtkTreeViewColumn *col;
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
@@ -225,7 +225,7 @@ editlist_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, g
 static gboolean
 editlist_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 {
-	GtkTreeView *view = g_object_get_data (G_OBJECT (editlist_win), "view");
+	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	GtkTreeModel *store;
 	GtkTreeIter iter1, iter2;
 	GtkTreeSelection *sel;
