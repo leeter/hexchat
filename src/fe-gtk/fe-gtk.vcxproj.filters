@@ -113,9 +113,6 @@
     <ClCompile Include="pixmaps.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="setup.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sexy-iso-codes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="fkeys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
