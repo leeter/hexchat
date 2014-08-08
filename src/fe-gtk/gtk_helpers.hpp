@@ -25,4 +25,14 @@ inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b)
 	return static_cast<GtkAttachOptions>(static_cast<int>(a) | static_cast<int>(b));
 }
 
+inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b)
+{
+	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
+{
+	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
+}
+
 #endif

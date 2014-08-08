@@ -55,13 +55,11 @@ enum
 	N_COLUMNS
 };
 
-extern "C"  {
 /* this is only used in xtext.c for indented timestamping */
 int
 xtext_get_stamp_str (time_t tim, char **ret)
 {
 	return get_stamp_str (prefs.hex_stamp_text_format, tim, ret);
-}
 }
 
 static void

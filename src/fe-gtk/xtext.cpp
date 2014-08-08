@@ -26,10 +26,11 @@
 #define REFRESH_TIMEOUT 20
 #define WORDWRAP_LIMIT 24
 
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <time.h>
+#include <string>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
+#include <ctime>
 
 #include "../../config.h"
 #include "../common/hexchat.h"
@@ -41,10 +42,12 @@
 #include "fe-gtk.h"
 #include "xtext.h"
 #include "fkeys.h"
+#include "gtk_helpers.hpp"
 
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
 #include <gdk/gdk.h>
@@ -57,8 +60,14 @@
 #endif
 
 /* is delimiter */
-#define is_del(c) \
-	(c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0)
+//#define is_del(c) \
+//	(c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0)
+
+template<class T>
+inline bool is_del(T c)
+{
+	return (c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0);
+}
 
 /* force scrolling off */
 #define dontscroll(buf) (buf)->last_pixel_pos = 0x7fffffff
@@ -320,7 +329,7 @@ backend_get_text_width_emph (GtkXText *xtext, guchar *str, int len, int emphasis
 			deltaw = fontwidths[emphasis][*str];
 		else
 		{
-			pango_layout_set_text (xtext->layout, str, mbl);
+			pango_layout_set_text (xtext->layout, (const char*)str, mbl);
 			pango_layout_get_pixel_size (xtext->layout, &deltaw, NULL);
 		}
 		width += deltaw;
@@ -340,7 +349,7 @@ backend_get_text_width_slp (GtkXText *xtext, guchar *str, GSList *slp)
 	{
 		offlen_t *meta;
 
-		meta = slp->data;
+		meta = static_cast<offlen_t *>(slp->data);
 		width += backend_get_text_width_emph (xtext, str, meta->len, meta->emph);
 		str += meta->len;
 		slp = g_slist_next (slp);
@@ -364,7 +373,7 @@ xtext_draw_layout_line (GdkDrawable      *drawable,
 
 	while (tmp_list)
 	{
-		PangoLayoutRun *run = tmp_list->data;
+		PangoLayoutRun *run = static_cast<PangoLayoutRun*>(tmp_list->data);
 
 		pango_glyph_string_extents (run->glyphs, run->item->analysis.font,
 											 NULL, &logical_rect);
@@ -399,7 +408,7 @@ backend_draw_text_emph (GtkXText *xtext, int dofill, GdkGC *gc, int x, int y,
 		gdk_gc_set_foreground (gc, &col);
 	}
 
-	line = pango_layout_get_lines (xtext->layout)->data;
+	line = static_cast<PangoLayoutLine*>(pango_layout_get_lines (xtext->layout)->data);
 
 	xtext_draw_layout_line (xtext->draw_buf, gc, x, y, line);
 }
@@ -540,7 +549,7 @@ gtk_xtext_new (GdkColor palette[], int separator)
 {
 	GtkXText *xtext;
 
-	xtext = g_object_new (gtk_xtext_get_type (), NULL);
+	xtext = static_cast<GtkXText*>(g_object_new (gtk_xtext_get_type (), NULL));
 	xtext->separator = separator;
 	xtext->wordwrap = TRUE;
 	xtext->buffer = gtk_xtext_buffer_new (xtext);
@@ -834,7 +843,7 @@ find_x (GtkXText *xtext, textentry *ent, int x, int subline, int indent)
 		suboff = GPOINTER_TO_INT (g_slist_nth_data (ent->sublines, subline - 1));
 		for (list = ent->slp; list; list = g_slist_next (list))
 		{
-			meta = list->data;
+			meta = static_cast<offlen_t*>(list->data);
 			if (meta->off + meta->len > suboff)
 				break;
 		}
@@ -845,7 +854,7 @@ find_x (GtkXText *xtext, textentry *ent, int x, int subline, int indent)
 		list = ent->slp;
 	} 
 	/* Step to the first character of the subline */
-	meta = list->data;
+	meta = static_cast<offlen_t*>(list->data);
 	off = meta->off;
 	len = meta->len;
 	if (meta->emph & EMPH_HIDDEN)
@@ -881,7 +890,7 @@ find_x (GtkXText *xtext, textentry *ent, int x, int subline, int indent)
 			list = g_slist_next (list);
 			if (list == NULL)
 				return ent->str_len;
-			meta = list->data;
+			meta = static_cast<offlen_t*>(list->data);
 			off = meta->off;
 			len = meta->len;
 		}
@@ -890,7 +899,7 @@ find_x (GtkXText *xtext, textentry *ent, int x, int subline, int indent)
 	/* If previous chunk exists and is marked hidden, regard it as unhidden */
 	if (hid && list && hid->next == list)
 	{
-		meta = hid->data;
+		meta = static_cast<offlen_t*>(hid->data);
 		off = meta->off;
 	}
 
@@ -1527,7 +1536,7 @@ gtk_xtext_get_word (GtkXText * xtext, int x, int y, textentry ** ret_ent,
 		return NULL;
 
 	word = ent->str + offset;
-	while ((word = g_utf8_find_prev_char (ent->str, word)))
+	while ((word = (unsigned char*)g_utf8_find_prev_char((const gchar*)ent->str, (const gchar*)word)))
 	{
 		if (is_del (*word))
 		{
@@ -1541,7 +1550,7 @@ gtk_xtext_get_word (GtkXText * xtext, int x, int y, textentry ** ret_ent,
 		word = ent->str;
 
 	/* remove color characters from the length */
-	gtk_xtext_strip_color (word, len_to_offset, xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
+	gtk_xtext_strip_color ((unsigned char*)word, len_to_offset, xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
 
 	last = word;
 	end = ent->str + ent->str_len;
@@ -1551,7 +1560,7 @@ gtk_xtext_get_word (GtkXText * xtext, int x, int y, textentry ** ret_ent,
 		if (is_del (*last))
 			break;
 		len += charlen (last);
-		last = g_utf8_find_next_char (last, end);
+		last = (unsigned char*)g_utf8_find_next_char ((const gchar*)last, (const gchar*)end);
 	}
 	while (last);
 
@@ -1568,7 +1577,7 @@ gtk_xtext_get_word (GtkXText * xtext, int x, int y, textentry ** ret_ent,
 	word = gtk_xtext_strip_color (word, len, xtext->scratch_buffer, NULL, slp, FALSE);
 
 	/* avoid turning the cursor into a hand for non-url part of the word */
-	if (xtext->urlcheck_function && xtext->urlcheck_function (GTK_WIDGET (xtext), word))
+	if (xtext->urlcheck_function && xtext->urlcheck_function (GTK_WIDGET (xtext), (char*)word))
 	{
 		int start, end;
 		url_last (&start, &end);
@@ -1582,7 +1591,7 @@ gtk_xtext_get_word (GtkXText * xtext, int x, int y, textentry ** ret_ent,
 			return 0;
 	}
 
-	return word;
+	return (char*)word;
 }
 
 static void
@@ -1661,12 +1670,12 @@ gtk_xtext_get_word_adjust (GtkXText *xtext, int x, int y, textentry **word_ent, 
 	unsigned char *word;
 	int word_type = 0;
 
-	word = gtk_xtext_get_word (xtext, x, y, word_ent, offset, len, &slp);
+	word = (unsigned char*)gtk_xtext_get_word (xtext, x, y, word_ent, offset, len, &slp);
 	if (word)
 	{
 		int laststart, lastend;
 
-		word_type = xtext->urlcheck_function (GTK_WIDGET (xtext), word);
+		word_type = xtext->urlcheck_function (GTK_WIDGET (xtext), (char*)word);
 		if (word_type > 0)
 		{
 			if (url_last (&laststart, &lastend))
@@ -1677,7 +1686,7 @@ gtk_xtext_get_word_adjust (GtkXText *xtext, int x, int y, textentry **word_ent, 
 
 				for (sl = slp, cumlen = 0; sl; sl = g_slist_next (sl))
 				{
-					meta = sl->data;
+					meta = static_cast<offlen_t*>(sl->data);
 					startadj = meta->off - cumlen;
 					cumlen += meta->len;
 					if (laststart < cumlen)
@@ -1685,7 +1694,7 @@ gtk_xtext_get_word_adjust (GtkXText *xtext, int x, int y, textentry **word_ent, 
 				}
 				for (sl = slp, cumlen = 0; sl; sl = g_slist_next (sl))
 				{
-					meta = sl->data;
+					meta = static_cast<offlen_t*>(sl->data);
 					endadj = meta->off - cumlen;
 					cumlen += meta->len;
 					if (lastend < cumlen)
@@ -1949,7 +1958,7 @@ gtk_xtext_button_release (GtkWidget * widget, GdkEventButton * event)
 
 		if (!xtext->hilighting)
 		{
-			word = gtk_xtext_get_word (xtext, event->x, event->y, 0, 0, 0, 0);
+			word = (unsigned char*)gtk_xtext_get_word (xtext, event->x, event->y, 0, 0, 0, 0);
 			g_signal_emit (G_OBJECT (xtext), xtext_signals[WORD_CLICK], 0, word ? word : NULL, event);
 		} else
 		{
@@ -1966,7 +1975,7 @@ gtk_xtext_button_press (GtkWidget * widget, GdkEventButton * event)
 	GtkXText *xtext = GTK_XTEXT (widget);
 	GdkModifierType mask;
 	textentry *ent;
-	unsigned char *word;
+	char *word;
 	int line_x, x, y, offset, len;
 
 	gdk_window_get_pointer (widget->window, &x, &y, &mask);
@@ -2105,7 +2114,7 @@ gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret)
 		return NULL;
 
 	/* now allocate mem and copy buffer */
-	pos = txt = malloc (len);
+	pos = txt = static_cast<char*>(malloc (len));
 	if (!txt)
 		return NULL;
 	ent = buf->last_ent_start;
@@ -2149,7 +2158,7 @@ gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret)
 		len = strlen (txt);
 	} else
 	{
-		stripped = gtk_xtext_strip_color (txt, strlen (txt), NULL, &len, NULL, FALSE);
+		stripped = (char*)gtk_xtext_strip_color ((unsigned char*)txt, strlen (txt), NULL, &len, NULL, FALSE);
 		free (txt);
 	}
 
@@ -2199,7 +2208,7 @@ gtk_xtext_selection_get (GtkWidget * widget,
 		break;
 #endif
 	default:
-		new_text = g_locale_from_utf8 (stripped, len, NULL, &glen, NULL);
+		new_text = (guchar*)g_locale_from_utf8 (stripped, len, NULL, &glen, NULL);
 		gtk_selection_data_set (selection_data_ptr, GDK_SELECTION_TYPE_STRING,
 										8, new_text, glen);
 		g_free (new_text);
@@ -2264,17 +2273,17 @@ gtk_xtext_scroll_adjustments (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustmen
 }
 
 static void
-gtk_xtext_class_init (GtkXTextClass * class)
+gtk_xtext_class_init (GtkXTextClass * text_class)
 {
 	GtkObjectClass *object_class;
 	GtkWidgetClass *widget_class;
 	GtkXTextClass *xtext_class;
 
-	object_class = (GtkObjectClass *) class;
-	widget_class = (GtkWidgetClass *) class;
-	xtext_class = (GtkXTextClass *) class;
+	object_class = (GtkObjectClass *)text_class;
+	widget_class = (GtkWidgetClass *)text_class;
+	xtext_class = (GtkXTextClass *)text_class;
 
-	parent_class = g_type_class_peek (gtk_widget_get_type ());
+	parent_class = static_cast<GtkWidgetClass *>(g_type_class_peek(gtk_widget_get_type()));
 
 	xtext_signals[WORD_CLICK] =
 		g_signal_new ("word_click",
@@ -2304,7 +2313,7 @@ gtk_xtext_class_init (GtkXTextClass * class)
 	widget_class->button_press_event = gtk_xtext_button_press;
 	widget_class->button_release_event = gtk_xtext_button_release;
 	widget_class->motion_notify_event = gtk_xtext_motion_notify;
-	widget_class->selection_clear_event = (void *)gtk_xtext_selection_kill;
+	widget_class->selection_clear_event = (gboolean(*)(GtkWidget*, GdkEventSelection*))gtk_xtext_selection_kill;
 	widget_class->selection_get = gtk_xtext_selection_get;
 	widget_class->expose_event = gtk_xtext_expose;
 	widget_class->scroll_event = gtk_xtext_scroll;
@@ -2336,7 +2345,7 @@ gtk_xtext_get_type (void)
 		};
 
 		xtext_type = g_type_register_static (GTK_TYPE_WIDGET, "GtkXText",
-														 &xtext_info, 0);
+														 &xtext_info, GTypeFlags());
 	}
 
 	return xtext_type;
@@ -2360,7 +2369,7 @@ xtext_do_chunk(chunk_t *c)
 	if (c->len1 == 0)
 		return;
 
-	meta = malloc (sizeof *meta);
+	meta = static_cast<offlen_t*>(malloc (sizeof *meta));
 	meta->off = c->off1;
 	meta->len = c->len1;
 	meta->emph = c->emph;
@@ -2383,7 +2392,7 @@ gtk_xtext_strip_color (unsigned char *text, int len, unsigned char *outbuf,
 	int mbl;	/* multi-byte length */
 
 	if (outbuf == NULL)
-		new_str = malloc (len + 2);
+		new_str = static_cast<unsigned char*>(malloc (len + 2));
 	else
 		new_str = outbuf;
 
@@ -2489,7 +2498,7 @@ gtk_xtext_text_width_ent (GtkXText *xtext, textentry *ent)
 	{
 		offlen_t *meta;
 
-		meta = slp->data;
+		meta = static_cast<offlen_t *>(slp->data);
 		meta->width = backend_get_text_width_emph (xtext, ent->str + meta->off, meta->len, meta->emph);
 	}
 	return width;
@@ -2568,7 +2577,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		dofill = FALSE;	/* already drawn the background */
 	}
 
-	backend_draw_text_emph (xtext, dofill, gc, x, y, str, len, str_width, *emphasis);
+	backend_draw_text_emph (xtext, dofill, gc, x, y, (char*)str, len, str_width, *emphasis);
 
 	if (pix)
 	{
@@ -3123,7 +3132,7 @@ find_next_wrap (GtkXText * xtext, textentry * ent, unsigned char *str,
 	/* Find emphasis value for the offset that is the first byte of our string */
 	for (lp = ent->slp; lp; lp = g_slist_next (lp))
 	{
-		offlen_t *meta = lp->data;
+		offlen_t *meta = static_cast<offlen_t *>(lp->data);
 		unsigned char *start, *end;
 
 		start = ent->str + meta->off;
@@ -3279,11 +3288,11 @@ gtk_xtext_render_stamp (GtkXText * xtext, textentry * ent,
 			ent->mark_start = -1;
 			ent->mark_end = -1;
 		}
-		ent->str = text;
+		ent->str = (unsigned char*)text;
 	}
 
 	y = (xtext->fontsize * line) + xtext->font->ascent - xtext->pixel_offset;
-	gtk_xtext_render_str (xtext, y, ent, text, len,
+	gtk_xtext_render_str(xtext, y, ent, (unsigned char*)text, len,
 								 win_width, 2, line, TRUE, &xsize, &emphasis);
 
 	/* restore everything back to how it was */
@@ -3469,7 +3478,7 @@ gtk_xtext_set_font (GtkXText *xtext, char *name)
 		char *time_str;
 		int stamp_size = xtext_get_stamp_str (time(0), &time_str);
 		xtext->stamp_width =
-			gtk_xtext_text_width (xtext, time_str, stamp_size) + MARGIN;
+			gtk_xtext_text_width(xtext, (unsigned char*)time_str, stamp_size) + MARGIN;
 		g_free (time_str);
 	}
 
@@ -3526,7 +3535,7 @@ gtk_xtext_save (GtkXText * xtext, int fh)
 	ent = xtext->buffer->text_first;
 	while (ent)
 	{
-		buf = gtk_xtext_strip_color (ent->str, ent->str_len, NULL,
+		buf = (char*)gtk_xtext_strip_color (ent->str, ent->str_len, NULL,
 											  &newlen, NULL, FALSE);
 		write (fh, buf, newlen);
 		write (fh, "\n", 1);
@@ -4112,7 +4121,7 @@ gtk_xtext_unstrip_color (gint start, gint end, GSList *slp, GList **gl, gint max
 	cursl = slp;
 	while (cursl)
 	{
-		meta = cursl->data;
+		meta = static_cast<offlen_t *>(cursl->data);
 		if (start < meta->len)
 		{
 			off1 = meta->off + start;
@@ -4127,7 +4136,7 @@ gtk_xtext_unstrip_color (gint start, gint end, GSList *slp, GList **gl, gint max
 	off2 = off1;
 	while (cursl)
 	{
-		meta = cursl->data;
+		meta = static_cast<offlen_t *>(cursl->data);
 		if (end < meta->len)
 		{
 			off2 = meta->off + end;
@@ -4161,7 +4170,7 @@ gtk_xtext_search_textentry (xtext_buffer *buf, textentry *ent)
 		return gl;
 	}
 
-	str = gtk_xtext_strip_color (ent->str, ent->str_len, buf->xtext->scratch_buffer,
+	str = (gchar*)gtk_xtext_strip_color (ent->str, ent->str_len, buf->xtext->scratch_buffer,
 										  &lstr, &slp, !buf->xtext->ignore_hidden);
 
 	/* Regular-expression matching --- */
@@ -4174,7 +4183,7 @@ gtk_xtext_search_textentry (xtext_buffer *buf, textentry *ent)
 		{
 			return gl;
 		}
-		g_regex_match (buf->search_re, str, 0, &gmi);
+		g_regex_match (buf->search_re, str, GRegexMatchFlags(), &gmi);
 		while (g_match_info_matches (gmi))
 		{
 			g_match_info_fetch_pos (gmi, 0,  &start, &end);
@@ -4254,9 +4263,9 @@ gtk_xtext_search_textentry_del (xtext_buffer *buf, textentry *ent)
 
 /* Used only by glist_foreach */
 static void
-gtk_xtext_search_textentry_fini (gpointer entp, gpointer dummy)
+gtk_xtext_search_textentry_fini (gpointer entp, gpointer)
 {
-	textentry *ent = entp;
+	textentry *ent = static_cast<textentry *>(entp);
 
 	g_list_free (ent->marks);
 	ent->marks = NULL;
@@ -4273,7 +4282,7 @@ gtk_xtext_search_fini (xtext_buffer *buf)
 	buf->search_text = NULL;
 	g_free (buf->search_nee);
 	buf->search_nee = NULL;
-	buf->search_flags = 0;
+	buf->search_flags = gtk_xtext_search_flags();
 	buf->cursearch = NULL;
 	buf->curmark = NULL;
 	/* but leave buf->curdata.u alone! */
@@ -4297,12 +4306,12 @@ gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_fl
 	{
 		return TRUE;
 	}
-	buf->hintsearch = buf->cursearch? buf->cursearch->data: NULL;
+	buf->hintsearch = static_cast<textentry *>(buf->cursearch ? buf->cursearch->data : NULL);
 	gtk_xtext_search_fini (buf);
 	buf->search_text = g_strdup (text);
 	if (flags & regexp)
 	{
-		buf->search_re = g_regex_new (text, (flags & case_match)? 0: G_REGEX_CASELESS, 0, perr);
+		buf->search_re = g_regex_new (text, (flags & case_match)? GRegexCompileFlags() : G_REGEX_CASELESS, GRegexMatchFlags(), perr);
 		if (perr && *perr)
 		{
 			return FALSE;
@@ -4352,7 +4361,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 		if (newfollow && (newfollow != oldfollow))
 		{
 			gl = g_list_last (buf->search_found);
-			ent = gl? gl->data: buf->text_first;
+			ent = static_cast<textentry *>(gl ? gl->data : buf->text_first);
 			for (; ent; ent = ent->next)
 			{
 				GList *gl;
@@ -4397,7 +4406,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 			/* If we're in the midst of moving among found items */
 			if (buf->cursearch)
 			{
-				ent = buf->cursearch->data;
+				ent = static_cast<textentry *>(buf->cursearch->data);
 				buf->curmark = NEXTPREVIOUS (buf->curmark);
 				if (buf->curmark == NULL)
 				{
@@ -4405,7 +4414,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 					buf->cursearch = NEXTPREVIOUS (buf->cursearch);
 					if (buf->cursearch)
 					{
-						ent = buf->cursearch->data;
+						ent = static_cast<textentry *>(buf->cursearch->data);
 						buf->curmark = FIRSTLAST (ent->marks);
 					}
 					else	/* We've returned all the matches for all textentries */
@@ -4419,7 +4428,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 			else if (buf->hintsearch)
 			{
 				GList *mark;
-				offsets_t last, this;
+				offsets_t last, this_line;
 				/*
 				 * If we already have a 'current' item from the last search, and if
 				 * the first character of an occurrence on this line for this new search
@@ -4429,8 +4438,8 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 				last.u = buf->curdata.u;
 				for (mark = ent->marks; mark; mark = mark->next)
 				{
-					this.u = GPOINTER_TO_UINT (mark->data);
-					if (this.o.start >= last.o.start && this.o.start < last.o.end)
+					this_line.u = GPOINTER_TO_UINT(mark->data);
+					if (this_line.o.start >= last.o.start && this_line.o.start < last.o.end)
 					break;
 				}
 				if (mark == NULL)
@@ -4448,7 +4457,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 			else
 			{
 				buf->cursearch = FIRSTLAST (buf->search_found);
-				ent = buf->cursearch->data;
+				ent = static_cast<textentry *>(buf->cursearch->data);
 				buf->curmark = FIRSTLAST (ent->marks);
 			}
 			buf->curdata.u = (buf->curmark)? GPOINTER_TO_UINT (buf->curmark->data): 0;
@@ -4628,10 +4637,10 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	int left_width;
 
 	if (left_len == -1)
-		left_len = strlen (left_text);
+		left_len = std::char_traits<unsigned char>::length(left_text);
 
 	if (right_len == -1)
-		right_len = strlen (right_text);
+		right_len = std::char_traits<unsigned char>::length(right_text);
 
 	if (right_len >= sizeof (buf->xtext->scratch_buffer))
 		right_len = sizeof (buf->xtext->scratch_buffer) - 1;
@@ -4639,7 +4648,7 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	if (right_text[right_len-1] == '\n')
 		right_len--;
 
-	ent = malloc (left_len + right_len + 2 + sizeof (textentry));
+	ent = static_cast<textentry*>(malloc(left_len + right_len + 2 + sizeof(textentry)));
 	str = (unsigned char *) ent + sizeof (textentry);
 
 	memcpy (str, left_text, left_len);
@@ -4686,7 +4695,7 @@ gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len)
 	textentry *ent;
 
 	if (len == -1)
-		len = strlen (text);
+		len = std::char_traits<unsigned char>::length(text);
 
 	if (text[len-1] == '\n')
 		len--;
@@ -4694,7 +4703,7 @@ gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len)
 	if (len >= sizeof (buf->xtext->scratch_buffer))
 		len = sizeof (buf->xtext->scratch_buffer) - 1;
 
-	ent = malloc (len + 1 + sizeof (textentry));
+	ent = static_cast<textentry*>(malloc (len + 1 + sizeof (textentry)));
 	ent->str = (unsigned char *) ent + sizeof (textentry);
 	ent->str_len = len;
 	if (len)
@@ -4820,7 +4829,7 @@ gtk_xtext_set_wordwrap (GtkXText *xtext, gboolean wordwrap)
 void
 gtk_xtext_set_marker_last (session *sess)
 {
-	xtext_buffer *buf = sess->res->buffer;
+	xtext_buffer *buf = static_cast<xtext_buffer *>(sess->res->buffer);
 
 	buf->marker_pos = buf->text_last;
 	buf->marker_state = MARKER_IS_SET;
@@ -4959,7 +4968,7 @@ gtk_xtext_buffer_new (GtkXText *xtext)
 {
 	xtext_buffer *buf;
 
-	buf = calloc (1, sizeof (xtext_buffer));
+	buf = static_cast<xtext_buffer *>(calloc(1, sizeof(xtext_buffer)));
 	if (!buf)
 		return NULL;
 	buf->old_value = -1;
