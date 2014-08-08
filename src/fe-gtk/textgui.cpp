@@ -15,11 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -38,9 +40,9 @@
 #include "palette.h"
 #include "textgui.h"
 
-extern struct text_event te[];
-extern char *pntevts_text[];
-extern char *pntevts[];
+extern "C" struct text_event te[];
+extern "C" char *pntevts_text[];
+extern "C" char *pntevts[];
 
 static GtkWidget *pevent_dialog = NULL, *pevent_dialog_twid,
 	*pevent_dialog_list, *pevent_dialog_hlist;
@@ -53,12 +55,13 @@ enum
 	N_COLUMNS
 };
 
-
+extern "C"  {
 /* this is only used in xtext.c for indented timestamping */
 int
 xtext_get_stamp_str (time_t tim, char **ret)
 {
 	return get_stamp_str (prefs.hex_stamp_text_format, tim, ret);
+}
 }
 
 static void
@@ -79,20 +82,19 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 
 			if (timet == 0)
 				timet = time (0);
-
+			
 			stamp_size = get_stamp_str (prefs.hex_stamp_text_format, timet, &stamp);
-			new_text = malloc (len + stamp_size + 1);
-			memcpy (new_text, stamp, stamp_size);
+			std::vector<unsigned char> new_text(len + stamp_size + 1);
+			std::copy_n(stamp, stamp_size, new_text.begin());
 			g_free (stamp);
-			memcpy (new_text + stamp_size, text, len);
-			gtk_xtext_append (xtbuf, new_text, len + stamp_size);
-			free (new_text);
+			std::copy_n(text, len, new_text.begin() + stamp_size);
+			gtk_xtext_append (xtbuf, new_text.data(), len + stamp_size);
 		} else
 			gtk_xtext_append (xtbuf, text, len);
 		return;
 	}
 
-	tab = strchr (text, '\t');
+	tab = (unsigned char*)strchr ((char*)text, '\t');
 	if (tab && tab < (text + len))
 	{
 		leftlen = tab - text;
@@ -105,9 +107,9 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 void
 PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 {
-	char *last_text = text;
+	unsigned char *last_text = text;
 	int len = 0;
-	int beep_done = FALSE;
+	bool beep_done = false;
 
 	/* split the text into separate lines */
 	while (1)
@@ -115,10 +117,10 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 		switch (*text)
 		{
 		case 0:
-			PrintTextLine (xtbuf, last_text, len, indent, stamp);
+			PrintTextLine (static_cast<xtext_buffer*>(xtbuf), last_text, len, indent, stamp);
 			return;
 		case '\n':
-			PrintTextLine (xtbuf, last_text, len, indent, stamp);
+			PrintTextLine(static_cast<xtext_buffer*>(xtbuf), last_text, len, indent, stamp);
 			text++;
 			if (*text == 0)
 				return;
@@ -129,7 +131,7 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 			*text = ' ';
 			if (!beep_done) /* beeps may be slow, so only do 1 per line */
 			{
-				beep_done = TRUE;
+				beep_done = true;
 				if (!prefs.hex_input_filter_beep)
 					gdk_beep ();
 			}
@@ -174,7 +176,7 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	if (m > (te[sig].num_args & 0x7f))
 	{
 		free (out);
-		out = malloc (4096);
+		out = static_cast<char*>(malloc (4096));
 		snprintf (out, 4096,
 					_("This signal is only passed %d args, $%d is invalid"),
 					te[sig].num_args & 0x7f, m);
@@ -193,17 +195,17 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	if (pntevts[sig])
 		free (pntevts[sig]);
 
-	pntevts_text[sig] = malloc (len + 1);
+	pntevts_text[sig] = static_cast<char*>(malloc (len + 1));
 	memcpy (pntevts_text[sig], text, len + 1);
 	pntevts[sig] = out;
 
-	out = malloc (len + 2);
+	out = static_cast<char*>(malloc (len + 2));
 	memcpy (out, text, len + 1);
 	out[len] = '\n';
 	out[len + 1] = 0;
 	check_special_chars (out, TRUE);
 
-	PrintTextRaw (xtext->buffer, out, 0, 0);
+	PrintTextRaw (xtext->buffer, (unsigned char*)out, 0, 0);
 	free (out);
 
 	/* Scroll to bottom */
@@ -320,22 +322,13 @@ pevent_ok_cb (GtkWidget * wid, void *data)
 static void
 pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 {
-	int len, n;
-	char *out, *text;
-
-	for (n = 0; n < NUM_XP; n++)
+	for (int n = 0; n < NUM_XP; n++)
 	{
-		text = _(pntevts_text[n]);
-		len = strlen (text);
-
-		out = malloc (len + 2);
-		memcpy (out, text, len + 1);
-		out[len] = '\n';
-		out[len + 1] = 0;
-		check_special_chars (out, TRUE);
-
-		PrintTextRaw (GTK_XTEXT (twid)->buffer, out, 0, 0);
-		free (out);
+		std::string out(_(pntevts_text[n]));
+		out.push_back('\n');
+		out.push_back(0);
+		check_special_chars (&out[0], TRUE);
+		PrintTextRaw (GTK_XTEXT (twid)->buffer, (unsigned char*)&out[0], 0, 0);
 	}
 }
 
