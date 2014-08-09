@@ -24,6 +24,7 @@
 #include "../common/cfgfiles.h"
 #include "../common/hexchat.h"
 #include "../common/fe.h"
+#include "pixmaps.h"
 
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
