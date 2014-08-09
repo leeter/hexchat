@@ -37,7 +37,7 @@
 #include "gtkutil.h"
 #include "xtext.h"
 #include "maingui.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "textgui.h"
 using uchar_traits = std::char_traits < unsigned char >;
 extern "C" struct text_event te[];

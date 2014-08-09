@@ -42,7 +42,7 @@
 #include "banlist.h"
 #include "gtkutil.h"
 #include "joind.hpp"
-#include "palette.h"
+#include "palette.hpp"
 #include "maingui.h"
 #include "menu.h"
 #include "fkeys.h"

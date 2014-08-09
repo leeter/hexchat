@@ -42,7 +42,7 @@
 
 #include "../common/cfgfiles.h"
 #include "../common/hexchatc.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "xtext.h"
 
 /*

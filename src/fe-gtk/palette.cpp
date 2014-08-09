@@ -30,7 +30,7 @@
 #endif
 
 #include "fe-gtk.h"
-#include "palette.h"
+#include "palette.hpp"
 
 #include "../common/hexchat.h"
 #include "../common/util.h"

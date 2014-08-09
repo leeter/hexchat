@@ -59,7 +59,7 @@
 #include "notifygui.hpp"
 #include "pixmaps.h"
 #include "rawlog.hpp"
-#include "palette.h"
+#include "palette.hpp"
 #include "plugingui.hpp"
 #include "textgui.h"
 #include "urlgrab.hpp"

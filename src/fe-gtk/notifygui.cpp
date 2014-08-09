@@ -34,7 +34,7 @@
 #include "../common/outbound.h"
 #include "gtkutil.h"
 #include "maingui.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "notifygui.hpp"
 
 namespace{

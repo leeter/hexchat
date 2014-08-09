@@ -47,7 +47,7 @@
 #include "gtkutil.h"
 #include "menu.h"
 #include "xtext.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "maingui.h"
 #include "textgui.h"
 #include "fkeys.h"

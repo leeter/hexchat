@@ -32,7 +32,7 @@
 #include "fe-gtk.h"
 #include "gtkutil.h"
 #include "maingui.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "pixmaps.h"
 #include "menu.h"
 #include "plugin-tray.h"

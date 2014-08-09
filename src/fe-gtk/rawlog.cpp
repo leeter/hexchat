@@ -36,7 +36,7 @@
 #include "../common/cfgfiles.h"
 #include "../common/server.h"
 #include "gtkutil.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "maingui.h"
 #include "rawlog.hpp"
 #include "xtext.h"

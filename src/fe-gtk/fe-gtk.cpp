@@ -47,7 +47,7 @@
 #include "chanlist.h"
 #include "joind.hpp"
 #include "xtext.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "menu.h"
 #include "notifygui.hpp"
 #include "textgui.h"
