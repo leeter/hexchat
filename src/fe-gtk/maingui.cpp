@@ -27,7 +27,7 @@
 #include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/hexchatc.h"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "../common/inbound.h"
 #include "../common/plugin.h"
 #include "../common/modes.h"

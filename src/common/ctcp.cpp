@@ -28,7 +28,7 @@
 #include "cfgfiles.hpp"
 #include "util.h"
 #include "modes.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "ignore.hpp"
 #include "inbound.h"
 #include "dcc.hpp"

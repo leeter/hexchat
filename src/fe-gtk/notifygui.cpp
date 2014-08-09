@@ -31,7 +31,7 @@
 #include "../common/server.h"
 #include "../common/util.h"
 #include "../common/userlist.hpp"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"

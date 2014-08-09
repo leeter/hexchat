@@ -39,7 +39,7 @@
 #include "plugin.h"
 #include "server.h"
 #include "text.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "util.h"
 #include "hexchatc.h"
 #include "url.h"

@@ -31,7 +31,7 @@
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.hpp"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "../common/fe.hpp"
 #include "../common/text.h"
 #include "gtkutil.hpp"

@@ -38,7 +38,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/userlist.hpp"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "../common/util.h"
 #include "../common/text.h"
 #include "../common/plugin.h"

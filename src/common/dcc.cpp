@@ -49,7 +49,7 @@
 #include "hexchat.h"
 #include "util.h"
 #include "fe.hpp"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "inbound.h"
 #include "network.h"
 #include "plugin.h"

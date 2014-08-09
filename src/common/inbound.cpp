@@ -43,7 +43,7 @@
 #include "fe.hpp"
 #include "modes.h"
 #include "notify.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "inbound.h"
 #include "server.h"
 #include "servlist.h"

@@ -48,7 +48,7 @@
 #include "notify.h"
 #include "server.h"
 #include "servlist.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "text.h"
 #include "url.h"
 #include "hexchatc.h"

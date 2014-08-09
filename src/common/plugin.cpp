@@ -34,7 +34,7 @@
 #include "hexchat.h"
 #include "fe.hpp"
 #include "util.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "cfgfiles.hpp"
 #include "ignore.hpp"
 #include "server.h"

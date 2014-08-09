@@ -42,7 +42,7 @@
 #include "fe.hpp"
 #include "server.h"
 #include "util.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "hexchatc.h"
 #include "text.h"
 #include "typedef.h"

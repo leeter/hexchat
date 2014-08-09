@@ -35,9 +35,6 @@
     <ClInclude Include="notify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="outbound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -111,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="proto-irc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="outbound.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -24,7 +24,7 @@
 #include "../common/server.h"
 #include "../common/fe.hpp"
 #include "../common/util.h"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "fe-gtk.h"
 #include "pixmaps.h"
 #include "maingui.hpp"

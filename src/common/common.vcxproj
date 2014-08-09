@@ -29,7 +29,7 @@
     <ClInclude Include="msproxy.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="notify.h" />
-    <ClInclude Include="outbound.h" />
+    <ClInclude Include="outbound.hpp" />
     <ClInclude Include="plugin-timer.hpp" />
     <ClInclude Include="plugin.h" />
     <ClInclude Include="proto-irc.hpp" />

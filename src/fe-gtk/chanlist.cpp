@@ -35,7 +35,7 @@
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.hpp"
-#include "../common/outbound.h"
+#include "../common/outbound.hpp"
 #include "../common/util.h"
 #include "../common/fe.hpp"
 #include "../common/server.h"

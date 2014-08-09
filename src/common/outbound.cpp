@@ -53,7 +53,7 @@
 #include "servlist.h"
 #include "server.h"
 #include "tree.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "chanopt.h"
 #include "dcc.hpp"
 
