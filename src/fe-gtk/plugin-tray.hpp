@@ -17,20 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_PLUGIN_TRAY_H
-#define HEXCHAT_PLUGIN_TRAY_H
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef HEXCHAT_PLUGIN_TRAY_HPP
+#define HEXCHAT_PLUGIN_TRAY_HPP
 
 int tray_plugin_init (void *, char **, char **, char **, char *);
 int tray_plugin_deinit (void *);
-gboolean tray_toggle_visibility (gboolean force_hide);
+bool tray_toggle_visibility (bool force_hide);
 void tray_apply_setup (void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -49,7 +49,7 @@
 #include "userlistgui.hpp"
 #include "chanview.hpp"
 #include "pixmaps.h"
-#include "plugin-tray.h"
+#include "plugin-tray.hpp"
 #include "xtext.h"
 #include "sexy-spell-entry.h"
 
@@ -446,7 +446,7 @@ mg_windowstate_cb (GtkWindow *wid, GdkEventWindowState *event, gpointer userdata
 		 (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED) &&
 		 prefs.hex_gui_tray_minimize && !unity_mode ())
 	{
-		tray_toggle_visibility (TRUE);
+		tray_toggle_visibility (true);
 		gtk_window_deiconify (wid);
 	}
 
@@ -1287,7 +1287,7 @@ mg_open_quit_dialog (gboolean minimize_button)
 			prefs.hex_gui_tray = 1;
 			tray_apply_setup ();
 		}
-		tray_toggle_visibility (TRUE);
+		tray_toggle_visibility (true);
 		break;
 	}
 
@@ -3213,7 +3213,7 @@ mg_tabwindow_de_cb (GtkWidget *widget, GdkEvent *event, gpointer user_data)
 	GSList *list;
 	session *sess;
 
-	if (prefs.hex_gui_tray_close && !unity_mode () && tray_toggle_visibility (FALSE))
+	if (prefs.hex_gui_tray_close && !unity_mode () && tray_toggle_visibility (false))
 		return TRUE;
 
 	/* check for remaining toplevel windows */

@@ -52,7 +52,7 @@
 #include "notifygui.hpp"
 #include "textgui.h"
 #include "fkeys.h"
-#include "plugin-tray.h"
+#include "plugin-tray.hpp"
 #include "urlgrab.hpp"
 #include "setup.h"
 
@@ -389,7 +389,7 @@ fe_idle (gpointer data)
 	if (arg_minimize == 1)
 		gtk_window_iconify (GTK_WINDOW (sess->gui->window));
 	else if (arg_minimize == 2)
-		tray_toggle_visibility (FALSE);
+		tray_toggle_visibility (false);
 
 	return 0;
 }

@@ -35,7 +35,7 @@
 #include "palette.hpp"
 #include "pixmaps.h"
 #include "menu.h"
-#include "plugin-tray.h"
+#include "plugin-tray.hpp"
 #include "gtk_helpers.hpp"
 #include "setup.h"
 

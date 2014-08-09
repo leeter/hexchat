@@ -39,9 +39,6 @@
     <ClInclude Include="pixmaps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin-tray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sexy-iso-codes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gtkutil.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin-tray.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

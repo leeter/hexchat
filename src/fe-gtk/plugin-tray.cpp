@@ -29,7 +29,7 @@
 #include "pixmaps.h"
 #include "maingui.hpp"
 #include "menu.h"
-#include "plugin-tray.h"
+#include "plugin-tray.hpp"
 
 #ifndef WIN32
 #include <unistd.h>
@@ -403,8 +403,8 @@ fe_tray_set_file (const char *filename)
 	}
 }
 
-gboolean
-tray_toggle_visibility (gboolean force_hide)
+bool
+tray_toggle_visibility (bool force_hide)
 {
 	static int x, y;
 	static GdkScreen *screen;
@@ -413,7 +413,7 @@ tray_toggle_visibility (gboolean force_hide)
 	GtkWindow *win;
 
 	if (!sticon)
-		return FALSE;
+		return false;
 
 	/* ph may have an invalid context now */
 	hexchat_set_context (ph, hexchat_find_context (ph, NULL, NULL));
@@ -424,7 +424,7 @@ tray_toggle_visibility (gboolean force_hide)
 	tray_reset_counts ();
 
 	if (!win)
-		return FALSE;
+		return false;
 
 	if (force_hide || gtk_widget_get_visible (GTK_WIDGET (win)))
 	{
@@ -450,13 +450,13 @@ tray_toggle_visibility (gboolean force_hide)
 		gtk_window_present (win);
 	}
 
-	return TRUE;
+	return true;
 }
 
 static void
 tray_menu_restore_cb (GtkWidget *item, gpointer userdata)
 {
-	tray_toggle_visibility (FALSE);
+	tray_toggle_visibility (false);
 }
 
 static void
