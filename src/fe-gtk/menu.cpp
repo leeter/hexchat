@@ -58,7 +58,7 @@
 #include "maingui.h"
 #include "notifygui.hpp"
 #include "pixmaps.h"
-#include "rawlog.h"
+#include "rawlog.hpp"
 #include "palette.h"
 #include "plugingui.hpp"
 #include "textgui.h"

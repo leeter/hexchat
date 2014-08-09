@@ -38,7 +38,7 @@
 #include "gtkutil.h"
 #include "palette.h"
 #include "maingui.h"
-#include "rawlog.h"
+#include "rawlog.hpp"
 #include "xtext.h"
 #include "fkeys.h"
 
