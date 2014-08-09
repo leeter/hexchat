@@ -21,7 +21,7 @@
 
 #include "sexy-iso-codes.h"
 #include <libintl.h>
-#include <string.h>
+#include <cstring>
 #include "../../config.h"
 
 #define ISO_639_DOMAIN	"iso_639"
@@ -38,7 +38,7 @@ const gchar **attribute_values,
 gpointer data,
 GError **error)
 {
-	GHashTable *hash_table = data;
+	GHashTable *hash_table = static_cast<GHashTable *>(data);
 	const gchar *name = NULL;
 	const gchar *code = NULL;
 	int i;
@@ -67,7 +67,7 @@ const gchar **attribute_values,
 gpointer data,
 GError **error)
 {
-	GHashTable *hash_table = data;
+	GHashTable *hash_table = static_cast<GHashTable *>(data);
 	const gchar *name = NULL;
 	const gchar *code = NULL;
 	int i;
@@ -108,7 +108,7 @@ GHashTable *hash_table)
 		const gchar *contents;
 		gsize length;
 
-		context = g_markup_parse_context_new (parser, 0, hash_table, NULL);
+		context = g_markup_parse_context_new (parser, GMarkupParseFlags(), hash_table, NULL);
 		contents = g_mapped_file_get_contents (mapped_file);
 		length = g_mapped_file_get_length (mapped_file);
 		g_markup_parse_context_parse (context, contents, length, &error);
@@ -202,22 +202,22 @@ codetable_lookup (const gchar *language_code, const gchar **language_name, const
 
 	g_return_if_fail (*parts != NULL);
 
-	*language_name = g_hash_table_lookup (iso_639_table, parts[0]);
+	*language_name = static_cast<const gchar*>(g_hash_table_lookup (iso_639_table, parts[0]));
 	if (*language_name == NULL)
 	{
 		g_hash_table_insert (iso_639_table, g_strdup (parts[0]),
 			g_strdup (parts[0]));
-		*language_name = g_hash_table_lookup (iso_639_table, parts[0]);
+		*language_name = static_cast<const gchar*>(g_hash_table_lookup(iso_639_table, parts[0]));
 	}
 
 	if (g_strv_length (parts) == 2)
 	{
-		*country_name = g_hash_table_lookup (iso_3166_table, parts[1]);
+		*country_name = static_cast<const gchar*>(g_hash_table_lookup(iso_3166_table, parts[1]));
 		if (*country_name == NULL)
 		{
 			g_hash_table_insert (iso_3166_table, g_strdup (parts[1]),
 				g_strdup (parts[1]));
-			*country_name = g_hash_table_lookup (iso_3166_table, parts[1]);
+			*country_name = static_cast<const gchar*>(g_hash_table_lookup(iso_3166_table, parts[1]));
 		}
 	}
 
