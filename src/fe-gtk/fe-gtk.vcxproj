@@ -148,7 +148,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClCompile Include="fkeys.cpp" />
     <ClCompile Include="gtkutil.c" />
     <ClCompile Include="ignoregui.cpp" />
-    <ClCompile Include="joind.c" />
+    <ClCompile Include="joind.cpp" />
     <ClCompile Include="maingui.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="notifygui.cpp" />
