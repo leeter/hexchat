@@ -40,7 +40,7 @@
 #include "hexchat.h"
 #include "util.h"
 #include "ignore.hpp"
-#include "fe.h"
+#include "fe.hpp"
 #include "modes.h"
 #include "notify.h"
 #include "outbound.h"

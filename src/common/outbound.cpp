@@ -42,7 +42,7 @@
 #include "plugin.h"
 #include "ignore.hpp"
 #include "util.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.h"				/* net_ip() */
 #include "modes.h"

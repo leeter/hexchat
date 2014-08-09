@@ -24,7 +24,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/cfgfiles.hpp"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/text.h"
 #include "../common/userlist.h"
 #include "../common/util.h"
@@ -40,7 +40,7 @@
 #include "setup.h"
 
 #ifdef WIN32
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #endif
 #include "sexy-spell-entry.h"
 

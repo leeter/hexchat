@@ -17,9 +17,6 @@
     <ClInclude Include="ctcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fe.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="history.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -27,9 +24,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="modes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="msproxy.h">
@@ -111,6 +105,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cfgfiles.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fe.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

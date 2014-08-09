@@ -18,7 +18,7 @@
     <ClInclude Include="chanopt.h" />
     <ClInclude Include="ctcp.h" />
     <ClInclude Include="dcc.hpp" />
-    <ClInclude Include="fe.h" />
+    <ClInclude Include="fe.hpp" />
     <ClInclude Include="history.h" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />

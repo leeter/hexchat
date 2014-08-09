@@ -27,7 +27,7 @@
 #include "../common/hexchat.h"
 #include "../common/ignore.hpp"
 #include "../common/cfgfiles.hpp"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 

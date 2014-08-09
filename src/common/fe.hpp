@@ -19,12 +19,8 @@
 
 #include "userlist.h"
 
-#ifndef HEXCHAT_FE_H
-#define HEXCHAT_FE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_FE_HPP
+#define HEXCHAT_FE_HPP
 
 /* for storage of /menu entries */
 typedef struct
@@ -181,8 +177,5 @@ void fe_tray_set_tooltip (const char *text);
 void fe_tray_set_balloon (const char *title, const char *text);
 void fe_open_chan_list (server *serv, char *filter, int do_refresh);
 const char *fe_get_default_font ();
-#ifdef __cplusplus
-}
-#endif
 
 #endif

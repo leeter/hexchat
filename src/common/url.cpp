@@ -23,7 +23,7 @@
 #include "hexchat.h"
 #include "hexchatc.h"
 #include "cfgfiles.hpp"
-#include "fe.h"
+#include "fe.hpp"
 #include "tree.h"
 #include "url.h"
 #ifdef HAVE_STRINGS_H

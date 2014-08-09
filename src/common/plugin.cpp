@@ -32,7 +32,7 @@
 #endif
 
 #include "hexchat.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "util.h"
 #include "outbound.h"
 #include "cfgfiles.hpp"
@@ -963,7 +963,7 @@ hexchat_hook_fd (hexchat_plugin *ph, int fd, int flags,
 	if (!hook)
 		return NULL;
 	hook->pri = fd;
-	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.h) */
+	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.hpp) */
 	hook->tag = fe_input_add (fd, flags, plugin_fd_cb, hook);
 
 	return hook;

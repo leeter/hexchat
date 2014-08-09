@@ -36,7 +36,7 @@
 #include "hexchat.h"
 #include "notify.h"
 #include "cfgfiles.hpp"
-#include "fe.h"
+#include "fe.hpp"
 #include "server.h"
 #include "text.h"
 #include "util.h"

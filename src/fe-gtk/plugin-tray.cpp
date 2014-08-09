@@ -22,7 +22,7 @@
 #include "../common/hexchatc.h"
 #include "../common/inbound.h"
 #include "../common/server.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/util.h"
 #include "../common/outbound.h"
 #include "fe-gtk.h"

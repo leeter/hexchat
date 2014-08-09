@@ -37,7 +37,7 @@
 #include <unistd.h>
 #endif
 #include "hexchat.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "util.h"
 #include "cfgfiles.hpp"
 #include "chanopt.h"

@@ -50,7 +50,7 @@ extern "C"{
 #include <unistd.h>
 #endif
 #include "hexchat.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "cfgfiles.hpp"
 #include "network.h"
 #include "notify.h"

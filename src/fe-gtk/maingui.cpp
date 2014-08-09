@@ -24,7 +24,7 @@
 #include <gdk/gdkkeysyms.h>
 
 #include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/hexchatc.h"
 #include "../common/outbound.h"

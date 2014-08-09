@@ -31,7 +31,7 @@
 #include "../common/text.h"
 #include "../common/notify.h"
 #include "../common/hexchatc.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"

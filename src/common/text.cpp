@@ -39,7 +39,7 @@
 #include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "plugin.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "server.h"
 #include "util.h"
 #include "outbound.h"

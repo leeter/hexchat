@@ -31,7 +31,7 @@
 #include "../common/dcc.hpp"
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/util.h"
 #include "../common/network.h"
 #include "gtkutil.hpp"

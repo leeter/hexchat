@@ -27,7 +27,7 @@
 #include "../common/hexchat.h"
 #include "../common/notify.h"
 #include "../common/cfgfiles.hpp"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/util.h"
 #include "../common/userlist.h"

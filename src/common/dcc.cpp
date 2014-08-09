@@ -48,7 +48,7 @@
 #include "dcc.hpp"
 #include "hexchat.h"
 #include "util.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "outbound.h"
 #include "inbound.h"
 #include "network.h"

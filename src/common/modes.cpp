@@ -25,7 +25,7 @@
 #include "modes.h"
 #include "server.h"
 #include "text.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "util.h"
 #include "inbound.h"
 #ifdef HAVE_STRINGS_H

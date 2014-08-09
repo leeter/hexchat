@@ -31,7 +31,7 @@
 #include "fe-gtk.h"
 
 #include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/modes.h"
 #include "../common/outbound.h"
 #include "../common/hexchatc.h"

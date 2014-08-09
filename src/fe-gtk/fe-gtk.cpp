@@ -32,7 +32,7 @@
 #endif
 
 #include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/util.h"
 #include "../common/text.h"
 #include "../common/cfgfiles.hpp"

@@ -42,7 +42,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/outbound.h"
 #include "../common/ignore.hpp"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/notify.h"

@@ -40,7 +40,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/outbound.h"
 #include "../common/util.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/dcc.hpp"
 #include "fe-text.h"
 

@@ -23,7 +23,7 @@
 #include "fe-gtk.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "pixmaps.h"
 
 #include <gio/gio.h>

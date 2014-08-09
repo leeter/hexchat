@@ -32,7 +32,7 @@
 #include "hexchat.h"
 #include "ignore.hpp"
 #include "cfgfiles.hpp"
-#include "fe.h"
+#include "fe.hpp"
 #include "text.h"
 #include "util.h"
 #include "hexchatc.h"
