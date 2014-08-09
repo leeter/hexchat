@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="banlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="chanlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fe-gtk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="banlist.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

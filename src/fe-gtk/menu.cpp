@@ -50,7 +50,7 @@
 #include "../common/text.h"
 #include "xtext.h"
 #include "ascii.hpp"
-#include "banlist.h"
+#include "banlist.hpp"
 #include "chanlist.h"
 #include "editlist.h"
 #include "fkeys.h"

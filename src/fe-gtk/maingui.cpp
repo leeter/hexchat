@@ -39,7 +39,7 @@
 #include "../common/dcc.hpp"
 
 #include "fe-gtk.hpp"
-#include "banlist.h"
+#include "banlist.hpp"
 #include "gtkutil.hpp"
 #include "joind.hpp"
 #include "palette.hpp"

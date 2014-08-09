@@ -109,7 +109,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ascii.hpp" />
-    <ClInclude Include="banlist.h" />
+    <ClInclude Include="banlist.hpp" />
     <ClInclude Include="chanlist.h" />
     <ClInclude Include="chanview.hpp" />
     <ClInclude Include="custom-list.h" />

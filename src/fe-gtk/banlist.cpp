@@ -37,7 +37,7 @@
 #include "../common/hexchatc.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "banlist.h"
+#include "banlist.hpp"
 
 namespace {
 struct mode_info {

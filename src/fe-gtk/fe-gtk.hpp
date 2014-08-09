@@ -35,7 +35,7 @@
 #include <gtkosxapplication.h>
 #endif
 
-#include "banlist.h"
+#include "banlist.hpp"
 
 #define flag_c flag_wid[0]
 #define flag_n flag_wid[1]
