@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <string>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -109,41 +110,36 @@ palette_load (void)
 	int i, j, l, fh;
 	char prefname[256];
 	struct stat st;
-	char *cfg;
+	//char *cfg;
 	int red, green, blue;
 
 	fh = hexchat_open_file ("colors.conf", O_RDONLY, 0, 0);
 	if (fh != -1)
 	{
 		fstat (fh, &st);
-		cfg = malloc (st.st_size + 1);
-		if (cfg)
+		std::string cfg(st.st_size + 1, '\0');
+		l = read (fh, &cfg[0], st.st_size);
+		if (l >= 0)
+			cfg[l] = '\0';
+
+		/* mIRC colors 0-31 are here */
+		for (i = 0; i < 32; i++)
 		{
-			cfg[0] = '\0';
-			l = read (fh, cfg, st.st_size);
-			if (l >= 0)
-				cfg[l] = '\0';
+			snprintf (prefname, sizeof prefname, "color_%d", i);
+			cfg_get_color (&cfg[0], prefname, &red, &green, &blue);
+			colors[i].red = red;
+			colors[i].green = green;
+			colors[i].blue = blue;
+		}
 
-			/* mIRC colors 0-31 are here */
-			for (i = 0; i < 32; i++)
-			{
-				snprintf (prefname, sizeof prefname, "color_%d", i);
-				cfg_get_color (cfg, prefname, &red, &green, &blue);
-				colors[i].red = red;
-				colors[i].green = green;
-				colors[i].blue = blue;
-			}
-
-			/* our special colors are mapped at 256+ */
-			for (i = 256, j = 32; j < MAX_COL+1; i++, j++)
-			{
-				snprintf (prefname, sizeof prefname, "color_%d", i);
-				cfg_get_color (cfg, prefname, &red, &green, &blue);
-				colors[j].red = red;
-				colors[j].green = green;
-				colors[j].blue = blue;
-			}
-			free (cfg);
+		/* our special colors are mapped at 256+ */
+		for (i = 256, j = 32; j < MAX_COL+1; i++, j++)
+		{
+			snprintf (prefname, sizeof prefname, "color_%d", i);
+			cfg_get_color(&cfg[0], prefname, &red, &green, &blue);
+			colors[j].red = red;
+			colors[j].green = green;
+			colors[j].blue = blue;
 		}
 		close (fh);
 	}
