@@ -101,9 +101,6 @@
     <ClCompile Include="custom-list.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sexy-iso-codes.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="resources.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gtkutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sexy-iso-codes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
