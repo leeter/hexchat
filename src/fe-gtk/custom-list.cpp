@@ -17,8 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
+#include <vector>
 #include "custom-list.h"
 
 /* indent -i3 -ci3 -ut -ts3 -bli0 -c0 custom-list.c */
@@ -691,7 +692,7 @@ custom_list_append (CustomList * custom_list, chanlistrow * newrecord)
 	{
 		custom_list->num_alloc += 64;
 		newsize = custom_list->num_alloc * sizeof (chanlistrow *);
-		custom_list->rows = g_realloc (custom_list->rows, newsize);
+		custom_list->rows = static_cast<chanlistrow **>(g_realloc(custom_list->rows, newsize));
 	}
 
 	/* TODO: Binary search insert? */
@@ -717,7 +718,7 @@ void
 custom_list_resort (CustomList * custom_list)
 {
 	GtkTreePath *path;
-	gint *neworder, i;
+	gint i;
 
 	if (custom_list->num_rows < 2)
 		return;
@@ -730,7 +731,7 @@ custom_list_resort (CustomList * custom_list)
 							 custom_list);
 
 	/* let other objects know about the new order */
-	neworder = malloc (sizeof (gint) * custom_list->num_rows);
+	std::vector<gint> neworder(custom_list->num_rows);
 
 	for (i = custom_list->num_rows - 1; i >= 0; i--)
 	{
@@ -745,9 +746,8 @@ custom_list_resort (CustomList * custom_list)
 
 	path = gtk_tree_path_new ();
 	gtk_tree_model_rows_reordered (GTK_TREE_MODEL (custom_list), path, NULL,
-											 neworder);
+											 &neworder[0]);
 	gtk_tree_path_free (path);
-	free (neworder);
 }
 
 void
