@@ -47,7 +47,7 @@
 #include "network.h"				/* net_ip() */
 #include "modes.h"
 #include "notify.h"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "text.h"
 #include "hexchatc.h"
 #include "servlist.h"

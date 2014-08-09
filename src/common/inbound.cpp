@@ -44,7 +44,7 @@
 #include "modes.h"
 #include "notify.h"
 #include "outbound.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "server.h"
 #include "servlist.h"
 #include "text.h"

@@ -27,7 +27,7 @@
 #include "text.h"
 #include "fe.hpp"
 #include "util.h"
-#include "inbound.h"
+#include "inbound.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif

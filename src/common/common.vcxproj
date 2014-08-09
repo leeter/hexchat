@@ -22,7 +22,7 @@
     <ClInclude Include="history.h" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />
-    <ClInclude Include="inbound.h" />
+    <ClInclude Include="inbound.hpp" />
     <ClInclude Include="inet.h" />
     <ClInclude Include="marshal.h" />
     <ClInclude Include="modes.h" />

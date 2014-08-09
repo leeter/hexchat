@@ -55,7 +55,7 @@ extern "C"{
 #include "network.h"
 #include "notify.h"
 #include "hexchatc.h"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "outbound.hpp"
 #include "text.h"
 #include "util.h"

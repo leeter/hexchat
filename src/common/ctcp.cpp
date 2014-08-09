@@ -30,7 +30,7 @@
 #include "modes.h"
 #include "outbound.hpp"
 #include "ignore.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "dcc.hpp"
 #include "text.h"
 #include "ctcp.h"

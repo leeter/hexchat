@@ -50,7 +50,7 @@
 #include "util.h"
 #include "fe.hpp"
 #include "outbound.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "network.h"
 #include "plugin.h"
 #include "server.h"

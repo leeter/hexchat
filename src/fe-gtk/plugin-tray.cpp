@@ -20,7 +20,7 @@
 #include "../common/hexchat-plugin.h"
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
-#include "../common/inbound.h"
+#include "../common/inbound.hpp"
 #include "../common/server.h"
 #include "../common/fe.hpp"
 #include "../common/util.h"

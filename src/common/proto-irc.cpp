@@ -33,7 +33,7 @@
 #include "ctcp.h"
 #include "fe.hpp"
 #include "ignore.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "modes.h"
 #include "notify.h"
 #include "plugin.h"
