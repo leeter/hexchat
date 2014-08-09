@@ -60,7 +60,7 @@ extern "C"{
 #include "text.h"
 #include "util.h"
 #include "url.h"
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 #include "servlist.h"
 #include "server.h"
 #include "dcc.hpp"

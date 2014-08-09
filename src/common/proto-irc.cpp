@@ -29,7 +29,7 @@
 #endif
 
 #include "hexchat.h"
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 #include "ctcp.h"
 #include "fe.hpp"
 #include "ignore.hpp"

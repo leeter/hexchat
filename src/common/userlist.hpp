@@ -18,7 +18,7 @@
  */
 
 #include <ctime>
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 
 #ifndef HEXCHAT_USERLIST_HPP
 #define HEXCHAT_USERLIST_HPP

@@ -19,14 +19,11 @@
 
 
 
-#ifndef HEXCHAT_PROTO_H
-#define HEXCHAT_PROTO_H
+#ifndef HEXCHAT_PROTO_HPP
+#define HEXCHAT_PROTO_HPP
 
-#include <time.h>
+#include <ctime>
 #include "hexchat.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 #define MESSAGE_TAGS_DATA_INIT			\
 	{									\
@@ -43,9 +40,5 @@ typedef struct
 } message_tags_data;
 
 void proto_fill_her_up (server *serv);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

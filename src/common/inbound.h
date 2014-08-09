@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 
 #ifndef HEXCHAT_INBOUND_H
 #define HEXCHAT_INBOUND_H
