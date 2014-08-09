@@ -29,7 +29,7 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "palette.hpp"
 
 #include "../common/hexchat.h"

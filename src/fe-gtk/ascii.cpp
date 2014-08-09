@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"

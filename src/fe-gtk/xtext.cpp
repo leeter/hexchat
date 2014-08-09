@@ -39,7 +39,7 @@
 #include "../common/hexchatc.h"
 #include "../common/url.h"
 #include "../common/marshal.h"
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "xtext.h"
 #include "fkeys.h"
 #include "gtk_helpers.hpp"

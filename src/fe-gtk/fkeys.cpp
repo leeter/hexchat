@@ -31,7 +31,7 @@
 #endif
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"

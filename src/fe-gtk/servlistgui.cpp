@@ -30,7 +30,7 @@
 #include "../common/fe.hpp"
 #include "../common/util.h"
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "menu.hpp"
 #include "pixmaps.h"

@@ -27,7 +27,7 @@
 #define WANTSOCKET
 #define WANTARPA
 #include "../common/inet.h"
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "../common/dcc.hpp"
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"

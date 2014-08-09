@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchat.h"
 #include "../common/fe.hpp"

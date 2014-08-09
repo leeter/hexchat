@@ -36,7 +36,7 @@
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/fe.hpp"
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "chanlist.h"
 
 

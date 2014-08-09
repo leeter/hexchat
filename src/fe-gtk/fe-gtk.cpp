@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <memory>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 
 #ifdef WIN32

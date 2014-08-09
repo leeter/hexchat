@@ -38,7 +38,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "banlist.h"
 #include "gtkutil.hpp"
 #include "joind.hpp"

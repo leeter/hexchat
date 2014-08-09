@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include "../common/hexchat.h"
 #define PLUGIN_C

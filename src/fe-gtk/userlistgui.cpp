@@ -20,7 +20,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 

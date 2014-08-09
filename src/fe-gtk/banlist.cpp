@@ -28,7 +28,7 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include "../common/hexchat.h"
 #include "../common/fe.hpp"
