@@ -506,7 +506,7 @@ get_cpu_arch (void)
 }
 
 char *
-get_sys_str (int with_cpu)
+get_sys_str (bool with_cpu)
 {
 	static char verbuf[64];
 	static char winver[20];
@@ -612,7 +612,7 @@ get_sys_str (int with_cpu)
 #else
 
 char *
-get_sys_str (int with_cpu)
+get_sys_str (bool with_cpu)
 {
 #if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__)
 	double mhz;

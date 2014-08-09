@@ -4243,7 +4243,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 				case 'h':
 					utf = h; break;
 				case 'm':
-					utf = get_sys_str (1); break;
+					utf = get_sys_str (true); break;
 				case 'n':
 					utf = n; break;
 				case 's':

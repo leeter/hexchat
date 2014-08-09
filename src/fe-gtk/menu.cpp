@@ -1709,7 +1709,7 @@ menu_about (GtkWidget *wid, gpointer sess)
 				(portable_mode () ? "Yes" : "No"),
 				get_cpu_arch (),
 #endif
-				get_sys_str (0));
+				get_sys_str (false));
 
 	gtk_about_dialog_set_program_name (dialog, DISPLAY_NAME);
 	gtk_about_dialog_set_version (dialog, PACKAGE_VERSION);

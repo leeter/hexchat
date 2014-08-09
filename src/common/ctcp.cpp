@@ -143,10 +143,10 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 	{
 #ifdef WIN32
 		snprintf (outbuf, sizeof (outbuf), "VERSION HexChat "PACKAGE_VERSION" [x%d] / %s",
-					 get_cpu_arch (), get_sys_str (1));
+					 get_cpu_arch (), get_sys_str (true));
 #else
 		snprintf (outbuf, sizeof (outbuf), "VERSION HexChat "PACKAGE_VERSION" / %s",
-					 get_sys_str (1));
+					 get_sys_str (true));
 #endif
 		serv->p_nctcp (serv, nick, outbuf);
 	}
