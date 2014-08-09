@@ -115,9 +115,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="msproxy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="marshal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -191,6 +188,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
