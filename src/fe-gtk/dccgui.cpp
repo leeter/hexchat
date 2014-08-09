@@ -34,7 +34,7 @@
 #include "../common/fe.h"
 #include "../common/util.h"
 #include "../common/network.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 

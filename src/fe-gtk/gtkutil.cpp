@@ -37,7 +37,7 @@
 #include "../common/cfgfiles.h"
 #include "../common/hexchatc.h"
 #include "../common/typedef.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "pixmaps.h"
 
 #ifdef WIN32

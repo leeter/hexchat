@@ -30,7 +30,7 @@
 #include "../common/util.h"
 #include "../common/hexchatc.h"
 #include "fe-gtk.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "pixmaps.h"

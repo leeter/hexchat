@@ -22,9 +22,7 @@
 
 #include <gtk/gtk.h>
 #include "../common/fe.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
+
 typedef void (*filereqcallback) (void *, char *file);
 
 void gtkutil_file_req (const char *title, void *callback, void *userdata, char *filter, char *extensions, int flags);
@@ -58,7 +56,4 @@ gboolean gtkutil_treeview_get_selected (GtkTreeView *view, GtkTreeIter *iter_ret
 gboolean gtkutil_find_font (const char *fontname);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 #endif

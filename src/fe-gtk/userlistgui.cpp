@@ -32,7 +32,7 @@
 #include "../common/notify.h"
 #include "../common/hexchatc.h"
 #include "../common/fe.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "menu.h"

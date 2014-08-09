@@ -39,7 +39,7 @@
 #include "../common/util.h"
 #include "../common/fe.h"
 #include "../common/server.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "menu.h"
 #include "chanlist.h"

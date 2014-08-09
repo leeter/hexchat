@@ -40,7 +40,7 @@
 
 #include "fe-gtk.h"
 #include "banlist.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "joind.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"

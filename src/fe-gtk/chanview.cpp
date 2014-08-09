@@ -26,7 +26,7 @@
 #include "../common/hexchatc.h"
 #include "fe-gtk.h"
 #include "maingui.hpp"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "chanview.hpp"
 
 /* treeStore columns */

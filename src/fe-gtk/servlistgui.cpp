@@ -31,7 +31,7 @@
 #include "../common/util.h"
 
 #include "fe-gtk.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "menu.h"
 #include "pixmaps.h"
 #include "fkeys.h"

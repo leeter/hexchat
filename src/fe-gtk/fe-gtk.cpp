@@ -41,7 +41,7 @@
 #include "../common/server.h"
 #include "../common/url.h"
 #include "../common/dcc.hpp"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "pixmaps.h"
 #include "chanlist.h"

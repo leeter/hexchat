@@ -54,7 +54,7 @@
 #include "chanlist.h"
 #include "editlist.h"
 #include "fkeys.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "notifygui.hpp"
 #include "pixmaps.h"

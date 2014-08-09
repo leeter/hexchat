@@ -28,7 +28,7 @@
 #include "../common/ignore.hpp"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 
 enum

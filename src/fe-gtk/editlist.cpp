@@ -38,7 +38,7 @@
 #include "../common/hexchatc.h"
 #include "../common/fe.h"
 #include "menu.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "editlist.h"
 

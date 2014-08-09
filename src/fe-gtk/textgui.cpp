@@ -34,7 +34,7 @@
 #include "../common/outbound.h"
 #include "../common/fe.h"
 #include "../common/text.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "xtext.h"
 #include "maingui.hpp"
 #include "palette.hpp"

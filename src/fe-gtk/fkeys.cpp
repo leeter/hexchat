@@ -44,7 +44,7 @@
 #include "../common/plugin.h"
 #include "../common/typedef.h"
 #include <gdk/gdkkeysyms.h>
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "menu.h"
 #include "xtext.h"
 #include "palette.hpp"

@@ -35,7 +35,7 @@
 #include "../common/modes.h"
 #include "../common/outbound.h"
 #include "../common/hexchatc.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "banlist.h"
 

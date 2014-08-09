@@ -24,7 +24,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "ascii.hpp"
 #include "maingui.hpp"
 namespace{

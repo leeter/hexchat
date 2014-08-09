@@ -28,7 +28,7 @@
 #include "../common/fe.h"
 #include "../common/url.h"
 #include "../common/tree.h"
-#include "gtkutil.h"
+#include "gtkutil.hpp"
 #include "menu.h"
 #include "maingui.hpp"
 #include "urlgrab.hpp"
