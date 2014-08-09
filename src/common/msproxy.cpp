@@ -23,9 +23,9 @@
 
 /*#define DEBUG_MSPROXY*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <fcntl.h>
 
 #ifndef WIN32
