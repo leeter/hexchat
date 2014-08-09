@@ -104,9 +104,6 @@
     <ClCompile Include="gtkutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="palette.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pixmaps.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="joind.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="palette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
