@@ -24,9 +24,9 @@
 
 #include <gtk/gtk.h>
 #include "sexy-spell-entry.h"
-#include <string.h>
+#include <cstring>
 #include <fcntl.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <glib/gi18n.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -73,7 +73,7 @@ static void (*enchant_dict_describe) (struct EnchantDict * dict, EnchantDictDesc
 static void (*enchant_dict_free_suggestions) (struct EnchantDict * dict, char **suggestions);
 static void (*enchant_dict_store_replacement) (struct EnchantDict * dict, const char *const mis, ssize_t mis_len, const char *const cor, ssize_t cor_len);
 static char ** (*enchant_dict_suggest) (struct EnchantDict * dict, const char *const word, ssize_t len, size_t * out_n_suggs);
-static gboolean have_enchant = FALSE;
+static bool have_enchant = false;
 
 struct _SexySpellEntryPriv
 {
@@ -147,14 +147,20 @@ spell_accumulator(GSignalInvocationHint *hint, GValue *return_accu, const GValue
 	return ret;
 }
 
+template<class T>
+static T module_symbol(GModule* enchant, const gchar* name)
+{
+	gpointer funcptr = nullptr;
+	g_module_symbol(enchant, name, &funcptr);
+	return static_cast<T>(funcptr);
+}
+
 static void
 initialize_enchant ()
 {
 	GModule *enchant;
-	gpointer funcptr;
 
-
-	enchant = g_module_open("libenchant."G_MODULE_SUFFIX, 0);
+	enchant = g_module_open("libenchant."G_MODULE_SUFFIX, GModuleFlags());
 	if (enchant == NULL)
 	{
 #ifndef WIN32
@@ -172,11 +178,10 @@ initialize_enchant ()
 #endif
 	}
 
-	have_enchant = TRUE;
+	have_enchant = true;
 
 #define MODULE_SYMBOL(name, func) \
-	g_module_symbol(enchant, (name), &funcptr); \
-	(func) = funcptr;
+	func = module_symbol<decltype(func)>(enchant, (name)); \
 
 	MODULE_SYMBOL("enchant_broker_init", enchant_broker_init)
 	MODULE_SYMBOL("enchant_broker_free", enchant_broker_free)
@@ -206,7 +211,7 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 
 	initialize_enchant();
 
-	parent_class = g_type_class_peek_parent(klass);
+	parent_class = static_cast<GtkEntryClass*>(g_type_class_peek_parent(klass));
 
 	gobject_class = G_OBJECT_CLASS(klass);
 	object_class  = G_OBJECT_CLASS(klass);
@@ -267,7 +272,7 @@ gtk_entry_find_position (GtkEntry *entry, gint x)
 	text = pango_layout_get_text(layout);
 	cursor_index = g_utf8_offset_to_pointer(text, entry->current_pos) - text;
 
-	line = pango_layout_get_lines(layout)->data;
+	line = static_cast<PangoLayoutLine *>(pango_layout_get_lines(layout)->data);
 	pango_layout_line_x_to_index(line, x * PANGO_SCALE, &index, &trailing);
 
 	if (index >= cursor_index && entry->preedit_length) {
@@ -1181,7 +1186,7 @@ enchant_has_lang(const gchar *lang, GSList *langs) {
 	GSList *i;
 	for (i = langs; i; i = g_slist_next(i))
 	{
-		if (strcmp(lang, i->data) == 0)
+		if (strcmp(lang, static_cast<const char*>(i->data)) == 0)
 		{
 			return TRUE;
 		}
@@ -1440,7 +1445,7 @@ sexy_spell_entry_deactivate_language(SexySpellEntry *entry, const gchar *lang)
 	if (lang) {
 		struct EnchantDict *dict;
 
-		dict = g_hash_table_lookup(entry->priv->dict_hash, lang);
+		dict = static_cast<EnchantDict*>(g_hash_table_lookup(entry->priv->dict_hash, lang));
 		if (!dict)
 			return;
 		enchant_broker_free_dict(entry->priv->broker, dict);
