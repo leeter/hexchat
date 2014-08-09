@@ -32,7 +32,7 @@ void gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad);
 void gtkutil_destroy_on_esc (GtkWidget *win);
 GtkWidget *gtkutil_button (GtkWidget *box, char *stock, char *tip, void *callback,
 				 void *userdata, char *labeltext);
-void gtkutil_label_new (char *text, GtkWidget * box);
+void gtkutil_label_new (const char *text, GtkWidget * box);
 GtkWidget *gtkutil_entry_new (int max, GtkWidget * box, void *callback,
 										gpointer userdata);
 GtkWidget *gtkutil_clist_new (int columns, char *titles[], GtkWidget * box,

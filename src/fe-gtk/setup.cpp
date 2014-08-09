@@ -31,7 +31,7 @@
 #include "../common/hexchatc.h"
 #include "fe-gtk.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "palette.hpp"
 #include "pixmaps.h"
 #include "menu.h"

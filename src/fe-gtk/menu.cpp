@@ -55,7 +55,7 @@
 #include "editlist.h"
 #include "fkeys.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "notifygui.hpp"
 #include "pixmaps.h"
 #include "rawlog.hpp"

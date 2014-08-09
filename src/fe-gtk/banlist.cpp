@@ -36,7 +36,7 @@
 #include "../common/outbound.h"
 #include "../common/hexchatc.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "banlist.h"
 
 namespace {

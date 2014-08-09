@@ -33,7 +33,7 @@ typedef struct session hexchat_context;
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 
 /* model for the plugin treeview */
 enum

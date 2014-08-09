@@ -48,7 +48,7 @@
 #include "menu.h"
 #include "xtext.h"
 #include "palette.hpp"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "textgui.h"
 #include "fkeys.h"
 

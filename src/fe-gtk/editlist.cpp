@@ -39,7 +39,7 @@
 #include "../common/fe.h"
 #include "menu.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "editlist.h"
 
 enum

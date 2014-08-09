@@ -17,12 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_MAINGUI_H
-#define HEXCHAT_MAINGUI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_MAINGUI_HPP
+#define HEXCHAT_MAINGUI_HPP
 
 extern GtkStyle *input_style;
 extern GtkWidget *parent_window;
@@ -61,9 +57,5 @@ gboolean mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, i
 void mg_search_toggle(session *sess);
 void mg_search_handle_previous(GtkWidget *wid, session *sess);
 void mg_search_handle_next(GtkWidget *wid, session *sess);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

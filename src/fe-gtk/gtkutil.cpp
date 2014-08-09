@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #define _FILE_OFFSET_BITS 64 /* allow selection of large files */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -62,7 +62,7 @@ static void
 gtkutil_file_req_destroy (GtkWidget * wid, struct file_req *freq)
 {
 	freq->callback (freq->userdata, NULL);
-	free (freq);
+	delete freq;
 }
 
 static void
@@ -122,7 +122,7 @@ gtkutil_file_req_done (GtkWidget * wid, struct file_req *freq)
 		files = cur = gtk_file_chooser_get_filenames (fs);
 		while (cur)
 		{
-			gtkutil_check_file (cur->data, freq);
+			gtkutil_check_file (static_cast<char*>(cur->data), freq);
 			g_free (cur->data);
 			cur = cur->next;
 		}
@@ -225,11 +225,7 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 
 	gtk_file_chooser_add_shortcut_folder (GTK_FILE_CHOOSER (dialog), get_xdir (), NULL);
 
-	freq = malloc (sizeof (struct file_req));
-	freq->dialog = dialog;
-	freq->flags = flags;
-	freq->callback = callback;
-	freq->userdata = userdata;
+	freq = new file_req{ dialog, userdata, static_cast<filereqcallback>(callback), flags };
 
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (gtkutil_file_req_response), freq);
@@ -280,7 +276,7 @@ gtkutil_get_str_response (GtkDialog *dialog, gint arg1, gpointer entry)
 	void *user_data;
 
 	text = (char *) gtk_entry_get_text (GTK_ENTRY (entry));
-	callback = g_object_get_data (G_OBJECT (dialog), "cb");
+	callback = static_cast<void(*)(int, char *, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -311,7 +307,7 @@ fe_get_str (char *msg, char *def, void *callback, void *userdata)
 	GtkWidget *label;
 	extern GtkWidget *parent_window;
 
-	dialog = gtk_dialog_new_with_buttons (msg, NULL, 0,
+	dialog = gtk_dialog_new_with_buttons (msg, NULL, GtkDialogFlags(),
 										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 										NULL);
@@ -358,7 +354,7 @@ gtkutil_get_number_response (GtkDialog *dialog, gint arg1, gpointer spin)
 	void *user_data;
 
 	num = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (spin));
-	callback = g_object_get_data (G_OBJECT (dialog), "cb");
+	callback = static_cast<void(*)(int, int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -380,7 +376,7 @@ gtkutil_get_bool_response (GtkDialog *dialog, gint arg1, gpointer spin)
 	void (*callback) (int value, void *user_data);
 	void *user_data;
 
-	callback = g_object_get_data (G_OBJECT (dialog), "cb");
+	callback = static_cast<void(*) (int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -406,7 +402,7 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	GtkAdjustment *adj;
 	extern GtkWidget *parent_window;
 
-	dialog = gtk_dialog_new_with_buttons (msg, NULL, 0,
+	dialog = gtk_dialog_new_with_buttons (msg, NULL, GtkDialogFlags(),
 										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 										NULL);
@@ -446,7 +442,7 @@ fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
 	GtkWidget *prompt_label;
 	extern GtkWidget *parent_window;
 
-	dialog = gtk_dialog_new_with_buttons (title, NULL, 0,
+	dialog = gtk_dialog_new_with_buttons (title, NULL, GtkDialogFlags(),
 		GTK_STOCK_NO, GTK_RESPONSE_REJECT,
 		GTK_STOCK_YES, GTK_RESPONSE_ACCEPT,
 		NULL);
@@ -506,7 +502,7 @@ gtkutil_button (GtkWidget *box, char *stock, char *tip, void *callback,
 }
 
 void
-gtkutil_label_new (char *text, GtkWidget * box)
+gtkutil_label_new (const char *text, GtkWidget * box)
 {
 	GtkWidget *label = gtk_label_new (text);
 	gtk_container_add (GTK_CONTAINER (box), label);

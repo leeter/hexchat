@@ -27,7 +27,7 @@
 #include "../common/outbound.h"
 #include "fe-gtk.h"
 #include "pixmaps.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "menu.h"
 #include "plugin-tray.h"
 

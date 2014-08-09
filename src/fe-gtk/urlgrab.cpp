@@ -30,7 +30,7 @@
 #include "../common/tree.h"
 #include "gtkutil.h"
 #include "menu.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "urlgrab.hpp"
 namespace{
 /* model for the URL treeview */

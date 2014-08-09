@@ -29,7 +29,7 @@
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 
 enum
 {

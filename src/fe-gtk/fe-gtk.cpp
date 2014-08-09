@@ -42,7 +42,7 @@
 #include "../common/url.h"
 #include "../common/dcc.hpp"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "pixmaps.h"
 #include "chanlist.h"
 #include "joind.hpp"

@@ -33,7 +33,7 @@
 #include "../common/userlist.h"
 #include "../common/outbound.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "palette.hpp"
 #include "notifygui.hpp"
 

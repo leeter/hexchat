@@ -36,7 +36,7 @@
 #include "../common/text.h"
 #include "gtkutil.h"
 #include "xtext.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "palette.hpp"
 #include "textgui.h"
 using uchar_traits = std::char_traits < unsigned char >;

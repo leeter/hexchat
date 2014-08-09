@@ -25,7 +25,7 @@
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
 #include "fe-gtk.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "gtkutil.h"
 #include "chanview.hpp"
 

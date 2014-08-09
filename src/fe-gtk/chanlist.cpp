@@ -40,7 +40,7 @@
 #include "../common/fe.h"
 #include "../common/server.h"
 #include "gtkutil.h"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "menu.h"
 #include "chanlist.h"
 #include "custom-list.h"

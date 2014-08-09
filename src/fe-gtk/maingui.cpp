@@ -43,7 +43,7 @@
 #include "gtkutil.h"
 #include "joind.hpp"
 #include "palette.hpp"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "menu.h"
 #include "fkeys.h"
 #include "userlistgui.hpp"

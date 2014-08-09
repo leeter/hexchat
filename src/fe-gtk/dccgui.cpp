@@ -36,7 +36,7 @@
 #include "../common/network.h"
 #include "gtkutil.h"
 #include "palette.hpp"
-#include "maingui.h"
+#include "maingui.hpp"
 
 namespace dcc = ::hexchat::dcc;
 namespace fe = ::hexchat::fe::dcc;

@@ -34,7 +34,7 @@
 #include "../common/fe.h"
 #include "gtkutil.h"
 #include "palette.hpp"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "menu.h"
 #include "pixmaps.h"
 #include "userlistgui.hpp"

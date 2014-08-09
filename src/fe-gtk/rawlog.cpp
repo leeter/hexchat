@@ -37,7 +37,7 @@
 #include "../common/server.h"
 #include "gtkutil.h"
 #include "palette.hpp"
-#include "maingui.h"
+#include "maingui.hpp"
 #include "rawlog.hpp"
 #include "xtext.h"
 #include "fkeys.h"
