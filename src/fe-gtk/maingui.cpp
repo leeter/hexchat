@@ -41,7 +41,7 @@
 #include "fe-gtk.h"
 #include "banlist.h"
 #include "gtkutil.h"
-#include "joind.h"
+#include "joind.hpp"
 #include "palette.h"
 #include "maingui.h"
 #include "menu.h"

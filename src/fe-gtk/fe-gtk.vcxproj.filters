@@ -36,9 +36,6 @@
     <ClInclude Include="gtkutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="joind.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="maingui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gtk_helpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="joind.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

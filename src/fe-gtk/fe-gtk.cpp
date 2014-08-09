@@ -45,7 +45,7 @@
 #include "maingui.h"
 #include "pixmaps.h"
 #include "chanlist.h"
-#include "joind.h"
+#include "joind.hpp"
 #include "xtext.h"
 #include "palette.h"
 #include "menu.h"
