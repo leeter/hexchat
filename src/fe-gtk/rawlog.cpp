@@ -42,6 +42,7 @@
 #include "xtext.h"
 #include "fkeys.h"
 
+namespace {
 static void
 close_rawlog (GtkWidget *wid, server *serv)
 {
@@ -95,6 +96,7 @@ rawlog_key_cb (GtkWidget * wid, GdkEventKey * key, gpointer userdata)
 		gtk_xtext_copy_selection (static_cast<GtkXText*>(userdata));
 	}
 	return FALSE;
+}
 }
 
 void
