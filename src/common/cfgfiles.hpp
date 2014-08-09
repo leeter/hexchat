@@ -19,15 +19,12 @@
 
 /* cfgfiles.hpp */
 
-#ifndef HEXCHAT_CFGFILES_H
-#define HEXCHAT_CFGFILES_H
+#ifndef HEXCHAT_CFGFILES_HPP
+#define HEXCHAT_CFGFILES_HPP
 
 #include "hexchat.h"
 
 #define LANGUAGES_LENGTH 53
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 extern char *xdir;
 extern const char * const languages[LANGUAGES_LENGTH];
@@ -75,10 +72,6 @@ struct prefs
 	unsigned short len;
 	unsigned short type;
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #define TYPE_STR 0
 #define TYPE_INT 1
