@@ -116,9 +116,6 @@
     <ClCompile Include="sexy-iso-codes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sexy-spell-entry.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="resources.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xtext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sexy-spell-entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
