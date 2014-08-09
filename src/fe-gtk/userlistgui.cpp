@@ -35,7 +35,7 @@
 #include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "pixmaps.h"
 #include "userlistgui.hpp"
 #include "fkeys.h"

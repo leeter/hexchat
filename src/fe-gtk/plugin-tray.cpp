@@ -28,7 +28,7 @@
 #include "fe-gtk.h"
 #include "pixmaps.h"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "plugin-tray.hpp"
 
 #ifndef WIN32

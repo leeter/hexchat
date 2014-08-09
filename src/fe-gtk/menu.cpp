@@ -63,7 +63,7 @@
 #include "plugingui.hpp"
 #include "textgui.h"
 #include "urlgrab.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "servlistgui.h"
 #include "userlistgui.hpp"
 
@@ -88,7 +88,7 @@ struct mymenu
 	void *callback;
 	char *image;
 	unsigned char type;	/* M_XXX */
-	unsigned char id;		/* MENU_ID_XXX (menu.h) */
+	unsigned char id;		/* MENU_ID_XXX (menu.hpp) */
 	unsigned char state;	/* ticked or not? */
 	unsigned char sensitive;	/* shaded out? */
 	guint key;				/* GDK_KEY_x */

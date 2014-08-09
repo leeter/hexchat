@@ -48,7 +48,7 @@
 #include "joind.hpp"
 #include "xtext.h"
 #include "palette.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "notifygui.hpp"
 #include "textgui.h"
 #include "fkeys.h"

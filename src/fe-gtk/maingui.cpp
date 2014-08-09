@@ -44,7 +44,7 @@
 #include "joind.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "fkeys.h"
 #include "userlistgui.hpp"
 #include "chanview.hpp"

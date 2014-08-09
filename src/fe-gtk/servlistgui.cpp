@@ -32,7 +32,7 @@
 
 #include "fe-gtk.h"
 #include "gtkutil.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "pixmaps.h"
 #include "fkeys.h"
 #include "servlistgui.h"

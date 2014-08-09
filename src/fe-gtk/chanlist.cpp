@@ -41,7 +41,7 @@
 #include "../common/server.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "chanlist.h"
 #include "custom-list.h"
 

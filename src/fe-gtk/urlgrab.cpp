@@ -29,7 +29,7 @@
 #include "../common/url.h"
 #include "../common/tree.h"
 #include "gtkutil.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "maingui.hpp"
 #include "urlgrab.hpp"
 namespace{

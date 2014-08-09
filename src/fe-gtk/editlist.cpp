@@ -37,7 +37,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/fe.h"
-#include "menu.h"
+#include "menu.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "editlist.h"

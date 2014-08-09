@@ -45,7 +45,7 @@
 #include "../common/typedef.h"
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "xtext.h"
 #include "palette.hpp"
 #include "maingui.hpp"
