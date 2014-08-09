@@ -101,7 +101,7 @@ struct server_gui
 
 /* this struct is persistant even when delinking/relinking */
 
-typedef struct restore_gui
+struct restore_gui
 {
 	banlist_info *banlist;
 
@@ -123,9 +123,9 @@ typedef struct restore_gui
 	char *queue_tip;		/* outbound queue tooltip */
 	short flag_wid_state[NUM_FLAG_WIDS];
 	unsigned int c_graph:1;	/* connecting graph, is there one? */
-} restore_gui;
+};
 
-typedef struct session_gui
+struct session_gui
 {
 	GtkWidget
 		*xtext,
@@ -177,7 +177,7 @@ typedef struct session_gui
 	guint16 is_tab;	/* is tab or toplevel? */
 	guint16 ul_hidden;	/* userlist hidden? */
 
-} session_gui;
+};
 
 extern GdkPixmap *channelwin_pix;
 extern GdkPixmap *dialogwin_pix;
