@@ -704,7 +704,7 @@ fe_userlist_update (session *sess, struct User *user)
 }
 
 void
-menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_sel)
+menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, int num_sel)
 {
 	char buf[512];
 	struct User *user;
@@ -712,7 +712,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_s
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (nick);
+	str_copy = strdup (nick.c_str());
 
 	submenu_list = 0;	/* first time through, might not be 0 */
 
@@ -724,12 +724,12 @@ menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_s
 		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 	} else
 	{
-		user = userlist_find (sess, nick);	/* lasttalk is channel specific */
+		user = userlist_find (sess, nick.c_str());	/* lasttalk is channel specific */
 		if (!user)
-			user = userlist_find_global (current_sess->server, nick);
+			user = userlist_find_global (current_sess->server, nick.c_str());
 		if (user)
 		{
-			nick_submenu = submenu = menu_quick_sub (nick, menu, NULL, XCMENU_DOLIST, -1);
+			nick_submenu = submenu = menu_quick_sub (nick.c_str(), menu, NULL, XCMENU_DOLIST, -1);
 
 			if (menu_create_nickinfo_menu (user, submenu) ||
 				 !user->hostname || !user->realname || !user->servername)
@@ -925,14 +925,14 @@ open_url_cb (GtkWidget *item, char *url)
 }
 
 void
-menu_urlmenu (GdkEventButton *event, char *url)
+menu_urlmenu (GdkEventButton *event, const std::string & url)
 {
 	GtkWidget *menu;
 	char *tmp, *chop;
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (url);
+	str_copy = strdup (url.c_str());
 
 	menu = gtk_menu_new ();
 	/* more than 51 chars? Chop it */

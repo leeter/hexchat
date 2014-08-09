@@ -17,21 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_MENU_H
-#define HEXCHAT_MENU_H
+#ifndef HEXCHAT_MENU_HPP
+#define HEXCHAT_MENU_HPP
 
-#ifdef __cplusplus
 #include <string>
 void nick_command_parse(session *sess, const std::string &cmd, const std::string &nick, const std::string &allnick);
-extern "C" {
-#endif
 
 GtkWidget *menu_create_main (void *accel_group, int bar, int away, int toplevel, GtkWidget **menu_widgets);
-void menu_urlmenu (GdkEventButton * event, char *url);
+void menu_urlmenu (GdkEventButton * event, const std::string& url);
 void menu_chanmenu (session *sess, GdkEventButton * event, char *chan);
 void menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean istree);
 void menu_addconnectmenu (server *serv, GtkWidget *menu);
-void menu_nickmenu (session *sess, GdkEventButton * event, const char *nick, int num_sel);
+void menu_nickmenu (session *sess, GdkEventButton * event, const std::string &nick, int num_sel);
 void menu_middlemenu (session *sess, GdkEventButton *event);
 void userlist_button_cb (GtkWidget * button, const char *cmd);
 
@@ -72,10 +69,6 @@ void menu_set_fullscreen (session_gui *gui, int fullscreen);
 
 #if (MENU_ID_NUM < MENU_ID_HEXCHAT)
 #error MENU_ID_NUM is set wrong
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif
