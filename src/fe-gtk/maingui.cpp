@@ -3055,13 +3055,13 @@ mg_tabs_compare (session *a, session *b)
 static void
 mg_create_tabs (session_gui *gui)
 {
-	gboolean use_icons = FALSE;
+	bool use_icons = false;
 
 	/* if any one of these PNGs exist, the chanview will create
 	 * the extra column for icons. */
 	if (prefs.hex_gui_tab_icons && (pix_tree_channel || pix_tree_dialog || pix_tree_server || pix_tree_util))
 	{
-		use_icons = TRUE;
+		use_icons = true;
 	}
 
 	gui->chanview = chanview_new (prefs.hex_gui_tab_layout, prefs.hex_gui_tab_trunc,

@@ -128,13 +128,12 @@ static void gtk_xtext_fix_indent (xtext_buffer *buf);
 static int gtk_xtext_find_subline (GtkXText *xtext, textentry *ent, int line);
 /* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
 /* For use by gtk_xtext_strip_color() and its callers -- */
-struct offlen_s {
+struct offlen_t {
 	guint16 off;
 	guint16 len;
 	guint16 emph;
 	guint16 width;
 };
-typedef struct offlen_s offlen_t;
 static unsigned char *
 gtk_xtext_strip_color (unsigned char *text, int len, unsigned char *outbuf,
 							  int *newlen, GSList **slp, int strip_hidden);
@@ -146,7 +145,7 @@ static void gtk_xtext_search_textentry_add (xtext_buffer *, textentry *, GList *
 static void gtk_xtext_search_textentry_del (xtext_buffer *, textentry *);
 static void gtk_xtext_search_textentry_fini (gpointer, gpointer);
 static void gtk_xtext_search_fini (xtext_buffer *);
-static gboolean gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr);
+static bool gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr);
 
 /* Avoid warning messages for this unused function */
 #if 0
@@ -1312,13 +1311,13 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 	int high_y;
 	int tmp;
 	int oob;
-	int marking_up;
+	bool marking_up;
 
 	if (xtext->select_start_y > xtext->select_end_y)
 	{
 		low_x = xtext->select_end_x;
 		low_y = xtext->select_end_y;
-		marking_up = TRUE;
+		marking_up = true;
 		high_x = xtext->select_start_x;
 		high_y = xtext->select_start_y;
 	} else
@@ -1327,7 +1326,7 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 		low_y = xtext->select_start_y;
 		high_x = xtext->select_end_x;
 		high_y = xtext->select_end_y;
-		marking_up = FALSE;
+		marking_up = false;
 	}
 
 	ent_start = gtk_xtext_find_char (xtext, low_x, low_y, &offset_start, &oob);
@@ -1339,7 +1338,7 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 	}
 	else if (oob)
 	{
-		offset_start = marking_up == TRUE? 0: xtext->buffer->last_offset_start;
+		offset_start = marking_up ? 0: xtext->buffer->last_offset_start;
 	}
 
 	ent_end = gtk_xtext_find_char (xtext, high_x, high_y, &offset_end, &oob);
@@ -4294,7 +4293,7 @@ gtk_xtext_search_fini (xtext_buffer *buf)
 }
 
 /* Returns TRUE if the base search information exists and is still okay to use */
-static gboolean
+static bool
 gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr)
 {
 	/* Of the five flags, backward and highlight_all do not need a new search */
@@ -4304,7 +4303,7 @@ gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_fl
 		 (buf->search_flags & follow) == (flags & follow) &&
 		 (buf->search_flags & regexp) == (flags & regexp))
 	{
-		return TRUE;
+		return true;
 	}
 	buf->hintsearch = static_cast<textentry *>(buf->cursearch ? buf->cursearch->data : NULL);
 	gtk_xtext_search_fini (buf);
@@ -4314,7 +4313,7 @@ gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_fl
 		buf->search_re = g_regex_new (text, (flags & case_match)? GRegexCompileFlags() : G_REGEX_CASELESS, GRegexMatchFlags(), perr);
 		if (perr && *perr)
 		{
-			return FALSE;
+			return false;
 		}
 	}
 	else
@@ -4333,7 +4332,7 @@ gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_fl
 	buf->cursearch = NULL;
 	buf->curmark = NULL;
 	/* but leave buf->curdata.u alone! */
-	return FALSE;
+	return false;
 }
 
 #define BACKWARD (flags & backward)
@@ -4383,7 +4382,7 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 	/* If the text arg is neither NULL nor "", it's the search string */
 	else
 	{
-		if (gtk_xtext_search_init (buf, text, flags, perr) == FALSE)	/* If a new search: */
+		if (gtk_xtext_search_init (buf, text, flags, perr) == false)	/* If a new search: */
 		{
 			if (perr && *perr)
 			{

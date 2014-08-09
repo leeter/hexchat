@@ -660,7 +660,7 @@ log_open_or_close (session *sess)
 	}
 }
 
-int
+gsize
 get_stamp_str (char *fmt, time_t tim, char **ret)
 {
 	char *loc = NULL;

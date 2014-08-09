@@ -39,7 +39,7 @@
 #include "maingui.h"
 #include "palette.h"
 #include "textgui.h"
-
+using uchar_traits = std::char_traits < unsigned char >;
 extern "C" struct text_event te[];
 extern "C" char *pntevts_text[];
 extern "C" char *pntevts[];
@@ -65,7 +65,7 @@ xtext_get_stamp_str (time_t tim, char **ret)
 static void
 PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, time_t timet)
 {
-	unsigned char *tab, *new_text;
+	unsigned char *tab;
 	int leftlen;
 
 	if (len == 0)
@@ -91,7 +91,7 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 			gtk_xtext_append (xtbuf, text, len);
 		return;
 	}
-
+	
 	tab = (unsigned char*)strchr ((char*)text, '\t');
 	if (tab && tab < (text + len))
 	{
