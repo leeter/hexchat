@@ -39,7 +39,7 @@
 #include "hexchat.h"
 #include "fe.h"
 #include "util.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "ignore.hpp"
 #include "hexchat-plugin.h"

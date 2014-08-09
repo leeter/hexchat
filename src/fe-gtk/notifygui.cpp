@@ -26,7 +26,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/notify.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/fe.h"
 #include "../common/server.h"
 #include "../common/util.h"

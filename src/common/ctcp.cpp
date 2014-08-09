@@ -25,7 +25,7 @@
 #endif
 
 #include "hexchat.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "util.h"
 #include "modes.h"
 #include "outbound.h"

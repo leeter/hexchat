@@ -40,7 +40,7 @@
 #include <unistd.h>
 #endif
 
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "palette.hpp"
 #include "xtext.h"

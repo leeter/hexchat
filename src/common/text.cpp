@@ -36,7 +36,7 @@
 #endif
 
 #include "hexchat.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "plugin.h"
 #include "fe.h"

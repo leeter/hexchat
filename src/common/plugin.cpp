@@ -35,7 +35,7 @@
 #include "fe.h"
 #include "util.h"
 #include "outbound.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "ignore.hpp"
 #include "server.h"
 #include "servlist.h"

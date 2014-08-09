@@ -33,7 +33,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/server.h"
 #include "gtkutil.hpp"
 #include "palette.hpp"

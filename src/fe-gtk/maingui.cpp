@@ -35,7 +35,7 @@
 #include "../common/util.h"
 #include "../common/text.h"
 #include "../common/chanopt.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"
 
 #include "fe-gtk.h"

@@ -51,7 +51,7 @@ extern "C"{
 #endif
 #include "hexchat.h"
 #include "fe.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "network.h"
 #include "notify.h"
 #include "hexchatc.h"

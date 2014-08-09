@@ -35,7 +35,7 @@
 #include "../common/fe.h"
 #include "../common/util.h"
 #include "../common/text.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/plugin.h"
 #include "../common/server.h"

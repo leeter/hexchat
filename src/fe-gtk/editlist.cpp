@@ -34,7 +34,7 @@
 #include "fe-gtk.h"
 
 #include "../common/hexchat.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/fe.h"
 #include "menu.h"

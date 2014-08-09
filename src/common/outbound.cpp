@@ -43,7 +43,7 @@
 #include "ignore.hpp"
 #include "util.h"
 #include "fe.h"
-#include "cfgfiles.h"			  /* hexchat_fopen_file() */
+#include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.h"				/* net_ip() */
 #include "modes.h"
 #include "notify.h"

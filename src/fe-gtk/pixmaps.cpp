@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 #include "fe-gtk.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/hexchat.h"
 #include "../common/fe.h"
 #include "pixmaps.h"

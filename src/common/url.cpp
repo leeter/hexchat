@@ -22,7 +22,7 @@
 #include <cctype>
 #include "hexchat.h"
 #include "hexchatc.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "fe.h"
 #include "tree.h"
 #include "url.h"

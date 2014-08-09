@@ -14,7 +14,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cfgfiles.h" />
+    <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.h" />
     <ClInclude Include="ctcp.h" />
     <ClInclude Include="dcc.hpp" />

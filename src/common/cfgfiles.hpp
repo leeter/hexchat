@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* cfgfiles.h */
+/* cfgfiles.hpp */
 
 #ifndef HEXCHAT_CFGFILES_H
 #define HEXCHAT_CFGFILES_H

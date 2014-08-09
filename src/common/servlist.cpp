@@ -27,7 +27,7 @@
 #endif
 
 #include "hexchat.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "fe.h"
 #include "server.h"
 #include "text.h"

@@ -24,7 +24,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/fe.h"
 #include "../common/url.h"
 #include "../common/tree.h"

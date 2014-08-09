@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 
 #include "hexchat.h"
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "util.h"
 #include "fe.h"
 #include "text.h"
