@@ -165,7 +165,7 @@ notify_remove_clicked(GtkWidget * igad)
 	GtkTreeModel *model;
 	GtkTreeIter iter;
 	GtkTreePath *path = NULL;
-	gboolean found = FALSE;
+	bool found = false;
 	char *name;
 
 	view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(notify_window), "view"));
@@ -238,10 +238,10 @@ namespace notify{
 		GtkWidget *label;
 		GtkWidget *wid;
 		GtkWidget *table;
-		char *msg = _("Enter nickname to add:");
+		const char *msg = _("Enter nickname to add:");
 		char buf[256];
 
-		dialog = gtk_dialog_new_with_buttons(msg, NULL, static_cast<GtkDialogFlags>(0),
+		dialog = gtk_dialog_new_with_buttons(msg, NULL, GtkDialogFlags(),
 			GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 			GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 			NULL);
