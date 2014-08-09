@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([HexChat],[2.10.0])
+AC_INIT([HexChat],[2.11.0])
 
 AC_PREREQ([2.60])
 AC_COPYRIGHT([Copyright (C) 1998-2010 Peter Zelezny])
@@ -216,7 +216,7 @@ dnl *********************************************************************
 
 _gdk_tgt=`$PKG_CONFIG --variable=target gdk-2.0`
 if test "x$_gdk_tgt" = xquartz; then
-		PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration, [
+		PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration-gtk2, [
 			GUI_LIBS="$GUI_LIBS $GTK_MAC_LIBS"
 			GUI_CFLAGS="$GUI_CFLAGS $GTK_MAC_CFLAGS"
 			AC_DEFINE(HAVE_GTK_MAC)
