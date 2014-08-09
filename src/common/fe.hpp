@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "userlist.h"
+#include "userlist.hpp"
 
 #ifndef HEXCHAT_FE_HPP
 #define HEXCHAT_FE_HPP

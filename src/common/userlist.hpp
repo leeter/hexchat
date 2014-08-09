@@ -17,15 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <time.h>
+#include <ctime>
 #include "proto-irc.h"
 
-#ifndef HEXCHAT_USERLIST_H
-#define HEXCHAT_USERLIST_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_USERLIST_HPP
+#define HEXCHAT_USERLIST_HPP
 
 struct User
 {
@@ -65,9 +61,5 @@ void userlist_update_mode (session *sess, char *name, char mode, char sign);
 GSList *userlist_flat_list (session *sess);
 GList *userlist_double_list (session *sess);
 void userlist_rehash (session *sess);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

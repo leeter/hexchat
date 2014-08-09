@@ -26,7 +26,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/text.h"
-#include "../common/userlist.h"
+#include "../common/userlist.hpp"
 #include "../common/util.h"
 #include "../common/hexchatc.h"
 #include "fe-gtk.h"

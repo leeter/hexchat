@@ -30,7 +30,7 @@
 #include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/util.h"
-#include "../common/userlist.h"
+#include "../common/userlist.hpp"
 #include "../common/outbound.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"

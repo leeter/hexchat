@@ -26,7 +26,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/util.h"
-#include "../common/userlist.h"
+#include "../common/userlist.hpp"
 #include "../common/modes.h"
 #include "../common/text.h"
 #include "../common/notify.h"

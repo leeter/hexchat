@@ -37,7 +37,7 @@
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
-#include "../common/userlist.h"
+#include "../common/userlist.hpp"
 #include "../common/outbound.h"
 #include "../common/util.h"
 #include "../common/text.h"
