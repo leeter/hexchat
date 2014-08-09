@@ -34,10 +34,10 @@
  *
  * See http://ircv3.atheme.org/specification/capability-negotiation-3.1
  */
-typedef struct 
+struct message_tags_data
 {
 	time_t timestamp;
-} message_tags_data;
+};
 
 void proto_fill_her_up (server *serv);
 
