@@ -265,7 +265,7 @@ editlist_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 }
 
 static GtkWidget *
-editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
+editlist_treeview_new (GtkWidget *box, const char *title1, const char *title2)
 {
 	GtkWidget *scroll;
 	GtkListStore *store;
@@ -324,7 +324,7 @@ editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
 
 
 void
-editlist_gui_open (char *title1, char *title2, GSList *list, char *title, char *wmclass,
+editlist_gui_open (const char *title1, const char *title2, GSList *list, char *title, char *wmclass,
 					char *file, char *help)
 {
 	GtkWidget *vbox, *box;
