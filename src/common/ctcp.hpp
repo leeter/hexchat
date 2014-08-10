@@ -17,18 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_CTCP_H
-#define HEXCHAT_CTCP_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_CTCP_HPP
+#define HEXCHAT_CTCP_HPP
 
 void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
 						char *word[], char *word_eol[], int id,
 						const message_tags_data *tags_data);
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -30,7 +30,7 @@
 
 #include "hexchat.h"
 #include "proto-irc.hpp"
-#include "ctcp.h"
+#include "ctcp.hpp"
 #include "fe.hpp"
 #include "ignore.hpp"
 #include "inbound.hpp"

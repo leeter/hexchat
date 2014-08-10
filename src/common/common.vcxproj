@@ -16,7 +16,7 @@
   <ItemGroup>
     <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.h" />
-    <ClInclude Include="ctcp.h" />
+    <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />
     <ClInclude Include="history.h" />

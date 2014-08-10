@@ -33,7 +33,7 @@
 #include "inbound.hpp"
 #include "dcc.hpp"
 #include "text.h"
-#include "ctcp.h"
+#include "ctcp.hpp"
 #include "server.h"
 #include "hexchatc.h"
 
