@@ -26,7 +26,7 @@
 
 #include "hexchat.h"
 #include "cfgfiles.hpp"
-#include "util.h"
+#include "util.hpp"
 #include "fe.hpp"
 #include "text.h"
 #include "hexchatc.h"

@@ -38,7 +38,7 @@
 #include <gio/gio.h>
 
 #include "hexchat.h"
-#include "util.h"
+#include "util.hpp"
 #include "ignore.hpp"
 #include "fe.hpp"
 #include "modes.h"

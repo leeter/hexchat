@@ -39,7 +39,7 @@
 #include "../common/fe.hpp"
 #include "../common/userlist.hpp"
 #include "../common/outbound.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/text.h"
 #include "../common/plugin.h"
 #include "../common/typedef.h"

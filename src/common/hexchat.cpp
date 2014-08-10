@@ -38,7 +38,7 @@
 #endif
 #include "hexchat.h"
 #include "fe.hpp"
-#include "util.h"
+#include "util.hpp"
 #include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "ignore.hpp"

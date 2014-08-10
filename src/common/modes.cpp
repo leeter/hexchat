@@ -26,7 +26,7 @@
 #include "server.h"
 #include "text.h"
 #include "fe.hpp"
-#include "util.h"
+#include "util.hpp"
 #include "inbound.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>

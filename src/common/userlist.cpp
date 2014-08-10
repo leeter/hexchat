@@ -26,7 +26,7 @@
 #include "notify.h"
 #include "tree.h"
 #include "hexchatc.h"
-#include "util.h"
+#include "util.hpp"
 
 static int
 nick_cmp_az_ops (server *serv, struct User *user1, struct User *user2)

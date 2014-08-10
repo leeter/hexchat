@@ -46,7 +46,7 @@
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/notify.h"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/text.h"
 #include "xtext.hpp"
 #include "ascii.hpp"

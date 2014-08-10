@@ -51,7 +51,7 @@
 #include <cerrno>
 #include "hexchat.h"
 #include "hexchatc.h"
-#include "util.h"
+#include "util.hpp"
 
 #if defined (USING_FREEBSD) || defined (__APPLE__)
 #include <sys/sysctl.h>

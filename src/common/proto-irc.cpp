@@ -40,7 +40,7 @@
 #include "server.h"
 #include "text.h"
 #include "outbound.hpp"
-#include "util.h"
+#include "util.hpp"
 #include "hexchatc.h"
 #include "url.hpp"
 #include "servlist.h"

@@ -43,7 +43,7 @@
     <ClInclude Include="typedef.h" />
     <ClInclude Include="url.hpp" />
     <ClInclude Include="userlist.hpp" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="util.hpp" />
     <ClInclude Include="hexchat-plugin.h" />
     <ClInclude Include="hexchat.h" />
     <ClInclude Include="hexchatc.h" />

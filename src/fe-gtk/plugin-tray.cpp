@@ -23,7 +23,7 @@
 #include "../common/inbound.hpp"
 #include "../common/server.h"
 #include "../common/fe.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/outbound.hpp"
 #include "fe-gtk.hpp"
 #include "pixmaps.h"

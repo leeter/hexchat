@@ -28,7 +28,7 @@
 #include "../common/servlist.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"

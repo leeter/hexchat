@@ -33,7 +33,7 @@
 #include "palette.hpp"
 
 #include "../common/hexchat.h"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/typedef.h"
 

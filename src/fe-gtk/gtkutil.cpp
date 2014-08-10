@@ -33,7 +33,7 @@
 
 #include "../common/hexchat.h"
 #include "../common/fe.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/typedef.h"

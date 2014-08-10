@@ -34,7 +34,7 @@
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "text.h"
-#include "util.h"
+#include "util.hpp"
 #include "hexchatc.h"
 #include "typedef.h"
 

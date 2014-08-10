@@ -27,7 +27,7 @@
 #include "../common/fe.hpp"
 #include "../common/text.h"
 #include "../common/userlist.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/hexchatc.h"
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"

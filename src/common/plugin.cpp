@@ -33,7 +33,7 @@
 
 #include "hexchat.h"
 #include "fe.hpp"
-#include "util.h"
+#include "util.hpp"
 #include "outbound.hpp"
 #include "cfgfiles.hpp"
 #include "ignore.hpp"

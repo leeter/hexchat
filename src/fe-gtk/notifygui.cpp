@@ -29,7 +29,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/server.h"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/userlist.hpp"
 #include "../common/outbound.hpp"
 #include "gtkutil.hpp"

@@ -31,7 +31,7 @@
 #include "fe.hpp"
 #include "server.h"
 #include "text.h"
-#include "util.h" /* token_foreach */
+#include "util.hpp" /* token_foreach */
 #include "hexchatc.h"
 
 #include "servlist.h"

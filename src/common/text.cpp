@@ -41,7 +41,7 @@
 #include "plugin.h"
 #include "fe.hpp"
 #include "server.h"
-#include "util.h"
+#include "util.hpp"
 #include "outbound.hpp"
 #include "hexchatc.h"
 #include "text.h"

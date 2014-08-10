@@ -39,7 +39,7 @@
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/outbound.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/fe.hpp"
 #include "../common/dcc.hpp"
 #include "fe-text.h"

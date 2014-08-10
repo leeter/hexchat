@@ -32,7 +32,7 @@
 #include "../common/plugin.h"
 #include "../common/modes.h"
 #include "../common/url.hpp"
-#include "../common/util.h"
+#include "../common/util.hpp"
 #include "../common/text.h"
 #include "../common/chanopt.h"
 #include "../common/cfgfiles.hpp"
