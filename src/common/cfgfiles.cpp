@@ -144,7 +144,7 @@ list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 
 	std::string ibuf(st.st_size, '\0');
 	read (fd, &ibuf[0], st.st_size);
-	close (fd);
+	g_close (fd, nullptr);
 
 	list_load_from_data (list, ibuf);
 }
