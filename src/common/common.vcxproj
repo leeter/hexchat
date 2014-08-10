@@ -39,7 +39,7 @@
     <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
     <ClInclude Include="textevents.h" />
-    <ClInclude Include="tree.h" />
+    <ClInclude Include="tree.hpp" />
     <ClInclude Include="typedef.h" />
     <ClInclude Include="url.hpp" />
     <ClInclude Include="userlist.hpp" />

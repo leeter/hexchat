@@ -24,7 +24,7 @@
 #include "modes.h"
 #include "fe.hpp"
 #include "notify.h"
-#include "tree.h"
+#include "tree.hpp"
 #include "hexchatc.h"
 #include "util.hpp"
 

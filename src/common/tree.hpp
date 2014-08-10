@@ -17,14 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_TREE_H
-#define HEXCHAT_TREE_H
+#ifndef HEXCHAT_TREE_HPP
+#define HEXCHAT_TREE_HPP
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct _tree tree;
+struct tree;
 
 typedef int (tree_cmp_func) (const void *keya, const void *keyb, void *data);
 typedef int (tree_traverse_func) (const void *key, void *data);
@@ -39,8 +35,5 @@ int tree_insert (tree *t, void *key);
 void tree_append (tree* t, void *key);
 int tree_size (tree *t);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif

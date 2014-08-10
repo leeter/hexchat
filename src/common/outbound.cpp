@@ -52,7 +52,7 @@
 #include "hexchatc.h"
 #include "servlist.h"
 #include "server.h"
-#include "tree.h"
+#include "tree.hpp"
 #include "outbound.hpp"
 #include "chanopt.h"
 #include "dcc.hpp"

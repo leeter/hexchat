@@ -27,7 +27,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/url.hpp"
-#include "../common/tree.h"
+#include "../common/tree.hpp"
 #include "gtkutil.hpp"
 #include "menu.hpp"
 #include "maingui.hpp"
