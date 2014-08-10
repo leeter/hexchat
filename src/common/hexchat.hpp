@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef HEXCHAT_HPP
+#define HEXCHAT_HPP
+
 #include "../../config.h"
 
 #include <glib.h>
@@ -24,9 +27,6 @@
 #include <glib/gi18n.h>
 
 #include <ctime>			/* need time_t */
-
-#ifndef HEXCHAT_H
-#define HEXCHAT_H
 
 #ifdef USE_OPENSSL
 #ifdef __APPLE__
