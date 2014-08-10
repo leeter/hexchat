@@ -28,7 +28,7 @@
 #include "../common/util.hpp"
 #include "../common/userlist.hpp"
 #include "../common/modes.h"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "../common/notify.h"
 #include "../common/hexchatc.h"
 #include "../common/fe.hpp"

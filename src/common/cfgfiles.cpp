@@ -28,7 +28,7 @@
 #include "cfgfiles.hpp"
 #include "util.hpp"
 #include "fe.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "hexchatc.h"
 #include "typedef.h"
 

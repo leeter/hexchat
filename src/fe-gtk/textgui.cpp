@@ -33,7 +33,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/outbound.hpp"
 #include "../common/fe.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "gtkutil.hpp"
 #include "xtext.hpp"
 #include "maingui.hpp"

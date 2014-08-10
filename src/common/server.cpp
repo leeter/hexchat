@@ -57,7 +57,7 @@ extern "C"{
 #include "hexchatc.h"
 #include "inbound.hpp"
 #include "outbound.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "util.hpp"
 #include "url.hpp"
 #include "proto-irc.hpp"

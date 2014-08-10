@@ -44,7 +44,7 @@
 #include "util.hpp"
 #include "outbound.hpp"
 #include "hexchatc.h"
-#include "text.h"
+#include "text.hpp"
 #include "typedef.h"
 
 #ifdef WIN32

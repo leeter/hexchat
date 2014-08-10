@@ -40,7 +40,7 @@
 #include "../common/userlist.hpp"
 #include "../common/outbound.hpp"
 #include "../common/util.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "../common/plugin.h"
 #include "../common/typedef.h"
 #include <gdk/gdkkeysyms.h>

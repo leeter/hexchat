@@ -34,7 +34,7 @@
 #include "../common/hexchat.h"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/plugin.h"

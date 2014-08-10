@@ -36,7 +36,7 @@
     <ClInclude Include="server.h" />
     <ClInclude Include="servlist.h" />
     <ClInclude Include="ssl.hpp" />
-    <ClInclude Include="text.h" />
+    <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
     <ClInclude Include="textevents.h" />
     <ClInclude Include="tree.h" />

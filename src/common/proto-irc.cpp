@@ -38,7 +38,7 @@
 #include "notify.h"
 #include "plugin.h"
 #include "server.h"
-#include "text.h"
+#include "text.hpp"
 #include "outbound.hpp"
 #include "util.hpp"
 #include "hexchatc.h"

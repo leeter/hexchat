@@ -48,7 +48,7 @@
 #include "modes.h"
 #include "notify.h"
 #include "inbound.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "hexchatc.h"
 #include "servlist.h"
 #include "server.h"

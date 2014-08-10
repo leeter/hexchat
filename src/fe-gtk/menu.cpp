@@ -47,7 +47,7 @@
 #include "../common/servlist.h"
 #include "../common/notify.h"
 #include "../common/util.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "xtext.hpp"
 #include "ascii.hpp"
 #include "banlist.hpp"

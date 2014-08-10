@@ -41,7 +41,7 @@
 #include "servlist.h"
 #include "modes.h"
 #include "notify.h"
-#include "text.h"
+#include "text.hpp"
 #include "dcc.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;

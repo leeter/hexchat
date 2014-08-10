@@ -38,7 +38,7 @@
 
 #include "cfgfiles.hpp"
 #include "server.h"
-#include "text.h"
+#include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.h"
 

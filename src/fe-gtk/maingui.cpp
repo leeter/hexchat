@@ -33,7 +33,7 @@
 #include "../common/modes.h"
 #include "../common/url.hpp"
 #include "../common/util.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "../common/chanopt.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"

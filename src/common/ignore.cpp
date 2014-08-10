@@ -33,7 +33,7 @@
 #include "ignore.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.h"
 #include "typedef.h"

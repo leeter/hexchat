@@ -54,7 +54,7 @@
 #include "network.h"
 #include "plugin.h"
 #include "server.h"
-#include "text.h"
+#include "text.hpp"
 #include "url.hpp"
 #include "hexchatc.h"
 

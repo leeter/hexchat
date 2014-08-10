@@ -49,7 +49,7 @@
 #include "server.h"
 #include "servlist.h"
 #include "outbound.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "url.hpp"
 #include "hexchatc.h"
 #include "dcc.hpp"

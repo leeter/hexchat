@@ -25,7 +25,7 @@
 #include "../common/hexchat.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
-#include "../common/text.h"
+#include "../common/text.hpp"
 #include "../common/userlist.hpp"
 #include "../common/util.hpp"
 #include "../common/hexchatc.h"

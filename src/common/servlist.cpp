@@ -30,7 +30,7 @@
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "server.h"
-#include "text.h"
+#include "text.hpp"
 #include "util.hpp" /* token_foreach */
 #include "hexchatc.h"
 

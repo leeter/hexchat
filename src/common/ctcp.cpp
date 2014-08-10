@@ -32,7 +32,7 @@
 #include "ignore.hpp"
 #include "inbound.hpp"
 #include "dcc.hpp"
-#include "text.h"
+#include "text.hpp"
 #include "ctcp.hpp"
 #include "server.h"
 #include "hexchatc.h"
