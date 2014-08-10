@@ -33,7 +33,7 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "chanopt.h"
 
 #include "cfgfiles.hpp"

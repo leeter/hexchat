@@ -36,7 +36,7 @@
 #include <signal.h>
 #include <unistd.h>
 #endif
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "fe.hpp"
 #include "util.hpp"
 #include "cfgfiles.hpp"

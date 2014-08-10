@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "../common/server.h"
 #include "../common/servlist.h"

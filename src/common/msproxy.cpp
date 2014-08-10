@@ -36,7 +36,7 @@
 #define WANTARPA
 #include "inet.h"
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "network.h"
 #include "hexchatc.h"
 #include "server.h"

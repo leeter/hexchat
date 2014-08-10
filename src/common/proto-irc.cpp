@@ -28,7 +28,7 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "proto-irc.hpp"
 #include "ctcp.hpp"
 #include "fe.hpp"

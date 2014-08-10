@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_BANLIST_HPP
 #define HEXCHAT_BANLIST_HPP
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 
 void banlist_opengui (session *sess);
 

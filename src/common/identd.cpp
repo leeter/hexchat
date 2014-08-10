@@ -22,7 +22,7 @@
 #include <atomic>
 #include <string>
 #include "inet.h"
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "hexchatc.h"
 #include "text.hpp"
 

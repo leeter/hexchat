@@ -18,7 +18,7 @@
 
 #include <cstring>
 #include "../common/hexchat-plugin.h"
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "../common/inbound.hpp"
 #include "../common/server.h"

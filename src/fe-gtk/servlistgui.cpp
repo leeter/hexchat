@@ -23,7 +23,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "../common/servlist.h"
 #include "../common/cfgfiles.hpp"

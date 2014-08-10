@@ -38,7 +38,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "plugin.h"
 #include "ignore.hpp"
 #include "util.hpp"

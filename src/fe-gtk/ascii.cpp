@@ -22,7 +22,7 @@
 
 #include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "gtkutil.hpp"
 #include "ascii.hpp"

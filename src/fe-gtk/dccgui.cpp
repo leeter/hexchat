@@ -29,7 +29,7 @@
 #include "../common/inet.h"
 #include "fe-gtk.hpp"
 #include "../common/dcc.hpp"
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"

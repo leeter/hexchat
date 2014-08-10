@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/text.hpp"

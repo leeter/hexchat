@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "hexchatc.h"
 #include "modes.h"
 #include "server.h"

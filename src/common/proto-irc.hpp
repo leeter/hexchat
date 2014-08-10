@@ -23,7 +23,7 @@
 #define HEXCHAT_PROTO_HPP
 
 #include <ctime>
-#include "hexchat.h"
+#include "hexchat.hpp"
 
 #define MESSAGE_TAGS_DATA_INIT			\
 	{									\

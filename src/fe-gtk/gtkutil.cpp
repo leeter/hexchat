@@ -31,7 +31,7 @@
 #include <pango/pangocairo.h>
 #endif
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
 #include "../common/cfgfiles.hpp"

@@ -33,7 +33,7 @@
 
 #include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.h"
 #include "../common/fe.hpp"

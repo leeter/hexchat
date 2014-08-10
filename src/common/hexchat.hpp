@@ -23,7 +23,7 @@
 #include <glib/gstdio.h>
 #include <glib/gi18n.h>
 
-#include <time.h>			/* need time_t */
+#include <ctime>			/* need time_t */
 
 #ifndef HEXCHAT_H
 #define HEXCHAT_H
@@ -92,9 +92,7 @@
 #define PDIWORDS		32
 #define USERNAMELEN 10
 #define HIDDEN_CHAR	8			/* invisible character for xtext */
-#ifdef __cplusplus
-extern "C"{
-#endif
+
 struct nbexec
 {
 	int myfd;
@@ -642,7 +640,5 @@ struct popup
 
 #define hexchat_filename_from_utf8 g_filename_from_utf8
 #define hexchat_filename_to_utf8 g_filename_to_utf8
-#ifdef __cplusplus
-}
-#endif
+
 #endif

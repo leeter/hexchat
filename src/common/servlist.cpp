@@ -26,7 +26,7 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "server.h"

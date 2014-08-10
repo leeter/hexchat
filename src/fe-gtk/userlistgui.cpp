@@ -24,7 +24,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/util.hpp"
 #include "../common/userlist.hpp"
 #include "../common/modes.h"

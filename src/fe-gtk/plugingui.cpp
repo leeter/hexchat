@@ -22,7 +22,7 @@
 
 #include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;
 #include "../common/hexchat-plugin.h"

@@ -46,7 +46,7 @@
 #endif
 
 #include "dcc.hpp"
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "util.hpp"
 #include "fe.hpp"
 #include "outbound.hpp"

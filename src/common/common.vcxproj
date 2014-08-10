@@ -45,7 +45,7 @@
     <ClInclude Include="userlist.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="hexchat-plugin.h" />
-    <ClInclude Include="hexchat.h" />
+    <ClInclude Include="hexchat.hpp" />
     <ClInclude Include="hexchatc.h" />
   </ItemGroup>
   <ItemGroup>

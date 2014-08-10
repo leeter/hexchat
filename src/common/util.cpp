@@ -49,7 +49,7 @@
 #include "../../config.h"
 #include <fcntl.h>
 #include <cerrno>
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "hexchatc.h"
 #include "util.hpp"
 

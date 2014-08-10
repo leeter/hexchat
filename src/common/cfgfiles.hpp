@@ -22,7 +22,7 @@
 #ifndef HEXCHAT_CFGFILES_HPP
 #define HEXCHAT_CFGFILES_HPP
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 
 #define LANGUAGES_LENGTH 53
 

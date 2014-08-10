@@ -49,7 +49,7 @@ extern "C"{
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "fe.hpp"
 #include "cfgfiles.hpp"
 #include "network.h"

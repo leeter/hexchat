@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_OUTBOUND_HPP
 #define HEXCHAT_OUTBOUND_HPP
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 
 extern const struct commands xc_cmds[];
 extern GSList *menu_list;

@@ -35,7 +35,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "plugin.h"

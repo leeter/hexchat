@@ -29,7 +29,7 @@
 #else
 #include <unistd.h>
 #endif
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "ignore.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"

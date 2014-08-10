@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/hexchatc.h"
 #include "fe-gtk.hpp"
 #include "maingui.hpp"

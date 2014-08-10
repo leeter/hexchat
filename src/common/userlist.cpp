@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "modes.h"
 #include "fe.hpp"
 #include "notify.h"

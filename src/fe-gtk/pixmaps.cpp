@@ -22,7 +22,7 @@
 
 #include "fe-gtk.hpp"
 #include "../common/cfgfiles.hpp"
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
 #include "pixmaps.h"
 

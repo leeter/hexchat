@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "util.hpp"
 #include "fe.hpp"
