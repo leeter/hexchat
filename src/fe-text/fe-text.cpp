@@ -36,7 +36,7 @@
 #include <cctype>
 #include <glib-object.h>
 #include "../common/hexchat.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/outbound.hpp"
 #include "../common/util.hpp"

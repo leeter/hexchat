@@ -19,7 +19,7 @@
 #include <cstring>
 #include "../common/hexchat-plugin.h"
 #include "../common/hexchat.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/inbound.hpp"
 #include "../common/server.h"
 #include "../common/fe.hpp"

@@ -40,7 +40,7 @@
 #include "server.h"
 #include "text.hpp"
 #include "util.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 
 static GSList *chanopt_list = NULL;

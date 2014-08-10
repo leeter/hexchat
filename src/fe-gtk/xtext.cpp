@@ -36,7 +36,7 @@
 #include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/url.hpp"
 #include "../common/marshal.h"
 #include "fe-gtk.hpp"

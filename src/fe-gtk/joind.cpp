@@ -32,7 +32,7 @@
 #endif
 
 #include "../common/hexchat.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/fe.hpp"

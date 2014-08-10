@@ -17,12 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_C_H
-#define HEXCHAT_C_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_C_HPP
+#define HEXCHAT_C_HPP
 
 extern struct hexchatprefs prefs;
 
@@ -60,9 +56,5 @@ void session_free (session *killsess);
 void lag_check (void);
 void hexchat_exit (void);
 void hexchat_exec (const char *cmd);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -23,7 +23,7 @@
 #include <string>
 #include "inet.h"
 #include "hexchat.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "text.hpp"
 
 namespace{

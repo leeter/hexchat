@@ -29,7 +29,7 @@
 #include "util.hpp"
 #include "fe.hpp"
 #include "text.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "typedef.h"
 
 #ifdef WIN32

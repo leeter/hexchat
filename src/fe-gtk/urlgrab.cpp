@@ -23,7 +23,7 @@
 #include "fe-gtk.hpp"
 
 #include "../common/hexchat.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/url.hpp"

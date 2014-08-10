@@ -50,7 +50,7 @@
 #include <fcntl.h>
 #include <cerrno>
 #include "hexchat.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "util.hpp"
 
 #if defined (USING_FREEBSD) || defined (__APPLE__)

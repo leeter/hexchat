@@ -36,7 +36,7 @@
 #include "../common/util.hpp"
 #include "../common/text.hpp"
 #include "../common/cfgfiles.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/plugin.h"
 #include "../common/server.h"
 #include "../common/url.hpp"

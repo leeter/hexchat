@@ -32,7 +32,7 @@
 #include "server.h"
 #include "text.hpp"
 #include "util.hpp" /* token_foreach */
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 #include "servlist.h"
 

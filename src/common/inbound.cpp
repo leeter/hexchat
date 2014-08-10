@@ -48,7 +48,7 @@
 #include "server.h"
 #include "servlist.h"
 #include "text.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "chanopt.h"
 #include "dcc.hpp"
 

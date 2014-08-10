@@ -32,7 +32,7 @@
 #include <gdk/gdkkeysyms.h>
 
 #include "../common/hexchat.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/server.h"
 #include "gtkutil.hpp"

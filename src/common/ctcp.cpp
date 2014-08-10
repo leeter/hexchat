@@ -35,7 +35,7 @@
 #include "text.hpp"
 #include "ctcp.hpp"
 #include "server.h"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 namespace dcc = hexchat::dcc;
 

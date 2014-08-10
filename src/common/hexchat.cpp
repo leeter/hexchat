@@ -51,7 +51,7 @@
 #include "outbound.hpp"
 #include "text.hpp"
 #include "url.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "dcc.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)

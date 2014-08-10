@@ -35,7 +35,7 @@
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
 #include "../common/cfgfiles.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/typedef.h"
 #include "gtkutil.hpp"
 #include "pixmaps.h"

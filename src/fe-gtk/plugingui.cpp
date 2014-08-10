@@ -30,7 +30,7 @@ typedef struct session hexchat_context;
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"
 #include "../common/fe.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/cfgfiles.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"

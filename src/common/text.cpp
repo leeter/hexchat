@@ -43,7 +43,7 @@
 #include "server.h"
 #include "util.hpp"
 #include "outbound.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "text.hpp"
 #include "typedef.h"
 

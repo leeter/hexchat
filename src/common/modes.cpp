@@ -21,7 +21,7 @@
 #include <cstdio>
 
 #include "hexchat.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "modes.h"
 #include "server.h"
 #include "text.hpp"

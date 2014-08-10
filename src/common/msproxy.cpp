@@ -38,7 +38,7 @@
 
 #include "hexchat.hpp"
 #include "network.h"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "server.h"
 #include "msproxy.h"
 

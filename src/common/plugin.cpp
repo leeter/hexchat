@@ -51,7 +51,7 @@ typedef struct session hexchat_context;
 
 
 
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 /* the USE_PLUGIN define only removes libdl stuff */
 

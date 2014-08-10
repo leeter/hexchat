@@ -41,7 +41,7 @@
 #include "text.hpp"
 #include "outbound.hpp"
 #include "util.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "url.hpp"
 #include "servlist.h"
 

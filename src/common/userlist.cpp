@@ -25,7 +25,7 @@
 #include "fe.hpp"
 #include "notify.h"
 #include "tree.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "util.hpp"
 
 static int

@@ -21,7 +21,7 @@
 #include <cstring>
 #include <cctype>
 #include "hexchat.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "tree.hpp"

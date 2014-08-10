@@ -30,7 +30,7 @@
 #include "../common/modes.h"
 #include "../common/text.hpp"
 #include "../common/notify.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"

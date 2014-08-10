@@ -35,7 +35,7 @@
 #include "fe.hpp"
 #include "text.hpp"
 #include "util.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "typedef.h"
 
 ignore::ignore()

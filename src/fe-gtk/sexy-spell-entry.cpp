@@ -41,7 +41,7 @@
 #endif
 
 #include "../common/cfgfiles.hpp"
-#include "../common/hexchatc.h"
+#include "../common/hexchatc.hpp"
 #include "palette.hpp"
 #include "xtext.hpp"
 

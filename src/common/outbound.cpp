@@ -49,7 +49,7 @@
 #include "notify.h"
 #include "inbound.hpp"
 #include "text.hpp"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "servlist.h"
 #include "server.h"
 #include "tree.hpp"

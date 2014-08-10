@@ -46,7 +46,7 @@
     <ClInclude Include="util.hpp" />
     <ClInclude Include="hexchat-plugin.h" />
     <ClInclude Include="hexchat.hpp" />
-    <ClInclude Include="hexchatc.h" />
+    <ClInclude Include="hexchatc.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cfgfiles.cpp" />
