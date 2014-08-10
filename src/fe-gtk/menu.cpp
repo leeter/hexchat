@@ -48,7 +48,7 @@
 #include "../common/notify.h"
 #include "../common/util.h"
 #include "../common/text.h"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "ascii.hpp"
 #include "banlist.hpp"
 #include "chanlist.h"

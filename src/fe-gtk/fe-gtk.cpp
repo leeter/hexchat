@@ -46,7 +46,7 @@
 #include "pixmaps.h"
 #include "chanlist.h"
 #include "joind.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "palette.hpp"
 #include "menu.hpp"
 #include "notifygui.hpp"

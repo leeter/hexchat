@@ -35,7 +35,7 @@
 #include "../common/fe.hpp"
 #include "../common/text.h"
 #include "gtkutil.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "textgui.h"

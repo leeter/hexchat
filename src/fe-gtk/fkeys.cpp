@@ -46,7 +46,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
 #include "menu.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "textgui.h"

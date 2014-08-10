@@ -50,7 +50,7 @@
 #include "chanview.hpp"
 #include "pixmaps.h"
 #include "plugin-tray.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "sexy-spell-entry.h"
 
 namespace dcc = hexchat::dcc;

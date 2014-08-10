@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_XTEXT_H
-#define HEXCHAT_XTEXT_H
+#ifndef HEXCHAT_XTEXT_HPP
+#define HEXCHAT_XTEXT_HPP
 
 #include <gtk/gtk.h>
 
@@ -50,9 +50,7 @@
 #define XTEXT_MARKER 36		/* for marker line */
 #define XTEXT_MAX_COLOR 41
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 typedef struct _GtkXText GtkXText;
 typedef struct _GtkXTextClass GtkXTextClass;
 typedef struct textentry textentry;
@@ -293,8 +291,5 @@ void gtk_xtext_buffer_show (GtkXText *xtext, xtext_buffer *buf, int render);
 void gtk_xtext_copy_selection (GtkXText *xtext);
 GType gtk_xtext_get_type (void);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif

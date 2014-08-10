@@ -39,7 +39,7 @@
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "rawlog.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "fkeys.h"
 
 namespace {
