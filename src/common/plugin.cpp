@@ -1311,7 +1311,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 		}	/* fall through */
 
 	default:
-		free (list);
+		delete list;
 		return NULL;
 	}
 

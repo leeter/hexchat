@@ -359,20 +359,18 @@ struct hexchatprefs
 #define LACT_CHAN_DATA	4		/* channel with other data */
 
 /* Moved from fe-gtk for use in outbound.c as well -- */
-typedef enum gtk_xtext_search_flags_e {
+enum gtk_xtext_search_flags {
 	case_match = 1,
 	backward = 2,
 	highlight = 4,
 	follow = 8,
 	regexp = 16
-} gtk_xtext_search_flags;
+};
 
-#ifdef __cplusplus
 inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_search_flags b)
 {
 	return static_cast<gtk_xtext_search_flags>(static_cast<int>(a) | static_cast<int>(b));
 }
-#endif
 
 struct session
 {
