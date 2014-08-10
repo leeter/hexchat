@@ -21,9 +21,6 @@
     <ClInclude Include="custom-list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="fkeys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="xtext.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editlist.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

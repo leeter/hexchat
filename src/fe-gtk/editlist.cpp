@@ -40,7 +40,7 @@
 #include "menu.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "editlist.h"
+#include "editlist.hpp"
 
 enum
 {

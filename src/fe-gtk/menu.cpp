@@ -52,7 +52,7 @@
 #include "ascii.hpp"
 #include "banlist.hpp"
 #include "chanlist.h"
-#include "editlist.h"
+#include "editlist.hpp"
 #include "fkeys.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"

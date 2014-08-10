@@ -17,17 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_EDITLIST_H
-#define HEXCHAT_EDITLIST_H
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef HEXCHAT_EDITLIST_HPP
+#define HEXCHAT_EDITLIST_HPP
 
 void editlist_gui_open (const char *title1, const char *title2, GSList * list, char *title, char *wmclass, char *file, char *help);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
