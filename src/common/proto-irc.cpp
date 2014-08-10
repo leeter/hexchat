@@ -42,7 +42,7 @@
 #include "outbound.hpp"
 #include "util.h"
 #include "hexchatc.h"
-#include "url.h"
+#include "url.hpp"
 #include "servlist.h"
 
 namespace {

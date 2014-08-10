@@ -55,7 +55,7 @@
 #include "plugin.h"
 #include "server.h"
 #include "text.h"
-#include "url.h"
+#include "url.hpp"
 #include "hexchatc.h"
 
 #ifdef USE_DCC64

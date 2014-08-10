@@ -31,7 +31,7 @@
 #include "../common/inbound.hpp"
 #include "../common/plugin.h"
 #include "../common/modes.h"
-#include "../common/url.h"
+#include "../common/url.hpp"
 #include "../common/util.h"
 #include "../common/text.h"
 #include "../common/chanopt.h"

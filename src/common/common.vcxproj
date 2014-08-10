@@ -41,7 +41,7 @@
     <ClInclude Include="textevents.h" />
     <ClInclude Include="tree.h" />
     <ClInclude Include="typedef.h" />
-    <ClInclude Include="url.h" />
+    <ClInclude Include="url.hpp" />
     <ClInclude Include="userlist.hpp" />
     <ClInclude Include="util.h" />
     <ClInclude Include="hexchat-plugin.h" />

@@ -39,7 +39,7 @@
 #include "../common/hexchatc.h"
 #include "../common/plugin.h"
 #include "../common/server.h"
-#include "../common/url.h"
+#include "../common/url.hpp"
 #include "../common/dcc.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"

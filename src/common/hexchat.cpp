@@ -50,7 +50,7 @@
 #include "servlist.h"
 #include "outbound.hpp"
 #include "text.h"
-#include "url.h"
+#include "url.hpp"
 #include "hexchatc.h"
 #include "dcc.hpp"
 

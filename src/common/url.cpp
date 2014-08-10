@@ -25,7 +25,7 @@
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "tree.h"
-#include "url.h"
+#include "url.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif

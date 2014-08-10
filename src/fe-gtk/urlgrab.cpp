@@ -26,7 +26,7 @@
 #include "../common/hexchatc.h"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
-#include "../common/url.h"
+#include "../common/url.hpp"
 #include "../common/tree.h"
 #include "gtkutil.hpp"
 #include "menu.hpp"

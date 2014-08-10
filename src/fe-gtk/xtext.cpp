@@ -37,7 +37,7 @@
 #include "../common/fe.hpp"
 #include "../common/util.h"
 #include "../common/hexchatc.h"
-#include "../common/url.h"
+#include "../common/url.hpp"
 #include "../common/marshal.h"
 #include "fe-gtk.hpp"
 #include "xtext.hpp"

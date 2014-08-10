@@ -59,7 +59,7 @@ extern "C"{
 #include "outbound.hpp"
 #include "text.h"
 #include "util.h"
-#include "url.h"
+#include "url.hpp"
 #include "proto-irc.hpp"
 #include "servlist.h"
 #include "server.h"
