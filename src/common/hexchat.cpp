@@ -464,35 +464,64 @@ irc_init (session *sess)
 	load_perform_file (sess, "startup.txt");
 }
 
+session::session(struct server *serv, char *from, int type, int focus)
+	:server(serv),
+	logfd(-1),
+	scrollfd(-1),
+	type(type),
+	alert_beep(SET_DEFAULT),
+	alert_taskbar(SET_DEFAULT),
+	alert_tray(SET_DEFAULT),
+	
+	text_hidejoinpart(SET_DEFAULT),
+	text_logging(SET_DEFAULT),
+	text_scrollback(SET_DEFAULT),
+	text_strip(SET_DEFAULT),
+	
+	lastact_idx(LACT_NONE),
+	usertree_alpha(nullptr),
+	usertree(nullptr),
+	me(nullptr),
+	channel(),
+	waitchannel(),
+
+	quitreason(nullptr),
+	topic(nullptr),
+	current_modes(nullptr),
+
+	lastlog_sess(nullptr),
+	running_exec(nullptr),
+	gui(nullptr),
+	res(nullptr),
+
+	scrollback_replay_marklast(nullptr),
+
+	ops(),
+	hops(),
+	voices(),
+	total(),
+	history(),
+	new_data(),
+	nick_said(),
+	msg_said(),
+	ignore_date(),
+	ignore_mode(),
+	ignore_names(),
+	end_of_names(),
+	doing_who(),
+	done_away_check(),
+	lastlog_flags()
+{
+	if (from)
+		safe_strcpy(this->channel, from, CHANLEN);
+}
+
 static session *
 session_new (server *serv, char *from, int type, int focus)
 {
 	session *sess;
 
-	sess = new(std::nothrow) session();// calloc(1, sizeof(struct session));
-	if (sess == nullptr)
-	{
-		return nullptr;
-	}
-
-	sess->server = serv;
-	sess->logfd = -1;
-	sess->scrollfd = -1;
-	sess->type = type;
-
-	sess->alert_beep = SET_DEFAULT;
-	sess->alert_taskbar = SET_DEFAULT;
-	sess->alert_tray = SET_DEFAULT;
-
-	sess->text_hidejoinpart = SET_DEFAULT;
-	sess->text_logging = SET_DEFAULT;
-	sess->text_scrollback = SET_DEFAULT;
-	sess->text_strip = SET_DEFAULT;
-
-	sess->lastact_idx = LACT_NONE;
-
-	if (from)
-		safe_strcpy (sess->channel, from, CHANLEN);
+	sess = new session(serv, from, type, focus);
 
 	sess_list = g_slist_prepend (sess_list, sess);
 
@@ -669,7 +698,6 @@ session_free (session *killsess)
 
 	send_quit_or_part (killsess);
 
-	history_free (&killsess->history);
 	free (killsess->topic);
 	free (killsess->current_modes);
 

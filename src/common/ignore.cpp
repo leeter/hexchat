@@ -38,6 +38,10 @@
 #include "hexchatc.h"
 #include "typedef.h"
 
+ignore::ignore()
+	:mask(),
+	type()
+{}
 
 int ignored_ctcp = 0;			  /* keep a count of all we ignore */
 int ignored_priv = 0;
@@ -249,7 +253,7 @@ ignore_check(const std::string& mask, int type)
 		list = list->next;
 	}
 
-	return true;
+	return false;
 }
 
 static char *

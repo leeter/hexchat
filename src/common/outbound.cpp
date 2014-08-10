@@ -638,7 +638,7 @@ cmd_clear (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (g_ascii_strcasecmp (reason, "HISTORY") == 0)
 	{
-		history_free (&sess->history);
+		sess->history.clear();
 		return TRUE;
 	}
 
@@ -4831,7 +4831,7 @@ handle_user_input (session *sess, char *text, int history, int nocommand)
 		return 1;
 
 	if (history)
-		history_add (&sess->history, text);
+		sess->history.add(text);
 
 	/* is it NOT a command, just text? */
 	if (nocommand || text[0] != prefs.hex_input_command_char[0])

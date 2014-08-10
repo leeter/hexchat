@@ -374,8 +374,9 @@ inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_se
 }
 #endif
 
-typedef struct session
+struct session
 {
+	session(struct server *serv, char *from, int type, int focus);
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
 	guint8 alert_beep;
@@ -403,7 +404,7 @@ typedef struct session
 
 	char lastnick[NICKLEN];			  /* last nick you /msg'ed */
 
-	struct history history;
+	history history;
 
 	int ops;								/* num. of ops in channel */
 	int hops;						  /* num. of half-oped users */
@@ -439,7 +440,7 @@ typedef struct session
 	bool done_away_check;	/* done checking for away status changes */
 	gtk_xtext_search_flags lastlog_flags;
 	void (*scrollback_replay_marklast) (struct session *sess);
-} session;
+};
 
 struct msproxy_state_t
 {

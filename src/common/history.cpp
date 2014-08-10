@@ -16,106 +16,106 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <string>
 #include <cstring>
 #include <cstdlib>
 #include "history.hpp"
 
-void
-history_add (struct history *his, const char *text)
+history::history()
+	:lines(),
+	pos(),
+	realpos()
 {
-	if (his->lines[his->realpos])
-		free (his->lines[his->realpos]);
-	his->lines[his->realpos] = strdup (text);
-	his->realpos++;
-	if (his->realpos == HISTORY_SIZE)
-		his->realpos = 0;
-	his->pos = his->realpos;
 }
 
 void
-history_free (struct history *his)
+history::clear()
 {
-	int i;
-	for (i = 0; i < HISTORY_SIZE; i++)
-	{
-		if (his->lines[i])
-		{
-			free (his->lines[i]);
-			his->lines[i] = 0;
-		}
-	}
+	this->lines.fill("");
+	this->pos = 0;
+	this->realpos = 0;
 }
 
-char *
-history_down (struct history *his)
+void
+history::add (const std::string& text)
+{
+	this->lines[this->realpos] = text;
+	this->realpos++;
+	if (this->realpos == HISTORY_SIZE)
+		this->realpos = 0;
+	this->pos = this->realpos;
+}
+
+std::pair<std::string, bool>
+history::down ()
 {
 	int next;
 
-	if (his->pos == his->realpos)	/* allow down only after up */
-		return 0;
-	if (his->realpos == 0)
+	if (this->pos == this->realpos)	/* allow down only after up */
+		return std::make_pair("", false);
+	if (this->realpos == 0)
 	{
-		if (his->pos == HISTORY_SIZE - 1)
+		if (this->pos == HISTORY_SIZE - 1)
 		{
-			his->pos = 0;
-			return "";
+			this->pos = 0;
+			return std::make_pair("", true);
 		}
 	} else
 	{
-		if (his->pos == his->realpos - 1)
+		if (this->pos == this->realpos - 1)
 		{
-			his->pos++;
-			return "";
+			this->pos++;
+			return std::make_pair("", true);
 		}
 	}
 
 	next = 0;
-	if (his->pos < HISTORY_SIZE - 1)
-		next = his->pos + 1;
+	if (this->pos < HISTORY_SIZE - 1)
+		next = this->pos + 1;
 
-	if (his->lines[next])
+	if (!this->lines[next].empty())
 	{
-		his->pos = next;
-		return his->lines[his->pos];
+		this->pos = next;
+		return std::make_pair(this->lines[this->pos], true);
 	}
 
-	return 0;
+	return std::make_pair("", false);
 }
 
-char *
-history_up (struct history *his, const char *current_text)
+std::pair<std::string, bool>
+history::up (const std::string & current_text)
 {
 	int next;
 
-	if (his->realpos == HISTORY_SIZE - 1)
+	if (this->realpos == HISTORY_SIZE - 1)
 	{
-		if (his->pos == 0)
-			return 0;
+		if (this->pos == 0)
+			return std::make_pair("", false);
 	} else
 	{
-		if (his->pos == his->realpos + 1)
-			return 0;
+		if (this->pos == this->realpos + 1)
+			return std::make_pair("", false);
 	}
 
 	next = HISTORY_SIZE - 1;
-	if (his->pos != 0)
-		next = his->pos - 1;
+	if (this->pos != 0)
+		next = this->pos - 1;
 
-	if (his->lines[next])
+	if (!this->lines[next].empty())
 	{
 		if
 		(
-			current_text[0] && strcmp(current_text, his->lines[next]) &&
-			(!his->lines[his->pos] || strcmp(current_text, his->lines[his->pos])) &&
-			(!his->lines[his->realpos] || strcmp(current_text, his->lines[his->pos]))
+			current_text[0] && this->lines[next] != current_text &&
+			(this->lines[this->pos].empty() || current_text != this->lines[this->pos]) &&
+			(this->lines[this->realpos].empty() || current_text != this->lines[this->pos])
 		)
 		{
-			history_add (his, current_text);
+			this->add (current_text);
 		}
 		
-		his->pos = next;
-		return his->lines[his->pos];
+		this->pos = next;
+		return std::make_pair(this->lines[this->pos], true);
 	}
 
-	return 0;
+	return std::make_pair("", false);
 }

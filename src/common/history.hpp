@@ -21,17 +21,21 @@
 #define HEXCHAT_HISTORY_HPP
 
 #define HISTORY_SIZE 100
+#include <string>
+#include <utility>
+#include <array>
 
-struct history
+class history
 {
-	char *lines[HISTORY_SIZE];
+	std::array<std::string, HISTORY_SIZE> lines;
 	int pos;
 	int realpos;
+public:
+	history();
+	void add(const std::string& text);
+	std::pair<std::string, bool> up(const std::string& current_text);
+	std::pair<std::string, bool> down();
+	void clear();
 };
-
-void history_add (struct history *his, const char *text);
-void history_free (struct history *his);
-char *history_up (struct history *his, const char *current_text);
-char *history_down (struct history *his);
 
 #endif
