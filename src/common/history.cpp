@@ -18,7 +18,7 @@
 
 #include <cstring>
 #include <cstdlib>
-#include "history.h"
+#include "history.hpp"
 
 void
 history_add (struct history *his, const char *text)

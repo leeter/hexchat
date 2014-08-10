@@ -17,14 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_HISTORY_H
-#define HEXCHAT_HISTORY_H
+#ifndef HEXCHAT_HISTORY_HPP
+#define HEXCHAT_HISTORY_HPP
 
 #define HISTORY_SIZE 100
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct history
 {
@@ -37,9 +33,5 @@ void history_add (struct history *his, const char *text);
 void history_free (struct history *his);
 char *history_up (struct history *his, const char *current_text);
 char *history_down (struct history *his);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

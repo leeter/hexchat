@@ -19,7 +19,7 @@
     <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />
-    <ClInclude Include="history.h" />
+    <ClInclude Include="history.hpp" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />
     <ClInclude Include="inbound.hpp" />

@@ -35,7 +35,7 @@
 #endif
 #endif
 
-#include "history.h"
+#include "history.hpp"
 
 #ifndef HAVE_SNPRINTF
 #define snprintf g_snprintf
