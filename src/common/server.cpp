@@ -97,7 +97,7 @@ GSList *serv_list = NULL;
 static void auto_reconnect (server *serv, int send_quit, int err);
 static void server_disconnect (session * sess, int sendquit, int err);
 static int server_cleanup (server * serv);
-static void server_connect (server *serv, char *hostname, int port, int no_login);
+static void server_connect (server *serv, char *hostname, int port, bool no_login);
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -796,7 +796,7 @@ timeout_auto_reconnect (server *serv)
 		serv->recondelay_tag = 0;
 		if (!serv->connected && !serv->connecting && serv->server_session)
 		{
-			server_connect (serv, serv->hostname, serv->port, FALSE);
+			server_connect (serv, serv->hostname, serv->port, false);
 		}
 	}
 	return 0;			  /* returning 0 should remove the timeout handler */
@@ -1673,7 +1673,7 @@ xit:
 }
 
 static void
-server_connect (server *serv, char *hostname, int port, int no_login)
+server_connect (server *serv, char *hostname, int port, bool no_login)
 {
 	int read_des[2];
 	unsigned int pid;
@@ -1720,7 +1720,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	if (serv->use_ssl)
 	{
 		char *cert_file;
-		serv->have_cert = FALSE;
+		serv->have_cert = false;
 
 		/* first try network specific cert/key */
 		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
@@ -1728,7 +1728,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 		{
 			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-				serv->have_cert = TRUE;
+				serv->have_cert = true;
 		}
 		else
 		{
@@ -1736,8 +1736,8 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", NULL);
 			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 			{
-				if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-					serv->have_cert = TRUE;
+				if (SSL_CTX_use_PrivateKey_file(ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+					serv->have_cert = true;
 			}
 		}
 		g_free (cert_file);
@@ -1745,7 +1745,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 #endif
 
 	server_set_defaults (serv);
-	serv->connecting = TRUE;
+	serv->connecting = true;
 	serv->port = port;
 	serv->no_login = no_login;
 

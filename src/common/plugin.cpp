@@ -1601,17 +1601,17 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 			tmp <<= 1;
 			tmp |= ((struct session *)data)->text_hidejoinpart;   /* 6 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_idmsg; /* 5 */
+			tmp |= ((struct session *)data)->server->have_idmsg ? 1 : 0; /* 5 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_whox;  /* 4 */
+			tmp |= ((struct session *)data)->server->have_whox ? 1 : 0;  /* 4 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->end_of_motd;/* 3 */
+			tmp |= ((struct session *)data)->server->end_of_motd ? 1 : 0;/* 3 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->is_away;    /* 2 */
+			tmp |= ((struct session *)data)->server->is_away ? 1 : 0;    /* 2 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connecting; /* 1 */ 
+			tmp |= ((struct session *)data)->server->connecting ? 1 : 0; /* 1 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connected;  /* 0 */
+			tmp |= ((struct session *)data)->server->connected ? 1 : 0;  /* 0 */
 			return tmp;
 		case 0x1a192: /* lag */
 			return ((struct session *)data)->server->lag;
