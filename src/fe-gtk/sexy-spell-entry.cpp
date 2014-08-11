@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <sstream>
 #include <gtk/gtk.h>
 #include "sexy-spell-entry.h"
 #include <cstring>
@@ -111,8 +112,8 @@ static gboolean   word_misspelled                             (SexySpellEntry   
                                                                int                   end);
 static gboolean   default_word_check                          (SexySpellEntry       *entry,
                                                                const gchar          *word);
-static gboolean   sexy_spell_entry_activate_language_internal (SexySpellEntry       *entry,
-                                                               const gchar          *lang,
+static bool   sexy_spell_entry_activate_language_internal (SexySpellEntry       *entry,
+                                                               const std::string     &lang,
                                                                GError              **error);
 static gchar     *get_lang_from_dict                          (struct EnchantDict   *dict);
 static void       sexy_spell_entry_recheck_all                (SexySpellEntry       *entry);
@@ -1207,7 +1208,6 @@ void
 sexy_spell_entry_activate_default_languages(SexySpellEntry *entry)
 {
 	GSList *enchant_langs;
-	char *lang, *langs;
 
 	if (!have_enchant)
 		return;
@@ -1217,21 +1217,17 @@ sexy_spell_entry_activate_default_languages(SexySpellEntry *entry)
 
 	enchant_langs = sexy_spell_entry_get_languages(entry);
 
-	langs = g_strdup (prefs.hex_text_spell_langs);
-
-	lang = strtok (langs, ",");
-	while (lang != NULL)
+	std::istringstream langs(prefs.hex_text_spell_langs);
+	for (std::string lang; std::getline(langs, lang, ',');)
 	{
-		if (enchant_has_lang (lang, enchant_langs))
+		if (enchant_has_lang (lang.c_str(), enchant_langs))
 		{
-			sexy_spell_entry_activate_language_internal (entry, lang, NULL);
+			sexy_spell_entry_activate_language_internal (entry, lang, nullptr);
 		}
-		lang = strtok (NULL, ",");
 	}
 
 	g_slist_foreach(enchant_langs, (GFunc) g_free, NULL);
 	g_slist_free(enchant_langs);
-	g_free (langs);
 
 	/* If we don't have any languages activated, use "en" */
 	if (entry->priv->dict_list == NULL)
@@ -1262,32 +1258,32 @@ get_lang_from_dict(struct EnchantDict *dict)
 	return lang;
 }
 
-static gboolean
-sexy_spell_entry_activate_language_internal(SexySpellEntry *entry, const gchar *lang, GError **error)
+static bool
+sexy_spell_entry_activate_language_internal(SexySpellEntry *entry, const std::string & lang, GError **error)
 {
 	struct EnchantDict *dict;
 
 	if (!have_enchant)
-		return FALSE;
+		return false;
 
 	if (!entry->priv->broker)
 		entry->priv->broker = enchant_broker_init();
 
-	if (g_hash_table_lookup(entry->priv->dict_hash, lang))
-		return TRUE;
+	if (g_hash_table_lookup(entry->priv->dict_hash, lang.c_str()))
+		return true;
 
-	dict = enchant_broker_request_dict(entry->priv->broker, lang);
+	dict = enchant_broker_request_dict(entry->priv->broker, lang.c_str());
 
 	if (!dict) {
-		g_set_error(error, SEXY_SPELL_ERROR, SEXY_SPELL_ERROR_BACKEND, _("enchant error for language: %s"), lang);
-		return FALSE;
+		g_set_error(error, SEXY_SPELL_ERROR, SEXY_SPELL_ERROR_BACKEND, _("enchant error for language: %s"), lang.c_str());
+		return false;
 	}
 
 	enchant_dict_add_to_session (dict, "HexChat", strlen("HexChat"));
 	entry->priv->dict_list = g_slist_append(entry->priv->dict_list, (gpointer) dict);
 	g_hash_table_insert(entry->priv->dict_hash, get_lang_from_dict(dict), (gpointer) dict);
 
-	return TRUE;
+	return true;
 }
 
 static void
