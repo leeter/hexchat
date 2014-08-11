@@ -40,7 +40,7 @@
 #include "server.h"
 #include "servlist.h"
 #include "modes.h"
-#include "notify.h"
+#include "notify.hpp"
 #include "text.hpp"
 #include "dcc.hpp"
 #define PLUGIN_C

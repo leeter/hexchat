@@ -28,7 +28,7 @@
     <ClInclude Include="modes.h" />
     <ClInclude Include="msproxy.h" />
     <ClInclude Include="network.h" />
-    <ClInclude Include="notify.h" />
+    <ClInclude Include="notify.hpp" />
     <ClInclude Include="outbound.hpp" />
     <ClInclude Include="plugin-timer.hpp" />
     <ClInclude Include="plugin.h" />

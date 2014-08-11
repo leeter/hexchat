@@ -45,7 +45,7 @@
 #include "hexchat-plugin.h"
 #include "plugin.h"
 #include "plugin-timer.hpp"
-#include "notify.h"
+#include "notify.hpp"
 #include "server.h"
 #include "servlist.h"
 #include "outbound.hpp"

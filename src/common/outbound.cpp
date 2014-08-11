@@ -46,7 +46,7 @@
 #include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.h"				/* net_ip() */
 #include "modes.h"
-#include "notify.h"
+#include "notify.hpp"
 #include "inbound.hpp"
 #include "text.hpp"
 #include "hexchatc.hpp"

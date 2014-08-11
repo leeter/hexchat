@@ -34,7 +34,7 @@
 #endif
 
 #include "hexchat.hpp"
-#include "notify.h"
+#include "notify.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "server.h"

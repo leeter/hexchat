@@ -53,7 +53,7 @@ extern "C"{
 #include "fe.hpp"
 #include "cfgfiles.hpp"
 #include "network.h"
-#include "notify.h"
+#include "notify.hpp"
 #include "hexchatc.hpp"
 #include "inbound.hpp"
 #include "outbound.hpp"

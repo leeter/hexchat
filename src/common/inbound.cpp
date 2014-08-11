@@ -42,7 +42,7 @@
 #include "ignore.hpp"
 #include "fe.hpp"
 #include "modes.h"
-#include "notify.h"
+#include "notify.hpp"
 #include "outbound.hpp"
 #include "inbound.hpp"
 #include "server.h"

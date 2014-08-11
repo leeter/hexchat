@@ -45,7 +45,7 @@
 #include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/servlist.h"
-#include "../common/notify.h"
+#include "../common/notify.hpp"
 #include "../common/util.hpp"
 #include "../common/text.hpp"
 #include "xtext.hpp"

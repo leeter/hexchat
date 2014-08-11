@@ -19,12 +19,8 @@
 
 #include "proto-irc.hpp"
 
-#ifndef HEXCHAT_NOTIFY_H
-#define HEXCHAT_NOTIFY_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_NOTIFY_HPP
+#define HEXCHAT_NOTIFY_HPP
 
 struct notify
 {
@@ -73,9 +69,5 @@ struct notify_per_server *notify_find_server_entry (struct notify *notify, struc
 void notify_markonline (server *serv, const char * const word[], 
 								const message_tags_data *tags_data);
 int notify_checklist (void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
