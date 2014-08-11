@@ -446,7 +446,7 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 	struct notify *notify;
 	struct notify_per_server *servnot;
 	GSList *list = notify_list;
-	int i, seen;
+	int i;
 
 	while (list)
 	{
@@ -458,12 +458,12 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 			continue;
 		}
 		i = 4;
-		seen = FALSE;
+		bool seen = false;
 		while (*word[i])
 		{
 			if (!serv->p_cmp (notify->name, word[i]))
 			{
-				seen = TRUE;
+				seen = true;
 				notify_announce_online (serv, servnot, notify->name, tags_data);
 				break;
 			}
