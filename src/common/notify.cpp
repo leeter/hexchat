@@ -289,62 +289,52 @@ notify_set_online (server * serv, char *nick,
 /* monitor can send lists for numeric 730/731 */
 
 void
-notify_set_offline_list (server * serv, char *users, int quiet,
+notify_set_offline_list (server * serv, const char *users, int quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
 	char nick[NICKLEN] = { 0 };
-	char *token, *chr;
-	int pos;
 
-	token = strtok (users, ",");
-	while (token != NULL)
+	std::istringstream stream(users);
+	for (std::string token; std::getline(stream, token, ',');)
 	{
-		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		auto pos = token.find_first_of('!');
+		if (pos == std::string::npos)
+			continue;
 
-		pos = chr - token;
 		if (pos + 1 >= sizeof(nick))
-			goto end;
+			continue;
 
-		strncpy (nick, token, pos);
+		std::copy_n(token.cbegin(), pos, std::begin(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_offline (serv, servnot, nick, quiet, tags_data);
-end:
-		token = strtok (NULL, ",");
 	}
 }
 
 void
-notify_set_online_list (server * serv, char *users,
+notify_set_online_list (server * serv, const char *users,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
 	char nick[NICKLEN] = { 0 };
-	char *token, *chr;
-	int pos;
 
-	token = strtok (users, ",");
-	while (token != NULL)
+	std::istringstream stream(users);
+	for (std::string token; std::getline(stream, token, ',');)
 	{
-		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		auto pos = token.find_first_of('!');
+		if (pos == std::string::npos)
+			continue;
 
-		pos = chr - token;
 		if (pos + 1 >= sizeof(nick))
-			goto end;
+			continue;
 
-		strncpy (nick, token, pos);
+		std::copy_n(token.cbegin(), pos, std::begin(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_online (serv, servnot, nick, tags_data);
-end:
-		token = strtok (NULL, ",");
 	}
 }
 
@@ -451,7 +441,7 @@ notify_send_watches (server * serv)
 /* called when receiving a ISON 303 - should this func go? */
 
 void
-notify_markonline (server *serv, char *word[], const message_tags_data *tags_data)
+notify_markonline(server *serv, const char * const word[], const message_tags_data *tags_data)
 {
 	struct notify *notify;
 	struct notify_per_server *servnot;
