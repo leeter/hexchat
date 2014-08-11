@@ -385,7 +385,7 @@ log_close (session *sess)
 	if (sess->logfd != -1)
 	{
 		std::time_t currenttime = std::time (NULL);
-		std::ostringstream stream(_("**** ENDING LOGGING AT %s\n"), std::ios_base::ate);
+		std::ostringstream stream(_("**** ENDING LOGGING AT "), std::ios_base::ate);
 		stream << std::ctime(&currenttime) <<"\n";
 		auto to_output = stream.str();
 		write (sess->logfd, to_output.c_str(), to_output.length());
