@@ -444,8 +444,8 @@ banlist_do_refresh (banlist_info *banl)
 	if (sess->server->connected)
 	{
 		GtkListStore *store;
-		std::ostringstream stream;
-		stream << DISPLAY_NAME": Ban List (" << sess->channel << ", " << sess->server->servername << ")";
+		std::ostringstream stream(DISPLAY_NAME": Ban List (", std::ios::ate);
+		stream << sess->channel << ", " << sess->server->servername << ")";
 		mg_set_title (banl->window, stream.str().c_str());
 
 		store = get_store (sess);
