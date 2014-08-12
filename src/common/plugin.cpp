@@ -1765,7 +1765,7 @@ hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char
 	char *confname_tmp;
 	char *buffer;
 	char *buffer_tmp;
-	char line_buffer[512];		/* the same as in cfg_put_str */
+	char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
 	char *line_bufp = line_buffer;
 	char *canon;
 

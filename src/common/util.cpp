@@ -1666,8 +1666,10 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	encrypted_pass = static_cast<unsigned char*>(calloc (1, pass_len));
 	plain_pass = static_cast<char*>(calloc(1, pass_len));
 
-	if (!encrypted_pass && !plain_pass)
+	if (!encrypted_pass || !plain_pass)
 	{
+		free(encrypted_pass);
+		free(plain_pass);
 		DH_free(dh);
 		free(secret);
 		return NULL;
@@ -1738,8 +1740,10 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 
 	encrypted_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*encrypted_userpass)));
 	plain_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*plain_userpass)));
-	if (!encrypted_userpass && !plain_userpass)
+	if (!encrypted_userpass || !plain_userpass)
 	{
+		free(encrypted_userpass);
+		free(plain_userpass);
 		DH_free(dh);
 		free(secret);
 		return NULL;

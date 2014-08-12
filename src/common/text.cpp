@@ -1695,7 +1695,8 @@ pevent_load (char *filename)
 		close (fd);
 		return 1;
 	}
-	ibuf = static_cast<char*>(malloc (st.st_size));
+	std::string ibufr(st.st_size, '\0');
+	ibuf = &ibuf[0];
 	read (fd, ibuf, st.st_size);
 	close (fd);
 
@@ -1768,7 +1769,6 @@ pevent_load (char *filename)
 	}
 
 	pevent_trigger_load (&penum, &text, &snd);
-	free (ibuf);
 	return 0;
 }
 

@@ -575,6 +575,8 @@ server_stopconnecting (server * serv)
 	{
 		/* if we close the pipe now, giowin32 will crash. */
 		int *pipefd = static_cast<int*>(malloc (sizeof (int) * 2));
+		if (!pipefd)
+			std::terminate();
 		pipefd[0] = serv->childwrite;
 		pipefd[1] = serv->childread;
 		g_idle_add ((GSourceFunc)server_close_pipe, pipefd);

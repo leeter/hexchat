@@ -1030,14 +1030,14 @@ servlist_favchan_free (favchannel *channel)
 {
 	g_free (channel->name);
 	g_free (channel->key);
-	g_free (channel);
+	free (channel);
 }
 
 void
 servlist_favchan_remove (ircnet *net, favchannel *channel)
 {
-	servlist_favchan_free (channel);
 	net->favchanlist = g_slist_remove (net->favchanlist, channel);
+	servlist_favchan_free(channel);
 }
 
 static void
@@ -1106,7 +1106,7 @@ servlist_net_remove (ircnet *net)
 		}
 		list = list->next;
 	}
-	free(net);
+	delete net;
 }
 
 ircnet *
@@ -1114,9 +1114,7 @@ servlist_net_add (char *name, char *comment, int prepend)
 {
 	ircnet *net;
 
-	net = static_cast<ircnet *>(calloc(1, sizeof(*net)));
-	if (!net)
-		return NULL;
+	net = new ircnet();
 	net->name = strdup (name);
 /*	net->comment = strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;

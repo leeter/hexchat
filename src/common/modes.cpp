@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <string>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -37,20 +38,20 @@
 struct mode_run
 {
 	server *serv;
-	char *op;
-	char *deop;
-	char *voice;
-	char *devoice;
+	std::string op;
+	std::string deop;
+	std::string voice;
+	std::string devoice;
 };
 
 static int is_prefix_char (const server * serv, char c);
 static void record_chan_mode (session *sess, char sign, char mode, char *arg);
 static char *mode_cat (char *str, const char *addition);
-static void handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
+static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 										  char *chan, char *arg, int quiet, int is_324,
 										  const message_tags_data *tags_data);
 static int mode_has_arg (server *serv, char sign, char mode);
-static void mode_print_grouped (session *sess, char *nick, mode_run *mr,
+static void mode_print_grouped (session *sess, char *nick, mode_run &mr,
 										  const message_tags_data *tags_data);
 static int mode_chanmode_type (server * serv, char mode);
 
@@ -363,37 +364,28 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 	}
 }
 
-static char *
-mode_cat (char *str, const char *addition)
+static std::string
+mode_cat(const std::string& str, const std::string& addition)
 {
 	int len;
 
-	if (str)
+	if (!str.empty())
 	{
-		len = strlen (str) + strlen (addition) + 2;
-		str = static_cast<char*>(realloc (str, len));
-		if (!str)
-			return nullptr;
-		strcat (str, " ");
-		strcat (str, addition);
-	} else
-	{
-		str = strdup (addition);
+		return str + " " + addition;
 	}
-
-	return str;
+	return addition;
 }
 
 /* handle one mode, e.g.
    handle_single_mode (mr,'+','b',"elite","#warez","banneduser",) */
 
 static void
-handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
+handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 						  char *chan, char *arg, int quiet, int is_324,
 						  const message_tags_data *tags_data)
 {
 	session *sess;
-	server *serv = mr->serv;
+	server *serv = mr.serv;
 	char outbuf[4];
 	char *cm = serv->chanmodes;
 	bool supportsq = false;
@@ -456,7 +448,7 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 			return;
 		case 'o':
 			if (!quiet)
-				mr->op = mode_cat (mr->op, arg);
+				mr.op = mode_cat (mr.op, arg);
 			return;
 		case 'h':
 			if (!quiet)
@@ -465,7 +457,7 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 			return;
 		case 'v':
 			if (!quiet)
-				mr->voice = mode_cat (mr->voice, arg);
+				mr.voice = mode_cat (mr.voice, arg);
 			return;
 		case 'b':
 			if (!quiet)
@@ -512,7 +504,7 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 			return;
 		case 'o':
 			if (!quiet)
-				mr->deop = mode_cat (mr->deop, arg);
+				mr.deop = mode_cat (mr.deop, arg);
 			return;
 		case 'h':
 			if (!quiet)
@@ -521,7 +513,7 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 			return;
 		case 'v':
 			if (!quiet)
-				mr->devoice = mode_cat (mr->devoice, arg);
+				mr.devoice = mode_cat (mr.devoice, arg);
 			return;
 		case 'b':
 			if (!quiet)
@@ -626,40 +618,40 @@ mode_chanmode_type (server * serv, char mode)
 }
 
 static void
-mode_print_grouped (session *sess, char *nick, mode_run *mr,
+mode_print_grouped (session *sess, char *nick, mode_run &mr,
 						  const message_tags_data *tags_data)
 {
 	/* print all the grouped Op/Deops */
-	if (mr->op)
+	if (!mr.op.empty())
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, nick, mr->op, NULL, NULL, 0,
+		mr.op.push_back(0);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, nick, &mr.op[0], NULL, NULL, 0,
 									  tags_data->timestamp);
-		free (mr->op);
-		mr->op = NULL;
+		mr.op.clear();
 	}
 
-	if (mr->deop)
+	if (!mr.deop.empty())
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, nick, mr->deop, NULL, NULL,
+		mr.deop.push_back(0);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, nick, &mr.deop[0], NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->deop);
-		mr->deop = NULL;
+		mr.deop.clear();
 	}
 
-	if (mr->voice)
+	if (!mr.voice.empty())
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, nick, mr->voice, NULL, NULL,
+		mr.voice.push_back(0);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, nick, &mr.voice[0], NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->voice);
-		mr->voice = NULL;
+		mr.voice.clear();
 	}
 
-	if (mr->devoice)
+	if (!mr.devoice.empty())
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, nick, mr->devoice, NULL,
+		mr.devoice.push_back(0);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, nick, &mr.devoice[0], NULL,
 									  NULL, 0, tags_data->timestamp);
-		free (mr->devoice);
-		mr->devoice = NULL;
+		mr.devoice.clear();
 	}
 }
 
@@ -682,7 +674,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	int offset = 3;
 	bool all_modes_have_args = false;
 	bool using_front_tab = false;
-	mode_run mr = { 0 };
+	mode_run mr = mode_run();
 
 	mr.serv = serv;
 
@@ -754,7 +746,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 		case '-':
 		case '+':
 			/* print all the grouped Op/Deops */
-			mode_print_grouped (sess, nick, &mr, tags_data);
+			mode_print_grouped (sess, nick, mr, tags_data);
 			sign = *modes;
 			break;
 		default:
@@ -764,7 +756,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 				arg++;
 				argstr = word[arg + offset];
 			}
-			handle_single_mode (&mr, sign, *modes, nick, chan,
+			handle_single_mode (mr, sign, *modes, nick, chan,
 									  argstr, numeric_324 || prefs.hex_irc_raw_modes,
 									  numeric_324, tags_data);
 		}
@@ -777,7 +769,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 		fe_set_title (sess);
 
 	/* print all the grouped Op/Deops */
-	mode_print_grouped (sess, nick, &mr, tags_data);
+	mode_print_grouped (sess, nick, mr, tags_data);
 }
 
 /* handle the 005 numeric */
