@@ -995,8 +995,8 @@ void
 servlist_server_remove (ircnet *net, ircserver *serv)
 {
 	free (serv->hostname);
-	free (serv);
 	net->servlist = g_slist_remove (net->servlist, serv);
+	free(serv);
 }
 
 static void
@@ -1094,7 +1094,6 @@ servlist_net_remove (ircnet *net)
 	if (net->encoding)
 		free (net->encoding);
 	free (net->name);
-	free (net);
 
 	/* for safety */
 	list = serv_list;
@@ -1107,6 +1106,7 @@ servlist_net_remove (ircnet *net)
 		}
 		list = list->next;
 	}
+	free(net);
 }
 
 ircnet *

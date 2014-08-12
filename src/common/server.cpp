@@ -246,6 +246,8 @@ tcp_send_len (server *serv, const char *buf, int len)
 		return server_send_real (serv, buf, len);
 
 	dbuf = static_cast<char*>(malloc (len + 2));	/* first byte is the priority */
+	if (!dbuf)
+		return -1;
 	dbuf[0] = 2;	/* pri 2 for most things */
 	memcpy (dbuf + 1, buf, len);
 	dbuf[len + 1] = 0;
@@ -1483,7 +1485,7 @@ server_child (server * serv)
 	netstore *ns_local;
 	int port = serv->port;
 	int error;
-	int sok, psok;
+	int sok = -1, psok = -1;
 	char *hostname = serv->hostname;
 	char *real_hostname = NULL;
 	char *ip;
@@ -1675,7 +1677,7 @@ xit:
 static void
 server_connect (server *serv, char *hostname, int port, bool no_login)
 {
-	int read_des[2];
+	int read_des[2] = { 0 };
 	unsigned int pid;
 	session *sess = serv->server_session;
 

@@ -51,7 +51,8 @@ static char *
 despacify_dup (char *str)
 {
 	char *p, *res = static_cast<char*>(malloc (strlen (str) + 1));
-
+	if (!res)
+		return nullptr;
 	p = res;
 	while (1)
 	{
@@ -490,7 +491,7 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 static void
 notify_checklist_for_server (server *serv)
 {
-	char outbuf[512];
+	char outbuf[512] = { 0 };
 	struct notify *notify;
 	GSList *list = notify_list;
 	int i = 0;

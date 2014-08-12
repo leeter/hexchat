@@ -237,7 +237,7 @@ find_channel (server *serv, char *chan)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if ((!serv || serv == sess->server) && sess->type == SESS_CHANNEL)
+		if ((serv && serv == sess->server) && sess->type == SESS_CHANNEL)
 		{
 			if (!serv->p_cmp (chan, sess->channel))
 				return sess;
@@ -1042,7 +1042,7 @@ static void
 set_locale (void)
 {
 #ifdef WIN32
-	char hexchat_lang[13];	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
+	char hexchat_lang[13] = { 0 };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
 
 	strcpy (hexchat_lang, "LC_ALL=");
 
@@ -1079,6 +1079,9 @@ main (int argc, char *argv[])
 				}
 
 				xdir = strdup (argv[i + 1]);
+
+				if (!xdir)
+					return -1;
 
 				if (xdir[strlen (xdir) - 1] == G_DIR_SEPARATOR)
 				{

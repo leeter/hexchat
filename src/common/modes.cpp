@@ -372,6 +372,8 @@ mode_cat (char *str, const char *addition)
 	{
 		len = strlen (str) + strlen (addition) + 2;
 		str = static_cast<char*>(realloc (str, len));
+		if (!str)
+			return nullptr;
 		strcat (str, " ");
 		strcat (str, addition);
 	} else

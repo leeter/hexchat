@@ -68,6 +68,8 @@ list_addentry (GSList ** list, char *cmd, char *name)
 	name_len = strlen (name) + 1;
 
 	pop = static_cast<popup*>(malloc (sizeof (struct popup) + cmd_len + name_len));
+	if (!pop)
+		return;
 	pop->name = (char *) pop + sizeof (struct popup);
 	pop->cmd = pop->name + name_len;
 
@@ -1237,6 +1239,8 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				{
 					/* save the previous value until we print it out */
 					prev_string = (char*) malloc (vars[i].len + 1);
+					if (!prev_string)
+						return false;
 					strncpy (prev_string, (char *) &prefs + vars[i].offset, vars[i].len);
 
 					/* update the variable */

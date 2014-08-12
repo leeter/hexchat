@@ -26,6 +26,7 @@
 #include <glib/gstdio.h>
 #include <glib/gi18n.h>
 
+#include <string>
 #include <ctime>			/* need time_t */
 
 #ifdef USE_OPENSSL
