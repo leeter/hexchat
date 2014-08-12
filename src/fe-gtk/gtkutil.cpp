@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <sstream>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -163,8 +165,6 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	GtkWidget *dialog;
 	GtkFileFilter *filefilter;
 	extern char *get_xdir_fs (void);
-	char *token;
-	char *tokenbuffer;
 
 	if (flags & FRF_WRITE)
 	{
@@ -207,19 +207,16 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	if ((flags & FRF_EXTENSIONS || flags & FRF_MIMETYPES) && extensions != NULL)
 	{
 		filefilter = gtk_file_filter_new ();
-		tokenbuffer = g_strdup (extensions);
-		token = strtok (tokenbuffer, ";");
+		std::istringstream tokenbuffer(extensions);
 
-		while (token != NULL)
+		for (std::string token; std::getline(tokenbuffer, token, ';');)
 		{
 			if (flags & FRF_EXTENSIONS)
-				gtk_file_filter_add_pattern (filefilter, token);
+				gtk_file_filter_add_pattern(filefilter, token.c_str());
 			else
-				gtk_file_filter_add_mime_type (filefilter, token);
-			token = strtok (NULL, ";");
+				gtk_file_filter_add_mime_type (filefilter, token.c_str());
 		}
 
-		g_free (tokenbuffer);
 		gtk_file_chooser_set_filter (GTK_FILE_CHOOSER (dialog), filefilter);
 	}
 
