@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -103,8 +104,8 @@ GSList *tabmenu_list = 0;
 GList *sess_list_by_lastact[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
 
-static int in_hexchat_exit = FALSE;
-int hexchat_is_quitting = FALSE;
+static std::atomic_bool in_hexchat_exit = { false };
+std::atomic_bool hexchat_is_quitting = { false };
 /* command-line args */
 int arg_dont_autoconnect = FALSE;
 int arg_skip_plugins = FALSE;
@@ -1011,8 +1012,8 @@ xchat_init (void)
 void
 hexchat_exit (void)
 {
-	hexchat_is_quitting = TRUE;
-	in_hexchat_exit = TRUE;
+	hexchat_is_quitting = true;
+	in_hexchat_exit = true;
 	plugin_kill_all ();
 	fe_cleanup ();
 

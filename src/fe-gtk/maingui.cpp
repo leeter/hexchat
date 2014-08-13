@@ -1789,7 +1789,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 	session *sess;
 
 /*	puts("enter mg_tabwindow_kill_cb");*/
-	hexchat_is_quitting = TRUE;
+	hexchat_is_quitting = true;
 
 	/* see if there's any non-tab windows left */
 	list = sess_list;
@@ -1799,7 +1799,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 		next = list->next;
 		if (!sess->gui->is_tab)
 		{
-			hexchat_is_quitting = FALSE;
+			hexchat_is_quitting = false;
 /*			puts("-> will not exit, some toplevel windows left");*/
 		} else
 		{
@@ -1855,7 +1855,7 @@ mg_link_irctab (session *sess, int focus)
 		win = mg_changui_destroy (sess);
 		mg_changui_new (sess, sess->res, 0, focus);
 		mg_populate (sess);
-		hexchat_is_quitting = FALSE;
+		hexchat_is_quitting = false;
 		if (win)
 			gtk_widget_destroy (win);
 		return;

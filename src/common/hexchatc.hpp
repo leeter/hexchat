@@ -19,10 +19,11 @@
 
 #ifndef HEXCHAT_C_HPP
 #define HEXCHAT_C_HPP
+#include <atomic>
 
 extern struct hexchatprefs prefs;
 
-extern int hexchat_is_quitting;
+extern std::atomic_bool hexchat_is_quitting;
 extern gint arg_skip_plugins;	/* command-line args */
 extern gint arg_dont_autoconnect;
 extern char *arg_url;

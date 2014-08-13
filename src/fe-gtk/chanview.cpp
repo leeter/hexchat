@@ -19,6 +19,7 @@
 
 /* abstract channel view: tabs or tree or anything you like */
 
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 
@@ -1783,7 +1784,7 @@ chan_remove (chan *ch, gboolean force)
 {
 	chan *new_ch;
 	int i, num;
-	extern int hexchat_is_quitting;
+	extern std::atomic_bool hexchat_is_quitting;
 
 	if (hexchat_is_quitting)	/* avoid lots of looping on exit */
 		return TRUE;
