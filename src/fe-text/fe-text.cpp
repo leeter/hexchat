@@ -591,7 +591,7 @@ fe_new_server (struct server *serv)
 }
 
 void
-fe_message (const char *msg, int flags)
+fe_message (const std::string& msg, int flags)
 {
 	std::cout << msg << "\n";
 }
