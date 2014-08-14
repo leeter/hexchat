@@ -34,6 +34,7 @@
 #include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
 #include <sys/timeb.h>
@@ -1078,19 +1079,18 @@ static const std::unordered_map<std::string, std::string> domain =
 const char *
 country (const char *hostname)
 {
+	std::locale loc;
 	const char *p;
-	if (!hostname || !*hostname || isdigit ((unsigned char) hostname[strlen (hostname) - 1]))
+	if (!hostname || !*hostname || std::isdigit (hostname[strlen (hostname) - 1], loc))
 		return NULL;
 	if ((p = strrchr (hostname, '.')))
 		p++;
 	else
 		p = hostname;
 
-	auto upper = std::bind(std::toupper<char>, std::placeholders::_1, std::locale());
-	std::string lowercased_domain(p);
-	std::string uppercased_domain(lowercased_domain.length(), '\0');
-	std::transform(lowercased_domain.cbegin(), lowercased_domain.cend(), uppercased_domain.begin(), upper);
-	auto dom = domain.find(uppercased_domain);
+	std::string host(p);
+	boost::algorithm::to_upper(host, loc);
+	auto dom = domain.find(host);
 
 	if (dom == domain.cend())
 		return NULL;
