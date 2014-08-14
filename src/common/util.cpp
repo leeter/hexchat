@@ -37,6 +37,7 @@
 #include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
+#include <codecvt>
 #include <sys/timeb.h>
 #include <io.h>
 #include <VersionHelpers.h>
@@ -151,7 +152,8 @@ errorstring (int err)
 	/* can't use strerror() on Winsock errors! */
 	if (err >= WSABASEERR)
 	{
-		static char tbuf[384];
+		static char fbuf[384];
+		std::wstring tbuf(384, '\0');
 		OSVERSIONINFOW osvi = { 0 };
 
 		osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOW);
@@ -160,35 +162,30 @@ errorstring (int err)
 		/* FormatMessage works on WSA*** errors starting from Win2000 */
 		if (osvi.dwMajorVersion >= 5)
 		{
-			if (FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM |
+			if (FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
 									  FORMAT_MESSAGE_IGNORE_INSERTS |
 									  FORMAT_MESSAGE_MAX_WIDTH_MASK,
 									  NULL, err,
 									  MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-									  tbuf, sizeof (tbuf), NULL))
+									  &tbuf[0], tbuf.size(), NULL))
 			{
-				int len;
-				char *utf;
-
-				tbuf[sizeof (tbuf) - 1] = 0;
-				len = strlen (tbuf);
-				if (len >= 2)
-					tbuf[len - 2] = 0;	/* remove the cr-lf */
-
 				/* now convert to utf8 */
-				utf = g_locale_to_utf8 (tbuf, -1, 0, 0, 0);
-				if (utf)
-				{
-					safe_strcpy (tbuf, utf, sizeof (tbuf));
-					g_free (utf);
-					return tbuf;
-				}
+				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > convert;
+				auto utf8 = convert.to_bytes(tbuf);
+				/* remove the cr-lf if present */ 
+				auto crlf = utf8.find_first_of("\r\n");
+
+				if (crlf != std::string::npos)
+					utf8.erase(crlf);
+
+				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
+				return fbuf;
 			}
 		}	/* ! if (osvi.dwMajorVersion >= 5) */
 
 		/* fallback to error number */
-		sprintf (tbuf, "%s %d", _("Error"), err);
-		return tbuf;
+		sprintf (fbuf, "%s %d", _("Error"), err);
+		return fbuf;
 	} /* ! if (err >= WSABASEERR) */
 #endif	/* ! WIN32 */
 
