@@ -8,8 +8,3 @@ script:
     - ./autogen.sh
     - ./configure --enable-textfe --with-theme-manager
     - make V=1
-notifications:
-    irc:
-        channels: "chat.freenode.net#hexchat-devel"
-        template: "Build #%{build_number} (%{commit}) by %{author}: %{message}"
-        on_success: change
