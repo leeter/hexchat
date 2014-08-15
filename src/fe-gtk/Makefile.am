@@ -7,11 +7,11 @@ AM_CPPFLAGS = $(GUI_CFLAGS) -DLOCALEDIR=\"$(localedir)\"
 hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS)
 
 EXTRA_DIST = \
-	ascii.h banlist.h chanlist.h chanview.h chanview-tabs.c \
-	chanview-tree.c custom-list.h editlist.h fe-gtk.h fkeys.h gtkutil.h joind.h \
-	maingui.h menu.h notifygui.h palette.h pixmaps.h \
-	plugin-tray.h plugingui.c plugingui.h rawlog.h sexy-iso-codes.h \
-	sexy-spell-entry.h textgui.h urlgrab.h userlistgui.h xtext.h \
+	ascii.hpp banlist.hpp chanlist.h chanview.hpp \
+	custom-list.h editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.h \
+	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.h \
+	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.h \
+	sexy-spell-entry.h textgui.h urlgrab.hpp userlistgui.hpp xtext.hpp \
 	../../data/hexchat.gresource.xml
 
 BUILT_SOURCES = resources.c
@@ -19,18 +19,18 @@ BUILT_SOURCES = resources.c
 CLEANFILES = $(BUILT_SOURCES)
 
 if DO_PLUGIN
-plugingui_c = plugingui.c
+plugingui_c = plugingui.cpp
 endif
 
 if HAVE_ISO_CODES
-iso_codes_c = sexy-iso-codes.c
+iso_codes_c = sexy-iso-codes.cpp
 endif
 
-hexchat_SOURCES = ascii.c banlist.c chanlist.c chanview.c custom-list.c \
-	dccgui.c editlist.c fe-gtk.c fkeys.c gtkutil.c ignoregui.c joind.c menu.c \
-	maingui.c notifygui.c palette.c pixmaps.c plugin-tray.c $(plugingui_c) \
-	rawlog.c resources.c servlistgui.c setup.c $(iso_codes_c) \
-	sexy-spell-entry.c textgui.c urlgrab.c userlistgui.c xtext.c
+hexchat_SOURCES = ascii.cpp banlist.cpp chanlist.cpp chanview.cpp custom-list.cpp \
+	dccgui.cpp editlist.cpp fe-gtk.cpp fkeys.cpp gtkutil.cpp ignoregui.cpp joind.cpp menu.cpp \
+	maingui.cpp notifygui.cpp palette.cpp pixmaps.cpp plugin-tray.cpp $(plugingui_c) \
+	rawlog.cpp resources.c servlistgui.cpp setup.cpp $(iso_codes_c) \
+	sexy-spell-entry.cpp textgui.cpp urlgrab.cpp userlistgui.cpp xtext.cpp
 hexchat_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_builddir)/src/common
 
 resources.c: $(top_srcdir)/data/hexchat.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(top_srcdir)/data --generate-dependencies $(top_srcdir)/data/hexchat.gresource.xml)
