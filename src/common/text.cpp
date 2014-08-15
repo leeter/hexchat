@@ -24,6 +24,7 @@
 #include <cstring>
 #include <cctype>
 #include <ctime>
+#include <numeric>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -2084,12 +2085,9 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 static char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
 int
-text_color_of (const char *name)
+text_color_of (const std::string &name)
 {
-	int i = 0, sum = 0;
-
-	while (name[i])
-		sum += name[i++];
+	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
 	sum %= sizeof (rcolors) / sizeof (char);
 	return rcolors[sum];
 }

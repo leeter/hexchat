@@ -415,21 +415,21 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 }
 
 /*	Miscellaneous description --- */
-#define DOMAIN "[a-z0-9][-a-z0-9]*(\\.[-a-z0-9]+)*"
+#define URL_DOMAIN "[a-z0-9][-a-z0-9]*(\\.[-a-z0-9]+)*"
 #define TLD "\\.[a-z][-a-z0-9]*[a-z]"
 #define IPADDR "[0-9]{1,3}(\\.[0-9]{1,3}){3}"
 #define IPV6GROUP "([0-9a-f]{0,4})"
 #define IPV6ADDR "((" IPV6GROUP "(:" IPV6GROUP "){7})"	\
 	         "|(" IPV6GROUP "(:" IPV6GROUP ")*:(:" IPV6GROUP ")+))" /* with :: compression */
-#define HOST "(" DOMAIN TLD "|" IPADDR "|" IPV6ADDR ")"
+#define HOST "(" URL_DOMAIN TLD "|" IPADDR "|" IPV6ADDR ")"
 /* In urls the IPv6 must be enclosed in square brackets */
-#define HOST_URL "(" DOMAIN TLD "|" IPADDR "|" "\\[" IPV6ADDR "\\]" ")"
-#define HOST_URL_OPT_TLD "(" DOMAIN "|" HOST_URL ")"
+#define HOST_URL "(" URL_DOMAIN TLD "|" IPADDR "|" "\\[" IPV6ADDR "\\]" ")"
+#define HOST_URL_OPT_TLD "(" URL_DOMAIN "|" HOST_URL ")"
 #define PORT "(:[1-9][0-9]{0,4})"
 #define OPT_PORT "(" PORT ")?"
 
 static GRegex *
-make_re (char *grist)
+make_re (const char *grist)
 {
 	GRegex *ret;
 	GError *err = NULL;

@@ -17,11 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <ctime>
-#include "textenums.h"
-
 #ifndef HEXCHAT_TEXT_HPP
 #define HEXCHAT_TEXT_HPP
+
+#include <string>
+#include <ctime>
+#include "textenums.h"
 
 /* timestamp is non-zero if we are using server-time */
 #define EMIT_SIGNAL_TIMESTAMP(i, sess, a, b, c, d, e, timestamp) \
@@ -52,7 +53,7 @@ void pevent_save (char *fn);
 int pevt_build_string (const char *input, char **output, int *max_arg);
 int pevent_load (char *filename);
 void pevent_make_pntevts (void);
-int text_color_of (const char *name);
+int text_color_of (const std::string& name);
 void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		time_t timestamp);
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
