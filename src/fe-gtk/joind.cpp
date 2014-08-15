@@ -31,12 +31,12 @@
 #include <unistd.h>
 #endif
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
 #include "../common/server.h"
 #include "../common/servlist.h"
-#include "../common/fe.h"
-#include "fe-gtk.h"
+#include "../common/fe.hpp"
+#include "fe-gtk.hpp"
 #include "chanlist.h"
 
 

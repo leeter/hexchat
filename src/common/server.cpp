@@ -49,18 +49,18 @@ extern "C"{
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
-#include "hexchat.h"
-#include "fe.h"
-#include "cfgfiles.h"
+#include "hexchat.hpp"
+#include "fe.hpp"
+#include "cfgfiles.hpp"
 #include "network.h"
-#include "notify.h"
-#include "hexchatc.h"
-#include "inbound.h"
-#include "outbound.h"
-#include "text.h"
-#include "util.h"
-#include "url.h"
-#include "proto-irc.h"
+#include "notify.hpp"
+#include "hexchatc.hpp"
+#include "inbound.hpp"
+#include "outbound.hpp"
+#include "text.hpp"
+#include "util.hpp"
+#include "url.hpp"
+#include "proto-irc.hpp"
 #include "servlist.h"
 #include "server.h"
 #include "dcc.hpp"
@@ -97,7 +97,7 @@ GSList *serv_list = NULL;
 static void auto_reconnect (server *serv, int send_quit, int err);
 static void server_disconnect (session * sess, int sendquit, int err);
 static int server_cleanup (server * serv);
-static void server_connect (server *serv, char *hostname, int port, int no_login);
+static void server_connect (server *serv, char *hostname, int port, bool no_login);
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -246,6 +246,8 @@ tcp_send_len (server *serv, const char *buf, int len)
 		return server_send_real (serv, buf, len);
 
 	dbuf = static_cast<char*>(malloc (len + 2));	/* first byte is the priority */
+	if (!dbuf)
+		return -1;
 	dbuf[0] = 2;	/* pri 2 for most things */
 	memcpy (dbuf + 1, buf, len);
 	dbuf[len + 1] = 0;
@@ -573,6 +575,8 @@ server_stopconnecting (server * serv)
 	{
 		/* if we close the pipe now, giowin32 will crash. */
 		int *pipefd = static_cast<int*>(malloc (sizeof (int) * 2));
+		if (!pipefd)
+			std::terminate();
 		pipefd[0] = serv->childwrite;
 		pipefd[1] = serv->childread;
 		g_idle_add ((GSourceFunc)server_close_pipe, pipefd);
@@ -796,7 +800,7 @@ timeout_auto_reconnect (server *serv)
 		serv->recondelay_tag = 0;
 		if (!serv->connected && !serv->connecting && serv->server_session)
 		{
-			server_connect (serv, serv->hostname, serv->port, FALSE);
+			server_connect (serv, serv->hostname, serv->port, false);
 		}
 	}
 	return 0;			  /* returning 0 should remove the timeout handler */
@@ -1483,7 +1487,7 @@ server_child (server * serv)
 	netstore *ns_local;
 	int port = serv->port;
 	int error;
-	int sok, psok;
+	int sok = -1, psok = -1;
 	char *hostname = serv->hostname;
 	char *real_hostname = NULL;
 	char *ip;
@@ -1673,9 +1677,9 @@ xit:
 }
 
 static void
-server_connect (server *serv, char *hostname, int port, int no_login)
+server_connect (server *serv, char *hostname, int port, bool no_login)
 {
-	int read_des[2];
+	int read_des[2] = { 0 };
 	unsigned int pid;
 	session *sess = serv->server_session;
 
@@ -1720,7 +1724,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	if (serv->use_ssl)
 	{
 		char *cert_file;
-		serv->have_cert = FALSE;
+		serv->have_cert = false;
 
 		/* first try network specific cert/key */
 		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
@@ -1728,7 +1732,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 		{
 			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-				serv->have_cert = TRUE;
+				serv->have_cert = true;
 		}
 		else
 		{
@@ -1736,8 +1740,8 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", NULL);
 			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 			{
-				if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-					serv->have_cert = TRUE;
+				if (SSL_CTX_use_PrivateKey_file(ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+					serv->have_cert = true;
 			}
 		}
 		g_free (cert_file);
@@ -1745,7 +1749,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 #endif
 
 	server_set_defaults (serv);
-	serv->connecting = TRUE;
+	serv->connecting = true;
 	serv->port = port;
 	serv->no_login = no_login;
 

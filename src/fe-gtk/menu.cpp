@@ -33,26 +33,26 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/outbound.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/outbound.hpp"
 #include "../common/ignore.hpp"
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #include "../common/server.h"
 #include "../common/servlist.h"
-#include "../common/notify.h"
-#include "../common/util.h"
-#include "../common/text.h"
-#include "xtext.h"
+#include "../common/notify.hpp"
+#include "../common/util.hpp"
+#include "../common/text.hpp"
+#include "xtext.hpp"
 #include "ascii.hpp"
-#include "banlist.h"
+#include "banlist.hpp"
 #include "chanlist.h"
-#include "editlist.h"
+#include "editlist.hpp"
 #include "fkeys.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
@@ -63,7 +63,7 @@
 #include "plugingui.hpp"
 #include "textgui.h"
 #include "urlgrab.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "servlistgui.h"
 #include "userlistgui.hpp"
 
@@ -88,7 +88,7 @@ struct mymenu
 	void *callback;
 	char *image;
 	unsigned char type;	/* M_XXX */
-	unsigned char id;		/* MENU_ID_XXX (menu.h) */
+	unsigned char id;		/* MENU_ID_XXX (menu.hpp) */
 	unsigned char state;	/* ticked or not? */
 	unsigned char sensitive;	/* shaded out? */
 	guint key;				/* GDK_KEY_x */
@@ -704,7 +704,7 @@ fe_userlist_update (session *sess, struct User *user)
 }
 
 void
-menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_sel)
+menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, int num_sel)
 {
 	char buf[512];
 	struct User *user;
@@ -712,7 +712,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_s
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (nick);
+	str_copy = strdup (nick.c_str());
 
 	submenu_list = 0;	/* first time through, might not be 0 */
 
@@ -724,12 +724,12 @@ menu_nickmenu (session *sess, GdkEventButton *event, const char *nick, int num_s
 		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 	} else
 	{
-		user = userlist_find (sess, nick);	/* lasttalk is channel specific */
+		user = userlist_find (sess, nick.c_str());	/* lasttalk is channel specific */
 		if (!user)
-			user = userlist_find_global (current_sess->server, nick);
+			user = userlist_find_global (current_sess->server, nick.c_str());
 		if (user)
 		{
-			nick_submenu = submenu = menu_quick_sub (nick, menu, NULL, XCMENU_DOLIST, -1);
+			nick_submenu = submenu = menu_quick_sub (nick.c_str(), menu, NULL, XCMENU_DOLIST, -1);
 
 			if (menu_create_nickinfo_menu (user, submenu) ||
 				 !user->hostname || !user->realname || !user->servername)
@@ -925,14 +925,14 @@ open_url_cb (GtkWidget *item, char *url)
 }
 
 void
-menu_urlmenu (GdkEventButton *event, char *url)
+menu_urlmenu (GdkEventButton *event, const std::string & url)
 {
 	GtkWidget *menu;
 	char *tmp, *chop;
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (url);
+	str_copy = strdup (url.c_str());
 
 	menu = gtk_menu_new ();
 	/* more than 51 chars? Chop it */
@@ -1709,7 +1709,7 @@ menu_about (GtkWidget *wid, gpointer sess)
 				(portable_mode () ? "Yes" : "No"),
 				get_cpu_arch (),
 #endif
-				get_sys_str (0));
+				get_sys_str (false));
 
 	gtk_about_dialog_set_program_name (dialog, DISPLAY_NAME);
 	gtk_about_dialog_set_version (dialog, PACKAGE_VERSION);

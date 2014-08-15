@@ -20,10 +20,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "fe-gtk.h"
-#include "../common/cfgfiles.h"
-#include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "fe-gtk.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
 #include "pixmaps.h"
 
 #include <gio/gio.h>

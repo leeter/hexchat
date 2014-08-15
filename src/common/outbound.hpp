@@ -17,14 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_OUTBOUND_H
-#define HEXCHAT_OUTBOUND_H
+#ifndef HEXCHAT_OUTBOUND_HPP
+#define HEXCHAT_OUTBOUND_HPP
 
-#include "hexchat.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include "hexchat.hpp"
 
 extern const struct commands xc_cmds[];
 extern GSList *menu_list;
@@ -42,9 +38,5 @@ void server_sendquit (session * sess);
 int menu_streq (const char *s1, const char *s2, int def);
 session *open_query (server *serv, char *nick, gboolean focus_existing);
 gboolean load_perform_file (session *sess, char *file);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -22,12 +22,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #include "../common/ignore.hpp"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 

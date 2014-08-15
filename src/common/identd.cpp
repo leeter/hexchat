@@ -22,11 +22,9 @@
 #include <atomic>
 #include <string>
 #include "inet.h"
-extern "C"{
-#include "hexchat.h"
-#include "hexchatc.h"
-#include "text.h"
-}
+#include "hexchat.hpp"
+#include "hexchatc.hpp"
+#include "text.hpp"
 
 namespace{
 	static ::std::atomic_bool identd_is_running = { false };

@@ -20,10 +20,10 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
 #include "gtkutil.hpp"
 #include "ascii.hpp"
 #include "maingui.hpp"

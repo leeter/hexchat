@@ -17,35 +17,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef HEXCHAT_HISTORY_HPP
+#define HEXCHAT_HISTORY_HPP
 
+#define HISTORY_SIZE 100
+#include <string>
+#include <utility>
+#include <array>
 
-#ifndef HEXCHAT_PROTO_H
-#define HEXCHAT_PROTO_H
-
-#include <time.h>
-#include "hexchat.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
-
-#define MESSAGE_TAGS_DATA_INIT			\
-	{									\
-		(time_t)0, /* timestamp */		\
-	}
-
-/* Message tag information that might be passed along with a server message
- *
- * See http://ircv3.atheme.org/specification/capability-negotiation-3.1
- */
-typedef struct 
+class history
 {
-	time_t timestamp;
-} message_tags_data;
-
-void proto_fill_her_up (server *serv);
-
-#ifdef __cplusplus
-}
-#endif
+	std::array<std::string, HISTORY_SIZE> lines;
+	int pos;
+	int realpos;
+public:
+	history();
+	void add(const std::string& text);
+	std::pair<std::string, bool> up(const std::string& current_text);
+	std::pair<std::string, bool> down();
+	void clear();
+};
 
 #endif

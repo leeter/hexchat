@@ -17,17 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* cfgfiles.h */
+/* cfgfiles.hpp */
 
-#ifndef HEXCHAT_CFGFILES_H
-#define HEXCHAT_CFGFILES_H
+#ifndef HEXCHAT_CFGFILES_HPP
+#define HEXCHAT_CFGFILES_HPP
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 
 #define LANGUAGES_LENGTH 53
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 extern char *xdir;
 extern const char * const languages[LANGUAGES_LENGTH];
@@ -51,7 +48,7 @@ void list_loadconf (const char *file, GSList ** list, const char *defaultconf);
 int list_delentry (GSList ** list, char *name);
 void list_addentry (GSList ** list, char *cmd, char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
-int hexchat_open_file (char *file, int flags, int mode, int xof_flags);
+int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
 
 #define XOF_DOMODE 1
@@ -75,10 +72,6 @@ struct prefs
 	unsigned short len;
 	unsigned short type;
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #define TYPE_STR 0
 #define TYPE_INT 1

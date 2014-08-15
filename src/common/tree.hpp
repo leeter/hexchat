@@ -17,18 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_CTCP_H
-#define HEXCHAT_CTCP_H
+#ifndef HEXCHAT_TREE_HPP
+#define HEXCHAT_TREE_HPP
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct tree;
 
-void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
-						char *word[], char *word_eol[], int id,
-						const message_tags_data *tags_data);
-#ifdef __cplusplus
-}
-#endif
+typedef int (tree_cmp_func) (const void *keya, const void *keyb, void *data);
+typedef int (tree_traverse_func) (const void *key, void *data);
+
+tree *tree_new (tree_cmp_func *cmp, void *data);
+void tree_destroy (tree *t);
+void *tree_find (tree *t, const void *key, tree_cmp_func *cmp, void *data, int *pos);
+int tree_remove (tree *t, void *key, int *pos);
+void *tree_remove_at_pos (tree *t, int pos);
+void tree_foreach (tree *t, tree_traverse_func *func, void *data);
+int tree_insert (tree *t, void *key);
+void tree_append (tree* t, void *key);
+int tree_size (tree *t);
+
 
 #endif

@@ -22,25 +22,25 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "../common/hexchat.h"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
-#include "../common/text.h"
-#include "../common/userlist.h"
-#include "../common/util.h"
-#include "../common/hexchatc.h"
-#include "fe-gtk.h"
+#include "../common/hexchat.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
+#include "../common/text.hpp"
+#include "../common/userlist.hpp"
+#include "../common/util.hpp"
+#include "../common/hexchatc.hpp"
+#include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "pixmaps.h"
-#include "menu.h"
+#include "menu.hpp"
 #include "plugin-tray.hpp"
 #include "gtk_helpers.hpp"
 #include "setup.h"
 
 #ifdef WIN32
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 #endif
 #include "sexy-spell-entry.h"
 

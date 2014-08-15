@@ -46,17 +46,17 @@
 #endif
 
 #include "dcc.hpp"
-#include "hexchat.h"
-#include "util.h"
-#include "fe.h"
-#include "outbound.h"
-#include "inbound.h"
+#include "hexchat.hpp"
+#include "util.hpp"
+#include "fe.hpp"
+#include "outbound.hpp"
+#include "inbound.hpp"
 #include "network.h"
 #include "plugin.h"
 #include "server.h"
-#include "text.h"
-#include "url.h"
-#include "hexchatc.h"
+#include "text.hpp"
+#include "url.hpp"
+#include "hexchatc.hpp"
 
 #ifdef USE_DCC64
 #define BIG_STR_TO_INT(x) strtoull(x,NULL,10)
@@ -746,6 +746,8 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 	case TYPE_CHATRECV:	/* normal chat */
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
+		if (!dcc->dccchat)
+			return false;
 		dcc->dccchat->pos = 0;
 		EMIT_SIGNAL(XP_TE_DCCCONCHAT, dcc->serv->front_session,
 			dcc->nick, host, NULL, NULL, 0);
@@ -1491,6 +1493,8 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		dcc_open_query(dcc->serv, dcc->nick);
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
+		if (!dcc->dccchat)
+			return false;
 		dcc->dccchat->pos = 0;
 		EMIT_SIGNAL(XP_TE_DCCCONCHAT, dcc->serv->front_session,
 			dcc->nick, host, NULL, NULL, 0);

@@ -59,7 +59,7 @@
       </PrecompiledHeader>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;NDEBUG;_WINDOWS;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -80,7 +80,7 @@
       </PrecompiledHeader>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WIN64;_AMD64_;NDEBUG;_WINDOWS;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_WIN64;_AMD64_;NDEBUG;_WINDOWS;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -109,18 +109,18 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ascii.hpp" />
-    <ClInclude Include="banlist.h" />
+    <ClInclude Include="banlist.hpp" />
     <ClInclude Include="chanlist.h" />
     <ClInclude Include="chanview.hpp" />
     <ClInclude Include="custom-list.h" />
-    <ClInclude Include="editlist.h" />
-    <ClInclude Include="fe-gtk.h" />
+    <ClInclude Include="editlist.hpp" />
+    <ClInclude Include="fe-gtk.hpp" />
     <ClInclude Include="fkeys.h" />
     <ClInclude Include="gtkutil.hpp" />
     <ClInclude Include="gtk_helpers.hpp" />
     <ClInclude Include="joind.hpp" />
     <ClInclude Include="maingui.hpp" />
-    <ClInclude Include="menu.h" />
+    <ClInclude Include="menu.hpp" />
     <ClInclude Include="notifygui.hpp" />
     <ClInclude Include="palette.hpp" />
     <ClInclude Include="pixmaps.h" />
@@ -134,7 +134,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="textgui.h" />
     <ClInclude Include="urlgrab.hpp" />
     <ClInclude Include="userlistgui.hpp" />
-    <ClInclude Include="xtext.h" />
+    <ClInclude Include="xtext.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ascii.cpp" />

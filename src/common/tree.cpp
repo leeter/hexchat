@@ -27,18 +27,18 @@ a tree, but it could be :)
 #include <algorithm>
 
 
-#include "tree.h"
+#include "tree.hpp"
 
 static const int ARRAY_GROW = 32;
 
-struct _tree
+struct tree
 {
 	int elements;
 	std::vector<void*> data_array;
 	tree_cmp_func *cmp;
 	void *data;
 
-	_tree(tree_cmp_func cmp, void* data)
+	tree(tree_cmp_func cmp, void* data)
 		:cmp(cmp), data(data), elements(0)
 	{
 	}
@@ -116,7 +116,7 @@ struct _tree
 tree *
 tree_new (tree_cmp_func *cmp, void *data)
 {
-	tree *t = new(::std::nothrow)tree(cmp, data);// calloc(1, sizeof(tree));
+	tree *t = new(::std::nothrow)tree(cmp, data);
 	if (!t)
 		return nullptr;
 	return t;

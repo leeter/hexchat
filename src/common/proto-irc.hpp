@@ -17,30 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_TREE_H
-#define HEXCHAT_TREE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-typedef struct _tree tree;
+#ifndef HEXCHAT_PROTO_HPP
+#define HEXCHAT_PROTO_HPP
 
-typedef int (tree_cmp_func) (const void *keya, const void *keyb, void *data);
-typedef int (tree_traverse_func) (const void *key, void *data);
+#include <ctime>
+#include "hexchat.hpp"
 
-tree *tree_new (tree_cmp_func *cmp, void *data);
-void tree_destroy (tree *t);
-void *tree_find (tree *t, const void *key, tree_cmp_func *cmp, void *data, int *pos);
-int tree_remove (tree *t, void *key, int *pos);
-void *tree_remove_at_pos (tree *t, int pos);
-void tree_foreach (tree *t, tree_traverse_func *func, void *data);
-int tree_insert (tree *t, void *key);
-void tree_append (tree* t, void *key);
-int tree_size (tree *t);
+#define MESSAGE_TAGS_DATA_INIT			\
+	{									\
+		(time_t)0, /* timestamp */		\
+	}
 
-#ifdef __cplusplus
-}
-#endif
+/* Message tag information that might be passed along with a server message
+ *
+ * See http://ircv3.atheme.org/specification/capability-negotiation-3.1
+ */
+struct message_tags_data
+{
+	time_t timestamp;
+};
+
+void proto_fill_her_up (server *serv);
 
 #endif

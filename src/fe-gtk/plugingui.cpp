@@ -20,18 +20,18 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
+#include "../common/hexchat.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;
 #include "../common/hexchat-plugin.h"
 #include "../common/plugin.h"
-#include "../common/util.h"
-#include "../common/outbound.h"
-#include "../common/fe.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
+#include "../common/util.hpp"
+#include "../common/outbound.hpp"
+#include "../common/fe.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 

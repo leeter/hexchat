@@ -11,28 +11,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cfgfiles.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="chanopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ctcp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="fe.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="history.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inbound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="modes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="msproxy.h">
@@ -41,16 +23,7 @@
     <ClInclude Include="network.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="notify.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="outbound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plugin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="proto-irc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="server.h">
@@ -59,31 +32,10 @@
     <ClInclude Include="servlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="text.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="textenums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="textevents.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="url.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="userlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hexchat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hexchatc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\config.h">
@@ -113,11 +65,56 @@
     <ClInclude Include="ignore.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cfgfiles.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fe.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="userlist.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto-irc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="outbound.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inbound.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ctcp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="url.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="text.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tree.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hexchat.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="history.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hexchatc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="notify.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="msproxy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="marshal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -191,6 +188,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

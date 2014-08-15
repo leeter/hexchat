@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_FE_GTK_H
-#define HEXCHAT_FE_GTK_H
+#ifndef HEXCHAT_FE_GTK_HPP
+#define HEXCHAT_FE_GTK_HPP
 
 #include "../../config.h"
 
@@ -35,7 +35,7 @@
 #include <gtkosxapplication.h>
 #endif
 
-#include "banlist.h"
+#include "banlist.hpp"
 
 #define flag_c flag_wid[0]
 #define flag_n flag_wid[1]
@@ -47,10 +47,6 @@
 #define flag_k flag_wid[7]
 #define flag_b flag_wid[8]
 #define NUM_FLAG_WIDS 9
-
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 #ifdef HAVE_GTK_MAC
 extern GtkosxApplication *osx_app;
@@ -105,7 +101,7 @@ struct server_gui
 
 /* this struct is persistant even when delinking/relinking */
 
-typedef struct restore_gui
+struct restore_gui
 {
 	banlist_info *banlist;
 
@@ -127,9 +123,9 @@ typedef struct restore_gui
 	char *queue_tip;		/* outbound queue tooltip */
 	short flag_wid_state[NUM_FLAG_WIDS];
 	unsigned int c_graph:1;	/* connecting graph, is there one? */
-} restore_gui;
+};
 
-typedef struct session_gui
+struct session_gui
 {
 	GtkWidget
 		*xtext,
@@ -181,7 +177,7 @@ typedef struct session_gui
 	guint16 is_tab;	/* is tab or toplevel? */
 	guint16 ul_hidden;	/* userlist hidden? */
 
-} session_gui;
+};
 
 extern GdkPixmap *channelwin_pix;
 extern GdkPixmap *dialogwin_pix;
@@ -192,9 +188,5 @@ extern GdkPixmap *dialogwin_pix;
 #define SPELL_ENTRY_GET_POS(e) gtk_editable_get_position(GTK_EDITABLE(e))
 #define SPELL_ENTRY_SET_POS(e,p) gtk_editable_set_position(GTK_EDITABLE(e),p);
 #define SPELL_ENTRY_INSERT(e,t,l,p) gtk_editable_insert_text(GTK_EDITABLE(e),t,l,p)
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

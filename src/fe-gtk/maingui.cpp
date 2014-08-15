@@ -23,34 +23,34 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
 #include "../common/server.h"
-#include "../common/hexchatc.h"
-#include "../common/outbound.h"
-#include "../common/inbound.h"
+#include "../common/hexchatc.hpp"
+#include "../common/outbound.hpp"
+#include "../common/inbound.hpp"
 #include "../common/plugin.h"
 #include "../common/modes.h"
-#include "../common/url.h"
-#include "../common/util.h"
-#include "../common/text.h"
+#include "../common/url.hpp"
+#include "../common/util.hpp"
+#include "../common/text.hpp"
 #include "../common/chanopt.h"
-#include "../common/cfgfiles.h"
+#include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"
 
-#include "fe-gtk.h"
-#include "banlist.h"
+#include "fe-gtk.hpp"
+#include "banlist.hpp"
 #include "gtkutil.hpp"
 #include "joind.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "fkeys.h"
 #include "userlistgui.hpp"
 #include "chanview.hpp"
 #include "pixmaps.h"
 #include "plugin-tray.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "sexy-spell-entry.h"
 
 namespace dcc = hexchat::dcc;
@@ -1789,7 +1789,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 	session *sess;
 
 /*	puts("enter mg_tabwindow_kill_cb");*/
-	hexchat_is_quitting = TRUE;
+	hexchat_is_quitting = true;
 
 	/* see if there's any non-tab windows left */
 	list = sess_list;
@@ -1799,7 +1799,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 		next = list->next;
 		if (!sess->gui->is_tab)
 		{
-			hexchat_is_quitting = FALSE;
+			hexchat_is_quitting = false;
 /*			puts("-> will not exit, some toplevel windows left");*/
 		} else
 		{
@@ -1855,7 +1855,7 @@ mg_link_irctab (session *sess, int focus)
 		win = mg_changui_destroy (sess);
 		mg_changui_new (sess, sess->res, 0, focus);
 		mg_populate (sess);
-		hexchat_is_quitting = FALSE;
+		hexchat_is_quitting = false;
 		if (win)
 			gtk_widget_destroy (win);
 		return;

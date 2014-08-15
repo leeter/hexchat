@@ -26,13 +26,13 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
-#include "cfgfiles.h"
-#include "fe.h"
+#include "hexchat.hpp"
+#include "cfgfiles.hpp"
+#include "fe.hpp"
 #include "server.h"
-#include "text.h"
-#include "util.h" /* token_foreach */
-#include "hexchatc.h"
+#include "text.hpp"
+#include "util.hpp" /* token_foreach */
+#include "hexchatc.hpp"
 
 #include "servlist.h"
 
@@ -995,8 +995,8 @@ void
 servlist_server_remove (ircnet *net, ircserver *serv)
 {
 	free (serv->hostname);
-	free (serv);
 	net->servlist = g_slist_remove (net->servlist, serv);
+	free(serv);
 }
 
 static void
@@ -1030,14 +1030,14 @@ servlist_favchan_free (favchannel *channel)
 {
 	g_free (channel->name);
 	g_free (channel->key);
-	g_free (channel);
+	free (channel);
 }
 
 void
 servlist_favchan_remove (ircnet *net, favchannel *channel)
 {
-	servlist_favchan_free (channel);
 	net->favchanlist = g_slist_remove (net->favchanlist, channel);
+	servlist_favchan_free(channel);
 }
 
 static void
@@ -1094,7 +1094,6 @@ servlist_net_remove (ircnet *net)
 	if (net->encoding)
 		free (net->encoding);
 	free (net->name);
-	free (net);
 
 	/* for safety */
 	list = serv_list;
@@ -1107,6 +1106,7 @@ servlist_net_remove (ircnet *net)
 		}
 		list = list->next;
 	}
+	delete net;
 }
 
 ircnet *
@@ -1114,9 +1114,7 @@ servlist_net_add (char *name, char *comment, int prepend)
 {
 	ircnet *net;
 
-	net = static_cast<ircnet *>(calloc(1, sizeof(*net)));
-	if (!net)
-		return NULL;
+	net = new ircnet();
 	net->name = strdup (name);
 /*	net->comment = strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;

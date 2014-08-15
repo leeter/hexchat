@@ -38,22 +38,22 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "plugin.h"
 #include "ignore.hpp"
-#include "util.h"
-#include "fe.h"
-#include "cfgfiles.h"			  /* hexchat_fopen_file() */
+#include "util.hpp"
+#include "fe.hpp"
+#include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.h"				/* net_ip() */
 #include "modes.h"
-#include "notify.h"
-#include "inbound.h"
-#include "text.h"
-#include "hexchatc.h"
+#include "notify.hpp"
+#include "inbound.hpp"
+#include "text.hpp"
+#include "hexchatc.hpp"
 #include "servlist.h"
 #include "server.h"
-#include "tree.h"
-#include "outbound.h"
+#include "tree.hpp"
+#include "outbound.hpp"
 #include "chanopt.h"
 #include "dcc.hpp"
 
@@ -638,7 +638,7 @@ cmd_clear (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (g_ascii_strcasecmp (reason, "HISTORY") == 0)
 	{
-		history_free (&sess->history);
+		sess->history.clear();
 		return TRUE;
 	}
 
@@ -4243,7 +4243,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 				case 'h':
 					utf = h; break;
 				case 'm':
-					utf = get_sys_str (1); break;
+					utf = get_sys_str (true); break;
 				case 'n':
 					utf = n; break;
 				case 's':
@@ -4831,7 +4831,7 @@ handle_user_input (session *sess, char *text, int history, int nocommand)
 		return 1;
 
 	if (history)
-		history_add (&sess->history, text);
+		sess->history.add(text);
 
 	/* is it NOT a command, just text? */
 	if (nocommand || text[0] != prefs.hex_input_command_char[0])

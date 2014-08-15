@@ -34,8 +34,10 @@
 #include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
+#include <codecvt>
 #include <sys/timeb.h>
 #include <io.h>
 #include <VersionHelpers.h>
@@ -49,9 +51,9 @@
 #include "../../config.h"
 #include <fcntl.h>
 #include <cerrno>
-#include "hexchat.h"
-#include "hexchatc.h"
-#include "util.h"
+#include "hexchat.hpp"
+#include "hexchatc.hpp"
+#include "util.hpp"
 
 #if defined (USING_FREEBSD) || defined (__APPLE__)
 #include <sys/sysctl.h>
@@ -150,7 +152,8 @@ errorstring (int err)
 	/* can't use strerror() on Winsock errors! */
 	if (err >= WSABASEERR)
 	{
-		static char tbuf[384];
+		static char fbuf[384];
+		std::wstring tbuf(384, '\0');
 		OSVERSIONINFOW osvi = { 0 };
 
 		osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOW);
@@ -159,35 +162,30 @@ errorstring (int err)
 		/* FormatMessage works on WSA*** errors starting from Win2000 */
 		if (osvi.dwMajorVersion >= 5)
 		{
-			if (FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM |
+			if (FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
 									  FORMAT_MESSAGE_IGNORE_INSERTS |
 									  FORMAT_MESSAGE_MAX_WIDTH_MASK,
 									  NULL, err,
 									  MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-									  tbuf, sizeof (tbuf), NULL))
+									  &tbuf[0], tbuf.size(), NULL))
 			{
-				int len;
-				char *utf;
-
-				tbuf[sizeof (tbuf) - 1] = 0;
-				len = strlen (tbuf);
-				if (len >= 2)
-					tbuf[len - 2] = 0;	/* remove the cr-lf */
-
 				/* now convert to utf8 */
-				utf = g_locale_to_utf8 (tbuf, -1, 0, 0, 0);
-				if (utf)
-				{
-					safe_strcpy (tbuf, utf, sizeof (tbuf));
-					g_free (utf);
-					return tbuf;
-				}
+				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > convert;
+				auto utf8 = convert.to_bytes(tbuf);
+				/* remove the cr-lf if present */ 
+				auto crlf = utf8.find_first_of("\r\n");
+
+				if (crlf != std::string::npos)
+					utf8.erase(crlf);
+
+				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
+				return fbuf;
 			}
 		}	/* ! if (osvi.dwMajorVersion >= 5) */
 
 		/* fallback to error number */
-		sprintf (tbuf, "%s %d", _("Error"), err);
-		return tbuf;
+		sprintf (fbuf, "%s %d", _("Error"), err);
+		return fbuf;
 	} /* ! if (err >= WSABASEERR) */
 #endif	/* ! WIN32 */
 
@@ -506,7 +504,7 @@ get_cpu_arch (void)
 }
 
 char *
-get_sys_str (int with_cpu)
+get_sys_str (bool with_cpu)
 {
 	static char verbuf[64];
 	static char winver[20];
@@ -612,7 +610,7 @@ get_sys_str (int with_cpu)
 #else
 
 char *
-get_sys_str (int with_cpu)
+get_sys_str (bool with_cpu)
 {
 #if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__)
 	double mhz;
@@ -1078,19 +1076,18 @@ static const std::unordered_map<std::string, std::string> domain =
 const char *
 country (const char *hostname)
 {
+	std::locale loc;
 	const char *p;
-	if (!hostname || !*hostname || isdigit ((unsigned char) hostname[strlen (hostname) - 1]))
+	if (!hostname || !*hostname || std::isdigit (hostname[strlen (hostname) - 1], loc))
 		return NULL;
 	if ((p = strrchr (hostname, '.')))
 		p++;
 	else
 		p = hostname;
 
-	auto upper = std::bind(std::toupper<char>, std::placeholders::_1, std::locale());
-	std::string lowercased_domain(p);
-	std::string uppercased_domain(lowercased_domain.length(), '\0');
-	std::transform(lowercased_domain.cbegin(), lowercased_domain.cend(), uppercased_domain.begin(), upper);
-	auto dom = domain.find(uppercased_domain);
+	std::string host(p);
+	boost::algorithm::to_upper(host, loc);
+	auto dom = domain.find(host);
 
 	if (dom == domain.cend())
 		return NULL;
@@ -1666,8 +1663,10 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	encrypted_pass = static_cast<unsigned char*>(calloc (1, pass_len));
 	plain_pass = static_cast<char*>(calloc(1, pass_len));
 
-	if (!encrypted_pass && !plain_pass)
+	if (!encrypted_pass || !plain_pass)
 	{
+		free(encrypted_pass);
+		free(plain_pass);
 		DH_free(dh);
 		free(secret);
 		return NULL;
@@ -1738,8 +1737,10 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 
 	encrypted_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*encrypted_userpass)));
 	plain_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*plain_userpass)));
-	if (!encrypted_userpass && !plain_userpass)
+	if (!encrypted_userpass || !plain_userpass)
 	{
+		free(encrypted_userpass);
+		free(plain_userpass);
 		DH_free(dh);
 		free(secret);
 		return NULL;

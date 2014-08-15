@@ -19,12 +19,13 @@
 
 /* abstract channel view: tabs or tree or anything you like */
 
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "fe-gtk.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "fe-gtk.hpp"
 #include "maingui.hpp"
 #include "gtkutil.hpp"
 #include "chanview.hpp"
@@ -57,7 +58,7 @@ struct chanview
 	/* impl */
 	void (*func_init) (chanview *);
 	void (*func_postinit) (chanview *);
-	void *(*func_add) (chanview *, chan *, char *, GtkTreeIter *);
+	void *(*func_add) (chanview *, chan *, const char *, GtkTreeIter *);
 	void (*func_move_focus) (chanview *, gboolean, int);
 	void (*func_change_orientation) (chanview *);
 	void (*func_remove) (chan *);
@@ -636,7 +637,7 @@ tab_click_cb(GtkWidget *wid, GdkEventButton *event, chan *ch)
 }
 
 static void *
-cv_tabs_add(chanview *cv, chan *ch, char *name, GtkTreeIter *parent)
+cv_tabs_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 {
 	GtkWidget *but;
 
@@ -1076,7 +1077,7 @@ cv_tree_postinit(chanview *cv)
 }
 
 static void *
-cv_tree_add(chanview *cv, chan *ch, char *name, GtkTreeIter *parent)
+cv_tree_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 {
 	GtkTreePath *path;
 
@@ -1530,7 +1531,7 @@ chanview_find_parent (chanview *cv, void *family, GtkTreeIter *search_iter, chan
 }
 
 static chan *
-chanview_add_real (chanview *cv, char *name, void *family, void *userdata,
+chanview_add_real (chanview *cv, const char *name, void *family, void *userdata,
 						 gboolean allow_closure, int tag, GdkPixbuf *icon,
 						 chan *ch, chan *avoid)
 {
@@ -1783,7 +1784,7 @@ chan_remove (chan *ch, gboolean force)
 {
 	chan *new_ch;
 	int i, num;
-	extern int hexchat_is_quitting;
+	extern std::atomic_bool hexchat_is_quitting;
 
 	if (hexchat_is_quitting)	/* avoid lots of looping on exit */
 		return TRUE;

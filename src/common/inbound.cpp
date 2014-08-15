@@ -37,18 +37,18 @@
 
 #include <gio/gio.h>
 
-#include "hexchat.h"
-#include "util.h"
+#include "hexchat.hpp"
+#include "util.hpp"
 #include "ignore.hpp"
-#include "fe.h"
+#include "fe.hpp"
 #include "modes.h"
-#include "notify.h"
-#include "outbound.h"
-#include "inbound.h"
+#include "notify.hpp"
+#include "outbound.hpp"
+#include "inbound.hpp"
 #include "server.h"
 #include "servlist.h"
-#include "text.h"
-#include "hexchatc.h"
+#include "text.hpp"
+#include "hexchatc.hpp"
 #include "chanopt.h"
 #include "dcc.hpp"
 

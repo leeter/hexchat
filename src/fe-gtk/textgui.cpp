@@ -26,16 +26,16 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/outbound.h"
-#include "../common/fe.h"
-#include "../common/text.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/outbound.hpp"
+#include "../common/fe.hpp"
+#include "../common/text.hpp"
 #include "gtkutil.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "textgui.h"

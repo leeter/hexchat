@@ -28,20 +28,20 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/outbound.h"
-#include "../common/util.h"
-#include "../common/fe.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/outbound.hpp"
+#include "../common/util.hpp"
+#include "../common/fe.hpp"
 #include "../common/server.h"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "chanlist.h"
 #include "custom-list.h"
 

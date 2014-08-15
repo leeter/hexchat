@@ -20,16 +20,16 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
-#include "../common/url.h"
-#include "../common/tree.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
+#include "../common/url.hpp"
+#include "../common/tree.hpp"
 #include "gtkutil.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "maingui.hpp"
 #include "urlgrab.hpp"
 namespace{

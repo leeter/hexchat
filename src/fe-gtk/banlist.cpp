@@ -28,16 +28,16 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/fe.h"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
 #include "../common/modes.h"
-#include "../common/outbound.h"
-#include "../common/hexchatc.h"
+#include "../common/outbound.hpp"
+#include "../common/hexchatc.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "banlist.h"
+#include "banlist.hpp"
 
 namespace {
 struct mode_info {
@@ -444,8 +444,8 @@ banlist_do_refresh (banlist_info *banl)
 	if (sess->server->connected)
 	{
 		GtkListStore *store;
-		std::ostringstream stream;
-		stream << DISPLAY_NAME": Ban List (" << sess->channel << ", " << sess->server->servername << ")";
+		std::ostringstream stream(DISPLAY_NAME": Ban List (", std::ios::ate);
+		stream << sess->channel << ", " << sess->server->servername << ")";
 		mg_set_title (banl->window, stream.str().c_str());
 
 		store = get_store (sess);

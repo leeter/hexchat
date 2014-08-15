@@ -30,14 +30,10 @@
  *        --+ Dagmar d'Surreal
  */
 
-#ifndef HEXCHAT_UTIL_H
-#define HEXCHAT_UTIL_H
+#ifndef HEXCHAT_UTIL_HPP
+#define HEXCHAT_UTIL_HPP
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
-
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 extern const unsigned char rfc_tolowertab[];
 
@@ -52,15 +48,15 @@ int buf_get_line (char *, char **, int *, int len);
 char *nocasestrstr (const char *text, const char *tofind);
 const char *country (const char *);
 void country_search (char *pattern, void *ud, void (*print)(void *, char *, ...));
-char *get_sys_str (int with_cpu);
+char *get_sys_str (bool with_cpu);
 void util_exec (const char *cmd);
-typedef enum{
+enum strip_flags{
 	STRIP_COLOR = 1,
     STRIP_ATTRIB = 2,
 	STRIP_HIDDEN = 4,
 	STRIP_ESCMARKUP = 8,
 	STRIP_ALL = 7
-} strip_flags;
+};
 //#define STRIP_COLOR 1
 //#define STRIP_ATTRIB 2
 //#define STRIP_HIDDEN 4
@@ -92,9 +88,5 @@ char *encode_sasl_pass_aes (char *user, char *pass, char *data);
 char *challengeauth_response (char *username, char *password, char *challenge);
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
 size_t strftime_utf8 (char *dest, size_t destsize, const char *format, time_t time);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

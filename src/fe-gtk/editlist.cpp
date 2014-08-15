@@ -31,16 +31,16 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/cfgfiles.h"
-#include "../common/hexchatc.h"
-#include "../common/fe.h"
-#include "menu.h"
+#include "../common/hexchat.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/fe.hpp"
+#include "menu.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "editlist.h"
+#include "editlist.hpp"
 
 enum
 {
@@ -265,7 +265,7 @@ editlist_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 }
 
 static GtkWidget *
-editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
+editlist_treeview_new (GtkWidget *box, const char *title1, const char *title2)
 {
 	GtkWidget *scroll;
 	GtkListStore *store;
@@ -324,7 +324,7 @@ editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
 
 
 void
-editlist_gui_open (char *title1, char *title2, GSList *list, char *title, char *wmclass,
+editlist_gui_open (const char *title1, const char *title2, GSList *list, char *title, char *wmclass,
 					char *file, char *help)
 {
 	GtkWidget *vbox, *box;

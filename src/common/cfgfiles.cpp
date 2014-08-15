@@ -17,6 +17,7 @@
  */
 
 #include <fcntl.h>
+#include <sstream>
 #include <string>
 #include <cstdlib>
 #include <cstring>
@@ -24,12 +25,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "hexchat.h"
-#include "cfgfiles.h"
-#include "util.h"
-#include "fe.h"
-#include "text.h"
-#include "hexchatc.h"
+#include "hexchat.hpp"
+#include "cfgfiles.hpp"
+#include "util.hpp"
+#include "fe.hpp"
+#include "text.hpp"
+#include "hexchatc.hpp"
 #include "typedef.h"
 
 #ifdef WIN32
@@ -67,6 +68,8 @@ list_addentry (GSList ** list, char *cmd, char *name)
 	name_len = strlen (name) + 1;
 
 	pop = static_cast<popup*>(malloc (sizeof (struct popup) + cmd_len + name_len));
+	if (!pop)
+		return;
 	pop->name = (char *) pop + sizeof (struct popup);
 	pop->cmd = pop->name + name_len;
 
@@ -82,27 +85,29 @@ list_addentry (GSList ** list, char *cmd, char *name)
 /* read it in from a buffer to our linked list */
 
 static void
-list_load_from_data (GSList ** list, char *ibuf, int size)
+list_load_from_data (GSList ** list, const std::string ibuf)
 {
 	char cmd[384];
 	char name[128];
-	char *buf;
+	//char *buf;
 	int pnt = 0;
 
 	cmd[0] = 0;
 	name[0] = 0;
 
-	while (buf_get_line (ibuf, &buf, &pnt, size))
+	std::istringstream buffer(ibuf);
+
+	for (std::string buf; std::getline(buffer, buf, '\n');)
 	{
-		if (*buf != '#')
+		if (buf[0] != '#')
 		{
-			if (!g_ascii_strncasecmp (buf, "NAME ", 5))
+			if (!g_ascii_strncasecmp (buf.c_str(), "NAME ", 5))
 			{
-				safe_strcpy (name, buf + 5, sizeof (name));
+				safe_strcpy (name, buf.c_str() + 5, sizeof (name));
 			}
-			else if (!g_ascii_strncasecmp (buf, "CMD ", 4))
+			else if (!g_ascii_strncasecmp (buf.c_str(), "CMD ", 4))
 			{
-				safe_strcpy (cmd, buf + 4, sizeof (cmd));
+				safe_strcpy (cmd, buf.c_str() + 4, sizeof (cmd));
 				if (*name)
 				{
 					list_addentry (list, cmd, name);
@@ -118,7 +123,6 @@ void
 list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 {
 	char *filebuf;
-	char *ibuf;
 	int fd;
 	struct stat st;
 
@@ -130,9 +134,7 @@ list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 	{
 		if (defaultconf)
 		{
-			char* mutableDefaultConf = strdup(defaultconf);
-			list_load_from_data(list, mutableDefaultConf, strlen(mutableDefaultConf));
-			free(mutableDefaultConf);
+			list_load_from_data(list, defaultconf);
 		}			
 		return;
 	}
@@ -142,13 +144,11 @@ list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 		abort ();
 	}
 
-	ibuf = static_cast<char*>(malloc (st.st_size));
-	read (fd, ibuf, st.st_size);
-	close (fd);
+	std::string ibuf(st.st_size, '\0');
+	read (fd, &ibuf[0], st.st_size);
+	g_close (fd, nullptr);
 
-	list_load_from_data (list, ibuf, st.st_size);
-
-	free (ibuf);
+	list_load_from_data (list, ibuf);
 }
 
 void
@@ -1239,6 +1239,8 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				{
 					/* save the previous value until we print it out */
 					prev_string = (char*) malloc (vars[i].len + 1);
+					if (!prev_string)
+						return false;
 					strncpy (prev_string, (char *) &prefs + vars[i].offset, vars[i].len);
 
 					/* update the variable */
@@ -1325,7 +1327,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 int
-hexchat_open_file (char *file, int flags, int mode, int xof_flags)
+hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
 	char *buf;
 	int fd;

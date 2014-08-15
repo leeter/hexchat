@@ -42,6 +42,7 @@ extern int ignored_invi;
 
 struct ignore
 {
+	ignore();
 	std::string mask;
 	unsigned int type;	/* one of more of IG_* ORed together */
 };

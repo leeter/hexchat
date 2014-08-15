@@ -27,12 +27,12 @@
 #define WANTSOCKET
 #define WANTARPA
 #include "../common/inet.h"
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "../common/dcc.hpp"
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/fe.h"
-#include "../common/util.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
 #include "../common/network.h"
 #include "gtkutil.hpp"
 #include "palette.hpp"

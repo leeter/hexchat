@@ -18,17 +18,17 @@
 
 #include <cstring>
 #include "../common/hexchat-plugin.h"
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/inbound.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/inbound.hpp"
 #include "../common/server.h"
-#include "../common/fe.h"
-#include "../common/util.h"
-#include "../common/outbound.h"
-#include "fe-gtk.h"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
+#include "../common/outbound.hpp"
+#include "fe-gtk.hpp"
 #include "pixmaps.h"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "plugin-tray.hpp"
 
 #ifndef WIN32

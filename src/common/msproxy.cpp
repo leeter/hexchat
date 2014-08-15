@@ -23,9 +23,9 @@
 
 /*#define DEBUG_MSPROXY*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <fcntl.h>
 
 #ifndef WIN32
@@ -36,9 +36,9 @@
 #define WANTARPA
 #include "inet.h"
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "network.h"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 #include "server.h"
 #include "msproxy.h"
 

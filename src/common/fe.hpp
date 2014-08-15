@@ -17,17 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "userlist.h"
+#ifndef HEXCHAT_FE_HPP
+#define HEXCHAT_FE_HPP
 
-#ifndef HEXCHAT_FE_H
-#define HEXCHAT_FE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string>
+#include "userlist.hpp"
 
 /* for storage of /menu entries */
-typedef struct
+struct menu_entry
 {
 	gint32 pos;	/* position */
 	gint16 modifier;	/* keybinding */
@@ -45,7 +42,7 @@ typedef struct
 	char *ucmd;	/* unselect command (toggles) */
 	char *group;	/* for radio items or NULL */
 	char *icon;	/* filename */
-} menu_entry;
+};
 
 int fe_args (int argc, char *argv[]);
 void fe_init (void);
@@ -62,7 +59,7 @@ void fe_add_rawlog (struct server *serv, const char *text, int len, int outbound
 #define FE_MSG_WARN 4
 #define FE_MSG_ERROR 8
 #define FE_MSG_MARKUP 16
-void fe_message (const char *msg, int flags);
+void fe_message (const std::string & msg, int flags);
 #define FIA_READ 1
 #define FIA_WRITE 2
 #define FIA_EX 4
@@ -181,8 +178,5 @@ void fe_tray_set_tooltip (const char *text);
 void fe_tray_set_balloon (const char *title, const char *text);
 void fe_open_chan_list (server *serv, char *filter, int do_refresh);
 const char *fe_get_default_font ();
-#ifdef __cplusplus
-}
-#endif
 
 #endif

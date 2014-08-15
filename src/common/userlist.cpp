@@ -20,16 +20,13 @@
 #include <cstdlib>
 #include <cstring>
 
-extern "C"{
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "modes.h"
-#include "fe.h"
-#include "notify.h"
-#include "tree.h"
-#include "hexchatc.h"
-#include "util.h"
-}
-
+#include "fe.hpp"
+#include "notify.hpp"
+#include "tree.hpp"
+#include "hexchatc.hpp"
+#include "util.hpp"
 
 static int
 nick_cmp_az_ops (server *serv, struct User *user1, struct User *user2)

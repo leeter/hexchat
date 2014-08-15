@@ -15,25 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="banlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="chanlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="custom-list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="fe-gtk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="fkeys.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pixmaps.h">
@@ -46,9 +34,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="textgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xtext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="servlistgui.h">
@@ -94,6 +79,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin-tray.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fe-gtk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="banlist.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xtext.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editlist.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,39 +14,39 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cfgfiles.h" />
+    <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.h" />
-    <ClInclude Include="ctcp.h" />
+    <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
-    <ClInclude Include="fe.h" />
-    <ClInclude Include="history.h" />
+    <ClInclude Include="fe.hpp" />
+    <ClInclude Include="history.hpp" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />
-    <ClInclude Include="inbound.h" />
+    <ClInclude Include="inbound.hpp" />
     <ClInclude Include="inet.h" />
     <ClInclude Include="marshal.h" />
     <ClInclude Include="modes.h" />
     <ClInclude Include="msproxy.h" />
     <ClInclude Include="network.h" />
-    <ClInclude Include="notify.h" />
-    <ClInclude Include="outbound.h" />
+    <ClInclude Include="notify.hpp" />
+    <ClInclude Include="outbound.hpp" />
     <ClInclude Include="plugin-timer.hpp" />
     <ClInclude Include="plugin.h" />
-    <ClInclude Include="proto-irc.h" />
+    <ClInclude Include="proto-irc.hpp" />
     <ClInclude Include="server.h" />
     <ClInclude Include="servlist.h" />
     <ClInclude Include="ssl.hpp" />
-    <ClInclude Include="text.h" />
+    <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
     <ClInclude Include="textevents.h" />
-    <ClInclude Include="tree.h" />
+    <ClInclude Include="tree.hpp" />
     <ClInclude Include="typedef.h" />
-    <ClInclude Include="url.h" />
-    <ClInclude Include="userlist.h" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="url.hpp" />
+    <ClInclude Include="userlist.hpp" />
+    <ClInclude Include="util.hpp" />
     <ClInclude Include="hexchat-plugin.h" />
-    <ClInclude Include="hexchat.h" />
-    <ClInclude Include="hexchatc.h" />
+    <ClInclude Include="hexchat.hpp" />
+    <ClInclude Include="hexchatc.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cfgfiles.cpp" />
@@ -59,7 +59,7 @@
     <ClCompile Include="inbound.cpp" />
     <ClCompile Include="marshal.c" />
     <ClCompile Include="modes.cpp" />
-    <ClCompile Include="msproxy.c" />
+    <ClCompile Include="msproxy.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="notify.cpp" />
     <ClCompile Include="outbound.cpp" />
@@ -124,8 +124,8 @@
       </PrecompiledHeader>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;NDEBUG;_LIB;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(YourBoostPath);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -141,8 +141,8 @@
       </PrecompiledHeader>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WIN64;_AMD64_;NDEBUG;_LIB;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_WIN64;_AMD64_;NDEBUG;_LIB;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(YourBoostPath);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>

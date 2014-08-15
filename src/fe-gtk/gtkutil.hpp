@@ -21,15 +21,15 @@
 #define HEXCHAT_GTKUTIL_HPP
 
 #include <gtk/gtk.h>
-#include "../common/fe.h"
+#include "../common/fe.hpp"
 
 typedef void (*filereqcallback) (void *, char *file);
 
 void gtkutil_file_req (const char *title, void *callback, void *userdata, char *filter, char *extensions, int flags);
 void gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad);
 void gtkutil_destroy_on_esc (GtkWidget *win);
-GtkWidget *gtkutil_button (GtkWidget *box, char *stock, char *tip, void *callback,
-				 void *userdata, char *labeltext);
+GtkWidget *gtkutil_button (GtkWidget *box, const char *stock, const char *tip, void *callback,
+				 void *userdata, const char *labeltext);
 void gtkutil_label_new (const char *text, GtkWidget * box);
 GtkWidget *gtkutil_entry_new (int max, GtkWidget * box, void *callback,
 										gpointer userdata);

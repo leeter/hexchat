@@ -17,13 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_BANLIST_H
-#define HEXCHAT_BANLIST_H
+#ifndef HEXCHAT_BANLIST_HPP
+#define HEXCHAT_BANLIST_HPP
 
-#include "../common/hexchat.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include "../common/hexchat.hpp"
+
 void banlist_opengui (session *sess);
 
 #ifndef RPL_BANLIST
@@ -38,15 +36,15 @@ void banlist_opengui (session *sess);
 #define RPL_ENDOFQUIETLIST 729
 #endif
 
-typedef enum banlist_modes_e {
+enum banlist_modes {
 	MODE_BAN,
 	MODE_EXEMPT,
 	MODE_INVITE,
 	MODE_QUIET,
 	MODE_CT
-} banlist_modes;
+};
 
-typedef struct banlist_info_s {
+struct banlist_info {
 	session *sess;
 	int capable;	/* MODE bitmask */
 	int readable;	/* subset of capable if not op */
@@ -63,10 +61,6 @@ typedef struct banlist_info_s {
 	GtkWidget *but_crop;
 	GtkWidget *but_clear;
 	GtkWidget *but_refresh;
-} banlist_info;
-
-#ifdef __cplusplus
-}
-#endif
+};
 
 #endif /* HEXCHAT_BANLIST_H */

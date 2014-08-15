@@ -33,14 +33,14 @@
 #include <ctime>
 
 #include "../../config.h"
-#include "../common/hexchat.h"
-#include "../common/fe.h"
-#include "../common/util.h"
-#include "../common/hexchatc.h"
-#include "../common/url.h"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/url.hpp"
 #include "../common/marshal.h"
-#include "fe-gtk.h"
-#include "xtext.h"
+#include "fe-gtk.hpp"
+#include "xtext.hpp"
 #include "fkeys.h"
 #include "gtk_helpers.hpp"
 

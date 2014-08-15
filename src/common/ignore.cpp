@@ -29,15 +29,19 @@
 #else
 #include <unistd.h>
 #endif
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "ignore.hpp"
-#include "cfgfiles.h"
-#include "fe.h"
-#include "text.h"
-#include "util.h"
-#include "hexchatc.h"
+#include "cfgfiles.hpp"
+#include "fe.hpp"
+#include "text.hpp"
+#include "util.hpp"
+#include "hexchatc.hpp"
 #include "typedef.h"
 
+ignore::ignore()
+	:mask(),
+	type()
+{}
 
 int ignored_ctcp = 0;			  /* keep a count of all we ignore */
 int ignored_priv = 0;
@@ -249,7 +253,7 @@ ignore_check(const std::string& mask, int type)
 		list = list->next;
 	}
 
-	return true;
+	return false;
 }
 
 static char *

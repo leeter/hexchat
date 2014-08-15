@@ -17,12 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_URL_H
-#define HEXCHAT_URL_H
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef HEXCHAT_URL_HPP
+#define HEXCHAT_URL_HPP
 
 extern void *url_tree;
 
@@ -41,9 +37,5 @@ void url_save_tree (const char *fname, const char *mode, gboolean fullpath);
 int url_last (int *, int *);
 int url_check_word (const char *word);
 void url_check_line (const char *buf, int len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

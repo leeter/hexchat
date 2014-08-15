@@ -17,29 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_HISTORY_H
-#define HEXCHAT_HISTORY_H
+#ifndef HEXCHAT_CTCP_HPP
+#define HEXCHAT_CTCP_HPP
 
-#define HISTORY_SIZE 100
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct history
-{
-	char *lines[HISTORY_SIZE];
-	int pos;
-	int realpos;
-};
-
-void history_add (struct history *his, const char *text);
-void history_free (struct history *his);
-char *history_up (struct history *his, const char *current_text);
-char *history_down (struct history *his);
-
-#ifdef __cplusplus
-}
-#endif
+void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
+						char *word[], char *word_eol[], int id,
+						const message_tags_data *tags_data);
 
 #endif

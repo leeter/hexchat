@@ -22,16 +22,16 @@
 #include <fcntl.h>
 #include <time.h>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/notify.h"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
+#include "../common/hexchat.hpp"
+#include "../common/notify.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
 #include "../common/server.h"
-#include "../common/util.h"
-#include "../common/userlist.h"
-#include "../common/outbound.h"
+#include "../common/util.hpp"
+#include "../common/userlist.hpp"
+#include "../common/outbound.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
@@ -297,7 +297,8 @@ notify_gui_update (void)
 	GSList *list = notify_list;
 	GSList *slist;
 	gchar *name, *status, *server, *seen;
-	int online, servcount, lastseenminutes;
+	int servcount, lastseenminutes;
+	bool online;
 	time_t lastseen;
 	char agobuf[128];
 
@@ -320,7 +321,7 @@ notify_gui_update (void)
 		status = _("Offline");
 		server = "";
 
-		online = FALSE;
+		online = false;
 		lastseen = 0;
 		/* First see if they're online on any servers */
 		slist = notify->server_list;
@@ -328,7 +329,7 @@ notify_gui_update (void)
 		{
 			servnot = (struct notify_per_server *) slist->data;
 			if (servnot->ison)
-				online = TRUE;
+				online = true;
 			if (servnot->lastseen > lastseen)
 				lastseen = servnot->lastseen;
 			slist = slist->next;

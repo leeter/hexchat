@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -36,22 +37,22 @@
 #include <signal.h>
 #include <unistd.h>
 #endif
-#include "hexchat.h"
-#include "fe.h"
-#include "util.h"
-#include "cfgfiles.h"
+#include "hexchat.hpp"
+#include "fe.hpp"
+#include "util.hpp"
+#include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "ignore.hpp"
 #include "hexchat-plugin.h"
 #include "plugin.h"
 #include "plugin-timer.hpp"
-#include "notify.h"
+#include "notify.hpp"
 #include "server.h"
 #include "servlist.h"
-#include "outbound.h"
-#include "text.h"
-#include "url.h"
-#include "hexchatc.h"
+#include "outbound.hpp"
+#include "text.hpp"
+#include "url.hpp"
+#include "hexchatc.hpp"
 #include "dcc.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
@@ -103,8 +104,8 @@ GSList *tabmenu_list = 0;
 GList *sess_list_by_lastact[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
 
-static int in_hexchat_exit = FALSE;
-int hexchat_is_quitting = FALSE;
+static std::atomic_bool in_hexchat_exit = { false };
+std::atomic_bool hexchat_is_quitting = { false };
 /* command-line args */
 int arg_dont_autoconnect = FALSE;
 int arg_skip_plugins = FALSE;
@@ -237,7 +238,7 @@ find_channel (server *serv, char *chan)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if ((!serv || serv == sess->server) && sess->type == SESS_CHANNEL)
+		if ((serv && serv == sess->server) && sess->type == SESS_CHANNEL)
 		{
 			if (!serv->p_cmp (chan, sess->channel))
 				return sess;
@@ -464,35 +465,64 @@ irc_init (session *sess)
 	load_perform_file (sess, "startup.txt");
 }
 
+session::session(struct server *serv, char *from, int type, int focus)
+	:server(serv),
+	logfd(-1),
+	scrollfd(-1),
+	type(type),
+	alert_beep(SET_DEFAULT),
+	alert_taskbar(SET_DEFAULT),
+	alert_tray(SET_DEFAULT),
+	
+	text_hidejoinpart(SET_DEFAULT),
+	text_logging(SET_DEFAULT),
+	text_scrollback(SET_DEFAULT),
+	text_strip(SET_DEFAULT),
+	
+	lastact_idx(LACT_NONE),
+	usertree_alpha(nullptr),
+	usertree(nullptr),
+	me(nullptr),
+	channel(),
+	waitchannel(),
+
+	quitreason(nullptr),
+	topic(nullptr),
+	current_modes(nullptr),
+
+	lastlog_sess(nullptr),
+	running_exec(nullptr),
+	gui(nullptr),
+	res(nullptr),
+
+	scrollback_replay_marklast(nullptr),
+
+	ops(),
+	hops(),
+	voices(),
+	total(),
+	history(),
+	new_data(),
+	nick_said(),
+	msg_said(),
+	ignore_date(),
+	ignore_mode(),
+	ignore_names(),
+	end_of_names(),
+	doing_who(),
+	done_away_check(),
+	lastlog_flags()
+{
+	if (from)
+		safe_strcpy(this->channel, from, CHANLEN);
+}
+
 static session *
 session_new (server *serv, char *from, int type, int focus)
 {
 	session *sess;
 
-	sess = new(std::nothrow) session();// calloc(1, sizeof(struct session));
-	if (sess == nullptr)
-	{
-		return nullptr;
-	}
-
-	sess->server = serv;
-	sess->logfd = -1;
-	sess->scrollfd = -1;
-	sess->type = type;
-
-	sess->alert_beep = SET_DEFAULT;
-	sess->alert_taskbar = SET_DEFAULT;
-	sess->alert_tray = SET_DEFAULT;
-
-	sess->text_hidejoinpart = SET_DEFAULT;
-	sess->text_logging = SET_DEFAULT;
-	sess->text_scrollback = SET_DEFAULT;
-	sess->text_strip = SET_DEFAULT;
-
-	sess->lastact_idx = LACT_NONE;
-
-	if (from)
-		safe_strcpy (sess->channel, from, CHANLEN);
+	sess = new session(serv, from, type, focus);
 
 	sess_list = g_slist_prepend (sess_list, sess);
 
@@ -669,7 +699,6 @@ session_free (session *killsess)
 
 	send_quit_or_part (killsess);
 
-	history_free (&killsess->history);
 	free (killsess->topic);
 	free (killsess->current_modes);
 
@@ -983,8 +1012,8 @@ xchat_init (void)
 void
 hexchat_exit (void)
 {
-	hexchat_is_quitting = TRUE;
-	in_hexchat_exit = TRUE;
+	hexchat_is_quitting = true;
+	in_hexchat_exit = true;
 	plugin_kill_all ();
 	fe_cleanup ();
 
@@ -1014,7 +1043,7 @@ static void
 set_locale (void)
 {
 #ifdef WIN32
-	char hexchat_lang[13];	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
+	char hexchat_lang[13] = { 0 };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
 
 	strcpy (hexchat_lang, "LC_ALL=");
 
@@ -1051,6 +1080,9 @@ main (int argc, char *argv[])
 				}
 
 				xdir = strdup (argv[i + 1]);
+
+				if (!xdir)
+					return -1;
 
 				if (xdir[strlen (xdir) - 1] == G_DIR_SEPARATOR)
 				{

@@ -28,21 +28,21 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
-#include "proto-irc.h"
-#include "ctcp.h"
-#include "fe.h"
+#include "hexchat.hpp"
+#include "proto-irc.hpp"
+#include "ctcp.hpp"
+#include "fe.hpp"
 #include "ignore.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "modes.h"
-#include "notify.h"
+#include "notify.hpp"
 #include "plugin.h"
 #include "server.h"
-#include "text.h"
-#include "outbound.h"
-#include "util.h"
-#include "hexchatc.h"
-#include "url.h"
+#include "text.hpp"
+#include "outbound.hpp"
+#include "util.hpp"
+#include "hexchatc.hpp"
+#include "url.hpp"
 #include "servlist.h"
 
 namespace {

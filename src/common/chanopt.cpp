@@ -33,14 +33,14 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
+#include "hexchat.hpp"
 #include "chanopt.h"
 
-#include "cfgfiles.h"
+#include "cfgfiles.hpp"
 #include "server.h"
-#include "text.h"
-#include "util.h"
-#include "hexchatc.h"
+#include "text.hpp"
+#include "util.hpp"
+#include "hexchatc.hpp"
 
 
 static GSList *chanopt_list = NULL;

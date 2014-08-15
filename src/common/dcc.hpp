@@ -23,7 +23,7 @@
 #define HEXCHAT_DCC_HPP
 
 #include <ctime>						/* for time_t */
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 namespace hexchat{
 #define STAT_QUEUED 0
 #define STAT_ACTIVE 1

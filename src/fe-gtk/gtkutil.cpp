@@ -20,22 +20,24 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <sstream>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 #if defined (WIN32) || defined (__APPLE__)
 #include <pango/pangocairo.h>
 #endif
 
-#include "../common/hexchat.h"
-#include "../common/fe.h"
-#include "../common/util.h"
-#include "../common/cfgfiles.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/hexchatc.hpp"
 #include "../common/typedef.h"
 #include "gtkutil.hpp"
 #include "pixmaps.h"
@@ -163,8 +165,6 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	GtkWidget *dialog;
 	GtkFileFilter *filefilter;
 	extern char *get_xdir_fs (void);
-	char *token;
-	char *tokenbuffer;
 
 	if (flags & FRF_WRITE)
 	{
@@ -207,19 +207,16 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	if ((flags & FRF_EXTENSIONS || flags & FRF_MIMETYPES) && extensions != NULL)
 	{
 		filefilter = gtk_file_filter_new ();
-		tokenbuffer = g_strdup (extensions);
-		token = strtok (tokenbuffer, ";");
+		std::istringstream tokenbuffer(extensions);
 
-		while (token != NULL)
+		for (std::string token; std::getline(tokenbuffer, token, ';');)
 		{
 			if (flags & FRF_EXTENSIONS)
-				gtk_file_filter_add_pattern (filefilter, token);
+				gtk_file_filter_add_pattern(filefilter, token.c_str());
 			else
-				gtk_file_filter_add_mime_type (filefilter, token);
-			token = strtok (NULL, ";");
+				gtk_file_filter_add_mime_type (filefilter, token.c_str());
 		}
 
-		g_free (tokenbuffer);
 		gtk_file_chooser_set_filter (GTK_FILE_CHOOSER (dialog), filefilter);
 	}
 
@@ -465,8 +462,8 @@ fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
 }
 
 GtkWidget *
-gtkutil_button (GtkWidget *box, char *stock, char *tip, void *callback,
-					 void *userdata, char *labeltext)
+gtkutil_button (GtkWidget *box, const char *stock, const char *tip, void *callback,
+					 void *userdata, const char *labeltext)
 {
 	GtkWidget *wid, *img, *bbox;
 

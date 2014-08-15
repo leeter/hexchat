@@ -31,17 +31,17 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
-#include "fe.h"
-#include "util.h"
-#include "outbound.h"
-#include "cfgfiles.h"
+#include "hexchat.hpp"
+#include "fe.hpp"
+#include "util.hpp"
+#include "outbound.hpp"
+#include "cfgfiles.hpp"
 #include "ignore.hpp"
 #include "server.h"
 #include "servlist.h"
 #include "modes.h"
-#include "notify.h"
-#include "text.h"
+#include "notify.hpp"
+#include "text.hpp"
 #include "dcc.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;
@@ -51,7 +51,7 @@ typedef struct session hexchat_context;
 
 
 
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 /* the USE_PLUGIN define only removes libdl stuff */
 
@@ -963,7 +963,7 @@ hexchat_hook_fd (hexchat_plugin *ph, int fd, int flags,
 	if (!hook)
 		return NULL;
 	hook->pri = fd;
-	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.h) */
+	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.hpp) */
 	hook->tag = fe_input_add (fd, flags, plugin_fd_cb, hook);
 
 	return hook;
@@ -1311,7 +1311,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 		}	/* fall through */
 
 	default:
-		free (list);
+		delete list;
 		return NULL;
 	}
 
@@ -1601,17 +1601,17 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 			tmp <<= 1;
 			tmp |= ((struct session *)data)->text_hidejoinpart;   /* 6 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_idmsg; /* 5 */
+			tmp |= ((struct session *)data)->server->have_idmsg ? 1 : 0; /* 5 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_whox;  /* 4 */
+			tmp |= ((struct session *)data)->server->have_whox ? 1 : 0;  /* 4 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->end_of_motd;/* 3 */
+			tmp |= ((struct session *)data)->server->end_of_motd ? 1 : 0;/* 3 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->is_away;    /* 2 */
+			tmp |= ((struct session *)data)->server->is_away ? 1 : 0;    /* 2 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connecting; /* 1 */ 
+			tmp |= ((struct session *)data)->server->connecting ? 1 : 0; /* 1 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connected;  /* 0 */
+			tmp |= ((struct session *)data)->server->connected ? 1 : 0;  /* 0 */
 			return tmp;
 		case 0x1a192: /* lag */
 			return ((struct session *)data)->server->lag;
@@ -1765,7 +1765,7 @@ hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char
 	char *confname_tmp;
 	char *buffer;
 	char *buffer_tmp;
-	char line_buffer[512];		/* the same as in cfg_put_str */
+	char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
 	char *line_bufp = line_buffer;
 	char *canon;
 

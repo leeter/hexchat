@@ -31,22 +31,22 @@
 #endif
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
-#include "../common/userlist.h"
-#include "../common/outbound.h"
-#include "../common/util.h"
-#include "../common/text.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
+#include "../common/userlist.hpp"
+#include "../common/outbound.hpp"
+#include "../common/util.hpp"
+#include "../common/text.hpp"
 #include "../common/plugin.h"
 #include "../common/typedef.h"
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
-#include "menu.h"
-#include "xtext.h"
+#include "menu.hpp"
+#include "xtext.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "textgui.h"
@@ -1326,12 +1326,10 @@ static int
 key_action_history_up (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
 							  struct session *sess)
 {
-	char *new_line;
-
-	new_line = history_up (&sess->history, SPELL_ENTRY_GET_TEXT (wid));
-	if (new_line)
+	auto new_line = sess->history.up(SPELL_ENTRY_GET_TEXT (wid));
+	if (new_line.second)
 	{
-		SPELL_ENTRY_SET_TEXT (wid, new_line);
+		SPELL_ENTRY_SET_TEXT (wid, new_line.first.c_str());
 		SPELL_ENTRY_SET_POS (wid, -1);
 	}
 
@@ -1342,12 +1340,10 @@ static int
 key_action_history_down (GtkWidget * wid, GdkEventKey * ent, char *d1,
 								 char *d2, struct session *sess)
 {
-	char *new_line;
-
-	new_line = history_down (&sess->history);
-	if (new_line)
+	auto new_line = sess->history.down();
+	if (new_line.second)
 	{
-		SPELL_ENTRY_SET_TEXT (wid, new_line);
+		SPELL_ENTRY_SET_TEXT (wid, new_line.first.c_str());
 		SPELL_ENTRY_SET_POS (wid, -1);
 	}
 
@@ -1727,7 +1723,7 @@ static int
 key_action_put_history (GtkWidget * wid, GdkEventKey * ent, char *d1,
 									char *d2, struct session *sess)
 {
-	history_add (&sess->history, SPELL_ENTRY_GET_TEXT (wid));
+	sess->history.add(SPELL_ENTRY_GET_TEXT (wid));
 	SPELL_ENTRY_SET_TEXT (wid, "");
 	return 2;						  /* -''- */
 }

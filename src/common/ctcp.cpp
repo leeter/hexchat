@@ -24,18 +24,18 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
-#include "cfgfiles.h"
-#include "util.h"
+#include "hexchat.hpp"
+#include "cfgfiles.hpp"
+#include "util.hpp"
 #include "modes.h"
-#include "outbound.h"
+#include "outbound.hpp"
 #include "ignore.hpp"
-#include "inbound.h"
+#include "inbound.hpp"
 #include "dcc.hpp"
-#include "text.h"
-#include "ctcp.h"
+#include "text.hpp"
+#include "ctcp.hpp"
 #include "server.h"
-#include "hexchatc.h"
+#include "hexchatc.hpp"
 
 namespace dcc = hexchat::dcc;
 
@@ -143,10 +143,10 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 	{
 #ifdef WIN32
 		snprintf (outbuf, sizeof (outbuf), "VERSION HexChat "PACKAGE_VERSION" [x%d] / %s",
-					 get_cpu_arch (), get_sys_str (1));
+					 get_cpu_arch (), get_sys_str (true));
 #else
 		snprintf (outbuf, sizeof (outbuf), "VERSION HexChat "PACKAGE_VERSION" / %s",
-					 get_sys_str (1));
+					 get_sys_str (true));
 #endif
 		serv->p_nctcp (serv, nick, outbuf);
 	}

@@ -17,16 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef HEXCHAT_HPP
+#define HEXCHAT_HPP
+
 #include "../../config.h"
 
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <glib/gi18n.h>
 
-#include <time.h>			/* need time_t */
-
-#ifndef HEXCHAT_H
-#define HEXCHAT_H
+#include <string>
+#include <ctime>			/* need time_t */
 
 #ifdef USE_OPENSSL
 #ifdef __APPLE__
@@ -35,7 +36,7 @@
 #endif
 #endif
 
-#include "history.h"
+#include "history.hpp"
 
 #ifndef HAVE_SNPRINTF
 #define snprintf g_snprintf
@@ -92,9 +93,7 @@
 #define PDIWORDS		32
 #define USERNAMELEN 10
 #define HIDDEN_CHAR	8			/* invisible character for xtext */
-#ifdef __cplusplus
-extern "C"{
-#endif
+
 struct nbexec
 {
 	int myfd;
@@ -361,23 +360,22 @@ struct hexchatprefs
 #define LACT_CHAN_DATA	4		/* channel with other data */
 
 /* Moved from fe-gtk for use in outbound.c as well -- */
-typedef enum gtk_xtext_search_flags_e {
+enum gtk_xtext_search_flags {
 	case_match = 1,
 	backward = 2,
 	highlight = 4,
 	follow = 8,
 	regexp = 16
-} gtk_xtext_search_flags;
+};
 
-#ifdef __cplusplus
 inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_search_flags b)
 {
 	return static_cast<gtk_xtext_search_flags>(static_cast<int>(a) | static_cast<int>(b));
 }
-#endif
 
-typedef struct session
+struct session
 {
+	session(struct server *serv, char *from, int type, int focus);
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
 	guint8 alert_beep;
@@ -405,7 +403,7 @@ typedef struct session
 
 	char lastnick[NICKLEN];			  /* last nick you /msg'ed */
 
-	struct history history;
+	history history;
 
 	int ops;								/* num. of ops in channel */
 	int hops;						  /* num. of half-oped users */
@@ -429,19 +427,19 @@ typedef struct session
 	int lastact_idx;		/* the sess_list_by_lastact[] index of the list we're in.
 							 * For valid values, see defines of LACT_*. */
 
-	int new_data:1;			/* new data avail? (purple tab) */
-	int nick_said:1;		/* your nick mentioned? (blue tab) */
-	int msg_said:1;			/* new msg available? (red tab) */
+	bool new_data;			/* new data avail? (purple tab) */
+	bool nick_said;		/* your nick mentioned? (blue tab) */
+	bool msg_said;			/* new msg available? (red tab) */
 
-	int ignore_date:1;
-	int ignore_mode:1;
-	int ignore_names:1;
-	int end_of_names:1;
-	int doing_who:1;		/* /who sent on this channel */
-	int done_away_check:1;	/* done checking for away status changes */
+	bool ignore_date;
+	bool ignore_mode;
+	bool ignore_names;
+	bool end_of_names;
+	bool doing_who;		/* /who sent on this channel */
+	bool done_away_check;	/* done checking for away status changes */
 	gtk_xtext_search_flags lastlog_flags;
 	void (*scrollback_replay_marklast) (struct session *sess);
-} session;
+};
 
 struct msproxy_state_t
 {
@@ -460,7 +458,7 @@ struct msproxy_state_t
 typedef struct server
 {
 	/*  server control operations (in server*.c) */
-	void (*connect)(struct server *, char *hostname, int port, int no_login);
+	void (*connect)(struct server *, char *hostname, int port, bool no_login);
 	void (*disconnect)(struct session *, int sendquit, int err);
 	int  (*cleanup)(struct server *);
 	void (*flush_queue)(struct server *);
@@ -566,42 +564,42 @@ typedef struct server
 	char *encoding;					/* NULL for system */
 	GSList *favlist;			/* list of channels & keys to join */
 
-	unsigned int motd_skipped:1;
-	unsigned int connected:1;
-	unsigned int connecting:1;
-	unsigned int no_login:1;
-	unsigned int skip_next_userhost:1;/* used for "get my ip from server" */
-	unsigned int skip_next_whois:1;	/* hide whois output */
-	unsigned int inside_whois:1;
-	unsigned int doing_dns:1;			/* /dns has been done */
-	unsigned int retry_sasl:1;		/* retrying another sasl mech */
-	unsigned int end_of_motd:1;		/* end of motd reached (logged in) */
-	unsigned int sent_quit:1;			/* sent a QUIT already? */
-	unsigned int use_listargs:1;		/* undernet and dalnet need /list >0,<10000 */
-	unsigned int is_away:1;
-	unsigned int reconnect_away:1;	/* whether to reconnect in is_away state */
-	unsigned int dont_use_proxy:1;	/* to proxy or not to proxy */
-	unsigned int supports_watch:1;	/* supports the WATCH command */
-	unsigned int supports_monitor:1;	/* supports the MONITOR command */
-	unsigned int bad_prefix:1;			/* gave us a bad PREFIX= 005 number */
-	unsigned int have_namesx:1;		/* 005 tokens NAMESX and UHNAMES */
-	unsigned int have_awaynotify:1;
-	unsigned int have_uhnames:1;
-	unsigned int have_whox:1;		/* have undernet's WHOX features */
-	unsigned int have_idmsg:1;		/* freenode's IDENTIFY-MSG */
-	unsigned int have_accnotify:1; /* cap account-notify */
-	unsigned int have_extjoin:1;	/* cap extended-join */
-	unsigned int have_server_time:1;	/* cap server-time */
-	unsigned int have_sasl:1;		/* SASL capability */
-	unsigned int have_except:1;	/* ban exemptions +e */
-	unsigned int have_invite:1;	/* invite exemptions +I */
-	unsigned int have_cert:1;	/* have loaded a cert */
-	unsigned int using_cp1255:1;	/* encoding is CP1255/WINDOWS-1255? */
-	unsigned int using_irc:1;		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
-	unsigned int use_who:1;			/* whether to use WHO command to get dcc_ip */
+	bool motd_skipped;
+	bool connected;
+	bool connecting;
+	bool no_login;
+	bool skip_next_userhost;/* used for "get my ip from server" */
+	bool skip_next_whois;	/* hide whois output */
+	bool inside_whois;
+	bool doing_dns;			/* /dns has been done */
+	bool retry_sasl;		/* retrying another sasl mech */
+	bool end_of_motd;		/* end of motd reached (logged in) */
+	bool sent_quit;			/* sent a QUIT already? */
+	bool use_listargs;		/* undernet and dalnet need /list >0,<10000 */
+	bool is_away;
+	bool reconnect_away;	/* whether to reconnect in is_away state */
+	bool dont_use_proxy;	/* to proxy or not to proxy */
+	bool supports_watch;	/* supports the WATCH command */
+	bool supports_monitor;	/* supports the MONITOR command */
+	bool bad_prefix;			/* gave us a bad PREFIX= 005 number */
+	bool have_namesx;		/* 005 tokens NAMESX and UHNAMES */
+	bool have_awaynotify;
+	bool have_uhnames;
+	bool have_whox;		/* have undernet's WHOX features */
+	bool have_idmsg;		/* freenode's IDENTIFY-MSG */
+	bool have_accnotify; /* cap account-notify */
+	bool have_extjoin;	/* cap extended-join */
+	bool have_server_time;	/* cap server-time */
+	bool have_sasl;		/* SASL capability */
+	bool have_except;	/* ban exemptions +e */
+	bool have_invite;	/* invite exemptions +I */
+	bool have_cert;	/* have loaded a cert */
+	bool using_cp1255;	/* encoding is CP1255/WINDOWS-1255? */
+	bool using_irc;		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
+	bool use_who;			/* whether to use WHO command to get dcc_ip */
 	unsigned int sasl_mech;			/* mechanism for sasl auth */
-	unsigned int sent_saslauth:1;	/* have sent AUTHENICATE yet */
-	unsigned int sent_capend:1;	/* have sent CAP END yet */
+	bool sent_saslauth;	/* have sent AUTHENICATE yet */
+	bool sent_capend;	/* have sent CAP END yet */
 #ifdef USE_OPENSSL
 	unsigned int use_ssl:1;				  /* is server SSL capable? */
 	unsigned int accept_invalid_cert:1;/* ignore result of server's cert. verify */
@@ -642,7 +640,5 @@ struct popup
 
 #define hexchat_filename_from_utf8 g_filename_from_utf8
 #define hexchat_filename_to_utf8 g_filename_to_utf8
-#ifdef __cplusplus
-}
-#endif
+
 #endif

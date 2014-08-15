@@ -24,6 +24,7 @@
 #include <cstring>
 #include <cctype>
 #include <ctime>
+#include <numeric>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -35,16 +36,16 @@
 #include <sys/mman.h>
 #endif
 
-#include "hexchat.h"
-#include "cfgfiles.h"
+#include "hexchat.hpp"
+#include "cfgfiles.hpp"
 #include "chanopt.h"
 #include "plugin.h"
-#include "fe.h"
+#include "fe.hpp"
 #include "server.h"
-#include "util.h"
-#include "outbound.h"
-#include "hexchatc.h"
-#include "text.h"
+#include "util.hpp"
+#include "outbound.hpp"
+#include "hexchatc.hpp"
+#include "text.hpp"
 #include "typedef.h"
 
 #ifdef WIN32
@@ -385,7 +386,7 @@ log_close (session *sess)
 	if (sess->logfd != -1)
 	{
 		std::time_t currenttime = std::time (NULL);
-		std::ostringstream stream(_("**** ENDING LOGGING AT %s\n"), std::ios_base::ate);
+		std::ostringstream stream(_("**** ENDING LOGGING AT "), std::ios_base::ate);
 		stream << std::ctime(&currenttime) <<"\n";
 		auto to_output = stream.str();
 		write (sess->logfd, to_output.c_str(), to_output.length());
@@ -1676,12 +1677,10 @@ pevent_load (char *filename)
 	 *      the changes and possibly modify them to suit you
 	 *      //David H
 	 */
-	char *buf, *ibuf;
 	int fd, i = 0, pnt = 0;
 	struct stat st;
 	char *text = NULL, *snd = NULL;
 	int penum = 0;
-	char *ofs;
 
 	if (filename == NULL)
 		fd = hexchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
@@ -1695,32 +1694,31 @@ pevent_load (char *filename)
 		close (fd);
 		return 1;
 	}
-	ibuf = static_cast<char*>(malloc (st.st_size));
-	read (fd, ibuf, st.st_size);
+	std::string ibufr(st.st_size, '\0');
+	read(fd, &ibufr[0], st.st_size);
 	close (fd);
-
-	while (buf_get_line (ibuf, &buf, &pnt, st.st_size))
+	std::istringstream buffer(ibufr);
+	for (std::string line; std::getline(buffer, line, '\n');)
 	{
-		if (buf[0] == '#')
+		if (line.empty())
 			continue;
-		if (strlen (buf) == 0)
+		if (line[0] == '#')
 			continue;
+		
+		auto ofs = line.find_first_of('=');
+		if (ofs == std::string::npos)
+			continue;
+		auto first_part = line.substr(0, ofs);
+		auto second_part = line.substr(ofs + 1);
 
-		ofs = strchr (buf, '=');
-		if (!ofs)
-			continue;
-		*ofs = 0;
-		ofs++;
-		/*if (*ofs == 0)
-			continue;*/
-
-		if (strcmp (buf, "event_name") == 0)
+		if (first_part == "event_name")
 		{
 			if (penum >= 0)
 				pevent_trigger_load (&penum, &text, &snd);
-			penum = pevent_find (ofs, &i);
+			penum = pevent_find (&second_part[0], &i);
 			continue;
-		} else if (strcmp (buf, "event_text") == 0)
+		}
+		else if (first_part == "event_text")
 		{
 			if (text)
 				free (text);
@@ -1752,7 +1750,7 @@ pevent_load (char *filename)
 				text = strdup (ofs);
 			}
 #else
-			text = strdup (ofs);
+			text = strdup (second_part.c_str());
 #endif
 
 			continue;
@@ -1768,7 +1766,6 @@ pevent_load (char *filename)
 	}
 
 	pevent_trigger_load (&penum, &text, &snd);
-	free (ibuf);
 	return 0;
 }
 
@@ -2088,12 +2085,9 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 static char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
 int
-text_color_of (const char *name)
+text_color_of (const std::string &name)
 {
-	int i = 0, sum = 0;
-
-	while (name[i])
-		sum += name[i++];
+	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
 	sum %= sizeof (rcolors) / sizeof (char);
 	return rcolors[sum];
 }

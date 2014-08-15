@@ -27,19 +27,19 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
 #include "../common/server.h"
 #include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "rawlog.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "fkeys.h"
 
 namespace {

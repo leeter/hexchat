@@ -19,6 +19,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <locale>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -26,6 +27,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctime>
+#include <functional>
+#include <algorithm>
 
 #ifdef WIN32
 #include <io.h>
@@ -33,14 +36,14 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.h"
-#include "notify.h"
-#include "cfgfiles.h"
-#include "fe.h"
+#include "hexchat.hpp"
+#include "notify.hpp"
+#include "cfgfiles.hpp"
+#include "fe.hpp"
 #include "server.h"
-#include "text.h"
-#include "util.h"
-#include "hexchatc.h"
+#include "text.hpp"
+#include "util.hpp"
+#include "hexchatc.hpp"
 
 
 GSList *notify_list = 0;
@@ -51,7 +54,8 @@ static char *
 despacify_dup (char *str)
 {
 	char *p, *res = static_cast<char*>(malloc (strlen (str) + 1));
-
+	if (!res)
+		return nullptr;
 	p = res;
 	while (1)
 	{
@@ -67,7 +71,7 @@ despacify_dup (char *str)
 }
 
 static int
-notify_netcmp (char *str, void *serv)
+notify_netcmp (const char *str, void *serv)
 {
 	char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
 
@@ -88,9 +92,32 @@ notify_do_network (struct notify *notify, server *serv)
 {
 	if (!notify->networks)	/* ALL networks for this nick */
 		return true;
+	std::istringstream buffer(notify->networks);
+	for (std::string token; std::getline(buffer, token, ',');)
+	{
+		std::string serv_str(server_get_network(static_cast<server*>(serv), TRUE));
+		serv_str.erase(
+			std::remove_if(
+				serv_str.begin(),
+				serv_str.end(),
+				std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+				serv_str.end());
+		if (rfc_casecmp(token.c_str(), serv_str.c_str()) == 0)
+			return false;
 
-	if (token_foreach (notify->networks, ',', notify_netcmp, serv))
-		return false;	/* network list doesn't contain this one */
+		/*char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
+
+	if (rfc_casecmp (str, net) == 0)
+	{
+		free (net);
+		return 0;	/* finish & return FALSE from token_foreach() *//*
+	}
+
+	free(net);
+	return 1;	/* keep going... */
+	}
+	//if (token_foreach (notify->networks, ',', notify_netcmp, serv))
+	//	return false;	/* network list doesn't contain this one */
 
 	return true;
 }
@@ -289,62 +316,52 @@ notify_set_online (server * serv, char *nick,
 /* monitor can send lists for numeric 730/731 */
 
 void
-notify_set_offline_list (server * serv, char *users, int quiet,
+notify_set_offline_list (server * serv, const char *users, int quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
 	char nick[NICKLEN] = { 0 };
-	char *token, *chr;
-	int pos;
 
-	token = strtok (users, ",");
-	while (token != NULL)
+	std::istringstream stream(users);
+	for (std::string token; std::getline(stream, token, ',');)
 	{
-		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		auto pos = token.find_first_of('!');
+		if (pos == std::string::npos)
+			continue;
 
-		pos = chr - token;
 		if (pos + 1 >= sizeof(nick))
-			goto end;
+			continue;
 
-		strncpy (nick, token, pos);
+		std::copy_n(token.cbegin(), pos, std::begin(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_offline (serv, servnot, nick, quiet, tags_data);
-end:
-		token = strtok (NULL, ",");
 	}
 }
 
 void
-notify_set_online_list (server * serv, char *users,
+notify_set_online_list (server * serv, const char *users,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
 	char nick[NICKLEN] = { 0 };
-	char *token, *chr;
-	int pos;
 
-	token = strtok (users, ",");
-	while (token != NULL)
+	std::istringstream stream(users);
+	for (std::string token; std::getline(stream, token, ',');)
 	{
-		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		auto pos = token.find_first_of('!');
+		if (pos == std::string::npos)
+			continue;
 
-		pos = chr - token;
 		if (pos + 1 >= sizeof(nick))
-			goto end;
+			continue;
 
-		strncpy (nick, token, pos);
+		std::copy_n(token.cbegin(), pos, std::begin(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_online (serv, servnot, nick, tags_data);
-end:
-		token = strtok (NULL, ",");
 	}
 }
 
@@ -451,12 +468,12 @@ notify_send_watches (server * serv)
 /* called when receiving a ISON 303 - should this func go? */
 
 void
-notify_markonline (server *serv, char *word[], const message_tags_data *tags_data)
+notify_markonline(server *serv, const char * const word[], const message_tags_data *tags_data)
 {
 	struct notify *notify;
 	struct notify_per_server *servnot;
 	GSList *list = notify_list;
-	int i, seen;
+	int i;
 
 	while (list)
 	{
@@ -468,12 +485,12 @@ notify_markonline (server *serv, char *word[], const message_tags_data *tags_dat
 			continue;
 		}
 		i = 4;
-		seen = FALSE;
+		bool seen = false;
 		while (*word[i])
 		{
 			if (!serv->p_cmp (notify->name, word[i]))
 			{
-				seen = TRUE;
+				seen = true;
 				notify_announce_online (serv, servnot, notify->name, tags_data);
 				break;
 			}
@@ -500,7 +517,7 @@ notify_markonline (server *serv, char *word[], const message_tags_data *tags_dat
 static void
 notify_checklist_for_server (server *serv)
 {
-	char outbuf[512];
+	char outbuf[512] = { 0 };
 	struct notify *notify;
 	GSList *list = notify_list;
 	int i = 0;

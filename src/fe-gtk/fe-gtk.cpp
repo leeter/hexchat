@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <memory>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 
 #ifdef WIN32
@@ -31,24 +31,24 @@
 #include <unistd.h>
 #endif
 
-#include "../common/hexchat.h"
-#include "../common/fe.h"
-#include "../common/util.h"
-#include "../common/text.h"
-#include "../common/cfgfiles.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchat.hpp"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
+#include "../common/text.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/hexchatc.hpp"
 #include "../common/plugin.h"
 #include "../common/server.h"
-#include "../common/url.h"
+#include "../common/url.hpp"
 #include "../common/dcc.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "pixmaps.h"
 #include "chanlist.h"
 #include "joind.hpp"
-#include "xtext.h"
+#include "xtext.hpp"
 #include "palette.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "notifygui.hpp"
 #include "textgui.h"
 #include "fkeys.h"
@@ -431,7 +431,7 @@ fe_new_server (struct server *serv)
 }
 
 void
-fe_message (const char *msg, int flags)
+fe_message (const std::string& msg, int flags)
 {
 	GtkWidget *dialog;
 	GtkMessageType type = GTK_MESSAGE_WARNING;
@@ -441,10 +441,10 @@ fe_message (const char *msg, int flags)
 	if (flags & FE_MSG_INFO)
 		type = GTK_MESSAGE_INFO;
 
-	dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), static_cast<GtkDialogFlags>(0), type,
-												GTK_BUTTONS_OK, "%s", msg);
+	dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), GtkDialogFlags(), type,
+												GTK_BUTTONS_OK, "%s", msg.c_str());
 	if (flags & FE_MSG_MARKUP)
-		gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), msg);
+		gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), msg.c_str());
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (gtk_widget_destroy), 0);
 	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);

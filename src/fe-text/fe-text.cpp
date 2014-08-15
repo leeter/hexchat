@@ -35,12 +35,12 @@
 #include <sys/types.h>
 #include <cctype>
 #include <glib-object.h>
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
-#include "../common/cfgfiles.h"
-#include "../common/outbound.h"
-#include "../common/util.h"
-#include "../common/fe.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/cfgfiles.hpp"
+#include "../common/outbound.hpp"
+#include "../common/util.hpp"
+#include "../common/fe.hpp"
 #include "../common/dcc.hpp"
 #include "fe-text.h"
 
@@ -102,7 +102,7 @@ fe_new_window (struct session *sess, int focus)
 				" \017HexChat-Text \00310"PACKAGE_VERSION"\n"
 				" \017Running on \00310%s \017glib \00310%d.%d.%d\n"
 				" \017This binary compiled \00310"__DATE__"\017\n",
-				get_sys_str (1),
+				get_sys_str (true),
 				glib_major_version, glib_minor_version, glib_micro_version);
 	fe_print_text (sess, buf, 0, FALSE);
 
@@ -591,7 +591,7 @@ fe_new_server (struct server *serv)
 }
 
 void
-fe_message (const char *msg, int flags)
+fe_message (const std::string& msg, int flags)
 {
 	std::cout << msg << "\n";
 }

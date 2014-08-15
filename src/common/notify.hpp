@@ -17,14 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "proto-irc.h"
+#include "proto-irc.hpp"
 
-#ifndef HEXCHAT_NOTIFY_H
-#define HEXCHAT_NOTIFY_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_NOTIFY_HPP
+#define HEXCHAT_NOTIFY_HPP
 
 struct notify
 {
@@ -52,9 +48,9 @@ void notify_set_online (server * serv, char *nick,
 void notify_set_offline (server * serv, char *nick, int quiet,
 								 const message_tags_data *tags_data);
 /* the MONITOR stuff */
-void notify_set_online_list (server * serv, char *users,
+void notify_set_online_list (server * serv, const char *users,
 								const message_tags_data *tags_data);
-void notify_set_offline_list (server * serv, char *users, int quiet,
+void notify_set_offline_list (server * serv, const char *users, int quiet,
 								 const message_tags_data *tags_data);
 void notify_send_watches (server * serv);
 
@@ -70,12 +66,8 @@ int notify_isnotify (session *sess, char *name);
 struct notify_per_server *notify_find_server_entry (struct notify *notify, struct server *serv);
 
 /* the old ISON stuff - remove me? */
-void notify_markonline (server *serv, char *word[], 
+void notify_markonline (server *serv, const char * const word[], 
 								const message_tags_data *tags_data);
 int notify_checklist (void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

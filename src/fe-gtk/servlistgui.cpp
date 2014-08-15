@@ -23,16 +23,16 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/hexchatc.h"
+#include "../common/hexchat.hpp"
+#include "../common/hexchatc.hpp"
 #include "../common/servlist.h"
-#include "../common/cfgfiles.h"
-#include "../common/fe.h"
-#include "../common/util.h"
+#include "../common/cfgfiles.hpp"
+#include "../common/fe.hpp"
+#include "../common/util.hpp"
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "gtkutil.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "pixmaps.h"
 #include "fkeys.h"
 #include "servlistgui.h"

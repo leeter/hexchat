@@ -193,7 +193,7 @@ net_resolve (netstore * ns, char *hostname, int port, char **real_host)
 {
 	struct addrinfo hints = { 0 };
 	char ipstring[MAX_HOSTNAME];
-	char portstring[MAX_HOSTNAME];
+	char portstring[MAX_HOSTNAME] = { 0 };
 	int ret;
 
 /*	if (ns->ip6_hostent)
@@ -309,12 +309,12 @@ net_store_fill_any (netstore *ns)
 
 	ai = ns->ip6_hostent;
 	if (!ai) {
-		ai = new(std::nothrow) addrinfo();
+		ai = new addrinfo();
 		ns->ip6_hostent = ai;
 	}
 	sin = (struct sockaddr_in *)ai->ai_addr;
 	if (!sin) {
-		sin = new(std::nothrow) sockaddr_in();
+		sin = new sockaddr_in();
 		ai->ai_addr = (struct sockaddr *)sin;
 	}
 	ai->ai_family = AF_INET;
@@ -333,12 +333,12 @@ net_store_fill_v4 (netstore *ns, guint32 addr, int port)
 
 	ai = ns->ip6_hostent;
 	if (!ai) {
-		ai = new(std::nothrow) addrinfo();
+		ai = new addrinfo();
 		ns->ip6_hostent = ai;
 	}
 	sin = (struct sockaddr_in *)ai->ai_addr;
 	if (!sin) {
-		sin = new(std::nothrow) sockaddr_in();
+		sin = new sockaddr_in();
 		ai->ai_addr = (struct sockaddr *)sin;
 	}
 	ai->ai_family = AF_INET;

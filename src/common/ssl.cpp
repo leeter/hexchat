@@ -53,7 +53,7 @@ __SSL_fill_err_buf (const std::string & funcname)
 	unsigned long err = ERR_get_error ();
 	ERR_error_string_n (err, buf, sizeof(buf));
 
-	std::ostringstream stream(funcname);
+	std::ostringstream stream(funcname, std::ios::ate);
 	stream << ": " << buf << " (" << err << ")\n";
 	auto err_string = stream.str();
 	std::copy(err_string.cbegin(), err_string.cend(), std::begin(err_buf));

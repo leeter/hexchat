@@ -20,22 +20,22 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/hexchat.h"
-#include "../common/util.h"
-#include "../common/userlist.h"
+#include "../common/hexchat.hpp"
+#include "../common/util.hpp"
+#include "../common/userlist.hpp"
 #include "../common/modes.h"
-#include "../common/text.h"
-#include "../common/notify.h"
-#include "../common/hexchatc.h"
-#include "../common/fe.h"
+#include "../common/text.hpp"
+#include "../common/notify.hpp"
+#include "../common/hexchatc.hpp"
+#include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
-#include "menu.h"
+#include "menu.hpp"
 #include "pixmaps.h"
 #include "userlistgui.hpp"
 #include "fkeys.h"

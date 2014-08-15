@@ -29,12 +29,12 @@
 #include <unistd.h>
 #endif
 
-#include "fe-gtk.h"
+#include "fe-gtk.hpp"
 #include "palette.hpp"
 
-#include "../common/hexchat.h"
-#include "../common/util.h"
-#include "../common/cfgfiles.h"
+#include "../common/hexchat.hpp"
+#include "../common/util.hpp"
+#include "../common/cfgfiles.hpp"
 #include "../common/typedef.h"
 
 
