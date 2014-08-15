@@ -19,6 +19,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <locale>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -26,6 +27,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctime>
+#include <functional>
+#include <algorithm>
 
 #ifdef WIN32
 #include <io.h>
@@ -68,7 +71,7 @@ despacify_dup (char *str)
 }
 
 static int
-notify_netcmp (char *str, void *serv)
+notify_netcmp (const char *str, void *serv)
 {
 	char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
 
@@ -89,9 +92,32 @@ notify_do_network (struct notify *notify, server *serv)
 {
 	if (!notify->networks)	/* ALL networks for this nick */
 		return true;
+	std::istringstream buffer(notify->networks);
+	for (std::string token; std::getline(buffer, token, ',');)
+	{
+		std::string serv_str(server_get_network(static_cast<server*>(serv), TRUE));
+		serv_str.erase(
+			std::remove_if(
+				serv_str.begin(),
+				serv_str.end(),
+				std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+				serv_str.end());
+		if (rfc_casecmp(token.c_str(), serv_str.c_str()) == 0)
+			return false;
 
-	if (token_foreach (notify->networks, ',', notify_netcmp, serv))
-		return false;	/* network list doesn't contain this one */
+		/*char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
+
+	if (rfc_casecmp (str, net) == 0)
+	{
+		free (net);
+		return 0;	/* finish & return FALSE from token_foreach() *//*
+	}
+
+	free(net);
+	return 1;	/* keep going... */
+	}
+	//if (token_foreach (notify->networks, ',', notify_netcmp, serv))
+	//	return false;	/* network list doesn't contain this one */
 
 	return true;
 }
