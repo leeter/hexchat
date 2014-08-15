@@ -1676,12 +1676,10 @@ pevent_load (char *filename)
 	 *      the changes and possibly modify them to suit you
 	 *      //David H
 	 */
-	char *buf, *ibuf;
 	int fd, i = 0, pnt = 0;
 	struct stat st;
 	char *text = NULL, *snd = NULL;
 	int penum = 0;
-	char *ofs;
 
 	if (filename == NULL)
 		fd = hexchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
@@ -1696,32 +1694,30 @@ pevent_load (char *filename)
 		return 1;
 	}
 	std::string ibufr(st.st_size, '\0');
-	ibuf = &ibuf[0];
-	read (fd, ibuf, st.st_size);
+	read(fd, &ibufr[0], st.st_size);
 	close (fd);
-
-	while (buf_get_line (ibuf, &buf, &pnt, st.st_size))
+	std::istringstream buffer(ibufr);
+	for (std::string line; std::getline(buffer, line, '\n');)
 	{
-		if (buf[0] == '#')
+		if (line.empty())
 			continue;
-		if (strlen (buf) == 0)
+		if (line[0] == '#')
 			continue;
+		
+		auto ofs = line.find_first_of('=');
+		if (ofs == std::string::npos)
+			continue;
+		auto first_part = line.substr(0, ofs);
+		auto second_part = line.substr(ofs + 1);
 
-		ofs = strchr (buf, '=');
-		if (!ofs)
-			continue;
-		*ofs = 0;
-		ofs++;
-		/*if (*ofs == 0)
-			continue;*/
-
-		if (strcmp (buf, "event_name") == 0)
+		if (first_part == "event_name")
 		{
 			if (penum >= 0)
 				pevent_trigger_load (&penum, &text, &snd);
-			penum = pevent_find (ofs, &i);
+			penum = pevent_find (&second_part[0], &i);
 			continue;
-		} else if (strcmp (buf, "event_text") == 0)
+		}
+		else if (first_part == "event_text")
 		{
 			if (text)
 				free (text);
@@ -1753,7 +1749,7 @@ pevent_load (char *filename)
 				text = strdup (ofs);
 			}
 #else
-			text = strdup (ofs);
+			text = strdup (second_part.c_str());
 #endif
 
 			continue;
