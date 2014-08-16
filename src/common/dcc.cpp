@@ -1482,16 +1482,16 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	{
 	case TYPE_SEND:
 		if (dcc->fastsend)
-			dcc->wiotag = fe_input_add(sok, FIA_WRITE, dcc_send_data, dcc);
-		dcc->iotag = fe_input_add(sok, FIA_READ | FIA_EX, dcc_read_ack, dcc);
-		dcc_send_data(NULL, static_cast<GIOCondition>(0), dcc);
+			dcc->wiotag = fe_input_add(sok, FIA_WRITE, (void*)dcc_send_data, dcc);
+		dcc->iotag = fe_input_add(sok, FIA_READ | FIA_EX, (void*)dcc_read_ack, dcc);
+		dcc_send_data(NULL, GIOCondition(), dcc);
 		EMIT_SIGNAL(XP_TE_DCCCONSEND, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
 
 	case TYPE_CHATSEND:
 		dcc_open_query(dcc->serv, dcc->nick);
-		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_chat, dcc);
+		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (void*)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
 		if (!dcc->dccchat)
 			return false;
