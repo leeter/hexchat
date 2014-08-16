@@ -1811,7 +1811,7 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 #ifdef WIN32
 	serv->iotag = fe_input_add(serv->childread, FIA_READ | FIA_FD, (GIOFunc)server_read_child,
 #else
-	serv->iotag = fe_input_add (serv->childread, FIA_READ, server_read_child,
+	serv->iotag = fe_input_add (serv->childread, FIA_READ, (GIOFunc)server_read_child,
 #endif
 										 serv);
 }
