@@ -17,6 +17,7 @@
  */
 
 #define _GNU_SOURCE	/* for memrchr */
+#include <string>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -4312,7 +4313,7 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 {
 	int occur = 0;
 	int len = strlen (cmd);
-	char *buf, *utf;
+	char *utf;
 	char tbuf[4];
 	int i = 0, j = 0;
 	gsize utf_len;
@@ -4320,84 +4321,80 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 	if (!len)
 		return;
 
-	buf = static_cast<char*>(malloc (len + 1));
+	std::string buf(len + 1, '\0');
 
-	if (buf)
+	while (cmd[j])
 	{
-		while (cmd[j])
+		switch (cmd[j])
 		{
-			switch (cmd[j])
+		case '%':
+			occur++;
+			if (	do_ascii &&
+					j + 3 < len &&
+					(isdigit ((unsigned char) cmd[j + 1]) && isdigit ((unsigned char) cmd[j + 2]) &&
+					isdigit ((unsigned char) cmd[j + 3])))
 			{
-			case '%':
-				occur++;
-				if (	do_ascii &&
-						j + 3 < len &&
-						(isdigit ((unsigned char) cmd[j + 1]) && isdigit ((unsigned char) cmd[j + 2]) &&
-						isdigit ((unsigned char) cmd[j + 3])))
+				tbuf[0] = cmd[j + 1];
+				tbuf[1] = cmd[j + 2];
+				tbuf[2] = cmd[j + 3];
+				tbuf[3] = 0;
+				buf[i] = atoi (tbuf);
+				utf = g_locale_to_utf8 (&buf[0] + i, 1, 0, &utf_len, 0);
+				if (utf)
 				{
-					tbuf[0] = cmd[j + 1];
-					tbuf[1] = cmd[j + 2];
-					tbuf[2] = cmd[j + 3];
-					tbuf[3] = 0;
-					buf[i] = atoi (tbuf);
-					utf = g_locale_to_utf8 (buf + i, 1, 0, &utf_len, 0);
-					if (utf)
-					{
-						memcpy (buf + i, utf, utf_len);
-						g_free (utf);
-						i += (utf_len - 1);
-					}
-					j += 3;
-				} else
-				{
-					switch (cmd[j + 1])
-					{
-					case 'R':
-						buf[i] = '\026';
-						break;
-					case 'U':
-						buf[i] = '\037';
-						break;
-					case 'B':
-						buf[i] = '\002';
-						break;
-					case 'I':
-						buf[i] = '\035';
-						break;
-					case 'C':
-						buf[i] = '\003';
-						break;
-					case 'O':
-						buf[i] = '\017';
-						break;
-					case 'H':	/* CL: invisible text code */
-						buf[i] = HIDDEN_CHAR;
-						break;
-					case '%':
-						buf[i] = '%';
-						break;
-					default:
-						buf[i] = '%';
-						j--;
-						break;
-					}
-					j++;
-					break;
-			default:
-					buf[i] = cmd[j];
+					std::copy_n(utf, utf_len, buf.begin() + i);
+					g_free (utf);
+					i += (utf_len - 1);
 				}
+				j += 3;
+			} else
+			{
+				switch (cmd[j + 1])
+				{
+				case 'R':
+					buf[i] = '\026';
+					break;
+				case 'U':
+					buf[i] = '\037';
+					break;
+				case 'B':
+					buf[i] = '\002';
+					break;
+				case 'I':
+					buf[i] = '\035';
+					break;
+				case 'C':
+					buf[i] = '\003';
+					break;
+				case 'O':
+					buf[i] = '\017';
+					break;
+				case 'H':	/* CL: invisible text code */
+					buf[i] = HIDDEN_CHAR;
+					break;
+				case '%':
+					buf[i] = '%';
+					break;
+				default:
+					buf[i] = '%';
+					j--;
+					break;
+				}
+				j++;
+				break;
+		default:
+				buf[i] = cmd[j];
 			}
-			j++;
-			i++;
 		}
-		buf[i] = 0;
-		if (occur)
-			strcpy (cmd, buf);
-		free (buf);
+		j++;
+		i++;
 	}
+	buf[i] = 0;
+	if (occur)
+		std::copy(buf.cbegin(), buf.cend(), cmd);
 }
 
-typedef struct
+struct nickdata
 {
 	char *nick;
 	int len;
@@ -4405,7 +4402,7 @@ typedef struct
 	int bestlen;
 	char *space;
 	char *tbuf;
-} nickdata;
+};
 
 static int
 nick_comp_cb (struct User *user, nickdata *data)
