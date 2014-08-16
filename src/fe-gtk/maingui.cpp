@@ -1127,7 +1127,7 @@ mg_menu_destroy (GtkWidget *menu, gpointer userdata)
 
 void
 mg_create_icon_item (char *label, char *stock, GtkWidget *menu,
-							void *callback, void *userdata)
+							GCallback callback, void *userdata)
 {
 	GtkWidget *item;
 
@@ -1597,9 +1597,9 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 	}
 
 	mg_create_icon_item (_("_Detach"), GTK_STOCK_REDO, menu,
-								mg_detach_tab_cb, ch);
+		G_CALLBACK(mg_detach_tab_cb), ch);
 	mg_create_icon_item (_("_Close"), GTK_STOCK_CLOSE, menu,
-								mg_destroy_tab_cb, ch);
+		G_CALLBACK(mg_destroy_tab_cb), ch);
 	if (sess && tabmenu_list)
 		menu_create (menu, tabmenu_list, sess->channel, FALSE);
 	if (sess)

@@ -622,11 +622,11 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	g_signal_connect (G_OBJECT (menu), "selection-done",
 							G_CALLBACK (chanlist_menu_destroy), NULL);
 	mg_create_icon_item (_("_Join Channel"), GTK_STOCK_JUMP_TO, menu,
-								chanlist_join, serv);
+		G_CALLBACK(chanlist_join), serv);
 	mg_create_icon_item (_("_Copy Channel Name"), GTK_STOCK_COPY, menu,
-								chanlist_copychannel, serv);
+		G_CALLBACK(chanlist_copychannel), serv);
 	mg_create_icon_item (_("Copy _Topic Text"), GTK_STOCK_COPY, menu,
-								chanlist_copytopic, serv);
+		G_CALLBACK(chanlist_copytopic), serv);
 
 	chan = chanlist_get_selected (serv, FALSE);
 	menu_addfavoritemenu (serv, menu, chan, FALSE);

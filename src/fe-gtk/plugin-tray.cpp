@@ -654,10 +654,10 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 	menu_add_plugin_items (menu, "\x5$TRAY", NULL);
 #ifdef WIN32
 	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
-	mg_create_icon_item (_("_Preferences"), GTK_STOCK_PREFERENCES, menu, tray_menu_settings, NULL);
+	mg_create_icon_item(_("_Preferences"), GTK_STOCK_PREFERENCES, menu, G_CALLBACK(tray_menu_settings), NULL);
 #endif
 	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
-	mg_create_icon_item (_("_Quit"), GTK_STOCK_QUIT, menu, tray_menu_quit_cb, NULL);
+	mg_create_icon_item(_("_Quit"), GTK_STOCK_QUIT, menu, G_CALLBACK(tray_menu_quit_cb), NULL);
 
 	g_object_ref (menu);
 	g_object_ref_sink (menu);
