@@ -72,7 +72,7 @@ __SSL_critical_error (const std::string & funcname)
 /* +++++ SSL functions +++++ */
 
 SSL_CTX *
-_SSL_context_init (void (*info_cb_func), int server)
+_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 {
 	SSL_CTX *ctx;
 
@@ -84,7 +84,7 @@ _SSL_context_init (void (*info_cb_func), int server)
 	SSL_CTX_set_timeout (ctx, 300);
 
 	/* used in SSL_connect(), SSL_accept() */
-	SSL_CTX_set_info_callback(ctx, (void(*)(const SSL *, int, int)) info_cb_func);
+	SSL_CTX_set_info_callback(ctx, info_cb_func);
 
 #ifdef WIN32
 	/* under win32, OpenSSL needs to be seeded with some randomness */
