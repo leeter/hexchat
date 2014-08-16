@@ -796,7 +796,7 @@ sigusr1_handler (int signal, siginfo_t *si, void *un)
 
 	while (list)
 	{
-		sess = list->data;
+		sess = static_cast<session*>(list->data);
 		log_open_or_close (sess);
 		list = list->next;
 	}

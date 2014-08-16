@@ -92,7 +92,6 @@ typedef int (hexchat_serv_attrs_cb) (const char * const word[], const char * con
 typedef int (hexchat_print_attrs_cb)(const char * const word[], hexchat_event_attrs *attrs, void *user_data);
 typedef int (hexchat_fd_cb) (int fd, int flags, void *user_data);
 typedef int (hexchat_timer_cb) (void *user_data);
-typedef int (hexchat_init_func) (hexchat_plugin *, char **, char **, char **, char *);
 typedef int (hexchat_deinit_func) (hexchat_plugin *);
 
 enum
@@ -240,7 +239,7 @@ hexchat_read_fd (hexchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 /* Load a static plugin */
 
 void
-plugin_add (session *sess, char *filename, void *handle, void *init_func,
+plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func,
 				void *deinit_func, char *arg, int fake)
 {
 	hexchat_plugin *pl;
@@ -304,7 +303,7 @@ plugin_add (session *sess, char *filename, void *handle, void *init_func,
 		pl->hexchat_event_attrs_free = hexchat_event_attrs_free;
 
 		/* run hexchat_plugin_init, if it returns 0, close the plugin */
-		if (((hexchat_init_func *)init_func) (pl, &pl->name, &pl->desc, &pl->version, arg) == 0)
+		if ((init_func) (pl, &pl->name, &pl->desc, &pl->version, arg) == 0)
 		{
 			plugin_free (pl, FALSE, FALSE);
 			return;
@@ -375,7 +374,7 @@ plugin_load (session *sess, char *filename, char *arg)
 {
 	void *handle;
 	char *filepart;
-	hexchat_init_func *init_func;
+	plugin_init_func init_func;
 	hexchat_deinit_func *deinit_func;
 	char *pluginpath;
 

@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+struct t_hexchat_plugin;
+typedef t_hexchat_plugin hexchat_plugin;
 #ifdef PLUGIN_C
 struct t_hexchat_plugin
 {
@@ -167,9 +169,14 @@ struct t_hexchat_plugin
 };
 #endif
 
+
+
+typedef int (*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name,
+	char **plugin_desc, char **plugin_version, char *arg);
+
 char *plugin_load (session *sess, char *filename, char *arg);
 int plugin_reload (session *sess, char *name, int by_filename);
-void plugin_add (session *sess, char *filename, void *handle, void *init_func, void *deinit_func, char *arg, int fake);
+void plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func, void *deinit_func, char *arg, int fake);
 int plugin_kill (char *name, int by_filename);
 void plugin_kill_all (void);
 void plugin_auto_load (session *sess);

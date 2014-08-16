@@ -20,7 +20,9 @@
 #ifndef HEXCHAT_PLUGIN_TRAY_HPP
 #define HEXCHAT_PLUGIN_TRAY_HPP
 
-int tray_plugin_init (void *, char **, char **, char **, char *);
+#include "../common/plugin.h"
+
+int tray_plugin_init (hexchat_plugin *, char **, char **, char **, char *);
 int tray_plugin_deinit (void *);
 bool tray_toggle_visibility (bool force_hide);
 void tray_apply_setup (void);
