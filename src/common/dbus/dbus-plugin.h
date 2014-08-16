@@ -22,10 +22,17 @@
 #ifndef HEXCHAT_DBUS_PLUGIN_H
 #define HEXCHAT_DBUS_PLUGIN_H
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 int	dbus_plugin_init	(hexchat_plugin *plugin_handle,
 				 char **plugin_name,
 				 char **plugin_desc,
 				 char **plugin_version,
 				 char *arg);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
