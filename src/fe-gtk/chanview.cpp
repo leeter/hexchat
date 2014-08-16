@@ -342,7 +342,7 @@ cv_tabs_xclick_cb(GtkWidget *button, chanview *cv)
 /* make a Scroll (arrow) button */
 
 static GtkWidget *
-make_sbutton(GtkArrowType type, void *click_cb, void *userdata)
+make_sbutton(GtkArrowType type, GSourceFunc click_cb, void *userdata)
 {
 	GtkWidget *button, *arrow;
 
@@ -405,12 +405,12 @@ cv_tabs_init(chanview *cv)
 	/* make the Scroll buttons */
 	((tabview *)cv)->b2 = make_sbutton(cv->vertical ?
 	GTK_ARROW_UP : GTK_ARROW_LEFT,
-				   tab_scroll_left_up_clicked,
+				   (GSourceFunc)tab_scroll_left_up_clicked,
 				   cv);
 
 	((tabview *)cv)->b1 = make_sbutton(cv->vertical ?
 	GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
-					 tab_scroll_right_down_clicked,
+					 (GSourceFunc)tab_scroll_right_down_clicked,
 					 cv);
 
 	if (hbox)
