@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <functional>
@@ -27,6 +28,7 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <io.h>
 #else
@@ -84,7 +86,7 @@ enum
 
 struct mymenu
 {
-	char *text;
+	const char *text;
 	GCallback callback;
 	char *image;
 	unsigned char type;	/* M_XXX */
@@ -227,7 +229,7 @@ popup_menu_cb (GtkWidget * item, char *cmd)
 }
 
 GtkWidget *
-menu_toggle_item (char *label, GtkWidget *menu, void *callback, void *userdata,
+menu_toggle_item (char *label, GtkWidget *menu, GCallback callback, void *userdata,
 						int state)
 {
 	GtkWidget *item;
@@ -475,7 +477,7 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 		} else if (!g_ascii_strncasecmp (pop->name, "TOGGLE", 6))
 		{
 			childcount++;
-			menu_toggle_item (pop->name + 7, tempmenu, toggle_cb, pop->cmd,
+			menu_toggle_item (pop->name + 7, tempmenu, G_CALLBACK(toggle_cb), pop->cmd,
 									cfg_get_bool (pop->cmd));
 
 		} else if (!g_ascii_strncasecmp (pop->name, "ENDSUB", 6))
@@ -1068,11 +1070,11 @@ menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean ist
 
 	if (joinlist_is_in_list (serv, channel))
 	{
-		menu_toggle_item (str, menu, menu_delfav_cb, serv, TRUE);
+		menu_toggle_item (str, menu, G_CALLBACK(menu_delfav_cb), serv, TRUE);
 	}
 	else
 	{
-		menu_toggle_item (str, menu, menu_addfav_cb, serv, FALSE);
+		menu_toggle_item (str, menu, G_CALLBACK(menu_addfav_cb), serv, FALSE);
 	}
 }
 
@@ -1098,11 +1100,11 @@ menu_addconnectmenu (server *serv, GtkWidget *menu)
 
 	if (((ircnet*)serv->network)->flags & FLAG_AUTO_CONNECT)
 	{
-		menu_toggle_item (_("_Auto-Connect"), menu, menu_delautoconn_cb, serv, TRUE);
+		menu_toggle_item (_("_Auto-Connect"), menu, G_CALLBACK(menu_delautoconn_cb), serv, TRUE);
 	}
 	else
 	{
-		menu_toggle_item (_("_Auto-Connect"), menu, menu_addautoconn_cb, serv, FALSE);
+		menu_toggle_item (_("_Auto-Connect"), menu, G_CALLBACK(menu_addautoconn_cb), serv, FALSE);
 	}
 }
 
@@ -1908,14 +1910,14 @@ menu_find_path (GtkWidget *menu, char *path)
 	GtkMenuItem *item;
 	char *s;
 	char name[128];
-	int len;
+	size_t len;
 
 	/* grab the next part of the path */
 	s = strchr (path, '/');
 	len = s - path;
 	if (!s)
 		len = strlen (path);
-	len = MIN (len, sizeof (name) - 1);
+	len = std::min (len, sizeof (name) - 1);
 	memcpy (name, path, len);
 	name[len] = 0;
 
@@ -2079,7 +2081,7 @@ menu_add_toggle (GtkWidget *menu, menu_entry *me)
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		item = menu_toggle_item (me->label, menu, menu_toggle_cb, me, me->state);
+		item = menu_toggle_item (me->label, menu, G_CALLBACK(menu_toggle_cb), me, me->state);
 		menu_reorder (GTK_MENU (menu), item, me->pos);
 	}
 	return item;
@@ -2350,7 +2352,7 @@ menu_create_main (void *accel_group, int bar, int away, int toplevel,
 				usermenu = menu;
 			menu_item = gtk_menu_item_new_with_mnemonic (_(mymenu[i].text));
 			/* record the English name for /menu */
-			g_object_set_data (G_OBJECT (menu_item), "name", mymenu[i].text);
+			g_object_set_data (G_OBJECT (menu_item), "name", const_cast<char*>(mymenu[i].text));
 #ifdef HAVE_GTK_MAC /* Added to app menu, see below */
 			if (!bar || mymenu[i].id != MENU_ID_HEXCHAT)		
 #endif
@@ -2430,7 +2432,7 @@ togitem:
 			submenu = gtk_menu_new ();
 			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, TRUE);
 			/* record the English name for /menu */
-			g_object_set_data (G_OBJECT (item), "name", mymenu[i].text);
+			g_object_set_data (G_OBJECT (item), "name", const_cast<char*>(mymenu[i].text));
 			gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
 			gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 			gtk_widget_show (item);

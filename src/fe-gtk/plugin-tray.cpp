@@ -562,7 +562,7 @@ tray_toggle_cb (GtkCheckMenuItem *item, unsigned int *setting)
 static void
 blink_item (unsigned int *setting, GtkWidget *menu, char *label)
 {
-	menu_toggle_item (label, menu, tray_toggle_cb, setting, *setting);
+	menu_toggle_item (label, menu, G_CALLBACK(tray_toggle_cb), setting, *setting);
 }
 
 static void

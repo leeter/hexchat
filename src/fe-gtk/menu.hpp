@@ -33,7 +33,7 @@ void menu_middlemenu (session *sess, GdkEventButton *event);
 void userlist_button_cb (GtkWidget * button, const char *cmd);
 
 void usermenu_update (void);
-GtkWidget *menu_toggle_item (char *label, GtkWidget *menu, void *callback, void *userdata, int state);
+GtkWidget *menu_toggle_item (char *label, GtkWidget *menu, GCallback callback, void *userdata, int state);
 GtkWidget *menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags, gpointer userdata, char *icon);
 GtkWidget *menu_quick_sub (const char *name, GtkWidget *menu, GtkWidget **sub_item_ret, int flags, int pos);
 GtkWidget *create_icon_menu (char *labeltext, void *stock_name, int is_stock);

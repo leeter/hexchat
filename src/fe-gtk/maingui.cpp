@@ -1526,7 +1526,7 @@ mg_perchan_menu_item (char *label, GtkWidget *menu, guint8 *setting, guint globa
 	if (initial_value == SET_DEFAULT)
 		initial_value = global;
 
-	menu_toggle_item (label, menu, mg_set_guint8, setting, initial_value);
+	menu_toggle_item (label, menu, G_CALLBACK(mg_set_guint8), setting, initial_value);
 }
 
 static void
