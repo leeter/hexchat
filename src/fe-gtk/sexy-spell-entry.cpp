@@ -129,7 +129,7 @@ static GtkEntryClass *parent_class = NULL;
 static int codetable_ref = 0;
 #endif
 
-G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init));
+G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init))
 
 enum
 {
@@ -166,11 +166,11 @@ initialize_enchant ()
 	if (enchant == NULL)
 	{
 #ifndef WIN32
-		enchant = g_module_open("libenchant.so.1", 0);
+		enchant = g_module_open("libenchant.so.1", GModuleFlags());
 		if (enchant == NULL)
 		{
 #ifdef __APPLE__
-			enchant = g_module_open("libenchant.dylib", 0);
+			enchant = g_module_open("libenchant.dylib", GModuleFlags());
 			if (enchant == NULL)
 #endif
 				return;
