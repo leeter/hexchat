@@ -158,7 +158,7 @@ gtkutil_file_req_response (GtkWidget *dialog, gint res, struct file_req *freq)
 }
 
 void
-gtkutil_file_req (const char *title, void *callback, void *userdata, char *filter, char *extensions,
+gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, char *filter, char *extensions,
 						int flags)
 {
 	struct file_req *freq;
@@ -296,7 +296,7 @@ gtkutil_str_enter (GtkWidget *entry, GtkWidget *dialog)
 }
 
 void
-fe_get_str (char *msg, char *def, void *callback, void *userdata)
+fe_get_str(char *msg, char *def, GSourceFunc callback, void *userdata)
 {
 	GtkWidget *dialog;
 	GtkWidget *entry;
@@ -390,7 +390,7 @@ gtkutil_get_bool_response (GtkDialog *dialog, gint arg1, gpointer spin)
 }
 
 void
-fe_get_int (char *msg, int def, void *callback, void *userdata)
+fe_get_int(char *msg, int def, GSourceFunc callback, void *userdata)
 {
 	GtkWidget *dialog;
 	GtkWidget *spin;
@@ -433,7 +433,7 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 }
 
 void
-fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
+fe_get_bool(char *title, char *prompt, GSourceFunc callback, void *userdata)
 {
 	GtkWidget *dialog;
 	GtkWidget *prompt_label;
@@ -507,7 +507,7 @@ gtkutil_label_new (const char *text, GtkWidget * box)
 }
 
 GtkWidget *
-gtkutil_entry_new (int max, GtkWidget * box, void *callback,
+gtkutil_entry_new (int max, GtkWidget * box, GCallback callback,
 						 gpointer userdata)
 {
 	GtkWidget *entry = gtk_entry_new ();

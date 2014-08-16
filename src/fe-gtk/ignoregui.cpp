@@ -301,7 +301,7 @@ static void
 ignore_new_entry_clicked (GtkWidget * wid, struct session *sess)
 {
 	fe_get_str (_("Enter mask to ignore:"), "nick!userid@host.com",
-	            ignore_store_new, NULL);
+		(GSourceFunc)ignore_store_new, NULL);
 
 }
 

@@ -888,7 +888,7 @@ fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *)
 	if (dcc->file)
 	{
 		filepath = g_build_filename (prefs.hex_dcc_dir, dcc->file, NULL);
-		gtkutil_file_req (message, dcc_saveas_cb, ud, filepath, NULL,
+		gtkutil_file_req (message, (filereqcallback)dcc_saveas_cb, ud, filepath, NULL,
 								FRF_WRITE|FRF_NOASKOVERWRITE|FRF_FILTERISINITIAL);
 		g_free (filepath);
 	}

@@ -25,19 +25,19 @@
 
 typedef void (*filereqcallback) (void *, char *file);
 
-void gtkutil_file_req (const char *title, void *callback, void *userdata, char *filter, char *extensions, int flags);
+void gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, char *filter, char *extensions, int flags);
 void gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad);
 void gtkutil_destroy_on_esc (GtkWidget *win);
 GtkWidget *gtkutil_button (GtkWidget *box, const char *stock, const char *tip, GCallback callback,
 				 void *userdata, const char *labeltext);
 void gtkutil_label_new (const char *text, GtkWidget * box);
-GtkWidget *gtkutil_entry_new (int max, GtkWidget * box, void *callback,
+GtkWidget *gtkutil_entry_new (int max, GtkWidget * box, GCallback callback,
 										gpointer userdata);
 GtkWidget *gtkutil_clist_new (int columns, char *titles[], GtkWidget * box,
-										int policy, void *select_callback,
-										gpointer select_userdata,
-										void *unselect_callback,
-										gpointer unselect_userdata, int selection_mode);
+	int policy, GCallback select_callback,
+	gpointer select_userdata,
+	GCallback unselect_callback,
+	gpointer unselect_userdata, int selection_mode);
 int gtkutil_clist_selection (GtkWidget * clist);
 int gtkutil_clist_multiple_selection (GtkWidget * clist,
 													int ** rows, const int max_rows);

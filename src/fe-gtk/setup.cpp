@@ -1051,7 +1051,7 @@ setup_browsefile_cb (GtkWidget *button, GtkWidget *entry)
 	filter = "image/*";
 	filter_type = FRF_MIMETYPES;
 #endif
-	gtkutil_file_req (_("Select an Image File"), setup_filereq_cb,
+	gtkutil_file_req (_("Select an Image File"), (filereqcallback)setup_filereq_cb,
 					entry, NULL, filter, filter_type|FRF_RECENTLYUSED);
 }
 
@@ -1087,7 +1087,7 @@ setup_fontsel_cancel (GtkWidget *button, GtkFontSelectionDialog *dialog)
 static void
 setup_browsefolder_cb (GtkWidget *button, GtkEntry *entry)
 {
-	gtkutil_file_req (_("Select Download Folder"), setup_filereq_cb, entry, (char*)gtk_entry_get_text (entry), NULL, FRF_CHOOSEFOLDER);
+	gtkutil_file_req (_("Select Download Folder"), (filereqcallback)setup_filereq_cb, entry, (char*)gtk_entry_get_text (entry), NULL, FRF_CHOOSEFOLDER);
 }
 
 static void
@@ -1659,7 +1659,7 @@ setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
 	filter_type = FRF_MIMETYPES;
 #endif
 
-	gtkutil_file_req (_("Select a sound file"), setup_snd_filereq_cb, entry,
+	gtkutil_file_req (_("Select a sound file"), (filereqcallback)setup_snd_filereq_cb, entry,
 						sounds_dir, filter, FRF_FILTERISINITIAL|filter_type);
 	g_free (sounds_dir);
 }

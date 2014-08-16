@@ -834,15 +834,15 @@ fe_serverlist_open (session *sess)
 {
 }
 void
-fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
+fe_get_bool(char *title, char *prompt, GSourceFunc callback, void *userdata)
 {
 }
 void
-fe_get_str (char *prompt, char *def, void *callback, void *ud)
+fe_get_str(char *prompt, char *def, GSourceFunc callback, void *ud)
 {
 }
 void
-fe_get_int (char *prompt, int def, void *callback, void *ud)
+fe_get_int(char *prompt, int def, GSourceFunc callback, void *ud)
 {
 }
 void

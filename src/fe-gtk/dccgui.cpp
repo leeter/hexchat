@@ -146,7 +146,7 @@ fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive)
 	mdc = new my_dcc_send{ sess, nick, maxcps, passive };
 
 	snprintf (tbuf, sizeof tbuf, _("Send file to %s"), nick);
-	gtkutil_file_req (tbuf, dcc_send_filereq_file, mdc, prefs.hex_dcc_dir, NULL, FRF_MULTIPLE|FRF_FILTERISINITIAL);
+	gtkutil_file_req (tbuf, (filereqcallback)dcc_send_filereq_file, mdc, prefs.hex_dcc_dir, NULL, FRF_MULTIPLE|FRF_FILTERISINITIAL);
 }
 
 static void

@@ -1976,7 +1976,7 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[2]);
 	info->sess = sess;
 
-	fe_get_bool (word[3], word_eol[4], (void*)get_bool_cb, info);
+	fe_get_bool(word[3], word_eol[4], (GSourceFunc)get_bool_cb, info);
 
 	return TRUE;
 }
@@ -2009,7 +2009,7 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
-	fe_get_int (word[4], atoi (word[2]), (void*)get_int_cb, info);
+	fe_get_int(word[4], atoi(word[2]), (GSourceFunc)get_int_cb, info);
 
 	return TRUE;
 }
@@ -2093,7 +2093,7 @@ cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
-	fe_get_str (word[4], word[2], (void*)get_str_cb, info);
+	fe_get_str(word[4], word[2], (GSourceFunc)get_str_cb, info);
 
 	return TRUE;
 }
