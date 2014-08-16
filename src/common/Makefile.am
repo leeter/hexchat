@@ -63,7 +63,7 @@ noinst_PROGRAMS = make-te
 
 libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.cpp \
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
-	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp server.c servlist.cpp \
+	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp tree.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
 
