@@ -108,7 +108,7 @@ timer_add (int ref, float timeout, int repeat, const std::string & command)
 		}
 	}
 
-	timer_map.emplace(ref, std::make_shared<timer>(command, ref, repeat, timeout, hexchat_get_context(ph)));
+	timer_map.insert(std::make_pair(ref, std::make_shared<timer>(command, ref, repeat, timeout, hexchat_get_context(ph))));
 }
 
 static void
