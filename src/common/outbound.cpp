@@ -21,6 +21,7 @@
 #endif
 #include <algorithm>
 #include <string>
+#include <sstream>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -429,14 +430,14 @@ cmd_back (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static char *
-create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
+create_mask(session * sess, std::string mask, const std::string &mode, const std::string &typestr, int deop)
 {
 	int type;
 	struct User *user;
-	char *at, *dot, *lastdot;
-	char username[64], fullhost[128], domain[128], buf[512], *p2;
+	const char *p2;
+	std::ostringstream buf;
 
-	user = userlist_find (sess, mask);
+	user = userlist_find (sess, mask.c_str());
 	if (user && user->hostname)  /* it's a nickname, let's find a proper ban mask */
 	{
 		if (deop)
@@ -446,71 +447,74 @@ create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
 
 		mask = user->hostname;
 
-		at = strchr (mask, '@');	/* FIXME: utf8 */
-		if (!at)
+		auto at = mask.find_first_of('@'); /* FIXME: utf8 */	
+		if (at == std::string::npos)
 			return NULL;					  /* can't happen? */
-		*at = 0;
 
+		auto submask = mask.substr(0, at);
+		std::ostringstream username;
 		if (mask[0] == '~' || mask[0] == '+' ||
 		    mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
 		{
 			/* the ident is prefixed with something, we replace that sign with an * */
-			safe_strcpy (username+1, mask+1, sizeof (username)-1);
-			username[0] = '*';
-		} else if (at - mask < USERNAMELEN)
+			submask.erase(0, 1);
+			username << '*';
+		} else if (at - submask.size() < USERNAMELEN)
 		{
 			/* we just add an * in the begining of the ident */
-			safe_strcpy (username+1, mask, sizeof (username)-1);
-			username[0] = '*';
-		} else
+			username << '*';
+		} /*else
 		{
+
 			/* ident might be too long, we just ban what it gives and add an * in the end */
-			safe_strcpy (username, mask, sizeof (username));
-		}
-		*at = '@';
-		safe_strcpy (fullhost, at + 1, sizeof (fullhost));
+			//safe_strcpy (username, mask, sizeof (username));
+		//} 
+		username << submask;
+		auto fullhost = mask.substr(at + 1);
 
-		dot = strchr (fullhost, '.');
-		if (dot)
+		auto dot = fullhost.find_first_of('.');
+		std::string domain;
+		if (dot != std::string::npos)
 		{
-			safe_strcpy (domain, dot, sizeof (domain));
+			domain = fullhost.substr(dot);
 		} else
 		{
-			safe_strcpy (domain, fullhost, sizeof (domain));
+			domain = fullhost;
 		}
 
-		if (*typestr)
-			type = atoi (typestr);
+		if (!typestr.empty())
+			type = std::stoi(typestr);
 		else
 			type = prefs.hex_irc_ban_type;
 
-		buf[0] = 0;
-		if (inet_addr (fullhost) != -1)	/* "fullhost" is really a IP number */
+		if (inet_addr (fullhost.c_str()) != -1)	/* "fullhost" is really a IP number */
 		{
-			lastdot = strrchr (fullhost, '.');
-			if (!lastdot)
+			auto lastdot = fullhost.find_last_of('.');
+			if (lastdot == std::string::npos)
 				return NULL;				  /* can't happen? */
 
-			*lastdot = 0;
-			strcpy (domain, fullhost);
-			*lastdot = '.';
-
+			domain = fullhost.substr(0, lastdot);
+			buf << mode << " " << p2 << " *!";
 			switch (type)
 			{
 			case 0:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s.*", mode, p2, domain);
+				buf << "*@" << domain << ".*";
+				//snprintf (buf, sizeof (buf), "%s %s *!*@%s.*", mode.c_str(), p2, domain.c_str());
 				break;
 
 			case 1:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
+				buf << "*@" << fullhost;
+				//snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
 				break;
 
 			case 2:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s.*", mode, p2, username, domain);
+				buf << username.str() << "@" << domain << ".*";
+				//snprintf (buf, sizeof (buf), "%s %s *!%s@%s.*", mode, p2, username, domain);
 				break;
 
 			case 3:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
+				buf << username.str() << "@" << fullhost;
+				//snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
 				break;
 			}
 		} else
@@ -518,29 +522,34 @@ create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
 			switch (type)
 			{
 			case 0:
-				snprintf (buf, sizeof (buf), "%s %s *!*@*%s", mode, p2, domain);
+				buf << "*@*" << domain;
+				//snprintf (buf, sizeof (buf), "%s %s *!*@*%s", mode, p2, domain);
 				break;
 
 			case 1:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
+				buf << "*@" << fullhost;
+				//snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
 				break;
 
 			case 2:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@*%s", mode, p2, username, domain);
+				buf << username.str() << "@*" << domain;
+				//snprintf (buf, sizeof (buf), "%s %s *!%s@*%s", mode, p2, username, domain);
 				break;
 
 			case 3:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
+				buf << username.str() << "@" << fullhost;
+				//snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
 				break;
 			}
 		}
 
 	} else
 	{
-		snprintf (buf, sizeof (buf), "%s %s", mode, mask);
+		buf << mode << " " << mask;
+		//snprintf (buf, sizeof (buf), "%s %s", mode, mask);
 	}
 	
-	return g_strdup (buf);
+	return g_strdup (buf.str().c_str());
 }
 
 static void
@@ -1544,7 +1553,7 @@ cmd_execw (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return FALSE;
 	}
 	std::string temp(word_eol[2]);
-	temp.push_back("\n\0");
+	temp += "\n\0";
 	PrintText(sess, &temp[0]);
 	write(sess->running_exec->myfd, temp.c_str(), temp.size());
 	return TRUE;
