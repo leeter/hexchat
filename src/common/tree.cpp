@@ -51,7 +51,7 @@ struct tree
 	}
 	void insert_at_pos(void *key, int pos)
 	{
-		this->data_array.insert(this->data_array.cbegin() + pos, key);
+		this->data_array.insert((this->data_array.cbegin() + pos), key);
 		this->elements++;
 	}
 
@@ -175,7 +175,7 @@ tree_remove_at_pos (tree *t, int pos)
 	t->elements--;
 	if (pos != t->elements)
 	{
-		t->data_array.erase(t->data_array.cbegin() + pos);
+		t->data_array.erase((t->data_array.cbegin() + pos));
 	}
 	return ret;
 }
