@@ -690,7 +690,7 @@ fe_userlist_update (session *sess, struct User *user)
 		return;
 
 	/* get rid of the "show" signal */
-	g_signal_handlers_disconnect_by_func (nick_submenu, menu_nickinfo_cb, sess);
+	g_signal_handlers_disconnect_by_func (nick_submenu, (void*)menu_nickinfo_cb, sess);
 
 	/* destroy all the old items */
 	items = ((GtkMenuShell *) nick_submenu)->children;
