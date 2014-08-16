@@ -644,10 +644,10 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 #endif
 
 	away_status = tray_find_away_status ();
-	item = tray_make_item(submenu, _("_Away"), G_CALLBACK(tray_foreach_server), "away");
+	item = tray_make_item(submenu, _("_Away"), G_CALLBACK(tray_foreach_server), const_cast<char*>("away"));
 	if (away_status == 1)
 		gtk_widget_set_sensitive (item, FALSE);
-	item = tray_make_item(submenu, _("_Back"), G_CALLBACK(tray_foreach_server), "back");
+	item = tray_make_item(submenu, _("_Back"), G_CALLBACK(tray_foreach_server), const_cast<char*>("back"));
 	if (away_status == 2)
 		gtk_widget_set_sensitive (item, FALSE);
 
