@@ -1326,7 +1326,7 @@ static int
 key_action_history_up (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
 							  struct session *sess)
 {
-	auto new_line = sess->history.up(SPELL_ENTRY_GET_TEXT (wid));
+	auto new_line = sess->hist.up(SPELL_ENTRY_GET_TEXT (wid));
 	if (new_line.second)
 	{
 		SPELL_ENTRY_SET_TEXT (wid, new_line.first.c_str());
@@ -1340,7 +1340,7 @@ static int
 key_action_history_down (GtkWidget * wid, GdkEventKey * ent, char *d1,
 								 char *d2, struct session *sess)
 {
-	auto new_line = sess->history.down();
+	auto new_line = sess->hist.down();
 	if (new_line.second)
 	{
 		SPELL_ENTRY_SET_TEXT (wid, new_line.first.c_str());
@@ -1723,7 +1723,7 @@ static int
 key_action_put_history (GtkWidget * wid, GdkEventKey * ent, char *d1,
 									char *d2, struct session *sess)
 {
-	sess->history.add(SPELL_ENTRY_GET_TEXT (wid));
+	sess->hist.add(SPELL_ENTRY_GET_TEXT (wid));
 	SPELL_ENTRY_SET_TEXT (wid, "");
 	return 2;						  /* -''- */
 }

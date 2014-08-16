@@ -501,7 +501,7 @@ session::session(struct server *serv, char *from, int type, int focus)
 	hops(),
 	voices(),
 	total(),
-	history(),
+	hist(),
 	new_data(),
 	nick_said(),
 	msg_said(),

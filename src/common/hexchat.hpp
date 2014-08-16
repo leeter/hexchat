@@ -403,7 +403,7 @@ struct session
 
 	char lastnick[NICKLEN];			  /* last nick you /msg'ed */
 
-	history history;
+	history hist;
 
 	int ops;								/* num. of ops in channel */
 	int hops;						  /* num. of half-oped users */
