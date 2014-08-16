@@ -85,7 +85,7 @@ list_addentry (GSList ** list, char *cmd, char *name)
 /* read it in from a buffer to our linked list */
 
 static void
-list_load_from_data (GSList ** list, const std::string ibuf)
+list_load_from_data (GSList ** list, const std::string &ibuf)
 {
 	char cmd[384];
 	char name[128];
