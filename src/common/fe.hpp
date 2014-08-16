@@ -49,7 +49,7 @@ void fe_init (void);
 void fe_main (void);
 void fe_cleanup (void);
 void fe_exit (void);
-int fe_timeout_add (int interval, void *callback, void *userdata);
+int fe_timeout_add(int interval, GSourceFunc callback, void *userdata);
 void fe_timeout_remove (int tag);
 void fe_new_window (struct session *sess, int focus);
 void fe_new_server (struct server *serv);

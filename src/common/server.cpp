@@ -273,7 +273,7 @@ tcp_send_len (server *serv, const char *buf, int len)
 	serv->sendq_len += len; /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (serv) && noqueue)
-		fe_timeout_add (500, tcp_send_queue, serv);
+		fe_timeout_add(500, (GSourceFunc)tcp_send_queue, serv);
 
 	return 1;
 }
@@ -849,7 +849,7 @@ auto_reconnect (server *serv, int send_quit, int err)
 		serv->recondelay_tag = 0;
 	}
 
-	serv->recondelay_tag = fe_timeout_add (del, timeout_auto_reconnect, serv);
+	serv->recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, serv);
 	fe_server_event (serv, FE_SE_RECONDELAY, del);
 }
 
@@ -886,7 +886,7 @@ server_connect_success (server *serv)
 		/* send(serv->sok, "STLS\r\n", 6, 0); sleep(1); */
 		set_nonblocking (serv->sok);
 		serv->ssl_do_connect_tag = fe_timeout_add (SSLDOCONNTMOUT,
-																 ssl_do_connect, serv);
+																 (GSourceFunc)ssl_do_connect, serv);
 		return;
 	}
 

@@ -342,9 +342,9 @@ fe_exit (void)
 }
 
 int
-fe_timeout_add (int interval, void *callback, void *userdata)
+fe_timeout_add(int interval, GSourceFunc callback, void *userdata)
 {
-	return g_timeout_add (interval, (GSourceFunc) callback, userdata);
+	return g_timeout_add (interval, callback, userdata);
 }
 
 void

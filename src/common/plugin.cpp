@@ -819,7 +819,7 @@ plugin_add_hook (hexchat_plugin *pl, int type, int pri, const char *name,
 	plugin_insert_hook (hook);
 
 	if (type == HOOK_TIMER)
-		hook->tag = fe_timeout_add (timeout, plugin_timeout_cb, hook);
+		hook->tag = fe_timeout_add(timeout, (GSourceFunc)plugin_timeout_cb, hook);
 
 	return hook;
 }

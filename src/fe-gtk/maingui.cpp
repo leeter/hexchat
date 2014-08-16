@@ -587,7 +587,7 @@ mg_progressbar_create (session_gui *gui)
 	gui->bar = gtk_progress_bar_new ();
 	gtk_box_pack_start (GTK_BOX (gui->nick_box), gui->bar, 0, 0, 0);
 	gtk_widget_show (gui->bar);
-	gui->bartag = fe_timeout_add (50, mg_progressbar_update, gui->bar);
+	gui->bartag = fe_timeout_add(50, (GSourceFunc)mg_progressbar_update, gui->bar);
 }
 
 void
