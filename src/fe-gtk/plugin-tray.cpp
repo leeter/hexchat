@@ -901,7 +901,7 @@ tray_plugin_init(hexchat_plugin * plugin_handle, char **plugin_name,
 }
 
 int
-tray_plugin_deinit (void *plugin_handle)
+tray_plugin_deinit (hexchat_plugin *plugin_handle)
 {
 #ifdef WIN32
 	tray_cleanup ();

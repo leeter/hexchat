@@ -173,10 +173,11 @@ struct t_hexchat_plugin
 
 typedef int (*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name,
 	char **plugin_desc, char **plugin_version, char *arg);
+typedef int (*plugin_deinit_func)(hexchat_plugin *);
 
 char *plugin_load (session *sess, char *filename, char *arg);
 int plugin_reload (session *sess, char *name, int by_filename);
-void plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func, void *deinit_func, char *arg, int fake);
+void plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, int fake);
 int plugin_kill (char *name, int by_filename);
 void plugin_kill_all (void);
 void plugin_auto_load (session *sess);

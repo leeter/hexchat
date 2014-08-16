@@ -23,7 +23,7 @@
 #include "../common/plugin.h"
 
 int tray_plugin_init (hexchat_plugin *, char **, char **, char **, char *);
-int tray_plugin_deinit (void *);
+int tray_plugin_deinit (hexchat_plugin *);
 bool tray_toggle_visibility (bool force_hide);
 void tray_apply_setup (void);
 

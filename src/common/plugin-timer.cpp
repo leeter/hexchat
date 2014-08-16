@@ -208,7 +208,7 @@ hexchat_plugin_init
 
 int
 #ifdef STATIC
-timer_plugin_deinit(void)
+timer_plugin_deinit(hexchat_plugin*)
 #else
 hexchat_plugin_deinit(void)
 #endif

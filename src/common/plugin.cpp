@@ -92,7 +92,6 @@ typedef int (hexchat_serv_attrs_cb) (const char * const word[], const char * con
 typedef int (hexchat_print_attrs_cb)(const char * const word[], hexchat_event_attrs *attrs, void *user_data);
 typedef int (hexchat_fd_cb) (int fd, int flags, void *user_data);
 typedef int (hexchat_timer_cb) (void *user_data);
-typedef int (hexchat_deinit_func) (hexchat_plugin *);
 
 enum
 {
@@ -134,7 +133,7 @@ plugin_free (hexchat_plugin *pl, int do_deinit, int allow_refuse)
 {
 	GSList *list, *next;
 	hexchat_hook *hook;
-	hexchat_deinit_func *deinit_func;
+	plugin_deinit_func deinit_func;
 
 	/* fake plugin added by hexchat_plugingui_add() */
 	if (pl->fake)
@@ -143,7 +142,7 @@ plugin_free (hexchat_plugin *pl, int do_deinit, int allow_refuse)
 	/* run the plugin's deinit routine, if any */
 	if (do_deinit && pl->deinit_callback != NULL)
 	{
-		deinit_func = static_cast<hexchat_deinit_func*>(pl->deinit_callback);
+		deinit_func = static_cast<plugin_deinit_func>(pl->deinit_callback);
 		if (!deinit_func (pl) && allow_refuse)
 			return FALSE;
 	}
@@ -240,7 +239,7 @@ hexchat_read_fd (hexchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 
 void
 plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func,
-				void *deinit_func, char *arg, int fake)
+				plugin_deinit_func deinit_func, char *arg, int fake)
 {
 	hexchat_plugin *pl;
 	char *file;
@@ -375,7 +374,7 @@ plugin_load (session *sess, char *filename, char *arg)
 	void *handle;
 	char *filepart;
 	plugin_init_func init_func;
-	hexchat_deinit_func *deinit_func;
+	plugin_deinit_func deinit_func;
 	char *pluginpath;
 
 	/* get the filename without path */
