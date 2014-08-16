@@ -1823,7 +1823,7 @@ mg_changui_destroy (session *sess)
 	{
 		/* avoid calling the "destroy" callback */
 		g_signal_handlers_disconnect_by_func (G_OBJECT (sess->gui->window),
-														  mg_tabwindow_kill_cb, 0);
+														  (void*)mg_tabwindow_kill_cb, 0);
 		/* remove the tab from the chanview */
 		if (!mg_chan_remove(static_cast<chan *>(sess->res->tab)))
 			/* if the window still exists, restore the signal handler */
@@ -1833,7 +1833,7 @@ mg_changui_destroy (session *sess)
 	{
 		/* avoid calling the "destroy" callback */
 		g_signal_handlers_disconnect_by_func (G_OBJECT (sess->gui->window),
-														  mg_topdestroy_cb, sess);
+														  (void*)mg_topdestroy_cb, sess);
 		/*gtk_widget_destroy (sess->gui->window);*/
 		/* don't destroy until the new one is created. Not sure why, but */
 		/* it fixes: Gdk-CRITICAL **: gdk_colormap_get_screen: */
