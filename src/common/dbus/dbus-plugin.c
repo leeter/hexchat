@@ -64,7 +64,7 @@ struct RemoteObjectClass
 	GObjectClass parent;
 };
 
-typedef struct 
+typedef struct
 {
 	guint id;
 	int return_value;
@@ -96,7 +96,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
 #define REMOTE_IS_OBJECT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), REMOTE_TYPE_OBJECT))
 #define REMOTE_OBJECT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), REMOTE_TYPE_OBJECT, RemoteObjectClass))
 #define REMOTE_OBJECT_ERROR (remote_object_error_quark ())
-#define REMOTE_TYPE_ERROR (remote_object_error_get_type ()) 
+#define REMOTE_TYPE_ERROR (remote_object_error_get_type ())
 
 G_DEFINE_TYPE (RemoteObject, remote_object, G_TYPE_OBJECT)
 
@@ -365,7 +365,7 @@ remote_object_connect (RemoteObject *obj,
 	static guint count = 0;
 	char *sender, *path;
 	RemoteObject *remote_object;
-	
+
 	sender = dbus_g_method_get_sender (context);
 	remote_object = g_hash_table_lookup (clients, sender);
 	if (remote_object != NULL) {
@@ -399,7 +399,7 @@ remote_object_disconnect (RemoteObject *obj,
 			  DBusGMethodInvocation *context)
 {
 	char *sender;
-	
+
 	sender = dbus_g_method_get_sender (context);
 	g_hash_table_remove (clients, sender);
 	g_free (sender);
@@ -467,7 +467,7 @@ remote_object_set_context (RemoteObject *obj,
 			   GError **error)
 {
 	hexchat_context *context;
-	
+
 	context = context_list_find_context (id);
 	if (context == NULL) {
 		*ret = FALSE;
@@ -535,7 +535,7 @@ server_hook_cb (char *word[],
 		       context_list_find_id (info->obj->context));
 	g_strfreev (arg1);
 	g_strfreev (arg2);
-  
+
 	return info->return_value;
 }
 
@@ -558,7 +558,7 @@ command_hook_cb (char *word[],
 		       context_list_find_id (info->obj->context));
 	g_strfreev (arg1);
 	g_strfreev (arg2);
-  
+
 	return info->return_value;
 }
 
@@ -577,7 +577,7 @@ print_hook_cb (char *word[],
 		       arg1, info->id,
 		       context_list_find_id (info->obj->context));
 	g_strfreev (arg1);
-  
+
 	return info->return_value;
 }
 
@@ -702,7 +702,7 @@ remote_object_list_next	(RemoteObject *obj,
 			 GError **error)
 {
 	hexchat_list *xlist;
-	
+
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL) {
 		*ret = FALSE;
@@ -711,7 +711,7 @@ remote_object_list_next	(RemoteObject *obj,
 	*ret = hexchat_list_next (ph, xlist);
 
 	return TRUE;
-}			 
+}
 
 static gboolean
 remote_object_list_str (RemoteObject *obj,
@@ -721,7 +721,7 @@ remote_object_list_str (RemoteObject *obj,
 			GError **error)
 {
 	hexchat_list *xlist;
-	
+
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL && !hexchat_set_context (ph, obj->context)) {
 		*ret_str = NULL;
@@ -744,7 +744,7 @@ remote_object_list_int (RemoteObject *obj,
 			GError **error)
 {
 	hexchat_list *xlist;
-	
+
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL && !hexchat_set_context (ph, obj->context)) {
 		*ret_int = -1;
@@ -769,14 +769,14 @@ remote_object_list_time (RemoteObject *obj,
 			 GError **error)
 {
 	hexchat_list *xlist;
-	
+
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL) {
 		*ret_time = (guint64) -1;
 		return TRUE;
 	}
 	*ret_time = hexchat_list_time (ph, xlist, name);
-	
+
 	return TRUE;
 }
 
@@ -811,7 +811,7 @@ remote_object_emit_print (RemoteObject *obj,
 {
 	const char *argv[4] = {NULL, NULL, NULL, NULL};
 	int i;
-	
+
 	for (i = 0; i < 4 && args[i] != NULL; i++) {
 		argv[i] = args[i];
 	}
@@ -924,7 +924,7 @@ init_dbus (void)
 				 G_TYPE_STRING,
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
-	dbus_g_proxy_connect_signal (proxy, "NameOwnerChanged", 
+	dbus_g_proxy_connect_signal (proxy, "NameOwnerChanged",
 				     G_CALLBACK (name_owner_changed),
 				     NULL, NULL);
 
@@ -948,11 +948,11 @@ build_list (char *word[])
 	if (word == NULL) {
 		return NULL;
 	}
-  
+
 	while (word[num] && word[num][0]) {
 		num++;
 	}
-	
+
 	result = g_new0 (char*, num + 1);
 	for (i = 0; i < num; i++) {
 		result[i] = g_strdup (word[i]);
@@ -990,11 +990,11 @@ context_list_find_context (guint id)
 }
 
 static int
-open_context_cb (char *word[],
+open_context_cb (const char * const word[],
 		 void *userdata)
 {
 	ContextInfo *info;
-	
+
 	info = g_new0 (ContextInfo, 1);
 	info->id = ++last_context_id;
 	info->context = hexchat_get_context (ph);
@@ -1004,7 +1004,7 @@ open_context_cb (char *word[],
 }
 
 static int
-close_context_cb (char *word[],
+close_context_cb (const char * const word[],
 		  void *userdata)
 {
 	GList *l;
@@ -1031,20 +1031,20 @@ clients_find_filename_foreach (gpointer key,
 }
 
 static int
-unload_plugin_cb (char *word[], char *word_eol[], void *userdata)
+unload_plugin_cb (const char * const word[], const char * const word_eol[], void *userdata)
 {
 	RemoteObject *obj;
-	
+
 	obj = g_hash_table_find (clients,
 				 clients_find_filename_foreach,
 				 word[2]);
 	if (obj != NULL) {
-		g_signal_emit (obj, 
+		g_signal_emit (obj,
 			       signals[UNLOAD_SIGNAL],
 			       0);
 		return HEXCHAT_EAT_ALL;
 	}
-	
+
 	return HEXCHAT_EAT_NONE;
 }
 
@@ -1083,5 +1083,5 @@ dbus_plugin_init (hexchat_plugin *plugin_handle,
 				    unload_plugin_cb, NULL, NULL);
 	}
 
-	return TRUE; 
+	return TRUE;
 }

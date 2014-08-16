@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libhexchatdbus.a
 libhexchatdbus_a_SOURCES =			\
-	dbus-plugin.c				\
+	dbus-plugin.cpp				\
 	dbus-plugin.h				\
 	dbus-client.c				\
 	dbus-client.h
@@ -32,4 +32,3 @@ service_DATA = $(service_in_files:.service.in=.service)
 # Rule to make the service file with bindir expanded
 $(service_DATA): $(service_in_files) Makefile
 	@sed -e "s|\@bindir\@|$(bindir)|" $< > $@
-
