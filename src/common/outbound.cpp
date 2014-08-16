@@ -1976,7 +1976,7 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[2]);
 	info->sess = sess;
 
-	fe_get_bool (word[3], word_eol[4], get_bool_cb, info);
+	fe_get_bool (word[3], word_eol[4], (void*)get_bool_cb, info);
 
 	return TRUE;
 }
