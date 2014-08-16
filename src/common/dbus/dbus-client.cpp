@@ -22,8 +22,8 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include <dbus/dbus-glib.h>
 #include "dbus-client.h"
-#include "../hexchat.h"
-#include "../hexchatc.h"
+#include "../hexchat.hpp"
+#include "../hexchatc.hpp"
 
 #define DBUS_SERVICE "org.hexchat.service"
 #define DBUS_REMOTE "/org/hexchat/Remote"
@@ -115,7 +115,7 @@ hexchat_remote (void)
 		}
 		g_free (command);
 	}
-	
+
 	if (arg_urls)
 	{
 		for (i = 0; i < g_strv_length(arg_urls); i++)
@@ -130,7 +130,7 @@ hexchat_remote (void)
 			g_free (command);
 		}
 		g_strfreev (arg_urls);
-	} 	
+	}
 
 	exit (0);
 }
