@@ -22,10 +22,7 @@
 #include <unordered_map>
 #include <memory>
 #include "hexchat-plugin.h"
-
-#ifdef WIN32
-#define g_ascii_strcasecmp stricmp
-#endif
+#include <glib.h>
 
 #define _(x) hexchat_gettext(ph,x)
 
