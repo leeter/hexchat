@@ -164,7 +164,7 @@ AC_ARG_WITH(theme-manager,
 	[AS_HELP_STRING([--with-theme-manager],[compile theme manager (needs monodevelop, default: off)])],
 		theme_manager=$withval, theme_manager=no)
 
-AX_BOOST_BASE([1.46],, [AC_MSG_ERROR([hexchat needs Boost, but it was not found in your system])])
+AX_BOOST_BASE([1.46],, [AC_MSG_FAILURE([hexchat needs Boost, but it was not found in your system])])
 AX_BOOST_SYSTEM
 
 
