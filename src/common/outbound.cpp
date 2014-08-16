@@ -487,7 +487,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		else
 			type = prefs.hex_irc_ban_type;
 
-		if (inet_addr (fullhost.c_str()) != -1)	/* "fullhost" is really a IP number */
+		if (inet_addr (fullhost.c_str()) != ~0)	/* "fullhost" is really a IP number */
 		{
 			auto lastdot = fullhost.find_last_of('.');
 			if (lastdot == std::string::npos)
@@ -2093,7 +2093,7 @@ cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
-	fe_get_str (word[4], word[2], get_str_cb, info);
+	fe_get_str (word[4], word[2], (void*)get_str_cb, info);
 
 	return TRUE;
 }
