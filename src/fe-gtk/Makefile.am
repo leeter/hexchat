@@ -2,7 +2,7 @@ localedir = $(datadir)/locale
 
 bin_PROGRAMS = hexchat
 
-AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) -DLOCALEDIR=\"$(localedir)\"
+AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" 
 
 hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS)
 
