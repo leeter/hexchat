@@ -26,6 +26,11 @@ extern "C" {
 
 struct t_hexchat_plugin;
 typedef t_hexchat_plugin hexchat_plugin;
+
+typedef int(*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name,
+	char **plugin_desc, char **plugin_version, char *arg);
+typedef int(*plugin_deinit_func)(hexchat_plugin *);
+
 #ifdef PLUGIN_C
 struct t_hexchat_plugin
 {
@@ -163,17 +168,11 @@ struct t_hexchat_plugin
 	char *desc;
 	char *version;
 	session *context;
-	void *deinit_callback;	/* pointer to hexchat_plugin_deinit */
+	plugin_deinit_func deinit_callback;	/* pointer to hexchat_plugin_deinit */
 	unsigned int fake:1;		/* fake plugin. Added by hexchat_plugingui_add() */
 	unsigned int free_strings:1;		/* free name,desc,version? */
 };
 #endif
-
-
-
-typedef int (*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name,
-	char **plugin_desc, char **plugin_version, char *arg);
-typedef int (*plugin_deinit_func)(hexchat_plugin *);
 
 char *plugin_load (session *sess, char *filename, char *arg);
 int plugin_reload (session *sess, char *name, int by_filename);

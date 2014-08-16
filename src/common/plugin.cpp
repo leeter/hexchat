@@ -142,7 +142,7 @@ plugin_free (hexchat_plugin *pl, int do_deinit, int allow_refuse)
 	/* run the plugin's deinit routine, if any */
 	if (do_deinit && pl->deinit_callback != NULL)
 	{
-		deinit_func = static_cast<plugin_deinit_func>(pl->deinit_callback);
+		deinit_func = pl->deinit_callback;
 		if (!deinit_func (pl) && allow_refuse)
 			return FALSE;
 	}
@@ -189,7 +189,7 @@ xit:
 static hexchat_plugin *
 plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 					  const char *desc, const char *version, void *handle,
-					  void *deinit_func, int fake, int free_strings)
+					  plugin_deinit_func deinit_func, int fake, int free_strings)
 {
 	hexchat_plugin *pl;
 
