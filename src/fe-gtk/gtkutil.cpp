@@ -273,7 +273,7 @@ gtkutil_get_str_response (GtkDialog *dialog, gint arg1, gpointer entry)
 	void *user_data;
 
 	text = (char *) gtk_entry_get_text (GTK_ENTRY (entry));
-	callback = static_cast<void(*)(int, char *, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
+	callback = reinterpret_cast<void(*)(int, char *, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -323,8 +323,8 @@ fe_get_str(char *msg, char *def, GSourceFunc callback, void *userdata)
 
 	hbox = gtk_hbox_new (TRUE, 0);
 
-	g_object_set_data (G_OBJECT (dialog), "cb", callback);
-	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
+	g_object_set_data (G_OBJECT (dialog), "cb", (void*)callback);
+	g_object_set_data(G_OBJECT(dialog), "ud", (void*)userdata);
 
 	entry = gtk_entry_new ();
 	g_signal_connect (G_OBJECT (entry), "activate",
@@ -351,7 +351,7 @@ gtkutil_get_number_response (GtkDialog *dialog, gint arg1, gpointer spin)
 	void *user_data;
 
 	num = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (spin));
-	callback = static_cast<void(*)(int, int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
+	callback = reinterpret_cast<void(*)(int, int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -373,7 +373,7 @@ gtkutil_get_bool_response (GtkDialog *dialog, gint arg1, gpointer spin)
 	void (*callback) (int value, void *user_data);
 	void *user_data;
 
-	callback = static_cast<void(*) (int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
+	callback = reinterpret_cast<void(*) (int, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)
@@ -409,7 +409,7 @@ fe_get_int(char *msg, int def, GSourceFunc callback, void *userdata)
 
 	hbox = gtk_hbox_new (TRUE, 0);
 
-	g_object_set_data (G_OBJECT (dialog), "cb", callback);
+	g_object_set_data (G_OBJECT (dialog), "cb", (void*)callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
 
 	spin = gtk_spin_button_new (NULL, 1, 0);
@@ -448,7 +448,7 @@ fe_get_bool(char *title, char *prompt, GSourceFunc callback, void *userdata)
 	gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
 
 
-	g_object_set_data (G_OBJECT (dialog), "cb", callback);
+	g_object_set_data (G_OBJECT (dialog), "cb", (void*)callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
 
 	prompt_label = gtk_label_new (prompt);
