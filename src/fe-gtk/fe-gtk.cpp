@@ -468,7 +468,7 @@ fe_input_remove (int tag)
 }
 
 int
-fe_input_add (int sok, int flags, void *func, void *data)
+fe_input_add(int sok, int flags, GIOFunc func, void *data)
 {
 	int tag, type = 0;
 	GIOChannel *channel;

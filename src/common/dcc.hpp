@@ -43,7 +43,7 @@ namespace dcc{
 #if defined(G_GINT64_FORMAT) && defined(HAVE_STRTOULL)
 #define USE_DCC64
 /* we really get only 63 bits, since st_size is signed */
-typedef gint64 DCC_SIZE;
+typedef ::gint64 DCC_SIZE;
 #define DCC_SFMT G_GINT64_FORMAT
 #else
 typedef unsigned int DCC_SIZE;
@@ -127,7 +127,7 @@ void dcc_change_nick (server *serv, char *oldnick, char *newnick);
 void dcc_notify_kill (struct server *serv);
 struct DCC *dcc_write_chat (char *nick, char *text);
 void dcc_send (struct session *sess, const char *to, char *file, int maxcps, int passive);
-struct DCC *find_dcc (char *nick, char *file, int type);
+struct DCC *find_dcc (const char *nick, const char *file, int type);
 void dcc_get_nick (struct session *sess, char *nick);
 void dcc_chat (session *sess, char *nick, int passive);
 void handle_dcc (session *sess, char *nick, char *word[], char *word_eol[],

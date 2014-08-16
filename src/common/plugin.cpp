@@ -964,7 +964,7 @@ hexchat_hook_fd (hexchat_plugin *ph, int fd, int flags,
 		return NULL;
 	hook->pri = fd;
 	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.hpp) */
-	hook->tag = fe_input_add (fd, flags, plugin_fd_cb, hook);
+	hook->tag = fe_input_add(fd, flags, (GIOFunc)plugin_fd_cb, hook);
 
 	return hook;
 }

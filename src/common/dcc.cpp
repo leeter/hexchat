@@ -469,7 +469,7 @@ dcc_read_chat(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		}
 
 		if (!dcc->iotag)
-			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_chat, dcc);
+			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 
 		len = recv(dcc->sok, lbuf, sizeof(lbuf) - 2, 0);
 		if (len < 1)
@@ -601,7 +601,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		}
 
 		if (!dcc->iotag)
-			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read, dcc);
+			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read, dcc);
 
 		n = recv(dcc->sok, buf, sizeof(buf), 0);
 		if (n < 1)
@@ -727,7 +727,7 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 	switch (dcc->type)
 	{
 	case TYPE_RECV:
-		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read, dcc);
+		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read, dcc);
 		EMIT_SIGNAL(XP_TE_DCCCONRECV, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
@@ -735,8 +735,8 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 		/* passive send */
 		dcc->fastsend = prefs.hex_dcc_fast_send;
 		if (dcc->fastsend)
-			dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE, dcc_send_data, dcc);
-		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_ack, dcc);
+			dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
+		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_ack, dcc);
 		dcc_send_data(NULL, static_cast<GIOCondition>(0), dcc);
 		EMIT_SIGNAL(XP_TE_DCCCONSEND, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
@@ -744,7 +744,7 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 	case TYPE_CHATSEND:	/* pchat */
 		dcc_open_query(dcc->serv, dcc->nick);
 	case TYPE_CHATRECV:	/* normal chat */
-		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_read_chat, dcc);
+		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
 		if (!dcc->dccchat)
 			return false;
@@ -849,7 +849,7 @@ dcc_wingate_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DC
 			dcc->port);
 		proxy->bufferused = 0;
 		dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-			dcc_wingate_proxy_traverse, dcc);
+			(GIOFunc)dcc_wingate_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 	if (proxy->phase == 1)
@@ -889,7 +889,7 @@ dcc_socks_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC 
 		proxy->buffersize = 8 + strlen(sc.username) + 1;
 		proxy->bufferused = 0;
 		dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-			dcc_socks_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -902,7 +902,7 @@ dcc_socks_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC 
 		proxy->bufferused = 0;
 		proxy->buffersize = 8;
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX,
-			dcc_socks_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -949,7 +949,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		proxy->buffersize = 3;
 		proxy->bufferused = 0;
 		dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-			dcc_socks5_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -962,7 +962,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		proxy->bufferused = 0;
 		proxy->buffersize = 2;
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX,
-			dcc_socks5_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1005,7 +1005,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 			proxy->buffersize = 3 + len_u + len_p;
 			proxy->bufferused = 0;
 			dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-				dcc_socks5_proxy_traverse, dcc);
+				(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 			++proxy->phase;
 		}
 		else
@@ -1030,7 +1030,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		proxy->buffersize = 2;
 		proxy->bufferused = 0;
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX,
-			dcc_socks5_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1069,7 +1069,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		proxy->buffersize = 10;
 		proxy->bufferused = 0;
 		dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-			dcc_socks5_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1082,7 +1082,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		proxy->buffersize = 4;
 		proxy->bufferused = 0;
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX,
-			dcc_socks5_proxy_traverse, dcc);
+			(GIOFunc)dcc_socks5_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1157,7 +1157,7 @@ dcc_http_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC *
 		proxy->bufferused = 0;
 		memcpy(proxy->buffer, buf, proxy->buffersize);
 		dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX,
-			dcc_http_proxy_traverse, dcc);
+			(GIOFunc)dcc_http_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1169,7 +1169,7 @@ dcc_http_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC *
 		dcc->wiotag = 0;
 		proxy->bufferused = 0;
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX,
-			dcc_http_proxy_traverse, dcc);
+			(GIOFunc)dcc_http_proxy_traverse, dcc);
 		++proxy->phase;
 	}
 
@@ -1288,9 +1288,9 @@ dcc_connect(::dcc::DCC *dcc)
 			return;
 		}
 		if (DCC_USE_PROXY())
-			dcc->iotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX, dcc_proxy_connect, dcc);
+			dcc->iotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX, (GIOFunc)dcc_proxy_connect, dcc);
 		else
-			dcc->iotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX, dcc_connect_finished, dcc);
+			dcc->iotag = fe_input_add(dcc->sok, FIA_WRITE | FIA_EX, (GIOFunc)dcc_connect_finished, dcc);
 	}
 
 	::fe::fe_dcc_update(dcc);
@@ -1321,7 +1321,7 @@ dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			return TRUE;
 	}
 	else if (!dcc->wiotag)
-		dcc->wiotag = fe_input_add(sok, FIA_WRITE, dcc_send_data, dcc);
+		dcc->wiotag = fe_input_add(sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
 
 	buf = static_cast<char*>(malloc(prefs.hex_dcc_blocksize));
 	if (!buf)
@@ -1482,8 +1482,8 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	{
 	case TYPE_SEND:
 		if (dcc->fastsend)
-			dcc->wiotag = fe_input_add(sok, FIA_WRITE, (void*)dcc_send_data, dcc);
-		dcc->iotag = fe_input_add(sok, FIA_READ | FIA_EX, (void*)dcc_read_ack, dcc);
+			dcc->wiotag = fe_input_add(sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
+		dcc->iotag = fe_input_add(sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_ack, dcc);
 		dcc_send_data(NULL, GIOCondition(), dcc);
 		EMIT_SIGNAL(XP_TE_DCCCONSEND, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
@@ -1491,7 +1491,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 
 	case TYPE_CHATSEND:
 		dcc_open_query(dcc->serv, dcc->nick);
-		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (void*)dcc_read_chat, dcc);
+		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
 		if (!dcc->dccchat)
 			return false;
@@ -1586,7 +1586,7 @@ dcc_listen_init(::dcc::DCC *dcc, session *sess)
 	listen(dcc->sok, 1);
 	set_blocking(dcc->sok);
 
-	dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (void*)dcc_accept, dcc);
+	dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_accept, dcc);
 
 	return TRUE;
 }
@@ -2199,7 +2199,7 @@ xit:
 }
 
 ::dcc::DCC *
-find_dcc (char *nick, char *file, int type)
+find_dcc (const char *nick, const char *file, int type)
 {
 	GSList *list = dcc_list;
 	::dcc::DCC *dcc;

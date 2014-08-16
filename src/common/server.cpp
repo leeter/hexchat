@@ -504,7 +504,7 @@ server_connected (server * serv)
 	serv->lag_sent = 0;
 	serv->connected = TRUE;
 	set_nonblocking (serv->sok);
-	serv->iotag = fe_input_add (serv->sok, FIA_READ|FIA_EX, server_read, serv);
+	serv->iotag = fe_input_add(serv->sok, FIA_READ | FIA_EX, (GIOFunc)server_read, serv);
 	if (!serv->no_login)
 	{
 		EMIT_SIGNAL (XP_TE_CONNECTED, serv->server_session, NULL, NULL, NULL,
@@ -1809,7 +1809,7 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 #endif
 	serv->childpid = pid;
 #ifdef WIN32
-	serv->iotag = fe_input_add (serv->childread, FIA_READ|FIA_FD, server_read_child,
+	serv->iotag = fe_input_add(serv->childread, FIA_READ | FIA_FD, (GIOFunc)server_read_child,
 #else
 	serv->iotag = fe_input_add (serv->childread, FIA_READ, server_read_child,
 #endif
