@@ -2,7 +2,7 @@
 
 noinst_LIBRARIES = libhexchatcommon.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS)
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 
 EXTRA_DIST = \
 	cfgfiles.hpp \
