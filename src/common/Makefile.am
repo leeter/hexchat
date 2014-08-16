@@ -2,50 +2,50 @@
 
 noinst_LIBRARIES = libhexchatcommon.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS)
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS)
 
 EXTRA_DIST = \
-	cfgfiles.h \
+	cfgfiles.hpp \
 	chanopt.h \
-	ctcp.h \
-	dcc.h \
-	fe.h \
-	hexchat.h \
-	hexchatc.h \
+	ctcp.hpp \
+	dcc.hpp \
+	fe.hpp \
+	hexchat.hpp \
+	hexchatc.hpp \
 	hexchat-plugin.h \
-	history.h \
-	identd.c \
-	ignore.h \
-	inbound.h \
+	history.hpp \
+	identd.cpp \
+	ignore.hpp \
+	inbound.hpp \
 	inet.h \
 	make-te.c \
 	modes.h \
 	msproxy.h \
 	network.h \
-	notify.h \
-	outbound.h \
+	notify.hpp \
+	outbound.hpp \
 	plugin.h \
-	plugin-timer.h \
-	proto-irc.h \
+	plugin-timer.hpp \
+	proto-irc.hpp \
 	server.h \
 	servlist.h \
-	ssl.h \
-	ssl.c	\
-	text.h \
+	ssl.hpp \
+	ssl.cpp	\
+	text.hpp \
 	textenums.h \
 	textevents.h \
 	textevents.in \
-	tree.h \
-	url.h \
-	userlist.h \
-	util.h
+	tree.hpp \
+	url.hpp \
+	userlist.hpp \
+	util.hpp
 
 if USE_OPENSSL
-ssl_c = ssl.c
+ssl_c = ssl.cpp
 endif
 
 if USE_MSPROXY
-msproxy_c = msproxy.c
+msproxy_c = msproxy.cpp
 endif
 
 if USE_DBUS
@@ -61,10 +61,10 @@ endif
 
 noinst_PROGRAMS = make-te
 
-libhexchatcommon_a_SOURCES = cfgfiles.c chanopt.c ctcp.c dcc.c hexchat.c \
-	history.c ignore.c inbound.c marshal.c modes.c $(msproxy_c) network.c notify.c \
+libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.cpp \
+	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
 	outbound.c plugin.c plugin-timer.c proto-irc.c server.c servlist.c \
-	$(ssl_c) text.c tree.c url.c userlist.c util.c
+	$(ssl_c) text.cpp tree.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS)
 
 textenums.h: textevents.h
