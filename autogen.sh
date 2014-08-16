@@ -7,7 +7,7 @@ test -z "$srcdir" && srcdir=.
 NOCONFIGURE=1
 PKG_NAME="hexchat"
 
-(test -f $srcdir/src/common/hexchat.c) || {
+(test -f $srcdir/src/common/hexchat.cpp) || {
 	echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
 	echo " top-level $PKG_NAME directory"
 	exit 1
@@ -19,4 +19,3 @@ which gnome-autogen.sh || {
 }
 
 . gnome-autogen.sh
-
