@@ -156,7 +156,7 @@ fe_print_text (struct session *sess, char *text, time_t stamp,
 	char num[8];
 	int reverse = 0, under = 0, bold = 0,
 		comma, k, i = 0, j = 0, len = strlen (text);
-	unsigned char *newtext = malloc (len + 1024);
+	char *newtext = static_cast<char*>(malloc (len + 1024));
 
 	if (prefs.hex_stamp_text)
 	{
