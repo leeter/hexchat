@@ -462,7 +462,7 @@ fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
 }
 
 GtkWidget *
-gtkutil_button (GtkWidget *box, const char *stock, const char *tip, void *callback,
+gtkutil_button (GtkWidget *box, const char *stock, const char *tip, GCallback callback,
 					 void *userdata, const char *labeltext)
 {
 	GtkWidget *wid, *img, *bbox;

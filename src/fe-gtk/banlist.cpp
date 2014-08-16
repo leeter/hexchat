@@ -822,7 +822,7 @@ banlist_opengui (struct session *sess)
 					sess->server->servername);
 
 	banl->window = mg_create_generic_tab ("BanList", tbuf, FALSE,
-					TRUE, banlist_closegui, banl, 550, 200, &vbox, sess->server);
+		TRUE, G_CALLBACK(banlist_closegui), banl, 550, 200, &vbox, sess->server);
 	gtkutil_destroy_on_esc (banl->window);
 
 	gtk_container_set_border_width (GTK_CONTAINER (banl->window), 3);
@@ -852,14 +852,14 @@ banlist_opengui (struct session *sess)
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, 0, 0, 0);
 	gtk_widget_show (bbox);
 
-	banl->but_remove = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, banlist_unban, banl,
+	banl->but_remove = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, G_CALLBACK(banlist_unban), banl,
 	                _("Remove"));
-	banl->but_crop = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, banlist_crop, banl,
+	banl->but_crop = gtkutil_button(bbox, GTK_STOCK_REMOVE, 0, G_CALLBACK(banlist_crop), banl,
 	                _("Crop"));
-	banl->but_clear = gtkutil_button (bbox, GTK_STOCK_CLEAR, 0, banlist_clear, banl,
+	banl->but_clear = gtkutil_button(bbox, GTK_STOCK_CLEAR, 0, G_CALLBACK(banlist_clear), banl,
 	                _("Clear"));
 
-	banl->but_refresh = gtkutil_button (bbox, GTK_STOCK_REFRESH, 0, banlist_refresh, banl, _("Refresh"));
+	banl->but_refresh = gtkutil_button(bbox, GTK_STOCK_REFRESH, 0, G_CALLBACK(banlist_refresh), banl, _("Refresh"));
 
 	banlist_do_refresh (banl);
 

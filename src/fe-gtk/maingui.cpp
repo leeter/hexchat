@@ -3564,7 +3564,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 GtkWidget *
 mg_create_generic_tab (char *name, char *title, int force_toplevel,
 							  int link_buttons,
-							  void *close_callback, void *userdata,
+							  GCallback close_callback, void *userdata,
 							  int width, int height, GtkWidget **vbox_ret,
 							  void *family)
 {
