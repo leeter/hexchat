@@ -377,11 +377,11 @@ ignore_gui_open ()
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
 	gtk_widget_show (box);
 
-	gtkutil_button (box, GTK_STOCK_NEW, 0, ignore_new_entry_clicked, 0,
+	gtkutil_button(box, GTK_STOCK_NEW, 0, G_CALLBACK(ignore_new_entry_clicked), 0,
 						 _("Add..."));
-	gtkutil_button (box, GTK_STOCK_DELETE, 0, ignore_delete_entry_clicked,
+	gtkutil_button(box, GTK_STOCK_DELETE, 0, G_CALLBACK(ignore_delete_entry_clicked),
 						 0, _("Delete"));
-	gtkutil_button (box, GTK_STOCK_CLEAR, 0, ignore_clear_entry_clicked,
+	gtkutil_button(box, GTK_STOCK_CLEAR, 0, G_CALLBACK(ignore_clear_entry_clicked),
 						 0, _("Clear"));
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));

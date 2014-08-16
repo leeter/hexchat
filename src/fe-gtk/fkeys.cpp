@@ -807,7 +807,7 @@ key_dialog_show ()
 	}
 
 	key_dialog = mg_create_generic_tab ("editkeys", _(DISPLAY_NAME": Keyboard Shortcuts"),
-									TRUE, FALSE, key_dialog_close, NULL, 600, 360, &vbox, 0);
+		TRUE, FALSE, G_CALLBACK(key_dialog_close), NULL, 600, 360, &vbox, 0);
 
 	view = key_dialog_treeview_new (vbox);
 	xtext = gtk_xtext_new (colors, 0);
@@ -822,13 +822,13 @@ key_dialog_show ()
 	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
 
-	gtkutil_button (box, GTK_STOCK_NEW, NULL, key_dialog_add,
+	gtkutil_button(box, GTK_STOCK_NEW, NULL, G_CALLBACK(key_dialog_add),
 					NULL, _("Add"));
-	gtkutil_button (box, GTK_STOCK_DELETE, NULL, key_dialog_delete,
+	gtkutil_button(box, GTK_STOCK_DELETE, NULL, G_CALLBACK(key_dialog_delete),
 					NULL, _("Delete"));
-	gtkutil_button (box, GTK_STOCK_CANCEL, NULL, key_dialog_close,
+	gtkutil_button(box, GTK_STOCK_CANCEL, NULL, G_CALLBACK(key_dialog_close),
 					NULL, _("Cancel"));
-	gtkutil_button (box, GTK_STOCK_SAVE, NULL, key_dialog_save,
+	gtkutil_button(box, GTK_STOCK_SAVE, NULL, G_CALLBACK(key_dialog_save),
 					NULL, _("Save"));
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));

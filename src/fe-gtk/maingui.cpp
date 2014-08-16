@@ -2197,7 +2197,7 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 
 	if (!prefs.hex_gui_ulist_resizable)
 		gtkutil_button (hbox, GTK_STOCK_GOTO_LAST, _("Show/Hide userlist"),
-							 mg_userlist_toggle_cb, 0, 0);
+		G_CALLBACK(mg_userlist_toggle_cb), 0, 0);
 }
 
 /* check if a word is clickable */

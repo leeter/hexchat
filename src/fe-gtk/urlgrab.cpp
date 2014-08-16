@@ -200,7 +200,7 @@ url_opengui ()
 
 	urlgrabberwindow =
 		mg_create_generic_tab ("UrlGrabber", _(DISPLAY_NAME": URL Grabber"), FALSE,
-							 TRUE, url_closegui, NULL, 400, 256, &vbox, 0);
+		TRUE, G_CALLBACK(url_closegui), NULL, 400, 256, &vbox, 0);
 	gtkutil_destroy_on_esc (urlgrabberwindow);
 	view = url_treeview_new (vbox);
 	g_object_set_data (G_OBJECT (urlgrabberwindow), "model",
@@ -215,7 +215,7 @@ url_opengui ()
 	gtkutil_button (hbox, GTK_STOCK_CLEAR,
 						 _("Clear list"), url_button_clear, 0, _("Clear"));
 	gtkutil_button (hbox, GTK_STOCK_COPY,
-						 _("Copy selected URL"), url_button_copy, view, _("Copy"));
+		_("Copy selected URL"), G_CALLBACK(url_button_copy), view, _("Copy"));
 	gtkutil_button (hbox, GTK_STOCK_SAVE_AS,
 						 _("Save list to a file"), url_button_save, 0, _("Save As..."));
 

@@ -442,7 +442,7 @@ pevent_dialog_show ()
 
 	pevent_dialog =
 			  mg_create_generic_tab ("edit events", _("Edit Events"),
-											 TRUE, FALSE, pevent_dialog_close, NULL,
+			  TRUE, FALSE, G_CALLBACK(pevent_dialog_close), NULL,
 											 600, 455, &vbox, 0);
 
 	pane = gtk_vpaned_new ();
@@ -466,13 +466,13 @@ pevent_dialog_show ()
 	hbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbox), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 4);
-	gtkutil_button (hbox, GTK_STOCK_SAVE_AS, NULL, pevent_save_cb,
+	gtkutil_button(hbox, GTK_STOCK_SAVE_AS, NULL, G_CALLBACK(pevent_save_cb),
 						 (void *) 1, _("Save As..."));
-	gtkutil_button (hbox, GTK_STOCK_OPEN, NULL, pevent_load_cb,
+	gtkutil_button(hbox, GTK_STOCK_OPEN, NULL, G_CALLBACK(pevent_load_cb),
 						 NULL, _("Load From..."));
-	gtkutil_button (hbox, NULL, NULL, pevent_test_cb,
+	gtkutil_button(hbox, NULL, NULL, G_CALLBACK(pevent_test_cb),
 						pevent_dialog_twid, _("Test All"));
-	gtkutil_button (hbox, GTK_STOCK_OK, NULL, pevent_ok_cb,
+	gtkutil_button(hbox, GTK_STOCK_OK, NULL, G_CALLBACK(pevent_ok_cb),
 						NULL, _("OK"));
 
 	gtk_widget_show_all (pevent_dialog);

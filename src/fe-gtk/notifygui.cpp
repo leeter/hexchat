@@ -429,15 +429,15 @@ notify_opengui (void)
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, 0, 0, 0);
 	gtk_widget_show (bbox);
 
-	gtkutil_button (bbox, GTK_STOCK_NEW, 0, notify_add_clicked, 0,
+	gtkutil_button(bbox, GTK_STOCK_NEW, 0, G_CALLBACK(notify_add_clicked), 0,
 	                _("Add..."));
 
 	notify_button_remove =
-	gtkutil_button (bbox, GTK_STOCK_DELETE, 0, notify_remove_clicked, 0,
+		gtkutil_button(bbox, GTK_STOCK_DELETE, 0, G_CALLBACK(notify_remove_clicked), 0,
 	                _("Remove"));
 
 	notify_button_opendialog =
-	gtkutil_button (bbox, NULL, 0, notify_opendialog_clicked, 0,
+		gtkutil_button(bbox, NULL, 0, G_CALLBACK(notify_opendialog_clicked), 0,
 	                _("Open Dialog"));
 
 	gtk_widget_set_sensitive (notify_button_opendialog, FALSE);

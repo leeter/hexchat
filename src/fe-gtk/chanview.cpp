@@ -424,7 +424,7 @@ cv_tabs_init(chanview *cv)
 		gtk_box_pack_start(GTK_BOX(outer), ((tabview *)cv)->b1, 0, 0, 0);
 	}
 
-	button = gtkutil_button(outer, GTK_STOCK_CLOSE, NULL, cv_tabs_xclick_cb,
+	button = gtkutil_button(outer, GTK_STOCK_CLOSE, NULL, G_CALLBACK(cv_tabs_xclick_cb),
 		cv, 0);
 	gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
 	gtk_widget_set_can_focus(button, FALSE);

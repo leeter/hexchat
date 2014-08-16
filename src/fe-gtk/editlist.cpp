@@ -338,7 +338,7 @@ editlist_gui_open (const char *title1, const char *title2, GSList *list, char *t
 	}
 
 	editlist_win = mg_create_generic_tab (wmclass, title, TRUE, FALSE,
-												editlist_close, NULL, 450, 250, &vbox, 0);
+		G_CALLBACK(editlist_close), NULL, 450, 250, &vbox, 0);
 
 	editlist_list = list;
 
@@ -354,13 +354,13 @@ editlist_gui_open (const char *title1, const char *title2, GSList *list, char *t
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
 	gtk_widget_show (box);
 
-	gtkutil_button (box, GTK_STOCK_NEW, 0, editlist_add,
+	gtkutil_button(box, GTK_STOCK_NEW, 0, G_CALLBACK(editlist_add),
 					NULL, _("Add"));
-	gtkutil_button (box, GTK_STOCK_DELETE, 0, editlist_delete,
+	gtkutil_button(box, GTK_STOCK_DELETE, 0, G_CALLBACK(editlist_delete),
 					NULL, _("Delete"));
-	gtkutil_button (box, GTK_STOCK_CANCEL, 0, editlist_close,
+	gtkutil_button(box, GTK_STOCK_CANCEL, 0, G_CALLBACK(editlist_close),
 					NULL, _("Cancel"));
-	gtkutil_button (box, GTK_STOCK_SAVE, 0, editlist_save,
+	gtkutil_button(box, GTK_STOCK_SAVE, 0, G_CALLBACK(editlist_save),
 					file, _("Save"));
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));

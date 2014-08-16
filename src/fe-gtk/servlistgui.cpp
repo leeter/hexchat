@@ -2191,7 +2191,7 @@ servlist_open_networks (void)
 	gtk_widget_set_can_default (button_close, TRUE);
 
 	button_connect = gtkutil_button (hbuttonbox1, GTK_STOCK_CONNECT, NULL,
-												servlist_connect_cb, NULL, _("C_onnect"));
+		G_CALLBACK(servlist_connect_cb), NULL, _("C_onnect"));
 	gtk_widget_set_can_default (button_connect, TRUE);
 
 	g_signal_connect (G_OBJECT (entry_guser), "changed", 
