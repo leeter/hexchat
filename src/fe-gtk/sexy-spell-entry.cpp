@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <string>
 #include <sstream>
 #include <gtk/gtk.h>
 #include "sexy-spell-entry.h"
@@ -153,7 +154,7 @@ static T module_symbol(GModule* enchant, const gchar* name)
 {
 	gpointer funcptr = nullptr;
 	g_module_symbol(enchant, name, &funcptr);
-	return static_cast<T>(funcptr);
+	return reinterpret_cast<T>(funcptr);
 }
 
 static void
