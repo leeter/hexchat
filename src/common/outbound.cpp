@@ -16,7 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE	/* for memrchr */
+#endif
+#include <algorithm>
 #include <string>
 #include <cstring>
 #include <cstdlib>
@@ -34,8 +37,8 @@
 #include <unistd.h>
 #endif
 
-#include <time.h>
-#include <signal.h>
+#include <ctime>
+#include <csignal>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -1534,21 +1537,16 @@ cmd_execk (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static int
 cmd_execw (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int len;
-	char *temp;
 	exec_check_process (sess);
 	if (sess->running_exec == NULL)
 	{
 		EMIT_SIGNAL (XP_TE_NOCHILD, sess, NULL, NULL, NULL, NULL, 0);
 		return FALSE;
 	}
-	len = strlen(word_eol[2]);
-	temp = malloc(len + 2);
-	sprintf(temp, "%s\n", word_eol[2]);
-	PrintText(sess, temp);
-	write(sess->running_exec->myfd, temp, len + 1);
-	free(temp);
-
+	std::string temp(word_eol[2]);
+	temp.push_back("\n\0");
+	PrintText(sess, &temp[0]);
+	write(sess->running_exec->myfd, temp.c_str(), temp.size());
 	return TRUE;
 }
 #endif /* !__EMX__ */
@@ -1562,16 +1560,15 @@ static short escconv[] =
 static void
 exec_handle_colors (char *buf, int len)
 {
-	char numb[16];
-	char *nbuf;
+	char numb[16] = { 0 };
 	int i = 0, j = 0, k = 0, firstn = 0, col, colf = 0, colb = 0;
-	int esc = FALSE, backc = FALSE, bold = FALSE;
+	bool esc = false, backc = false, bold = false;
 
 	/* any escape codes in this text? */
 	if (strchr (buf, 27) == 0)
 		return;
-
-	nbuf = malloc (len + 1);
+	
+	std::string nbuf(len + 1, '\0');
 
 	while (i < len)
 	{
@@ -1580,12 +1577,12 @@ exec_handle_colors (char *buf, int len)
 		case '\r':
 			break;
 		case 27:
-			esc = TRUE;
+			esc = true;
 			break;
 		case ';':
 			if (!esc)
 				goto norm;
-			backc = TRUE;
+			backc = true;
 			numb[k] = 0;
 			firstn = atoi (numb);
 			k = 0;
@@ -1606,16 +1603,16 @@ exec_handle_colors (char *buf, int len)
 						{
 							nbuf[j] = '\017';
 							j++;
-							bold = FALSE;
+							bold = false;
 							goto cont;
 						}
 
 						numb[k] = 0;
 						col = atoi (numb);
-						backc = FALSE;
+						backc = false;
 
 						if (firstn == 1)
-							bold = TRUE;
+							bold = true;
 
 						if (firstn >= 30 && firstn <= 37)
 							colf = firstn - 30;
@@ -1623,7 +1620,7 @@ exec_handle_colors (char *buf, int len)
 						if (col >= 40)
 						{
 							colb = col - 40;
-							backc = TRUE;
+							backc = true;
 						}
 
 						if (col >= 30 && col <= 37)
@@ -1643,8 +1640,8 @@ exec_handle_colors (char *buf, int len)
 							j += sprintf (&nbuf[j], "\003%02d", colf);
 						}
 					}
-cont:				esc = FALSE;
-					backc = FALSE;
+cont:				esc = false;
+					backc = false;
 					k = 0;
 				} else
 				{
@@ -1664,8 +1661,7 @@ norm:			nbuf[j] = buf[i];
 	}
 
 	nbuf[j] = 0;
-	memcpy (buf, nbuf, j + 1);
-	free (nbuf);
+	std::copy_n (nbuf.cbegin(), j + 1, buf);
 }
 
 #ifndef HAVE_MEMRCHR
@@ -1691,14 +1687,14 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 	len = s->buffill;
 	if (len) {
 		/* append new data to buffered incomplete line */
-		buf = malloc(len + 2050);
+		buf = static_cast<char*>(malloc(len + 2050));
 		memcpy(buf, s->linebuf, len);
 		readpos = buf + len;
 		free(s->linebuf);
 		s->linebuf = NULL;
 	}
 	else
-		readpos = buf = malloc(2050);
+		readpos = buf = static_cast<char*>(calloc(sizeof(char), 2050));
 
 	rd = read (sok, readpos, 2048);
 	if (rd < 1)
@@ -1737,7 +1733,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 		rest = buf;
 	if (*rest) {
 		s->buffill = len - (rest - buf); /* = strlen(rest) */
-		s->linebuf = malloc(s->buffill + 1);
+		s->linebuf = static_cast<char*>(malloc(s->buffill + 1));
 		memcpy(s->linebuf, rest, s->buffill);
 		*rest = '\0';
 		len -= s->buffill; /* possibly 0 */
@@ -2004,7 +2000,7 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
-	fe_get_int (word[4], atoi (word[2]), get_int_cb, info);
+	fe_get_int (word[4], atoi (word[2]), (void*)get_int_cb, info);
 
 	return TRUE;
 }
