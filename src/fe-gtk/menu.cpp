@@ -1833,9 +1833,9 @@ menu_set_away (session_gui *gui, int away)
 {
 	GtkCheckMenuItem *item = GTK_CHECK_MENU_ITEM (gui->menu_item[MENU_ID_AWAY]);
 
-	g_signal_handlers_block_by_func (G_OBJECT (item), menu_away, NULL);
+	g_signal_handlers_block_by_func (G_OBJECT (item), (void*)menu_away, NULL);
 	gtk_check_menu_item_set_active (item, away);
-	g_signal_handlers_unblock_by_func (G_OBJECT (item), menu_away, NULL);
+	g_signal_handlers_unblock_by_func (G_OBJECT (item), (void*)menu_away, NULL);
 }
 
 void
@@ -1843,9 +1843,9 @@ menu_set_fullscreen (session_gui *gui, int full)
 {
 	GtkCheckMenuItem *item = GTK_CHECK_MENU_ITEM (gui->menu_item[MENU_ID_FULLSCREEN]);
 
-	g_signal_handlers_block_by_func (G_OBJECT (item), menu_fullscreen_toggle, NULL);
+	g_signal_handlers_block_by_func(G_OBJECT(item), (void*)menu_fullscreen_toggle, NULL);
 	gtk_check_menu_item_set_active (item, full);
-	g_signal_handlers_unblock_by_func (G_OBJECT (item), menu_fullscreen_toggle, NULL);
+	g_signal_handlers_unblock_by_func(G_OBJECT(item), (void*)menu_fullscreen_toggle, NULL);
 }
 
 GtkWidget *
