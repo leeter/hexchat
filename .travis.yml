@@ -6,5 +6,6 @@ before_script:
     - sudo apt-get install -qq libnotify-dev libproxy-dev libpci-dev libcanberra-dev monodevelop gnome-common libboost-all-dev pkg-config
 script:
     - ./autogen.sh
+    - autoreconf -i
     - ./configure --enable-textfe --with-theme-manager
     - make V=1
