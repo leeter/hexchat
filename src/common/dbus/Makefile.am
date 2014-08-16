@@ -1,3 +1,5 @@
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
+
 noinst_LIBRARIES = libhexchatdbus.a
 libhexchatdbus_a_SOURCES =			\
 	dbus-plugin.cpp				\
@@ -15,7 +17,7 @@ BUILT_SOURCES =				\
 
 CLEANFILES = $(BUILT_SOURCES)
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
+
 
 noinst_PROGRAMS = example
 example_SOURCES = example.c
