@@ -294,7 +294,7 @@ _SSL_socket (SSL_CTX *ctx, int sd)
 
 
 char *
-_SSL_set_verify (SSL_CTX *ctx, void *verify_callback, char *cacert)
+_SSL_set_verify(SSL_CTX *ctx, int(*verify_callback)(int, X509_STORE_CTX*), char *cacert)
 {
 	if (!SSL_CTX_set_default_verify_paths (ctx))
 	{
@@ -311,7 +311,7 @@ _SSL_set_verify (SSL_CTX *ctx, void *verify_callback, char *cacert)
 		}
 	}
 */
-	SSL_CTX_set_verify (ctx, SSL_VERIFY_PEER, (int(*)(int, X509_STORE_CTX*))verify_callback);
+	SSL_CTX_set_verify (ctx, SSL_VERIFY_PEER, verify_callback);
 
 	return (NULL);
 }
