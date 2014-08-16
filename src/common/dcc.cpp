@@ -1228,7 +1228,7 @@ dcc_proxy_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	if (!dcc_did_connect(source, condition, dcc))
 		return TRUE;
 
-	dcc->proxy = static_cast<::dcc::proxy_state*>(calloc(1, sizeof(struct ::dcc::proxy_state)));
+	dcc->proxy = static_cast< ::dcc::proxy_state*>(calloc(1, sizeof(struct ::dcc::proxy_state)));
 	if (!dcc->proxy)
 	{
 		dcc->dccstat = STAT_FAILED;
@@ -1605,7 +1605,7 @@ dcc_send_wild(char *file)
 static ::dcc::DCC *
 new_dcc(void)
 {
-	::dcc::DCC *dcc = static_cast<::dcc::DCC*>(calloc(1, sizeof(::dcc::DCC)));
+	::dcc::DCC *dcc = static_cast< ::dcc::DCC*>(calloc(1, sizeof(::dcc::DCC)));
 	if (!dcc)
 		return NULL;
 	dcc->sok = -1;
@@ -1869,7 +1869,7 @@ is_resumable(::dcc::DCC *dcc)
 		::dcc::DCC *d;
 		while (list)
 		{
-			d = static_cast<::dcc::DCC*>(list->data);
+			d = static_cast< ::dcc::DCC*>(list->data);
 			if (d->type == TYPE_RECV && d->dccstat != STAT_ABORTED &&
 				d->dccstat != STAT_DONE && d->dccstat != STAT_FAILED)
 			{
@@ -1926,7 +1926,7 @@ dcc_check_timeouts(void)
 
 	while (list)
 	{
-		dcc = static_cast<::dcc::DCC *>(list->data);
+		dcc = static_cast< ::dcc::DCC *>(list->data);
 		next = list->next;
 
 		switch (dcc->dccstat)
@@ -2019,7 +2019,7 @@ dcc_notify_kill (struct server *serv)
 		replaceserv = (struct server *) serv_list->data;
 	while (list)
 	{
-		dcc = static_cast<::dcc::DCC *>(list->data);
+		dcc = static_cast< ::dcc::DCC *>(list->data);
 		if (dcc->serv == serv)
 			dcc->serv = replaceserv;
 		list = list->next;

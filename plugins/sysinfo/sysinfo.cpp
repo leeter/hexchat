@@ -258,7 +258,7 @@ namespace{
 		/* query WMI info only at the first time SysInfo is called, then cache it to save time */
 		if (firstRun)
 		{
-			::std::lock_guard<::std::mutex> guard(g_mutex);
+			::std::lock_guard< ::std::mutex> guard(g_mutex);
 			hexchat_printf(ph, "%s first execution, querying and caching WMI info...\n", name);
 			wmiOs = getWmiInfo(wmi_info_mode::os);
 			wmiCpu = getWmiInfo(wmi_info_mode::processor);
