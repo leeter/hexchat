@@ -43,10 +43,10 @@ namespace dcc{
 #if defined(G_GINT64_FORMAT) && defined(HAVE_STRTOULL)
 #define USE_DCC64
 /* we really get only 63 bits, since st_size is signed */
-using DCC_SIZE = gint64;
+typedef gint64 DCC_SIZE;
 #define DCC_SFMT G_GINT64_FORMAT
 #else
-using DCC_SIZE = unsigned int;
+typedef unsigned int DCC_SIZE;
 #define DCC_SFMT "u"
 #endif
 struct proxy_state;

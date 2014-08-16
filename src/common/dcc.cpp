@@ -1586,7 +1586,7 @@ dcc_listen_init(::dcc::DCC *dcc, session *sess)
 	listen(dcc->sok, 1);
 	set_blocking(dcc->sok);
 
-	dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, dcc_accept, dcc);
+	dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (void*)dcc_accept, dcc);
 
 	return TRUE;
 }
