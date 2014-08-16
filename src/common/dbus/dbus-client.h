@@ -22,6 +22,14 @@
 #ifndef __DBUS_PLUGIN_H__
 #define __DBUS_PLUGIN_H__
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 void hexchat_remote (void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DBUS_PLUGIN_H__ */
