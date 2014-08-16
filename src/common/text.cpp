@@ -2110,14 +2110,14 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		a = tbuf;
 		stripcolor_args &= ~ARG_FLAG(1);	/* don't strip color from this argument */
 	}
-
+	std::string empty("\000");
 	word[0] = te[index].name;
-	word[1] = (a ? a : "\000");
-	word[2] = (b ? b : "\000");
-	word[3] = (c ? c : "\000");
-	word[4] = (d ? d : "\000");
+	word[1] = (a ? a : &empty[0]);
+	word[2] = (b ? b : &empty[0]);
+	word[3] = (c ? c : &empty[0]);
+	word[4] = (d ? d : &empty[0]);
 	for (i = 5; i < PDIWORDS; i++)
-		word[i] = "\000";
+		word[i] = &empty[0];
 
 	if (plugin_emit_print (sess, word, timestamp))
 		return;
