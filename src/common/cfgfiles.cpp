@@ -1164,7 +1164,7 @@ int
 cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	int wild = FALSE;
-	int or = FALSE;
+	bool or_token = false;
 	int off = FALSE;
 	int quiet = FALSE;
 	int erase = FALSE;
@@ -1190,7 +1190,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (g_ascii_strcasecmp (word[idx], "-or") == 0 || g_ascii_strcasecmp (word[idx], "-on") == 0)
 	{
 		idx++;
-		or = TRUE;
+		or_token = true;
 	}
 
 	if (g_ascii_strcasecmp (word[idx], "-quiet") == 0)
@@ -1285,7 +1285,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 					}
 					else
 					{
-						if (or)
+						if (or_token)
 						{
 							*((int *) &prefs + vars[i].offset) |= atoi (val);
 						}
