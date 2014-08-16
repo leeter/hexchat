@@ -66,7 +66,7 @@ void fe_message (const std::string & msg, int flags);
 #define FIA_FD 8
 int fe_input_add(int sok, int flags, GIOFunc func, void *data);
 void fe_input_remove (int tag);
-void fe_idle_add (void *func, void *data);
+void fe_idle_add(GSourceFunc func, void *data);
 void fe_set_topic (struct session *sess, char *topic, char *stripped_topic);
 void fe_set_hilight (struct session *sess);
 void fe_set_tab_color (struct session *sess, int col);

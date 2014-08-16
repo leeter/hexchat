@@ -456,9 +456,9 @@ fe_message (const std::string& msg, int flags)
 }
 
 void
-fe_idle_add (void *func, void *data)
+fe_idle_add(GSourceFunc func, void *data)
 {
-	g_idle_add (static_cast<GSourceFunc>(func), data);
+	g_idle_add (func, data);
 }
 
 void
