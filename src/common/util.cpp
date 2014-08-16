@@ -618,11 +618,12 @@ get_sys_str (bool with_cpu)
 	int cpus = 1;
 	struct utsname un;
 	static char *buf = NULL;
-
 	if (buf)
 		return buf;
 
-	buf = malloc (128);
+	buf = static_cast<char*>(malloc (128));
+	if(!buf)
+		return nullptr;
 
 	uname (&un);
 
