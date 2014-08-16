@@ -67,7 +67,7 @@ struct t_hexchat_hook
 {
 	hexchat_plugin *pl;	/* the plugin to which it belongs */
 	char *name;			/* "xdcc" */
-	void *callback;	/* pointer to xdcc_callback */
+	void (*callback)(void*);	/* pointer to xdcc_callback */
 	char *help_text;	/* help_text for commands only */
 	void *userdata;	/* passed to the callback */
 	int tag;				/* for timers & FDs only */
@@ -797,7 +797,7 @@ plugin_fd_cb (GIOChannel *source, GIOCondition condition, hexchat_hook *hook)
 
 static hexchat_hook *
 plugin_add_hook (hexchat_plugin *pl, int type, int pri, const char *name,
-					  const  char *help_text, void *callb, int timeout, void *userdata)
+					  const  char *help_text, void (*callb)(void*), int timeout, void *userdata)
 {
 	hexchat_hook *hook;
 
@@ -910,7 +910,7 @@ hexchat_hook *
 hexchat_hook_command (hexchat_plugin *ph, const char *name, int pri,
 						  hexchat_cmd_cb *callb, const char *help_text, void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_COMMAND, pri, name, help_text, callb, 0,
+	return plugin_add_hook (ph, HOOK_COMMAND, pri, name, help_text, (void(*)(void*))callb, 0,
 									userdata);
 }
 
@@ -918,14 +918,14 @@ hexchat_hook *
 hexchat_hook_server (hexchat_plugin *ph, const char *name, int pri,
 						 hexchat_serv_cb *callb, void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_SERVER, pri, name, 0, callb, 0, userdata);
+	return plugin_add_hook(ph, HOOK_SERVER, pri, name, 0, (void(*)(void*))callb, 0, userdata);
 }
 
 hexchat_hook *
 hexchat_hook_server_attrs (hexchat_plugin *ph, const char *name, int pri,
 						   hexchat_serv_attrs_cb *callb, void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_SERVER_ATTRS, pri, name, 0, callb, 0,
+	return plugin_add_hook(ph, HOOK_SERVER_ATTRS, pri, name, 0, (void(*)(void*))callb, 0,
 							userdata);
 }
 
@@ -933,14 +933,14 @@ hexchat_hook *
 hexchat_hook_print (hexchat_plugin *ph, const char *name, int pri,
 						hexchat_print_cb *callb, void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_PRINT, pri, name, 0, callb, 0, userdata);
+	return plugin_add_hook(ph, HOOK_PRINT, pri, name, 0, (void(*)(void*))callb, 0, userdata);
 }
 
 hexchat_hook *
 hexchat_hook_print_attrs (hexchat_plugin *ph, const char *name, int pri,
 						  hexchat_print_attrs_cb *callb, void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_PRINT_ATTRS, pri, name, 0, callb, 0,
+	return plugin_add_hook(ph, HOOK_PRINT_ATTRS, pri, name, 0, (void(*)(void*))callb, 0,
 							userdata);
 }
 
@@ -948,7 +948,7 @@ hexchat_hook *
 hexchat_hook_timer (hexchat_plugin *ph, int timeout, hexchat_timer_cb *callb,
 					   void *userdata)
 {
-	return plugin_add_hook (ph, HOOK_TIMER, 0, 0, 0, callb, timeout, userdata);
+	return plugin_add_hook(ph, HOOK_TIMER, 0, 0, 0, (void(*)(void*))callb, timeout, userdata);
 }
 
 hexchat_hook *
@@ -957,7 +957,7 @@ hexchat_hook_fd (hexchat_plugin *ph, int fd, int flags,
 {
 	hexchat_hook *hook;
 
-	hook = plugin_add_hook (ph, HOOK_FD, 0, 0, 0, callb, 0, userdata);
+	hook = plugin_add_hook(ph, HOOK_FD, 0, 0, 0, (void(*)(void*))callb, 0, userdata);
 	if (!hook)
 		return NULL;
 	hook->pri = fd;
