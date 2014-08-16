@@ -46,7 +46,7 @@ int save_config (void);
 void list_free (GSList ** list);
 void list_loadconf (const char *file, GSList ** list, const char *defaultconf);
 int list_delentry (GSList ** list, char *name);
-void list_addentry (GSList ** list, char *cmd, char *name);
+void list_addentry (GSList ** list, const char *cmd, const char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);

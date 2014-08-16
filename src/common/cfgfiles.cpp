@@ -53,7 +53,7 @@ const char * const languages[LANGUAGES_LENGTH] = {
 };
 
 void
-list_addentry (GSList ** list, char *cmd, char *name)
+list_addentry (GSList ** list, const char *cmd, const char *name)
 {
 	struct popup *pop;
 	size_t name_len;
