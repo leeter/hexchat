@@ -47,21 +47,21 @@
 #endif
 #endif
 
-typedef enum	/* current icon status */
+enum TrayStatus	/* current icon status */
 {
 	TS_NONE,
 	TS_MESSAGE,
 	TS_HIGHLIGHT,
 	TS_FILEOFFER,
 	TS_CUSTOM /* plugin */
-} TrayStatus;
+};
 
-typedef enum
+enum WinStatus
 {
 	WS_FOCUSED,
 	WS_NORMAL,
 	WS_HIDDEN
-} WinStatus;
+};
 
 typedef GdkPixbuf* TrayIcon;
 #define tray_icon_from_file(f) gdk_pixbuf_new_from_file(f,NULL)
@@ -537,7 +537,7 @@ tray_foreach_server (GtkWidget *item, char *cmd)
 }
 
 static GtkWidget *
-tray_make_item (GtkWidget *menu, char *label, void *callback, void *userdata)
+tray_make_item (GtkWidget *menu, const char *label, GCallback callback, void *userdata)
 {
 	GtkWidget *item;
 
@@ -626,10 +626,10 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 	/*gtk_menu_set_screen (GTK_MENU (menu), gtk_widget_get_screen (widget));*/
 
 	if (tray_get_window_status () == WS_HIDDEN)
-		tray_make_item (menu, _("_Restore Window"), tray_menu_restore_cb, NULL);
+		tray_make_item (menu, _("_Restore Window"), G_CALLBACK(tray_menu_restore_cb), NULL);
 	else
-		tray_make_item (menu, _("_Hide Window"), tray_menu_restore_cb, NULL);
-	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
+		tray_make_item(menu, _("_Hide Window"), G_CALLBACK(tray_menu_restore_cb), NULL);
+	tray_make_item(menu, NULL, G_CALLBACK(tray_menu_quit_cb), NULL);
 
 #ifndef WIN32 /* submenus are buggy on win32 */
 	submenu = mg_submenu (menu, _("_Blink on"));
@@ -644,19 +644,19 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 #endif
 
 	away_status = tray_find_away_status ();
-	item = tray_make_item (submenu, _("_Away"), tray_foreach_server, "away");
+	item = tray_make_item(submenu, _("_Away"), G_CALLBACK(tray_foreach_server), "away");
 	if (away_status == 1)
 		gtk_widget_set_sensitive (item, FALSE);
-	item = tray_make_item (submenu, _("_Back"), tray_foreach_server, "back");
+	item = tray_make_item(submenu, _("_Back"), G_CALLBACK(tray_foreach_server), "back");
 	if (away_status == 2)
 		gtk_widget_set_sensitive (item, FALSE);
 
 	menu_add_plugin_items (menu, "\x5$TRAY", NULL);
 #ifdef WIN32
-	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
+	tray_make_item(menu, NULL, G_CALLBACK(tray_menu_quit_cb), NULL);
 	mg_create_icon_item(_("_Preferences"), GTK_STOCK_PREFERENCES, menu, G_CALLBACK(tray_menu_settings), NULL);
 #endif
-	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
+	tray_make_item(menu, NULL, G_CALLBACK(tray_menu_quit_cb), NULL);
 	mg_create_icon_item(_("_Quit"), GTK_STOCK_QUIT, menu, G_CALLBACK(tray_menu_quit_cb), NULL);
 
 	g_object_ref (menu);
