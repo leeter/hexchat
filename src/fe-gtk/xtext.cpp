@@ -2253,7 +2253,7 @@ gtk_xtext_scroll_adjustments (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustmen
 	if (xtext->adj && (xtext->adj != vadj))
 	{
 		g_signal_handlers_disconnect_by_func (xtext->adj,
-								gtk_xtext_adjustment_changed,
+								(void*)gtk_xtext_adjustment_changed,
 								xtext);
 		g_object_unref (xtext->adj);
 	}
