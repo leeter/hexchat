@@ -39,7 +39,7 @@
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "textgui.h"
-using uchar_traits = std::char_traits < unsigned char >;
+typedef std::char_traits < unsigned char > uchar_traits;
 extern "C" struct text_event te[];
 extern "C" char *pntevts_text[];
 extern "C" char *pntevts[];
