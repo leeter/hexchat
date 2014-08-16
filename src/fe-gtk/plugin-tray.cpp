@@ -197,7 +197,7 @@ fe_tray_set_balloon (const char *title, const char *text)
 		g_list_free_full (server_caps, g_free);
 	}
 
-	notify_text = strip_color (text, -1, notify_text_strip_flags);
+	notify_text = strip_color (text, -1, static_cast<strip_flags>(notify_text_strip_flags));
 	notify_title = strip_color (title, -1, STRIP_ALL);
 
 	notification = XC_NOTIFY_NEW (notify_title, notify_text, HEXCHATSHAREDIR "/icons/hicolor/scalable/apps/hexchat.svg", NULL);
