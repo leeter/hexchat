@@ -357,17 +357,16 @@ strip_color2 (const char *src, int len, char *dst, strip_flags flags)
 }
 
 int
-strip_hidden_attribute (char *src, char *dst)
+strip_hidden_attribute(const std::string & src, char *dst)
 {
 	int len = 0;
-	while (*src != '\000')
+	for (char sval : src)
 	{
-		if (*src != HIDDEN_CHAR)
+		if (sval != HIDDEN_CHAR)
 		{
-			*dst++ = *src;
+			*dst++ = sval;
 			len++;
 		}
-		src++;
 	}
 	return len;
 }

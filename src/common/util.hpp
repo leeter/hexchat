@@ -33,6 +33,8 @@
 #ifndef HEXCHAT_UTIL_HPP
 #define HEXCHAT_UTIL_HPP
 
+#include <string>
+
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
 extern const unsigned char rfc_tolowertab[];
@@ -64,7 +66,7 @@ enum strip_flags{
 //#define STRIP_ALL 7
 gchar *strip_color (const char *text, int len, strip_flags flags);
 int strip_color2(const char *src, int len, char *dst, strip_flags flags);
-int strip_hidden_attribute (char *src, char *dst);
+int strip_hidden_attribute (const std::string & src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
 #ifdef WIN32
