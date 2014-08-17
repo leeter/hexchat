@@ -166,6 +166,7 @@ AC_ARG_WITH(theme-manager,
 
 BOOST_REQUIRE([1.46])
 BOOST_FORMAT
+BOOST_FILESYSTEM
 
 
 dnl *********************************************************************
