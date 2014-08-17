@@ -231,7 +231,7 @@ find_dialog (server *serv, char *nick)
 }
 
 session *
-find_channel (server *serv, char *chan)
+find_channel (server *serv, const std::string &chan)
 {
 	session *sess;
 	GSList *list = sess_list;
@@ -240,12 +240,12 @@ find_channel (server *serv, char *chan)
 		sess = static_cast<session*>(list->data);
 		if ((serv && serv == sess->server) && sess->type == SESS_CHANNEL)
 		{
-			if (!serv->p_cmp (chan, sess->channel))
+			if (!serv->p_cmp(chan.c_str(), sess->channel))
 				return sess;
 		}
 		list = list->next;
 	}
-	return 0;
+	return nullptr;
 }
 
 static void
@@ -501,7 +501,6 @@ session::session(struct server *serv, char *from, int type, int focus)
 	hops(),
 	voices(),
 	total(),
-	hist(),
 	new_data(),
 	nick_said(),
 	msg_said(),
