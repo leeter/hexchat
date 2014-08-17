@@ -29,6 +29,7 @@
 #include <iomanip>
 
 #ifndef WIN32
+#include <time.h>
 #include <unistd.h>
 #endif
 
