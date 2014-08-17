@@ -17,12 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+
+
+#ifndef HEXCHAT_MODES_HPP
+#define HEXCHAT_MODES_HPP
+
+#include <string>
 #include "proto-irc.hpp"
 
-#ifndef HEXCHAT_MODES_H
-#define HEXCHAT_MODES_H
-
-int is_channel (const server *serv, const char *chan);
+bool is_channel (const server *serv, const std::string &chan);
 char get_nick_prefix (const server *serv, unsigned int access);
 unsigned int nick_access (const server *serv, const char *nick, int *modechars);
 int mode_access (const server *serv, char mode, char *prefix);

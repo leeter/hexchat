@@ -126,12 +126,12 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 
 /* does 'chan' have a valid prefix? e.g. # or & */
 
-int
-is_channel (const server * serv, const char *chan)
+bool
+is_channel (const server * serv, const std::string &chan)
 {
 	if (strchr (serv->chantypes, chan[0]))
-		return 1;
-	return 0;
+		return true;
+	return false;
 }
 
 /* is the given char a valid nick mode char? e.g. @ or + */
