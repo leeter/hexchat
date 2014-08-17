@@ -34,7 +34,7 @@
 #include "fe.hpp"
 #include "ignore.hpp"
 #include "inbound.hpp"
-#include "modes.h"
+#include "modes.hpp"
 #include "notify.hpp"
 #include "plugin.h"
 #include "server.h"

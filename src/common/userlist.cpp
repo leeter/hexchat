@@ -21,7 +21,7 @@
 #include <cstring>
 
 #include "hexchat.hpp"
-#include "modes.h"
+#include "modes.hpp"
 #include "fe.hpp"
 #include "notify.hpp"
 #include "tree.hpp"

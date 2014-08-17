@@ -41,7 +41,7 @@
 #include "util.hpp"
 #include "ignore.hpp"
 #include "fe.hpp"
-#include "modes.h"
+#include "modes.hpp"
 #include "notify.hpp"
 #include "outbound.hpp"
 #include "inbound.hpp"

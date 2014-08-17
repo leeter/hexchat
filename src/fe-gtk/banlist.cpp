@@ -32,7 +32,7 @@
 
 #include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
-#include "../common/modes.h"
+#include "../common/modes.hpp"
 #include "../common/outbound.hpp"
 #include "../common/hexchatc.hpp"
 #include "gtkutil.hpp"

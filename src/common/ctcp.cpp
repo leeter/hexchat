@@ -27,7 +27,7 @@
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "util.hpp"
-#include "modes.h"
+#include "modes.hpp"
 #include "outbound.hpp"
 #include "ignore.hpp"
 #include "inbound.hpp"

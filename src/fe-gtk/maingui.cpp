@@ -30,7 +30,7 @@
 #include "../common/outbound.hpp"
 #include "../common/inbound.hpp"
 #include "../common/plugin.h"
-#include "../common/modes.h"
+#include "../common/modes.hpp"
 #include "../common/url.hpp"
 #include "../common/util.hpp"
 #include "../common/text.hpp"

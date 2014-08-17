@@ -27,7 +27,7 @@
 #include "../common/hexchat.hpp"
 #include "../common/util.hpp"
 #include "../common/userlist.hpp"
-#include "../common/modes.h"
+#include "../common/modes.hpp"
 #include "../common/text.hpp"
 #include "../common/notify.hpp"
 #include "../common/hexchatc.hpp"

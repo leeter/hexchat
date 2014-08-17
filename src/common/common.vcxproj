@@ -25,7 +25,7 @@
     <ClInclude Include="inbound.hpp" />
     <ClInclude Include="inet.h" />
     <ClInclude Include="marshal.h" />
-    <ClInclude Include="modes.h" />
+    <ClInclude Include="modes.hpp" />
     <ClInclude Include="msproxy.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="notify.hpp" />

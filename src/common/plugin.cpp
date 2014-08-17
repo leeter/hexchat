@@ -39,7 +39,7 @@
 #include "ignore.hpp"
 #include "server.h"
 #include "servlist.h"
-#include "modes.h"
+#include "modes.hpp"
 #include "notify.hpp"
 #include "text.hpp"
 #include "dcc.hpp"

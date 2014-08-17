@@ -23,7 +23,7 @@
 
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
-#include "modes.h"
+#include "modes.hpp"
 #include "server.h"
 #include "text.hpp"
 #include "fe.hpp"
