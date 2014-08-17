@@ -367,8 +367,6 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 static std::string
 mode_cat(const std::string& str, const std::string& addition)
 {
-	int len;
-
 	if (!str.empty())
 	{
 		return str + " " + addition;

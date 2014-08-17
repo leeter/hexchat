@@ -205,10 +205,10 @@ lastact_getfirst(int (*filter) (session *sess))
 	return sess;
 }
 
-int
+bool
 is_session (session * sess)
 {
-	return g_slist_find (sess_list, sess) ? 1 : 0;
+	return g_slist_find(sess_list, sess) != nullptr;
 }
 
 session *

@@ -622,7 +622,7 @@ log_open_file (char *servname, char *channame, char *netname)
 static void
 log_open (session *sess)
 {
-	static gboolean log_error = FALSE;
+	static bool log_error = false;
 
 	log_close (sess);
 	sess->logfd = log_open_file (sess->server->servername, sess->channel,
@@ -638,7 +638,7 @@ log_open (session *sess)
 		fe_message (message, FE_MSG_WAIT | FE_MSG_ERROR);
 
 		g_free (message);
-		log_error = TRUE;
+		log_error = true;
 	}
 }
 

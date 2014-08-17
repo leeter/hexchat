@@ -52,7 +52,7 @@ session * find_dialog (server *serv, char *nick);
 session * new_ircwindow (server *serv, char *name, int type, int focus);
 void lastact_update (session * sess);
 session * lastact_getfirst (int (*filter) (session *sess));
-int is_session (session * sess);
+bool is_session (session * sess);
 void session_free (session *killsess);
 void lag_check (void);
 void hexchat_exit (void);
