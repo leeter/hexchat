@@ -23,6 +23,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <ctime>
+#include <iomanip>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -661,53 +662,69 @@ banlist_toggle (GtkWidget *item, gpointer data)
  * If the real strpftime() comes available, use this format string:
  *		#define DATE_FORMAT "%a %b %d %T %Y"
  */
-static void
-banlist_strptime (char *ti, struct tm *tm)
+//static void
+//banlist_strptime (char *ti, struct tm *tm)
+//{
+//	/* Expect something like "Sat Mar 16 21:24:27 2013" */
+//	static char *mon[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//								  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", nullptr };
+//	int M = -1, d = -1, h = -1, m = -1, s = -1, y = -1;
+//
+//	if (*ti == 0)
+//	{
+//		memset (tm, 0, sizeof *tm);
+//		return;
+//	}
+//	/* No need to supply tm->tm_wday; mktime() doesn't read it */
+//	ti += 4;
+//	while ((mon[++M]))
+//		if (strncmp (ti, mon[M], 3) == 0)
+//			break;
+//	ti += 4;
+//
+//	d = strtol (ti, &ti, 10);
+//	h = strtol (++ti, &ti, 10);
+//	m = strtol (++ti, &ti, 10);
+//	s = strtol (++ti, &ti, 10);
+//	y = strtol (++ti, nullptr, 10) - 1900;
+//
+//	tm->tm_sec = s;
+//	tm->tm_min = m;
+//	tm->tm_hour = h;
+//	tm->tm_mday = d;
+//	tm->tm_mon = M;
+//	tm->tm_year = y;
+//}
+
+namespace banlist{
+static time_t
+get_time(const std::string& timestr)
 {
-	/* Expect something like "Sat Mar 16 21:24:27 2013" */
-	static char *mon[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-								  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", nullptr };
-	int M = -1, d = -1, h = -1, m = -1, s = -1, y = -1;
-
-	if (*ti == 0)
-	{
-		memset (tm, 0, sizeof *tm);
-		return;
-	}
-	/* No need to supply tm->tm_wday; mktime() doesn't read it */
-	ti += 4;
-	while ((mon[++M]))
-		if (strncmp (ti, mon[M], 3) == 0)
-			break;
-	ti += 4;
-
-	d = strtol (ti, &ti, 10);
-	h = strtol (++ti, &ti, 10);
-	m = strtol (++ti, &ti, 10);
-	s = strtol (++ti, &ti, 10);
-	y = strtol (++ti, nullptr, 10) - 1900;
-
-	tm->tm_sec = s;
-	tm->tm_min = m;
-	tm->tm_hour = h;
-	tm->tm_mday = d;
-	tm->tm_mon = M;
-	tm->tm_year = y;
+	const char* DATE_FORMAT = "%a %b %d %T %Y";
+	std::tm t = std::tm();
+#if defined(__GNUC__) && (__GNUC__ < 4 && \
+							__GNUC_MINOR__ < 10)
+	strptime(timestr.c_str(), DATE_FORMAT, &tm);
+#else
+	std::istringstream buffer(timestr);
+	buffer >> std::get_time(&t, DATE_FORMAT);
+#endif
+	return std::mktime(&t);
 }
-
+}
 gint
 banlist_date_sort (GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer user_data)
 {
-	struct tm tm1, tm2;
+	/*struct tm tm1, tm2;*/
 	time_t t1, t2;
 	char *time1, *time2;
 
 	gtk_tree_model_get(model, a, DATE_COLUMN, &time1, -1);
 	gtk_tree_model_get(model, b, DATE_COLUMN, &time2, -1);
-	banlist_strptime (time1, &tm1);
-	banlist_strptime (time2, &tm2);
-	t1 = mktime (&tm1);
-	t2 = mktime (&tm2);
+	/*banlist_strptime (time1, &tm1);
+	banlist_strptime (time2, &tm2);*/
+	t1 = banlist::get_time(time1);
+	t2 = banlist::get_time(time2);
 
 	if (t1 < t2) return 1;
 	if (t1 == t2) return 0;
