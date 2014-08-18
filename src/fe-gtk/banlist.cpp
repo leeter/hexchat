@@ -706,8 +706,7 @@ get_time(const std::string& timestr)
 {
 	const char* DATE_FORMAT = "%a %b %d %T %Y";
 	std::tm t = std::tm();
-#if defined(__GNUC__) && (__GNUC__ <= 4 && \
-							__GNUC_MINOR__ < 10)
+#if defined(__GNUC__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 10)
 	strptime(timestr.c_str(), DATE_FORMAT, &tm);
 #else
 	std::istringstream buffer(timestr);
