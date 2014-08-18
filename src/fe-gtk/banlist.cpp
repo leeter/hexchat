@@ -29,7 +29,6 @@
 #include <iomanip>
 
 #ifndef WIN32
-#include <time.h>
 #include <unistd.h>
 #endif
 
@@ -707,7 +706,7 @@ get_time(const std::string& timestr)
 	const char* DATE_FORMAT = "%a %b %d %T %Y";
 	std::tm t = std::tm();
 #if defined(__GNUC__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 10)
-	strptime(timestr.c_str(), DATE_FORMAT, &tm);
+	strptime(timestr.c_str(), DATE_FORMAT, &t);
 #else
 	std::istringstream buffer(timestr);
 	buffer >> std::get_time(&t, DATE_FORMAT);
