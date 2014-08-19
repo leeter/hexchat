@@ -32,7 +32,7 @@
 
 #include "pci.h"
 #include "match.h"
-#include "hwmon.h"
+#include "hwmon.hpp"
 #include "xsys.h"
 
 int xs_parse_cpu(char *model, char *vendor, double *freq, char *cache, unsigned int *count)
