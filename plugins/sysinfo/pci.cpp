@@ -82,7 +82,7 @@ static u16 get_conf_word(struct device *d, unsigned int pos)
   	return d->config[pos] | (d->config[pos+1] << 8);
 }
 
-int pci_find_by_class(u16 *class, char *vendor, char *device)
+int pci_find_by_class(u16 *cls, char *vendor, char *device)
 {
 	struct device *d;
 	struct pci_dev *p;
@@ -96,7 +96,7 @@ int pci_find_by_class(u16 *class, char *vendor, char *device)
 	for(d=first_dev; d; d=d->next) {
     		p = d->dev;
     		/* Acquire vendor & device ID if the class matches */
-    		if(get_conf_word(d, PCI_CLASS_DEVICE) == *class) {
+    		if(get_conf_word(d, PCI_CLASS_DEVICE) == *cls) {
       			nomatch = 0;
 			snprintf(vendor,7,"%04x",p->vendor_id);
 			snprintf(device,7,"%04x",p->device_id);

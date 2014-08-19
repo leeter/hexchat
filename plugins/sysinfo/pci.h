@@ -23,6 +23,6 @@
 
 #include <pci/pci.h>
 void pci_find_fullname(char *fullname, char *vendor, char *device);
-int  pci_find_by_class(u16 *class, char *vendor, char *device);
+int  pci_find_by_class(u16 *cls, char *vendor, char *device);
 
 #endif
