@@ -576,7 +576,7 @@ print_uptime (int announce, char* format)
 }
 
 static int
-netdata_cb (const char const *word[], const char const *word_eol[], void *userdata)
+netdata_cb (const char * const word[], const char * const word_eol[], void *userdata)
 {
 	char netdata[bsize];
 	char format[bsize];
@@ -615,7 +615,7 @@ netdata_cb (const char const *word[], const char const *word_eol[], void *userda
 }
 
 static int
-netstream_cb (const char const *word[], const char const *word_eol[], void *userdata)
+netstream_cb (const char* const word[], const char* const word_eol[], void *userdata)
 {
 	char netstream[bsize];
 	char mag_r[5];
@@ -716,7 +716,7 @@ reset_settings ()
 }
 
 static int
-sysinfo_cb (const char* const word[], const char const *word_eol[], void *userdata)
+sysinfo_cb (const char* const word[], const char * const word_eol[], void *userdata)
 {
 	error_printed = 0;
 	int announce = sysinfo_get_announce ();
