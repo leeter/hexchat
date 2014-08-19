@@ -178,11 +178,11 @@ int xs_parse_os(char *user, char *host, char *kernel)
 int xs_parse_sound(char *snd_card)
 {
 	char buffer[bsize], cards[bsize] = "\0", vendor[7] = "\0", device[7] = "\0", *pos;
-	u16 class = PCI_CLASS_MULTIMEDIA_AUDIO;
+	u16 cls = PCI_CLASS_MULTIMEDIA_AUDIO;
 
 	FILE *fp = NULL;
 	if((fp = fopen("/proc/asound/cards", "r"))== NULL) {
-		if (pci_find_by_class(&class, vendor, device) == 0)
+		if (pci_find_by_class(&cls, vendor, device) == 0)
 			{
 				pci_find_fullname(snd_card, vendor, device);
 				return 0;
@@ -219,8 +219,8 @@ int xs_parse_sound(char *snd_card)
 int xs_parse_video(char *vid_card)
 {
 	char vendor[7] = "\0", device[7] = "\0";
-	u16 class = PCI_CLASS_DISPLAY_VGA;
-	if (pci_find_by_class(&class, vendor, device))
+	u16 cls = PCI_CLASS_DISPLAY_VGA;
+	if (pci_find_by_class(&cls, vendor, device))
 		return 1;
 	else
 		pci_find_fullname(vid_card, vendor, device);
@@ -230,8 +230,8 @@ int xs_parse_video(char *vid_card)
 int xs_parse_ether(char *ethernet_card)
 {
 	char vendor[7] = "\0", device[7] = "\0";
-	u16 class = PCI_CLASS_NETWORK_ETHERNET;
-	if (pci_find_by_class(&class, vendor, device))
+	u16 cls = PCI_CLASS_NETWORK_ETHERNET;
+	if (pci_find_by_class(&cls, vendor, device))
 		return 1;
 	else
 		pci_find_fullname(ethernet_card, vendor, device);
@@ -241,8 +241,8 @@ int xs_parse_ether(char *ethernet_card)
 int xs_parse_agpbridge(char *agp_bridge)
 {
 	char vendor[7] = "\0", device[7] = "\0";
-	u16 class = PCI_CLASS_BRIDGE_HOST;
-	if (pci_find_by_class(&class, vendor, device))
+	u16 cls = PCI_CLASS_BRIDGE_HOST;
+	if (pci_find_by_class(&cls, vendor, device))
 		return 1;
 	else
 		pci_find_fullname(agp_bridge, vendor, device);
