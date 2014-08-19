@@ -716,7 +716,7 @@ reset_settings ()
 }
 
 static int
-sysinfo_cb (char *word[], const char const *word_eol[], void *userdata)
+sysinfo_cb (const char* const word[], const char const *word_eol[], void *userdata)
 {
 	error_printed = 0;
 	int announce = sysinfo_get_announce ();
