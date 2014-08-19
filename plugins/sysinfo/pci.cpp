@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 #include <unistd.h>
 #include <pci/pci.h>
 #include "xsys.h"
@@ -47,7 +47,7 @@ static struct device *scan_device(struct pci_dev *p)
 
   	if (!pci_filter_match(&filter, p))
     		return NULL;
-  	d = malloc(sizeof(struct device));
+  	d = static_cast<device*>(malloc(sizeof(struct device)));
   	bzero(d, sizeof(*d));
   	d->dev = p;
   	if (!pci_read_block(p, 0, d->config, how_much))
@@ -151,6 +151,6 @@ void pci_find_fullname(char *fullname, char *vendor, char *device)
 	if (cardfound == 1)
 		snprintf(fullname, bsize, "%s %s", vendorname, devicename);
 	else
-		snprintf(fullname, bsize, "%s:%s", vendor, device);	
+		snprintf(fullname, bsize, "%s:%s", vendor, device);
 	fclose(fp);
 }

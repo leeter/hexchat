@@ -17,10 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <string>
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 #include <unistd.h>
 #include "xsys.h"
 
@@ -36,7 +38,7 @@ char *pretty_freespace(const char *desc, unsigned long long *free_k, unsigned lo
 	double free_space, total_space;
 	free_space = *free_k;
 	total_space = *total_k;
-        result = malloc(bsize * sizeof(char));
+        result = static_cast<char*>(malloc(bsize * sizeof(char)));
 	char *quantities[] = { "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB", 0 };
 	if (total_space == 0)
 	{
@@ -63,28 +65,24 @@ char *pretty_freespace(const char *desc, unsigned long long *free_k, unsigned lo
 
 void remove_leading_whitespace(char *buffer)
 {
-	char *buffer2 = NULL;
-	int i = 0, j = 0, ews = 0;
+	size_t i = 0, j = 0;
+    bool ews = false;
+    size_t buffer_len = strlen(buffer);
+    std::string buffer2(buffer_len, '\0');
 
-	buffer2 = (char*)malloc(strlen(buffer) * sizeof(char));
-	if (buffer2 == NULL)
-		return;
-
-	memset (buffer2, (char)0, strlen(buffer));
-	while (i < strlen(buffer))
+	while (i < buffer_len)
 	{
 		/* count tabs, spaces as whitespace. */
-		if (!(buffer[i] == (char)32 || buffer[i] == (char)9) || ews == 1)
+		if (!(buffer[i] == (char)32 || buffer[i] == (char)9) || ews == true)
 		{
-			ews = 1;
+			ews = true;
 			buffer2[j] = buffer[i];
 			j++;
 		}
 		i++;
 	}
-	memset (buffer, (char)0, strlen(buffer));
-	strcpy (buffer, buffer2);
-	free (buffer2);
+    std::fill_n(buffer, buffer_len, 0);
+    std::copy(buffer2.cbegin(), buffer2.cend(), buffer);
 }
 
 char *decruft_filename(char *buffer)

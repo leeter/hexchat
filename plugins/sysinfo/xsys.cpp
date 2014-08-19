@@ -23,9 +23,9 @@
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <glib.h>
 
 #include "hexchat-plugin.h"
@@ -576,7 +576,7 @@ print_uptime (int announce, char* format)
 }
 
 static int
-netdata_cb (char *word[], char *word_eol[], void *userdata)
+netdata_cb (const char const *word[], const char const *word_eol[], void *userdata)
 {
 	char netdata[bsize];
 	char format[bsize];
@@ -615,7 +615,7 @@ netdata_cb (char *word[], char *word_eol[], void *userdata)
 }
 
 static int
-netstream_cb (char *word[], char *word_eol[], void *userdata)
+netstream_cb (const char const *word[], const char const *word_eol[], void *userdata)
 {
 	char netstream[bsize];
 	char mag_r[5];
@@ -716,7 +716,7 @@ reset_settings ()
 }
 
 static int
-sysinfo_cb (char *word[], char *word_eol[], void *userdata)
+sysinfo_cb (char *word[], const char const *word_eol[], void *userdata)
 {
 	error_printed = 0;
 	int announce = sysinfo_get_announce ();
