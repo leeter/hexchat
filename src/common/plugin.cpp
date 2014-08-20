@@ -38,7 +38,7 @@
 #include "cfgfiles.hpp"
 #include "ignore.hpp"
 #include "server.h"
-#include "servlist.h"
+#include "servlist.hpp"
 #include "modes.hpp"
 #include "notify.hpp"
 #include "text.hpp"

@@ -25,7 +25,7 @@
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
-#include "../common/servlist.h"
+#include "../common/servlist.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"

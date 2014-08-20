@@ -43,7 +43,7 @@
 #include "util.hpp"
 #include "hexchatc.hpp"
 #include "url.hpp"
-#include "servlist.h"
+#include "servlist.hpp"
 
 namespace {
 static void

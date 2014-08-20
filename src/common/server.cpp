@@ -61,7 +61,7 @@ extern "C"{
 #include "util.hpp"
 #include "url.hpp"
 #include "proto-irc.hpp"
-#include "servlist.h"
+#include "servlist.hpp"
 #include "server.h"
 #include "dcc.hpp"
 

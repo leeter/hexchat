@@ -34,7 +34,7 @@
 #include "util.hpp" /* token_foreach */
 #include "hexchatc.hpp"
 
-#include "servlist.h"
+#include "servlist.hpp"
 
 
 struct defaultserver

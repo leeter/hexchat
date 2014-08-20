@@ -34,7 +34,7 @@
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/server.h"
-#include "../common/servlist.h"
+#include "../common/servlist.hpp"
 #include "../common/fe.hpp"
 #include "fe-gtk.hpp"
 #include "chanlist.h"

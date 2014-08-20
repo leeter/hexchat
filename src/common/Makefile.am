@@ -2,7 +2,7 @@
 
 noinst_LIBRARIES = libhexchatcommon.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS)
 
 EXTRA_DIST = \
 	cfgfiles.hpp \
@@ -28,7 +28,7 @@ EXTRA_DIST = \
 	plugin-timer.hpp \
 	proto-irc.hpp \
 	server.h \
-	servlist.h \
+	servlist.hpp \
 	ssl.hpp \
 	ssl.cpp	\
 	text.hpp \

@@ -46,7 +46,7 @@
 #include "outbound.hpp"
 #include "inbound.hpp"
 #include "server.h"
-#include "servlist.h"
+#include "servlist.hpp"
 #include "text.hpp"
 #include "hexchatc.hpp"
 #include "chanopt.h"

@@ -17,30 +17,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_SERVLIST_H
-#define HEXCHAT_SERVLIST_H
+#ifndef HEXCHAT_SERVLIST_HPP
+#define HEXCHAT_SERVLIST_HPP
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct ircserver
+struct ircserver
 {
 	char *hostname;
-} ircserver;
+};
 
-typedef struct commandentry
+struct commandentry
 {
 	char *command;
-} commandentry;
+};
 
-typedef struct favchannel
+struct favchannel
 {
 	char *name;
 	char *key;
-} favchannel;
+};
 
-typedef struct ircnet
+struct ircnet
 {
 	char *name;
 	char *nick;
@@ -56,7 +52,7 @@ typedef struct ircnet
 	GSList *favchanlist;
 	int selected;
 	guint32 flags;
-} ircnet;
+};
 
 extern GSList *network_list;
 
@@ -131,7 +127,4 @@ void joinlist_split (char *autojoin, GSList **channels, GSList **keys);
 void joinlist_free (GSList *channels, GSList *keys);
 */
 
-#ifdef __cplusplus
-}
-#endif
 #endif

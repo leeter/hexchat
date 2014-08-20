@@ -46,7 +46,7 @@
 #include "../common/ignore.hpp"
 #include "../common/fe.hpp"
 #include "../common/server.h"
-#include "../common/servlist.h"
+#include "../common/servlist.hpp"
 #include "../common/notify.hpp"
 #include "../common/util.hpp"
 #include "../common/text.hpp"
