@@ -24,7 +24,9 @@
 #include <cstring>
 #include <cctype>
 #include <unistd.h>
+extern "C" {
 #include <pci/pci.h>
+}
 #include "xsys.h"
 
 static struct pci_filter filter;       /* Device filter */

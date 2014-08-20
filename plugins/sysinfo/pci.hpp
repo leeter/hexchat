@@ -21,7 +21,9 @@
 #ifndef _PCI_H_
 #define _PCI_H_
 
+extern "C"{
 #include <pci/pci.h>
+}
 void pci_find_fullname(char *fullname, char *vendor, char *device);
 int  pci_find_by_class(u16 *cls, char *vendor, char *device);
 

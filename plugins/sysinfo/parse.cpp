@@ -30,7 +30,7 @@
 #include <sys/types.h>
 #include <pci/header.h>
 
-#include "pci.h"
+#include "pci.hpp"
 #include "match.h"
 #include "hwmon.hpp"
 #include "xsys.h"
