@@ -19,12 +19,11 @@
 
 #include <sstream>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 bool hwmon_chip_present()
 {
-	std::filebuf fb;
-	fb.open("/sys/class/hwmon/hwmon0/device/name", std::ios_base::in);
-	return fb.is_open();
+	return boost::filesystem::exists("/sys/class/hwmon/hwmon0/device/name");
 }
 
 #if 0
