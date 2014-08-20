@@ -18,11 +18,11 @@
  */
 
 
-#ifndef _HWMON_H_
-#define _HWMON_H_
+#ifndef _HWMON_HPP_
+#define _HWMON_HPP_
 
-int hwmon_chip_present();
+bool hwmon_chip_present();
 void get_hwmon_chip_name(char *name);
-void get_hwmon_temp(unsigned int *value, unsigned int *sensor);
+void get_hwmon_temp(unsigned int &value, unsigned int sensor);
 
 #endif

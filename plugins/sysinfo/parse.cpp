@@ -454,7 +454,7 @@ int xs_parse_hwmon_temp(char *temp, unsigned int *sensor)
 	if (!hwmon_chip_present())
 		return 1;
 	else
-		get_hwmon_temp(&value, sensor);
+		get_hwmon_temp(value, *sensor);
 		celsius = (float)value;
 		snprintf(temp, bsize, "%.1fC", celsius/1000.0);
 	return 0;

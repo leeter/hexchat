@@ -17,21 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
-#include "xsys.h"
+#include <sstream>
+#include <fstream>
 
-int hwmon_chip_present()
+bool hwmon_chip_present()
 {
-	FILE *fp = fopen("/sys/class/hwmon/hwmon0/device/name", "r");
-	if(fp != NULL) {
-		fclose(fp);
-		return 1;
-	}
-	return 0;
+	std::filebuf fb;
+	fb.open("/sys/class/hwmon/hwmon0/device/name", std::ios_base::in);
+	return fb.is_open();
 }
 
 #if 0
@@ -50,14 +43,10 @@ void get_hwmon_chip_name(char *name)
 }
 #endif
 
-void get_hwmon_temp(unsigned int *value, unsigned int *sensor)
+void get_hwmon_temp(unsigned int &value, unsigned int sensor)
 {
-	char buffer[bsize];
-	snprintf(buffer, bsize, "/sys/class/hwmon/hwmon0/device/temp%i_input", *sensor);
-	FILE *fp = fopen(buffer, "r");
-	if(fp != NULL) {
-		if(fgets(buffer, bsize, fp) != NULL)
-			*value = atoi(buffer);
-		fclose(fp);
-	}
+	std::ostringstream sensor_path( "/sys/class/hwmon/hwmon0/device/temp", std::ios_base::ate);
+	sensor_path << sensor << "_input";
+	std::ifstream instr(sensor_path.str());
+	instr >> value;
 }
