@@ -28,7 +28,7 @@ extern "C" {
 #include <pci/pci.h>
 }
 #include "xsys.h"
-
+namespace{
 static struct pci_filter filter;       /* Device filter */
 static struct pci_access *pacc;
 int bus, dev, func; /* Location of the card */
@@ -82,6 +82,7 @@ static void scan_devices(void)
 static u16 get_conf_word(struct device *d, unsigned int pos)
 {
   	return d->config[pos] | (d->config[pos+1] << 8);
+}
 }
 
 int pci_find_by_class(u16 *cls, char *vendor, char *device)

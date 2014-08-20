@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _PCI_H_
-#define _PCI_H_
+#ifndef _PCI_HPP_
+#define _PCI_HPP_
 
 extern "C"{
 #include <pci/pci.h>
