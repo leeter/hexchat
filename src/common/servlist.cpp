@@ -39,12 +39,12 @@
 
 struct defaultserver
 {
-	char *network;
-	char *host;
-	char *channel;
-	char *charset;
+	const char *network;
+	const char *host;
+	const char *channel;
+	const char *charset;
 	int loginmode;		/* default authentication type */
-	char *connectcmd;	/* default connect command - should only be used for rare login types, paired with LOGIN_CUSTOM */
+	const char *connectcmd;	/* default connect command - should only be used for rare login types, paired with LOGIN_CUSTOM */
 };
 
 static const struct defaultserver def[] =
@@ -921,7 +921,7 @@ servlist_net_find (char *name, int *pos, int (*cmpfunc) (const char *, const cha
 }
 
 ircserver *
-servlist_server_add (ircnet *net, char *name)
+servlist_server_add (ircnet *net, const char *name)
 {
 	ircserver *serv;
 
@@ -936,7 +936,7 @@ servlist_server_add (ircnet *net, char *name)
 }
 
 commandentry *
-servlist_command_add (ircnet *net, char *cmd)
+servlist_command_add (ircnet *net, const char *cmd)
 {
 	commandentry *entry;
 
@@ -951,7 +951,7 @@ servlist_command_add (ircnet *net, char *cmd)
 }
 
 GSList *
-servlist_favchan_listadd (GSList *chanlist, char *channel, char *key)
+servlist_favchan_listadd (GSList *chanlist, const char *channel, const char *key)
 {
 	favchannel *chan;
 
@@ -967,15 +967,15 @@ servlist_favchan_listadd (GSList *chanlist, char *channel, char *key)
 }
 
 void
-servlist_favchan_add (ircnet *net, char *channel)
+servlist_favchan_add (ircnet *net, const char *channel)
 {
-	int pos;
+	size_t pos;
 	char *name;
 	char *key;
 
 	if (strchr (channel, ',') != NULL)
 	{
-		pos = (int) (strchr (channel, ',') - channel);
+		pos = (strchr (channel, ',') - channel);
 		name = g_strndup (channel, pos);
 		key = g_strdup (channel + pos + 1);
 	}
@@ -1110,7 +1110,7 @@ servlist_net_remove (ircnet *net)
 }
 
 ircnet *
-servlist_net_add (char *name, char *comment, int prepend)
+servlist_net_add (const char *name, const char *comment, int prepend)
 {
 	ircnet *net;
 
