@@ -40,7 +40,7 @@
 #include "notify.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"

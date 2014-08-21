@@ -24,7 +24,7 @@
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "modes.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "text.hpp"
 #include "fe.hpp"
 #include "util.hpp"

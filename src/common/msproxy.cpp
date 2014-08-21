@@ -39,7 +39,7 @@
 #include "hexchat.hpp"
 #include "network.hpp"
 #include "hexchatc.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "msproxy.hpp"
 
 

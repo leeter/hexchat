@@ -37,7 +37,7 @@
 #include "modes.hpp"
 #include "notify.hpp"
 #include "plugin.h"
-#include "server.h"
+#include "server.hpp"
 #include "text.hpp"
 #include "outbound.hpp"
 #include "util.hpp"

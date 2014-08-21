@@ -37,7 +37,7 @@
 #include "chanopt.h"
 
 #include "cfgfiles.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"

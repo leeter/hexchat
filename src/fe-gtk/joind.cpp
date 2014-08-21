@@ -33,7 +33,7 @@
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "../common/servlist.hpp"
 #include "../common/fe.hpp"
 #include "fe-gtk.hpp"

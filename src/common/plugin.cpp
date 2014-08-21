@@ -37,7 +37,7 @@
 #include "outbound.hpp"
 #include "cfgfiles.hpp"
 #include "ignore.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "servlist.hpp"
 #include "modes.hpp"
 #include "notify.hpp"

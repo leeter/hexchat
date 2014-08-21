@@ -41,7 +41,7 @@
 #include "chanopt.h"
 #include "plugin.h"
 #include "fe.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "util.hpp"
 #include "outbound.hpp"
 #include "hexchatc.hpp"

@@ -38,7 +38,7 @@
 #include "../common/outbound.hpp"
 #include "../common/util.hpp"
 #include "../common/fe.hpp"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "menu.hpp"

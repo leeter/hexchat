@@ -47,7 +47,7 @@
 #include "plugin.h"
 #include "plugin-timer.hpp"
 #include "notify.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "servlist.hpp"
 #include "outbound.hpp"
 #include "text.hpp"

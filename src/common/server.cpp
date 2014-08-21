@@ -62,7 +62,7 @@ extern "C"{
 #include "url.hpp"
 #include "proto-irc.hpp"
 #include "servlist.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "dcc.hpp"
 
 namespace dcc = ::hexchat::dcc;

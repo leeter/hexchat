@@ -45,7 +45,7 @@
 #include "../common/outbound.hpp"
 #include "../common/ignore.hpp"
 #include "../common/fe.hpp"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "../common/servlist.hpp"
 #include "../common/notify.hpp"
 #include "../common/util.hpp"

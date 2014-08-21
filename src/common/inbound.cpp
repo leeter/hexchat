@@ -45,7 +45,7 @@
 #include "notify.hpp"
 #include "outbound.hpp"
 #include "inbound.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "servlist.hpp"
 #include "text.hpp"
 #include "hexchatc.hpp"

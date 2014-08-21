@@ -21,7 +21,7 @@
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/inbound.hpp"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"

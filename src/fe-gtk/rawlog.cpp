@@ -34,7 +34,7 @@
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/cfgfiles.hpp"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"

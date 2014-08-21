@@ -56,7 +56,7 @@
 #include "text.hpp"
 #include "hexchatc.hpp"
 #include "servlist.hpp"
-#include "server.h"
+#include "server.hpp"
 #include "tree.hpp"
 #include "outbound.hpp"
 #include "chanopt.h"

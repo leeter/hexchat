@@ -17,7 +17,7 @@ EXTRA_DIST = \
 	identd.cpp \
 	ignore.hpp \
 	inbound.hpp \
-	inet.h \
+	inet.hpp \
 	make-te.c \
 	modes.hpp \
 	msproxy.hpp \
@@ -27,7 +27,7 @@ EXTRA_DIST = \
 	plugin.h \
 	plugin-timer.hpp \
 	proto-irc.hpp \
-	server.h \
+	server.hpp \
 	servlist.hpp \
 	ssl.hpp \
 	ssl.cpp	\

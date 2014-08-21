@@ -38,7 +38,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/plugin.h"
-#include "../common/server.h"
+#include "../common/server.hpp"
 #include "../common/url.hpp"
 #include "../common/dcc.hpp"
 #include "gtkutil.hpp"

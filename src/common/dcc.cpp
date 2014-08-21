@@ -53,7 +53,7 @@
 #include "inbound.hpp"
 #include "network.hpp"
 #include "plugin.h"
-#include "server.h"
+#include "server.hpp"
 #include "text.hpp"
 #include "url.hpp"
 #include "hexchatc.hpp"
