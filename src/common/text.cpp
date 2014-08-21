@@ -38,7 +38,7 @@
 
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
-#include "chanopt.h"
+#include "chanopt.hpp"
 #include "plugin.h"
 #include "fe.hpp"
 #include "server.hpp"

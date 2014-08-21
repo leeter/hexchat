@@ -59,7 +59,7 @@
 #include "server.hpp"
 #include "tree.hpp"
 #include "outbound.hpp"
-#include "chanopt.h"
+#include "chanopt.hpp"
 #include "dcc.hpp"
 
 namespace hexchat{

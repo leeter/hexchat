@@ -49,7 +49,7 @@
 #include "servlist.hpp"
 #include "text.hpp"
 #include "hexchatc.hpp"
-#include "chanopt.h"
+#include "chanopt.hpp"
 #include "dcc.hpp"
 
 namespace dcc = hexchat::dcc;

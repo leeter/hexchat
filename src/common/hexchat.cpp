@@ -41,7 +41,7 @@
 #include "fe.hpp"
 #include "util.hpp"
 #include "cfgfiles.hpp"
-#include "chanopt.h"
+#include "chanopt.hpp"
 #include "ignore.hpp"
 #include "hexchat-plugin.h"
 #include "plugin.h"

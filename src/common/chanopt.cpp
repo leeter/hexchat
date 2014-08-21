@@ -34,7 +34,7 @@
 #endif
 
 #include "hexchat.hpp"
-#include "chanopt.h"
+#include "chanopt.hpp"
 
 #include "cfgfiles.hpp"
 #include "server.hpp"
@@ -71,7 +71,7 @@ static const channel_options chanopt[] =
 
 #undef S_F
 
-static char *
+static const char *
 chanopt_value (guint8 val)
 {
 	switch (val)
