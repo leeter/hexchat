@@ -21,7 +21,7 @@
 #include <thread>
 #include <atomic>
 #include <string>
-#include "inet.h"
+#include "inet.hpp"
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "text.hpp"

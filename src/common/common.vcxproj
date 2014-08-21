@@ -23,7 +23,7 @@
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />
     <ClInclude Include="inbound.hpp" />
-    <ClInclude Include="inet.h" />
+    <ClInclude Include="inet.hpp" />
     <ClInclude Include="marshal.h" />
     <ClInclude Include="modes.hpp" />
     <ClInclude Include="msproxy.hpp" />

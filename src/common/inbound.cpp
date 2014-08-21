@@ -33,7 +33,7 @@
 
 #define WANTARPA
 #define WANTDNS
-#include "inet.h"
+#include "inet.hpp"
 
 #include <gio/gio.h>
 

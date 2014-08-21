@@ -32,7 +32,7 @@
 #define WANTSOCKET
 #define WANTARPA
 #define WANTDNS
-#include "inet.h"
+#include "inet.hpp"
 
 #define NETWORK_PRIVATE
 #include "network.hpp"

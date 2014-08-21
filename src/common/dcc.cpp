@@ -36,7 +36,7 @@
 #define WANTSOCKET
 #define WANTARPA
 #define WANTDNS
-#include "inet.h"
+#include "inet.hpp"
 
 #ifdef WIN32
 #include <windows.h>

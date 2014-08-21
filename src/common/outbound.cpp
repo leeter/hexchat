@@ -31,7 +31,7 @@
 
 #define WANTSOCKET
 #define WANTARPA
-#include "inet.h"
+#include "inet.hpp"
 
 #ifndef WIN32
 #include <sys/wait.h>

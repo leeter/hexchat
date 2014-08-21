@@ -34,7 +34,7 @@
 
 #define WANTSOCKET
 #define WANTARPA
-#include "inet.h"
+#include "inet.hpp"
 
 #include "hexchat.hpp"
 #include "network.hpp"

@@ -36,7 +36,7 @@
 #define WANTSOCKET
 #define WANTARPA
 extern "C"{
-#include "inet.h"
+#include "inet.hpp"
 }
 
 #ifdef WIN32

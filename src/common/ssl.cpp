@@ -22,7 +22,7 @@
 #define DEPRECATED_IN_MAC_OS_X_VERSION_10_7_AND_LATER
 #endif
 
-#include "inet.h"				  /* make it first to avoid macro redefinitions */
+#include "inet.hpp"				  /* make it first to avoid macro redefinitions */
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
 #ifdef WIN32

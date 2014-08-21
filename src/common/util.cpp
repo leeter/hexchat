@@ -17,7 +17,7 @@
  */
 
 #define WANTSOCKET
-#include "inet.h"				/* make it first to avoid macro redefinitions */
+#include "inet.hpp"				/* make it first to avoid macro redefinitions */
 
 #define __APPLE_API_STRICT_CONFORMANCE
 
