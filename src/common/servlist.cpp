@@ -1045,10 +1045,10 @@ free_and_clear (char *str)
 {
 	if (str)
 	{
-		char *orig = str;
-		while (*str)
-			*str++ = 0;
-		free (orig);
+		volatile char *orig = str;
+		while (*orig)
+			*orig++ = 0;
+		free (str);
 	}
 }
 
