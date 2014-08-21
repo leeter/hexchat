@@ -21,8 +21,8 @@
  *      Inferno Nettverk A/S, Norway.  All rights reserved.
  */
 
-#ifndef HEXCHAT_MSPROXY_H
-#define HEXCHAT_MSPROXY_H
+#ifndef HEXCHAT_MSPROXY_HPP
+#define HEXCHAT_MSPROXY_HPP
 
 #include "network.hpp"
 
