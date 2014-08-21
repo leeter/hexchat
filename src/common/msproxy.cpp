@@ -37,10 +37,10 @@
 #include "inet.h"
 
 #include "hexchat.hpp"
-#include "network.h"
+#include "network.hpp"
 #include "hexchatc.hpp"
 #include "server.h"
-#include "msproxy.h"
+#include "msproxy.hpp"
 
 
 #ifdef USE_MSPROXY

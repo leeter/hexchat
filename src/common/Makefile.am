@@ -20,8 +20,8 @@ EXTRA_DIST = \
 	inet.h \
 	make-te.c \
 	modes.hpp \
-	msproxy.h \
-	network.h \
+	msproxy.hpp \
+	network.hpp \
 	notify.hpp \
 	outbound.hpp \
 	plugin.h \

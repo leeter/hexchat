@@ -52,7 +52,7 @@ extern "C"{
 #include "hexchat.hpp"
 #include "fe.hpp"
 #include "cfgfiles.hpp"
-#include "network.h"
+#include "network.hpp"
 #include "notify.hpp"
 #include "hexchatc.hpp"
 #include "inbound.hpp"
@@ -74,7 +74,7 @@ namespace dcc = ::hexchat::dcc;
 #endif
 
 #ifdef USE_MSPROXY
-#include "msproxy.h"
+#include "msproxy.hpp"
 #endif
 
 #ifdef WIN32

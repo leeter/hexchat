@@ -49,7 +49,7 @@
 #include "util.hpp"
 #include "fe.hpp"
 #include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
-#include "network.h"				/* net_ip() */
+#include "network.hpp"				/* net_ip() */
 #include "modes.hpp"
 #include "notify.hpp"
 #include "inbound.hpp"

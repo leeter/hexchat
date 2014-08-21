@@ -35,7 +35,7 @@
 #include "inet.h"
 
 #define NETWORK_PRIVATE
-#include "network.h"
+#include "network.hpp"
 
 #define RAND_INT(n) ((int)(rand() / (RAND_MAX + 1.0) * (n)))
 

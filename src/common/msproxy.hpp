@@ -24,7 +24,7 @@
 #ifndef HEXCHAT_MSPROXY_H
 #define HEXCHAT_MSPROXY_H
 
-#include "network.h"
+#include "network.hpp"
 
 #define MSPROXY_EXECUTABLE 		"hexchat.exe"	/* This probably can be used for access control on the server side */
 

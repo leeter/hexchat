@@ -65,7 +65,7 @@
 #endif
 
 #ifdef USE_MSPROXY
-#include "msproxy.h"
+#include "msproxy.hpp"
 #endif
 
 #ifdef USE_LIBPROXY

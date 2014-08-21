@@ -51,7 +51,7 @@
 #include "fe.hpp"
 #include "outbound.hpp"
 #include "inbound.hpp"
-#include "network.h"
+#include "network.hpp"
 #include "plugin.h"
 #include "server.h"
 #include "text.hpp"
