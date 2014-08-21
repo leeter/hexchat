@@ -6,7 +6,7 @@ AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(
 
 EXTRA_DIST = \
 	cfgfiles.hpp \
-	chanopt.h \
+	chanopt.hpp \
 	ctcp.hpp \
 	dcc.hpp \
 	fe.hpp \
