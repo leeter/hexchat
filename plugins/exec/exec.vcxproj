@@ -95,7 +95,7 @@
     <None Include="exec.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="exec.c" />
+    <ClCompile Include="exec.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
