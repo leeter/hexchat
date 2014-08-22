@@ -23,6 +23,7 @@
 #define HEXCHAT_CFGFILES_HPP
 
 #include "hexchat.hpp"
+#include <iosfwd>
 
 #define LANGUAGES_LENGTH 53
 
@@ -50,6 +51,7 @@ void list_addentry (GSList ** list, const char *cmd, const char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
+std::fstream hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode);
 
 #define XOF_DOMODE 1
 #define XOF_FULLPATH 2
