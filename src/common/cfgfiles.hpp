@@ -51,7 +51,9 @@ void list_addentry (GSList ** list, const char *cmd, const char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
+#ifdef WIN32
 std::fstream hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode);
+#endif
 
 #define XOF_DOMODE 1
 #define XOF_FULLPATH 2

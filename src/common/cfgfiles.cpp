@@ -1361,20 +1361,16 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	return fd;
 }
 
+#ifdef WIN32
 std::fstream
 hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode)
 {
-#ifdef WIN32
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring wide_file_path = converter.from_bytes(file);
-	std::fstream stream(wide_file_path, mode | std::ios::binary);
+	std::fstream stream(wide_file_path, mode);
 	return stream;
-#else
-	std::fstream stream(file, mode | std::ios::binary);
-	// GCC fails and doesn't implement movable streams
-	return std::move(stream);
-#endif
 }
+#endif
 
 FILE *
 hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
