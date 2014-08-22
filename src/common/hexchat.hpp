@@ -616,7 +616,7 @@ struct commands
 	char needserver;
 	char needchannel;
 	gint16 handle_quotes;
-	char *help;
+	const char *help;
 };
 
 struct away_msg
