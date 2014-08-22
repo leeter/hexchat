@@ -611,7 +611,7 @@ typedef int (*cmd_callback) (struct session * sess, char *tbuf, char *word[],
 
 struct commands
 {
-	char *name;
+	const char *name;
 	cmd_callback callback;
 	char needserver;
 	char needchannel;

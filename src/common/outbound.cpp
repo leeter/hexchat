@@ -74,7 +74,7 @@ namespace dcc = hexchat::dcc;
 namespace fe_notify = hexchat::fe::notify;
 #define TBUFSIZE 4096
 
-static void help (session *sess, char *tbuf, char *helpcmd, int quiet);
+static void help (session *sess, char *tbuf, const char *helpcmd, int quiet);
 static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
 static void handle_say (session *sess, char *text, int check_spch);
 
@@ -2144,10 +2144,10 @@ typedef struct
 } help_list;
 
 static void
-show_help_line (session *sess, help_list *hl, char *name, char *usage)
+show_help_line (session *sess, help_list *hl, const char *name, const char *usage)
 {
 	int j, len, max;
-	char *p;
+	const char *p;
 
 	if (name[0] == '.')	/* hidden command? */
 		return;
@@ -4090,7 +4090,7 @@ command_compare (const void *a, const void *b)
 }
 
 static struct commands *
-find_internal_command (char *name)
+find_internal_command (const char *name)
 {
 	/* the "-1" is to skip the NULL terminator */
 	return static_cast<commands*>(bsearch (name, xc_cmds, (sizeof (xc_cmds) /
@@ -4098,7 +4098,7 @@ find_internal_command (char *name)
 }
 
 static gboolean
-usercommand_show_help (session *sess, char *name)
+usercommand_show_help (session *sess, const char *name)
 {
 	struct popup *pop;
 	gboolean found = FALSE;
@@ -4123,7 +4123,7 @@ usercommand_show_help (session *sess, char *name)
 }
 
 static void
-help (session *sess, char *tbuf, char *helpcmd, int quiet)
+help (session *sess, char *tbuf, const char *helpcmd, int quiet)
 {
 	struct commands *cmd;
 

@@ -1523,7 +1523,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 				tmp_list = cmdlist_double_list (command_list);
 				for(i = 0; xc_cmds[i].name != NULL ; i++)
 				{
-					tmp_list = g_list_prepend (tmp_list, xc_cmds[i].name);
+					tmp_list = g_list_prepend (tmp_list, const_cast<char*>(xc_cmds[i].name));
 				}
 				tmp_list = plugin_command_list(tmp_list);
 			}

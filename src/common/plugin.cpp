@@ -860,7 +860,7 @@ plugin_command_foreach (session *sess, void *userdata,
 }
 
 int
-plugin_show_help (session *sess, char *cmd)
+plugin_show_help (session *sess, const char *cmd)
 {
 	GSList *list;
 	hexchat_hook *hook;

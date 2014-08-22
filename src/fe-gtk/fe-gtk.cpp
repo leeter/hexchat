@@ -109,7 +109,7 @@ create_msg_dialog (gchar *title, gchar *message)
 /* On Win32 we automatically have the icon. If we try to load it explicitly, it will look ugly for some reason. */
 #ifndef WIN32
 	pixmaps_init ();
-	gtk_window_set_icon (GTK_WINDOW (dialog), pix_hexchat);
+	gtk_window_set_icon (GTK_WINDOW (dialog.get()), pix_hexchat);
 #endif
 
 	gtk_dialog_run (GTK_DIALOG (dialog.get()));

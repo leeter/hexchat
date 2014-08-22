@@ -187,7 +187,7 @@ int plugin_emit_print(session *sess, const char *const word[], time_t server_tim
 int plugin_emit_dummy_print (session *sess, char *name);
 int plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval, int len, char *string);
 GList* plugin_command_list(GList *tmp_list);
-int plugin_show_help (session *sess, char *cmd);
+int plugin_show_help (session *sess, const char *cmd);
 void plugin_command_foreach (session *sess, void *userdata, void (*cb) (session *sess, void *userdata, char *name, char *usage));
 
 #ifdef __cplusplus
