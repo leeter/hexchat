@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <sstream>
 #include <string>
+#include <fstream>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -34,6 +35,8 @@
 #include "typedef.h"
 
 #ifdef WIN32
+#include <locale>
+#include <codecvt>
 #include <io.h>
 #else
 #include <unistd.h>
@@ -320,13 +323,15 @@ get_xdir (void)
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
 		{
 			char *path;
-			char file[MAX_PATH];
+			wchar_t file[MAX_PATH];
 			HMODULE hModule;
 			
 			hModule = GetModuleHandleW (NULL);
-			if (GetModuleFileName (hModule, file, sizeof(file)))
+			if (GetModuleFileNameW (hModule, file, sizeof(file)))
 			{
-				path = g_path_get_dirname (file);
+				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+				std::string narrowed_path = converter.to_bytes(file);
+				path = g_path_get_dirname (narrowed_path.c_str());
 				xdir = g_build_filename (path, "config", NULL);
 				g_free (path);
 			}
@@ -1354,6 +1359,19 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	g_free (buf);
 
 	return fd;
+}
+
+std::fstream
+hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode)
+{
+#ifdef WIN32
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	std::wstring wide_file_path = converter.from_bytes(file);
+	std::fstream stream(wide_file_path, mode | std::ios::binary);
+#else
+	std::fstream stream(file, mode);
+#endif
+	return stream;
 }
 
 FILE *

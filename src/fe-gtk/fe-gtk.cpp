@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <string>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -27,6 +28,8 @@
 #ifdef WIN32
 #include <gdk/gdkwin32.h>
 #include <windows.h>
+#include <locale>
+#include <codecvt>
 #else
 #include <unistd.h>
 #endif
@@ -989,7 +992,9 @@ static void
 fe_open_url_inner (const char *url)
 {
 #ifdef WIN32
-	ShellExecute (0, "open", url, NULL, NULL, SW_SHOWNORMAL);
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	std::wstring wide_url = converter.from_bytes(url);
+	ShellExecuteW (0, L"open", wide_url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 #elif defined __APPLE__
 	/* on Mac you can just 'open http://foo.bar/' */
 	gchar open[512];
