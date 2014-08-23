@@ -42,7 +42,7 @@
 #define closesocket close
 #define set_blocking(sok) fcntl(sok, F_SETFL, 0)
 #define set_nonblocking(sok) fcntl(sok, F_SETFL, O_NONBLOCK)
-#define would_block() (errno == EAGAIN || errno == EWOULDBLOCK)
+inline bool would_block(){ return errno == EAGAIN || errno == EWOULDBLOCK;}
 #define sock_error() (errno)
 
 #else
