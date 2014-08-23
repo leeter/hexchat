@@ -27,7 +27,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <vector>
 #include <utility>
@@ -400,8 +399,7 @@ chanopt_save_all (void)
 
 	auto fd = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
-	std::ofstream stream;
-	stream.set_rdbuf(&fbuf);
+	std::ostream stream(&fbuf);
 	for (const auto& co : chanopts)
 	{
 		stream << co;
