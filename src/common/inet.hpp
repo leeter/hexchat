@@ -63,7 +63,10 @@
 										unsigned long one = 1; \
 										ioctlsocket (sok, FIONBIO, &one); \
 										}
-#define would_block() (WSAGetLastError() == WSAEWOULDBLOCK)
+inline bool would_block() 
+{
+	return WSAGetLastError() == WSAEWOULDBLOCK;
+}
 #define sock_error WSAGetLastError
 
 #endif

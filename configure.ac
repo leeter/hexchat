@@ -165,7 +165,7 @@ AC_ARG_WITH(theme-manager,
 		theme_manager=$withval, theme_manager=no)
 
 BOOST_REQUIRE([1.46])
-BOOST_FORMAT
+BOOST_IOSTREAMS
 BOOST_FILESYSTEM
 
 

@@ -19,12 +19,14 @@
 #include <fcntl.h>
 #include <sstream>
 #include <string>
-#include <fstream>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
@@ -42,6 +44,9 @@
 #include <unistd.h>
 #define HEXCHAT_DIR "hexchat"
 #endif
+
+namespace bio = boost::iostreams;
+namespace fs = boost::filesystem;
 
 #define DEF_FONT "Monospace 9"
 #define DEF_FONT_ALTER "Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont"
@@ -1361,16 +1366,32 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	return fd;
 }
 
-#ifdef WIN32
-std::fstream
-hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode)
+
+boost::iostreams::stream_buffer<boost::iostreams::file_descriptor>
+hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
 {
+#ifdef WIN32
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring wide_file_path = converter.from_bytes(file);
-	std::fstream stream(wide_file_path, mode);
-	return stream;
-}
+	fs::path file_path(wide_file_path);
+#else
+	fs::path file_path(file);
 #endif
+	if (!(xof_flags & XOF_FULLPATH))
+		file_path = fs::path(get_xdir()) / file_path;
+	if (xof_flags & XOF_DOMODE)
+	{
+		int tfd;
+#ifdef WIN32
+		tfd = _wopen(file_path.c_str(), _O_CREAT, mode);
+#else
+		tfd = open(file_path.c_str(), O_CREAT, mode);
+#endif
+		close(tfd);
+	}
+	bio::file_descriptor fd(file_path, flags | std::ios::binary);
+	return bio::stream_buffer<bio::file_descriptor>(fd, bio::close_handle);
+}
 
 FILE *
 hexchat_fopen_file (const char *file, const char *mode, int xof_flags)

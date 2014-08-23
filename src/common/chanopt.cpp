@@ -19,13 +19,23 @@
 
 /* per-channel/dialog settings :: /CHANOPT */
 
+#include <algorithm>
+#include <array>
+#include <iterator>
+#include <string>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <utility>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cerrno>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -42,6 +52,7 @@
 #include "util.hpp"
 #include "hexchatc.hpp"
 
+namespace bio = boost::iostreams;
 
 static GSList *chanopt_list = NULL;
 static bool chanopt_open = false;
@@ -57,8 +68,8 @@ struct channel_options
 
 #define S_F(xx) STRUCT_OFFSET_STR(struct session,xx)
 
-static const channel_options chanopt[] =
-{
+static const std::array<channel_options, 7> chanopt =
+{ {
 	{ "alert_beep",  "BEEP",  S_F(alert_beep)},
 	{ "alert_taskbar", nullptr, S_F(alert_taskbar) },
 	{ "alert_tray", "TRAY",  S_F(alert_tray) },
@@ -67,7 +78,7 @@ static const channel_options chanopt[] =
 	{ "text_logging", nullptr, S_F(text_logging) },
 	{ "text_scrollback", nullptr, S_F(text_scrollback) },
 	{ "text_strip", nullptr, S_F(text_strip) },
-};
+}};
 
 #undef S_F
 
@@ -170,7 +181,7 @@ chanopt_is_set (unsigned int global, guint8 per_chan_setting)
 
 /* === below is LOADING/SAVING stuff only === */
 
-typedef struct
+struct chanopt_in_memory
 {
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
@@ -184,64 +195,102 @@ typedef struct
 	guint8 text_scrollback;
 	guint8 text_strip;
 
-	char *network;
-	char *channel;
+	std::string network;
+	std::string channel;
 
-} chanopt_in_memory;
+	chanopt_in_memory()
+		:alert_beep(SET_DEFAULT),
+		alert_taskbar(SET_DEFAULT),
+		alert_tray(SET_DEFAULT),
+		text_hidejoinpart(SET_DEFAULT),
+		text_logging(SET_DEFAULT),
+		text_scrollback(SET_DEFAULT),
+		text_strip(SET_DEFAULT){}
+	friend std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop);
+	friend std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop);
+};
 
 
-static chanopt_in_memory *
-chanopt_find (char *network, char *channel, gboolean add_new)
+/* network = <network name>
+ * channel = <channel name>
+ * alert_taskbar = <1/0>
+ */
+std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop)
 {
-	GSList *list;
-	chanopt_in_memory *co;
-	int i;
+	chanop = chanopt_in_memory();
+	// get network
+	std::string line;
+	if (!std::getline(i, line, '\n'))
+		return i;
+	do{
+		auto loc_eq = line.find_first_of('=');
+		if (loc_eq == std::string::npos) // data corruption
+			return i;
 
-	for (list = chanopt_list; list; list = list->next)
+		std::string first_part, second_part = line.substr(loc_eq + 2);
+		if (loc_eq && line[loc_eq - 1] == ' ')
+			first_part = line.substr(0, loc_eq - 1);
+
+		if (first_part == "network")
+			chanop.network = second_part;
+		else if (first_part == "channel")
+			chanop.channel = second_part;
+		else
+		{
+			int value = std::stoi(second_part);
+			for (const auto & op : chanopt)
+			{
+				if (first_part == op.name || (op.alias && first_part == op.alias))
+				{
+					*(guint8 *)G_STRUCT_MEMBER_P(&chanop, op.offset) = value;
+					break;
+				}
+			}
+		}
+		// if the next character is n it's a network and we shouldn't continue
+	} while (i.peek() != 'n' && std::getline(i, line, '\n'));
+	
+	/* we should always leave the stream in a good state if we got this far
+	 * otherwise the reader will assume we've failed even though we haven't
+	 */
+	if (!i)
 	{
-		co = static_cast<chanopt_in_memory *>(list->data);
-		if (!g_ascii_strcasecmp (co->channel, channel) &&
-			 !g_ascii_strcasecmp (co->network, network))
-			return co;
+		i.clear();
+		//i.unget();
 	}
-
-	if (!add_new)
-		return NULL;
-
-	/* allocate a new one */
-	co = static_cast<chanopt_in_memory *>(g_malloc0(sizeof(chanopt_in_memory)));
-	co->channel = g_strdup (channel);
-	co->network = g_strdup (network);
-
-	/* set all values to SET_DEFAULT */
-	i = 0;
-	while (i < sizeof (chanopt) / sizeof (channel_options))
-	{
-		*(guint8 *)G_STRUCT_MEMBER_P(co, chanopt[i].offset) = SET_DEFAULT;
-		i++;
-	}
-
-	chanopt_list = g_slist_prepend (chanopt_list, co);
-	chanopt_changed = true;
-
-	return co;
+	return i;
 }
 
-static void
-chanopt_add_opt (chanopt_in_memory *co, char *var, int new_value)
+std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop)
 {
-	int i;
-
-	i = 0;
-	while (i < sizeof (chanopt) / sizeof (channel_options))
-	{
-		if (!strcmp (var, chanopt[i].name))
+	bool something_saved = false;
+	std::ostringstream buffer;
+	buffer << "network = " << chanop.network << "\n";
+	buffer << "channel = " << chanop.channel << "\n";
+	for (const auto& op : chanopt){
+		guint8 val = G_STRUCT_MEMBER(guint8, &chanop, op.offset);
+		if (val != SET_DEFAULT)
 		{
-			*(guint8 *)G_STRUCT_MEMBER_P(co, chanopt[i].offset) = new_value;
-
+			buffer << op.name << " = " << std::to_string(val) << "\n";
+			something_saved = true;
 		}
-		i++;
 	}
+	if (something_saved)
+		o << buffer.str();
+	return o;
+}
+
+static std::vector<chanopt_in_memory> chanopts;
+
+static std::vector<chanopt_in_memory>::iterator 
+chanopt_find (const std::string & network, const std::string& channel)
+{
+	return std::find_if(
+		chanopts.begin(), chanopts.end(),
+		[&network, &channel](const chanopt_in_memory& c){
+		return !g_ascii_strcasecmp(c.channel.c_str(), channel.c_str()) &&
+			!g_ascii_strcasecmp(c.network.c_str(), network.c_str());
+		});
 }
 
 /* load chanopt.conf from disk into our chanopt_list GSList */
@@ -249,55 +298,23 @@ chanopt_add_opt (chanopt_in_memory *co, char *var, int new_value)
 static void
 chanopt_load_all (void)
 {
-	int fh;
-	char buf[256];
-	char *eq;
-	char *network = NULL;
-	chanopt_in_memory *current = NULL;
+	chanopt_in_memory current;
 
-	/* 1. load the old file into our GSList */
-	fh = hexchat_open_file ("chanopt.conf", O_RDONLY, 0, 0);
-	if (fh != -1)
+	/* 1. load the old file into our vector */
+	auto fbuf = hexchat_open_stream("chanopt.conf", std::ios::in, 0, 0);
+	std::istream stream(&fbuf);
+	while (stream >> current)
 	{
-		while (waitline (fh, buf, sizeof buf, FALSE) != -1)
-		{
-			eq = strchr (buf, '=');
-			if (!eq)
-				continue;
-			eq[0] = 0;
-
-			if (eq != buf && eq[-1] == ' ')
-				eq[-1] = 0;
-
-			if (!strcmp (buf, "network"))
-			{
-				g_free (network);
-				network = g_strdup (eq + 2);
-			}
-			else if (!strcmp (buf, "channel"))
-			{
-				current = chanopt_find (network, eq + 2, TRUE);
-				chanopt_changed = false;
-			}
-			else
-			{
-				if (current)
-					chanopt_add_opt (current, buf, atoi (eq + 2));
-			}
-
-		}
-		close (fh);
-		g_free (network);
+		chanopts.push_back(current);
+		chanopt_changed = true;
 	}
 }
 
 void
 chanopt_load (session *sess)
 {
-	int i;
 	guint8 val;
-	chanopt_in_memory *co;
-	char *network;
+	const char *network;
 
 	if (sess->channel[0] == 0)
 		return;
@@ -312,28 +329,25 @@ chanopt_load (session *sess)
 		chanopt_load_all ();
 	}
 
-	co = chanopt_find (network, sess->channel, FALSE);
-	if (!co)
+	auto itr = chanopt_find (network, sess->channel);
+	if (itr == chanopts.end())
 		return;
 
 	/* fill in all the sess->xxxxx fields */
-	i = 0;
-	while (i < sizeof (chanopt) / sizeof (channel_options))
+	for (const auto & op : chanopt)
 	{
-		val = G_STRUCT_MEMBER(guint8, co, chanopt[i].offset);
-		*(guint8 *)G_STRUCT_MEMBER_P(sess, chanopt[i].offset) = val;
-		i++;
+		val = G_STRUCT_MEMBER(guint8, &(*itr), op.offset);
+		*(guint8 *)G_STRUCT_MEMBER_P(sess, op.offset) = val;
 	}
 }
 
 void
 chanopt_save (session *sess)
 {
-	int i;
 	guint8 vals;
 	guint8 valm;
-	chanopt_in_memory *co;
-	char *network;
+	chanopt_in_memory co;
+	const char *network;
 
 	if (sess->channel[0] == 0)
 		return;
@@ -344,102 +358,40 @@ chanopt_save (session *sess)
 
 	/* 2. reconcile sess with what we loaded from disk */
 
-	co = chanopt_find (network, sess->channel, TRUE);
+	auto itr = chanopt_find (network, sess->channel);
+	co = itr != chanopts.end() ? *itr : chanopt_in_memory();
 
-	i = 0;
-	while (i < sizeof (chanopt) / sizeof (channel_options))
+	for (const auto& op : chanopt)
 	{
-		vals = G_STRUCT_MEMBER(guint8, sess, chanopt[i].offset);
-		valm = G_STRUCT_MEMBER(guint8, co, chanopt[i].offset);
+		vals = G_STRUCT_MEMBER(guint8, sess, op.offset);
+		valm = G_STRUCT_MEMBER(guint8, &co, op.offset);
 
 		if (vals != valm)
 		{
-			*(guint8 *)G_STRUCT_MEMBER_P(co, chanopt[i].offset) = vals;
+			*(guint8 *)G_STRUCT_MEMBER_P(&co, op.offset) = vals;
 			chanopt_changed = true;
 		}
-
-		i++;
 	}
-}
-
-static void
-chanopt_save_one_channel (chanopt_in_memory *co, int fh)
-{
-	int i;
-	char buf[256];
-	guint8 val;
-
-	snprintf (buf, sizeof (buf), "%s = %s\n", "network", co->network);
-	write (fh, buf, strlen (buf));
-
-	snprintf (buf, sizeof (buf), "%s = %s\n", "channel", co->channel);
-	write (fh, buf, strlen (buf));
-
-	i = 0;
-	while (i < sizeof (chanopt) / sizeof (channel_options))
-	{
-		val = G_STRUCT_MEMBER (guint8, co, chanopt[i].offset);
-		if (val != SET_DEFAULT)
-		{
-			snprintf (buf, sizeof (buf), "%s = %d\n", chanopt[i].name, val);
-			write (fh, buf, strlen (buf));
-		}
-		i++;
-	}
+	if (itr == chanopts.end())
+		chanopts.push_back(co);
+	else
+		*itr = co;
 }
 
 void
 chanopt_save_all (void)
 {
-	int i;
-	int num_saved;
-	int fh;
-	GSList *list;
-	chanopt_in_memory *co;
-	guint8 val;
-
-	if (!chanopt_list || !chanopt_changed)
+	if (chanopts.empty() || !chanopt_changed)
 	{
 		return;
 	}
 
-	fh = hexchat_open_file ("chanopt.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh == -1)
+	auto fbuf = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
+	std::ostream stream(&fbuf);
+	for (const auto& co : chanopts)
 	{
-		return;
+		stream << co;
 	}
-
-	for (num_saved = 0, list = chanopt_list; list; list = list->next)
-	{
-		co = static_cast<chanopt_in_memory *>(list->data);
-
-		i = 0;
-		while (i < sizeof (chanopt) / sizeof (channel_options))
-		{
-			val = G_STRUCT_MEMBER (guint8, co, chanopt[i].offset);
-			/* not using global/default setting, must save */
-			if (val != SET_DEFAULT)
-			{
-				if (num_saved != 0)
-					write (fh, "\n", 1);
-
-				chanopt_save_one_channel (co, fh);
-				num_saved++;
-				goto cont;
-			}
-			i++;
-		}
-
-cont:
-		g_free (co->network);
-		g_free (co->channel);
-		g_free (co);
-	}
-
-	close (fh);
-
-	g_slist_free (chanopt_list);
-	chanopt_list = NULL;
 
 	chanopt_open = false;
 	chanopt_changed = false;
