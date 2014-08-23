@@ -23,7 +23,7 @@
 #define HEXCHAT_INET_HPP
 
 #ifndef WIN32
-
+#include <cerrno>
 #ifdef WANTSOCKET
 #include <sys/types.h>
 #include <sys/socket.h>
