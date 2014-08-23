@@ -27,6 +27,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <utility>
@@ -101,7 +102,7 @@ chanopt_value (guint8 val)
 int
 chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int dots, i = 0, j, p = 0;
+	int dots, j, p = 0;
 	guint8 val;
 	int offset = 2;
 	char *find;
@@ -133,35 +134,34 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[])
 						sess->server->network ? server_get_network (sess->server, TRUE) : _("<none>"),
 						sess->channel[0] ? sess->channel : _("<none>"));
 
-	while (i < sizeof (chanopt) / sizeof (channel_options))
+	for(const auto & op : chanopt)
 	{
-		if (find[0] == 0 || match (find, chanopt[i].name) || (chanopt[i].alias && match (find, chanopt[i].alias)))
+		if (find[0] == 0 || match(find, op.name) || (op.alias && match(find, op.alias)))
 		{
 			if (newval != -1)	/* set new value */
 			{
-				*(guint8 *)G_STRUCT_MEMBER_P(sess, chanopt[i].offset) = newval;
+				*(guint8 *)G_STRUCT_MEMBER_P(sess, op.offset) = newval;
 				chanopt_changed = true;
 			}
 
 			if (!quiet)	/* print value */
 			{
-				strcpy (tbuf, chanopt[i].name);
+				strcpy(tbuf, op.name);
 				p = strlen (tbuf);
 
 				tbuf[p++] = 3;
 				tbuf[p++] = '2';
 
-				dots = 20 - strlen (chanopt[i].name);
+				dots = 20 - strlen(op.name);
 
 				for (j = 0; j < dots; j++)
 					tbuf[p++] = '.';
 				tbuf[p++] = 0;
 
-				val = G_STRUCT_MEMBER (guint8, sess, chanopt[i].offset);
+				val = G_STRUCT_MEMBER(guint8, sess, op.offset);
 				PrintTextf (sess, "%s\0033:\017 %s", tbuf, chanopt_value (val));
 			}
 		}
-		i++;
 	}
 
 	return TRUE;
@@ -206,6 +206,12 @@ struct chanopt_in_memory
 		text_logging(SET_DEFAULT),
 		text_scrollback(SET_DEFAULT),
 		text_strip(SET_DEFAULT){}
+	chanopt_in_memory(const std::string & network, const std::string & channel)
+		:chanopt_in_memory()
+	{
+		this->network = network;
+		this->channel = channel;
+	}
 	friend std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop);
 	friend std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop);
 };
@@ -360,7 +366,7 @@ chanopt_save (session *sess)
 	/* 2. reconcile sess with what we loaded from disk */
 
 	auto itr = chanopt_find (network, sess->channel);
-	co = itr != chanopts.end() ? *itr : chanopt_in_memory();
+	co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->channel);
 
 	for (const auto& op : chanopt)
 	{
@@ -374,9 +380,14 @@ chanopt_save (session *sess)
 		}
 	}
 	if (itr == chanopts.end())
+	{
 		chanopts.push_back(co);
+		chanopt_changed = true;
+	}
 	else
+	{
 		*itr = co;
+	}
 }
 
 void
@@ -389,7 +400,8 @@ chanopt_save_all (void)
 
 	auto fd = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
-	std::ostream stream(&fbuf);
+	std::ofstream stream;
+	stream.set_rdbuf(&fbuf);
 	for (const auto& co : chanopts)
 	{
 		stream << co;
