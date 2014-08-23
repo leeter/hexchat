@@ -394,7 +394,7 @@ chanopt_save_all (void)
 	{
 		stream << co;
 	}
-
+	stream.flush();
 	chanopt_open = false;
 	chanopt_changed = false;
 }
