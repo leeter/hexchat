@@ -1372,6 +1372,20 @@ hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode)
 }
 #endif
 
+std::filebuf 
+hexchat_open_filebuf(const std::string& file, std::ios_base::openmode mode)
+{
+	std::filebuf buf;
+#ifdef WIN32
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	std::wstring wide_file_path = converter.from_bytes(file);
+	buf.open(wide_file_path, mode);
+#else
+	buf.open(file, mode);
+#endif
+	return buf;
+}
+
 FILE *
 hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {

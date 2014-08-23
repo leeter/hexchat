@@ -54,6 +54,7 @@ FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
 #ifdef WIN32
 std::fstream hexchat_open_fstream(const std::string& file, std::ios_base::openmode mode);
 #endif
+std::filebuf hexchat_open_filebuf(const std::string& file, std::ios_base::openmode mode);
 
 #define XOF_DOMODE 1
 #define XOF_FULLPATH 2
