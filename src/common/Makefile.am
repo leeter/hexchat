@@ -50,7 +50,7 @@ endif
 
 if USE_DBUS
 dbusdir = dbus
-DBUSLIB =				\
+libhexchatcommon_a_LIBADD =				\
 	$(top_builddir)/src/common/dbus/dbus-*.$(OBJEXT)
 endif
 SUBDIRS = $(dbusdir) .
@@ -66,7 +66,6 @@ libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.c
 	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp tree.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
-libhexchatcommon_a_LIBADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(DBUSLIB)
 
 textenums.h: textevents.h
 
