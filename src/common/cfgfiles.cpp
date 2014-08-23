@@ -1389,8 +1389,11 @@ hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int 
 #endif
 		close(tfd);
 	}
-
+#ifdef WIN32
 	return bio::file_descriptor(file_path, flags | std::ios::binary);
+#else
+	return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
+#endif
 }
 
 FILE *
