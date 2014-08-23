@@ -328,15 +328,10 @@ get_xdir (void)
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
 		{
 			char *path;
-			wchar_t file[MAX_PATH];
-			HMODULE hModule;
 			
-			hModule = GetModuleHandleW (NULL);
-			if (GetModuleFileNameW (hModule, file, sizeof(file)))
+			path = g_win32_get_package_installation_directory_of_module (NULL);
+			if (path)
 			{
-				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-				std::string narrowed_path = converter.to_bytes(file);
-				path = g_path_get_dirname (narrowed_path.c_str());
 				xdir = g_build_filename (path, "config", NULL);
 				g_free (path);
 			}
