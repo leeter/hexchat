@@ -21,40 +21,27 @@
 
 #include <algorithm>
 #include <array>
-#include <iterator>
 #include <string>
-#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <utility>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <cerrno>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
-
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 #include "hexchat.hpp"
 #include "chanopt.hpp"
 
 #include "cfgfiles.hpp"
-#include "server.hpp"
 #include "text.hpp"
+#include "server.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"
 
 namespace bio = boost::iostreams;
-
-static GSList *chanopt_list = NULL;
+namespace {
 static bool chanopt_open = false;
 static bool chanopt_changed = false;
 
@@ -95,7 +82,7 @@ chanopt_value (guint8 val)
 		return "{unset}";
 	}
 }
-
+}
 /* handle the /CHANOPT command */
 
 int
@@ -178,6 +165,7 @@ chanopt_is_set (unsigned int global, guint8 per_chan_setting)
 		return global;
 }
 
+namespace {
 /* === below is LOADING/SAVING stuff only === */
 
 struct chanopt_in_memory
@@ -226,7 +214,8 @@ struct chanopt_in_memory
  * channel = <channel name>
  * alert_taskbar = <1/0>
  */
-std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop)
+std::istream& 
+operator>> (std::istream& i, chanopt_in_memory& chanop)
 {
 	chanop = chanopt_in_memory();
 	// get network
@@ -272,7 +261,8 @@ std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop)
 	return i;
 }
 
-std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop)
+std::ostream&
+operator<< (std::ostream& o, const chanopt_in_memory& chanop)
 {
 	bool something_saved = false;
 	std::ostringstream buffer;
@@ -320,6 +310,7 @@ chanopt_load_all (void)
 		chanopts.push_back(current);
 		chanopt_changed = true;
 	}
+}
 }
 
 void
