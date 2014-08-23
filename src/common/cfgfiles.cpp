@@ -1390,7 +1390,7 @@ hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int 
 		close(tfd);
 	}
 	bio::file_descriptor fd(file_path, flags | std::ios::binary);
-	return bio::stream_buffer<bio::file_descriptor>(fd, bio::close_handle);
+	return bio::stream_buffer<bio::file_descriptor>(fd);
 }
 
 FILE *
