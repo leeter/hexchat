@@ -301,7 +301,8 @@ chanopt_load_all (void)
 	chanopt_in_memory current;
 
 	/* 1. load the old file into our vector */
-	auto fbuf = hexchat_open_stream("chanopt.conf", std::ios::in, 0, 0);
+	auto fd = hexchat_open_stream("chanopt.conf", std::ios::in, 0, 0);
+	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::istream stream(&fbuf);
 	while (stream >> current)
 	{
@@ -386,7 +387,8 @@ chanopt_save_all (void)
 		return;
 	}
 
-	auto fbuf = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
+	auto fd = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
+	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::ostream stream(&fbuf);
 	for (const auto& co : chanopts)
 	{

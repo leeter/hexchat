@@ -1367,7 +1367,7 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 }
 
 
-boost::iostreams::stream_buffer<boost::iostreams::file_descriptor>
+bio::file_descriptor
 hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
 {
 #ifdef WIN32
@@ -1389,8 +1389,8 @@ hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int 
 #endif
 		close(tfd);
 	}
-	bio::file_descriptor fd(file_path, flags | std::ios::binary);
-	return bio::stream_buffer<bio::file_descriptor>(fd);
+
+	return bio::file_descriptor(file_path, flags | std::ios::binary);
 }
 
 FILE *
