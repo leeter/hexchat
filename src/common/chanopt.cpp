@@ -206,10 +206,16 @@ struct chanopt_in_memory
 		text_scrollback(SET_DEFAULT),
 		text_strip(SET_DEFAULT){}
 	chanopt_in_memory(const std::string & network, const std::string & channel)
-		:chanopt_in_memory()
+		:alert_beep(SET_DEFAULT),
+		alert_taskbar(SET_DEFAULT),
+		alert_tray(SET_DEFAULT),
+		text_hidejoinpart(SET_DEFAULT),
+		text_logging(SET_DEFAULT),
+		text_scrollback(SET_DEFAULT),
+		text_strip(SET_DEFAULT),
+		network(network),
+		channel(channel)
 	{
-		this->network = network;
-		this->channel = channel;
 	}
 	friend std::istream& operator>> (std::istream& i, chanopt_in_memory& chanop);
 	friend std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop);
