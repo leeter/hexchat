@@ -38,9 +38,11 @@
  *    modes.c, notify.c, outbound.c, proto-irc.c, server.c and text.c.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <string>
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 int main()
 {
@@ -53,7 +55,7 @@ int main()
 	char *defines[512];
   	int i = 0, max;
 
-	printf("/* this file is auto generated, edit textevents.in instead! */\n #ifdef __cplusplus\n#define EXPORT extern \"C\"\n#else\n #define EXPORT\n#endif\n\nEXPORT const struct text_event te[] = {\n");
+	std::cout << "/* this file is auto generated, edit textevents.in instead! */\n #ifdef __cplusplus\n#define EXPORT extern \"C\"\n#else\n #define EXPORT\n#endif\n\nEXPORT const struct text_event te[] = {\n";
 	while(fgets(name, sizeof(name), stdin))
 	{
 		name[strlen(name)-1] = 0;
