@@ -61,7 +61,7 @@ endif
 
 noinst_PROGRAMS = make-te
 
-make_te_SOURCES = make-tx.cpp
+make_te_SOURCES = make-te.cpp
 make_te_CPPFLAGS = $(CPPFLAGS)
 
 libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.cpp \
