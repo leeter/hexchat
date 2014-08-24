@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="make-te.c">
+    <ClCompile Include="make-te.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

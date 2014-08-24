@@ -18,7 +18,7 @@ EXTRA_DIST = \
 	ignore.hpp \
 	inbound.hpp \
 	inet.hpp \
-	make-te.c \
+	make-te.cpp \
 	modes.hpp \
 	msproxy.hpp \
 	network.hpp \
