@@ -61,8 +61,8 @@ endif
 
 noinst_PROGRAMS = make-te
 
-make-te_SOURCES = make-tx.cpp
-make-te_CPPFLAGS = $(CPPFLAGS)
+make_te_SOURCES = make-tx.cpp
+make_te_CPPFLAGS = $(CPPFLAGS)
 
 libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.cpp \
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
