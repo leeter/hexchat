@@ -473,12 +473,12 @@ session::session(struct server *serv, char *from, int type, int focus)
 	alert_beep(SET_DEFAULT),
 	alert_taskbar(SET_DEFAULT),
 	alert_tray(SET_DEFAULT),
-	
+
 	text_hidejoinpart(SET_DEFAULT),
 	text_logging(SET_DEFAULT),
 	text_scrollback(SET_DEFAULT),
 	text_strip(SET_DEFAULT),
-	
+
 	lastact_idx(LACT_NONE),
 	usertree_alpha(nullptr),
 	usertree(nullptr),
@@ -513,7 +513,10 @@ session::session(struct server *serv, char *from, int type, int focus)
 	lastlog_flags()
 {
 	if (from)
+	{
 		safe_strcpy(this->channel, from, CHANLEN);
+		this->name = from;
+	}
 }
 
 static session *

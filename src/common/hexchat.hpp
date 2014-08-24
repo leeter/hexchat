@@ -404,6 +404,7 @@ struct session
 	char lastnick[NICKLEN];			  /* last nick you /msg'ed */
 
 	history hist;
+	std::string name;
 
 	int ops;								/* num. of ops in channel */
 	int hops;						  /* num. of half-oped users */

@@ -319,7 +319,7 @@ chanopt_load (session *sess)
 	guint8 val;
 	const char *network;
 
-	if (sess->channel[0] == 0)
+	if (sess->name.empty())
 		return;
 
 	network = server_get_network (sess->server, FALSE);
@@ -332,7 +332,7 @@ chanopt_load (session *sess)
 		chanopt_load_all ();
 	}
 
-	auto itr = chanopt_find (network, sess->channel);
+	auto itr = chanopt_find (network, sess->name);
 	if (itr == chanopts.end())
 		return;
 
@@ -352,7 +352,7 @@ chanopt_save (session *sess)
 	chanopt_in_memory co;
 	const char *network;
 
-	if (sess->channel[0] == 0)
+	if (sess->name.empty())
 		return;
 
 	network = server_get_network (sess->server, FALSE);
@@ -361,8 +361,8 @@ chanopt_save (session *sess)
 
 	/* 2. reconcile sess with what we loaded from disk */
 
-	auto itr = chanopt_find (network, sess->channel);
-	co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->channel);
+	auto itr = chanopt_find (network, sess->name);
+	co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->name);
 
 	for (const auto& op : chanopt)
 	{
