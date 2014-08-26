@@ -17,13 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_CUSTOM_LIST_H
-#define HEXCHAT_CUSTOM_LIST_H
+#ifndef HEXCHAT_CUSTOM_LIST_HPP
+#define HEXCHAT_CUSTOM_LIST_HPP
 
 #include <gtk/gtk.h>
-#ifdef __cplusplus
-extern "C"{
-#endif
 GType custom_list_get_type (void);
 
 /* Some boilerplate GObject defines. 'klass' is used
@@ -53,7 +50,7 @@ enum
 	SORT_ID_TOPIC
 };
 
-typedef struct
+struct chanlistrow
 {
 	char *topic;
 	char *collation_key;
@@ -62,12 +59,7 @@ typedef struct
 	/* channel string lives beyond "users" */
 #define GET_CHAN(row) (((char *)row)+sizeof(chanlistrow))
 }
-chanlistrow;
-
-typedef struct _CustomList CustomList;
-typedef struct _CustomListClass CustomListClass;
-
-
+;
 
 /* CustomList: this structure contains everything we need for our
  *             model implementation. You can add extra fields to
@@ -75,7 +67,7 @@ typedef struct _CustomListClass CustomListClass;
  *             rows or whatever else you might need, but it is
  *             crucial that 'parent' is the first member of the
  *             structure.                                          */
-struct _CustomList
+struct CustomList
 {
 	GObject parent;
 
@@ -94,7 +86,7 @@ struct _CustomList
 
 /* CustomListClass: more boilerplate GObject stuff */
 
-struct _CustomListClass
+struct CustomListClass
 {
 	GObjectClass parent_class;
 };
@@ -104,8 +96,5 @@ CustomList *custom_list_new (void);
 void custom_list_append (CustomList *, chanlistrow *);
 void custom_list_resort (CustomList *);
 void custom_list_clear (CustomList *);
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HEXCHAT_CUSTOM_LIST_H */

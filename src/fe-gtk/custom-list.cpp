@@ -20,7 +20,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
-#include "custom-list.h"
+#include "custom-list.hpp"
 
 /* indent -i3 -ci3 -ut -ts3 -bli0 -c0 custom-list.c */
 

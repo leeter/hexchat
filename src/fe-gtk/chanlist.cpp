@@ -43,7 +43,7 @@
 #include "maingui.hpp"
 #include "menu.hpp"
 #include "chanlist.h"
-#include "custom-list.h"
+#include "custom-list.hpp"
 
 enum
 {
