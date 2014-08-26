@@ -17,17 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_SETUP_H
-#define HEXCHAT_SETUP_H
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef HEXCHAT_SETUP_HPP
+#define HEXCHAT_SETUP_HPP
 
 void setup_apply_real (int new_pix, int do_ulist, int do_layout);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

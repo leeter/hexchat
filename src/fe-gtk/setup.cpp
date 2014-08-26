@@ -37,7 +37,7 @@
 #include "menu.hpp"
 #include "plugin-tray.hpp"
 #include "gtk_helpers.hpp"
-#include "setup.h"
+#include "setup.hpp"
 
 #ifdef WIN32
 #include "../common/fe.hpp"

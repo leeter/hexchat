@@ -57,7 +57,7 @@
 #include "fkeys.h"
 #include "plugin-tray.hpp"
 #include "urlgrab.hpp"
-#include "setup.h"
+#include "setup.hpp"
 
 #ifdef USE_LIBCANBERRA
 #include <canberra.h>
