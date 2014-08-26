@@ -66,7 +66,7 @@
 #include "textgui.h"
 #include "urlgrab.hpp"
 #include "menu.hpp"
-#include "servlistgui.h"
+#include "servlistgui.hpp"
 #include "userlistgui.hpp"
 
 static GSList *submenu_list;

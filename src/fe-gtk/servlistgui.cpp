@@ -35,7 +35,7 @@
 #include "menu.hpp"
 #include "pixmaps.h"
 #include "fkeys.h"
-#include "servlistgui.h"
+#include "servlistgui.hpp"
 
 #define SERVLIST_X_PADDING 4			/* horizontal paddig in the network editor */
 #define SERVLIST_Y_PADDING 0			/* vertical padding in the network editor */

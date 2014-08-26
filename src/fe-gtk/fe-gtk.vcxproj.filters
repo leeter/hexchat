@@ -33,9 +33,6 @@
     <ClInclude Include="textgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="servlistgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="userlistgui.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="setup.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="servlistgui.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
