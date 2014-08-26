@@ -40,7 +40,7 @@
 #include "maingui.hpp"
 #include "rawlog.hpp"
 #include "xtext.hpp"
-#include "fkeys.h"
+#include "fkeys.hpp"
 
 namespace {
 static void

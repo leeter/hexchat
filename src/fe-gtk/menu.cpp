@@ -55,7 +55,7 @@
 #include "banlist.hpp"
 #include "chanlist.h"
 #include "editlist.hpp"
-#include "fkeys.h"
+#include "fkeys.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "notifygui.hpp"

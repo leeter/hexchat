@@ -34,7 +34,7 @@
 #include "gtkutil.hpp"
 #include "menu.hpp"
 #include "pixmaps.h"
-#include "fkeys.h"
+#include "fkeys.hpp"
 #include "servlistgui.hpp"
 
 #define SERVLIST_X_PADDING 4			/* horizontal paddig in the network editor */

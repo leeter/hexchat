@@ -38,7 +38,7 @@
 #include "menu.hpp"
 #include "pixmaps.h"
 #include "userlistgui.hpp"
-#include "fkeys.h"
+#include "fkeys.hpp"
 
 enum
 {

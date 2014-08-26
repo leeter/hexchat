@@ -121,7 +121,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="custom-list.hpp" />
     <ClInclude Include="editlist.hpp" />
     <ClInclude Include="fe-gtk.hpp" />
-    <ClInclude Include="fkeys.h" />
+    <ClInclude Include="fkeys.hpp" />
     <ClInclude Include="gtkutil.hpp" />
     <ClInclude Include="gtk_helpers.hpp" />
     <ClInclude Include="joind.hpp" />

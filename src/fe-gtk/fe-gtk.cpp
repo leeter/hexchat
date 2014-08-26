@@ -54,7 +54,7 @@
 #include "menu.hpp"
 #include "notifygui.hpp"
 #include "textgui.h"
-#include "fkeys.h"
+#include "fkeys.hpp"
 #include "plugin-tray.hpp"
 #include "urlgrab.hpp"
 #include "setup.hpp"

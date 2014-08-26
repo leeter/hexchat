@@ -41,7 +41,7 @@
 #include "../common/marshal.h"
 #include "fe-gtk.hpp"
 #include "xtext.hpp"
-#include "fkeys.h"
+#include "fkeys.hpp"
 #include "gtk_helpers.hpp"
 
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]

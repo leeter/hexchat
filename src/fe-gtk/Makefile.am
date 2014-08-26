@@ -8,7 +8,7 @@ hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS
 
 EXTRA_DIST = \
 	ascii.hpp banlist.hpp chanlist.h chanview.hpp \
-	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.h \
+	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.hpp \
 	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.h \
 	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.h \
 	sexy-spell-entry.h textgui.h urlgrab.hpp userlistgui.hpp xtext.hpp \

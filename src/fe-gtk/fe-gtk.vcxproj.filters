@@ -18,9 +18,6 @@
     <ClInclude Include="chanlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fkeys.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="pixmaps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="servlistgui.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fkeys.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

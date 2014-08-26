@@ -50,7 +50,7 @@
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "textgui.h"
-#include "fkeys.h"
+#include "fkeys.hpp"
 
 static void replace_handle (GtkWidget * wid);
 void key_action_tab_clean (void);

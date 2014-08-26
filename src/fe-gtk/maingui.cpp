@@ -45,7 +45,7 @@
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "menu.hpp"
-#include "fkeys.h"
+#include "fkeys.hpp"
 #include "userlistgui.hpp"
 #include "chanview.hpp"
 #include "pixmaps.h"
