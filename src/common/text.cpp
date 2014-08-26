@@ -2111,7 +2111,9 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		stripcolor_args &= ~ARG_FLAG(1);	/* don't strip color from this argument */
 	}
 	std::string empty("\000");
-	word[0] = te[index].name;
+    std::string name(te[index].name);
+    name.push_back(0);
+	word[0] = &name[0];
 	word[1] = (a ? a : &empty[0]);
 	word[2] = (b ? b : &empty[0]);
 	word[3] = (c ? c : &empty[0]);

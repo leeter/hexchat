@@ -32,10 +32,10 @@
 
 struct text_event
 {
-	char *name;
-	char * const *help;
+	const char *name;
+	const char * const *help;
 	int num_args;
-	char *def;
+	const char *def;
 };
 
 void scrollback_close (session *sess);
