@@ -66,7 +66,7 @@ int main()
         }
         else
             std::cout << std::stoi(args) << ", \nN_(\"" << def << "\")},\n";
-        defines.push_back(num);// = strdup(num.c_str());
+        defines.push_back(num);
         i++;
     }
     
