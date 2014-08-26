@@ -12,8 +12,7 @@ PKG_NAME="hexchat"
 	echo " top-level $PKG_NAME directory"
 	exit 1
 }
-wget http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
-mv boost.m4 m4/boost.m4
+
 which gnome-autogen.sh || {
 	echo "You need to install gnome-common"
 	exit 1
