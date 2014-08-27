@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sexy-iso-codes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="userlistgui.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pixmaps.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sexy-iso-codes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,19 +19,15 @@
 *    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef GTK_SPELL_CODETABLE_H
-#define GTK_SPELL_CODETABLE_H
+#ifndef GTK_SPELL_CODETABLE_HPP
+#define GTK_SPELL_CODETABLE_HPP
 
 #include <glib.h>
-
-G_BEGIN_DECLS
 
 void codetable_init (void);
 void codetable_free (void);
 void codetable_lookup (const gchar *language_code,
 	const gchar **language_name,
 	const gchar **country_name);
-
-G_END_DECLS
 
 #endif /* GTK_SPELL_CODETABLE_H */

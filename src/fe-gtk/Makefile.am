@@ -10,7 +10,7 @@ EXTRA_DIST = \
 	ascii.hpp banlist.hpp chanlist.hpp chanview.hpp \
 	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.hpp \
 	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.hpp \
-	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.h \
+	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.hpp \
 	sexy-spell-entry.hpp textgui.hpp urlgrab.hpp userlistgui.hpp xtext.hpp \
 	../../data/hexchat.gresource.xml
 

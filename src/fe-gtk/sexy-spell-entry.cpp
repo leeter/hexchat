@@ -32,7 +32,7 @@
 #include <glib/gi18n.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "sexy-iso-codes.h"
+#include "sexy-iso-codes.hpp"
 #include "../common/marshal.h"
 
 #ifdef WIN32

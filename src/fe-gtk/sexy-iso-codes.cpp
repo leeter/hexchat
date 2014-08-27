@@ -19,7 +19,7 @@
 *    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "sexy-iso-codes.h"
+#include "sexy-iso-codes.hpp"
 #include <libintl.h>
 #include <cstring>
 #include "../../config.h"
