@@ -42,7 +42,7 @@
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "menu.hpp"
-#include "chanlist.h"
+#include "chanlist.hpp"
 #include "custom-list.hpp"
 
 enum

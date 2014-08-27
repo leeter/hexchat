@@ -53,7 +53,7 @@
 #include "xtext.hpp"
 #include "ascii.hpp"
 #include "banlist.hpp"
-#include "chanlist.h"
+#include "chanlist.hpp"
 #include "editlist.hpp"
 #include "fkeys.hpp"
 #include "gtkutil.hpp"

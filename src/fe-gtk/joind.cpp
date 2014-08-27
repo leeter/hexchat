@@ -37,7 +37,7 @@
 #include "../common/servlist.hpp"
 #include "../common/fe.hpp"
 #include "fe-gtk.hpp"
-#include "chanlist.h"
+#include "chanlist.hpp"
 
 
 static void

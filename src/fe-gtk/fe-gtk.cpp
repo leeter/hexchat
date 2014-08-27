@@ -47,7 +47,7 @@
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "pixmaps.h"
-#include "chanlist.h"
+#include "chanlist.hpp"
 #include "joind.hpp"
 #include "xtext.hpp"
 #include "palette.hpp"

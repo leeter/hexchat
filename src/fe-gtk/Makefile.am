@@ -7,7 +7,7 @@ AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wext
 hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS)
 
 EXTRA_DIST = \
-	ascii.hpp banlist.hpp chanlist.h chanview.hpp \
+	ascii.hpp banlist.hpp chanlist.hpp chanview.hpp \
 	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.hpp \
 	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.h \
 	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.h \

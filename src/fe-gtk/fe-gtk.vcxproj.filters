@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="chanlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="pixmaps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fkeys.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chanlist.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
