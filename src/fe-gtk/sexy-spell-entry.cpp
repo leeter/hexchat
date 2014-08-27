@@ -25,7 +25,7 @@
 #include <string>
 #include <sstream>
 #include <gtk/gtk.h>
-#include "sexy-spell-entry.h"
+#include "sexy-spell-entry.hpp"
 #include <cstring>
 #include <fcntl.h>
 #include <cstdlib>

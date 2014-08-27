@@ -42,7 +42,7 @@
 #ifdef WIN32
 #include "../common/fe.hpp"
 #endif
-#include "sexy-spell-entry.h"
+#include "sexy-spell-entry.hpp"
 
 extern "C"{ GtkStyle *create_input_style(GtkStyle *); }
 

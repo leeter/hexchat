@@ -51,7 +51,7 @@
 #include "pixmaps.h"
 #include "plugin-tray.hpp"
 #include "xtext.hpp"
-#include "sexy-spell-entry.h"
+#include "sexy-spell-entry.hpp"
 
 namespace dcc = hexchat::dcc;
 
