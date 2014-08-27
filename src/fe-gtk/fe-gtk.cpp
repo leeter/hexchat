@@ -53,7 +53,7 @@
 #include "palette.hpp"
 #include "menu.hpp"
 #include "notifygui.hpp"
-#include "textgui.h"
+#include "textgui.hpp"
 #include "fkeys.hpp"
 #include "plugin-tray.hpp"
 #include "urlgrab.hpp"

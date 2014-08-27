@@ -49,7 +49,7 @@
 #include "xtext.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
-#include "textgui.h"
+#include "textgui.hpp"
 #include "fkeys.hpp"
 
 static void replace_handle (GtkWidget * wid);

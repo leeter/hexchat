@@ -63,7 +63,7 @@
 #include "rawlog.hpp"
 #include "palette.hpp"
 #include "plugingui.hpp"
-#include "textgui.h"
+#include "textgui.hpp"
 #include "urlgrab.hpp"
 #include "menu.hpp"
 #include "servlistgui.hpp"

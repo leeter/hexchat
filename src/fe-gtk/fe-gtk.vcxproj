@@ -137,7 +137,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="setup.hpp" />
     <ClInclude Include="sexy-iso-codes.h" />
     <ClInclude Include="sexy-spell-entry.hpp" />
-    <ClInclude Include="textgui.h" />
+    <ClInclude Include="textgui.hpp" />
     <ClInclude Include="urlgrab.hpp" />
     <ClInclude Include="userlistgui.hpp" />
     <ClInclude Include="xtext.hpp" />

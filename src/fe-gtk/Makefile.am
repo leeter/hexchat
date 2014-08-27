@@ -11,7 +11,7 @@ EXTRA_DIST = \
 	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.hpp \
 	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.h \
 	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.h \
-	sexy-spell-entry.hpp textgui.h urlgrab.hpp userlistgui.hpp xtext.hpp \
+	sexy-spell-entry.hpp textgui.hpp urlgrab.hpp userlistgui.hpp xtext.hpp \
 	../../data/hexchat.gresource.xml
 
 BUILT_SOURCES = resources.c
