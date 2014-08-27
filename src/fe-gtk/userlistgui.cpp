@@ -36,7 +36,7 @@
 #include "palette.hpp"
 #include "maingui.hpp"
 #include "menu.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "userlistgui.hpp"
 #include "fkeys.hpp"
 

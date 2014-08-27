@@ -17,12 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_PIXMAPS_H
-#define HEXCHAT_PIXMAPS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef HEXCHAT_PIXMAPS_HPP
+#define HEXCHAT_PIXMAPS_HPP
 
 extern GdkPixbuf *pix_ulist_voice;
 extern GdkPixbuf *pix_ulist_halfop;
@@ -45,9 +41,5 @@ extern GdkPixbuf *pix_hexchat;
 
 extern GdkPixmap *pixmap_load_from_file (char *file);
 extern void pixmaps_init (void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

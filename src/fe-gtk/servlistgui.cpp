@@ -33,7 +33,7 @@
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "menu.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "fkeys.hpp"
 #include "servlistgui.hpp"
 

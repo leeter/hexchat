@@ -48,7 +48,7 @@
 #include "fkeys.hpp"
 #include "userlistgui.hpp"
 #include "chanview.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "plugin-tray.hpp"
 #include "xtext.hpp"
 #include "sexy-spell-entry.hpp"

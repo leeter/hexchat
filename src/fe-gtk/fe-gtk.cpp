@@ -46,7 +46,7 @@
 #include "../common/dcc.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "chanlist.hpp"
 #include "joind.hpp"
 #include "xtext.hpp"

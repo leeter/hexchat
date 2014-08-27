@@ -59,7 +59,7 @@
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "notifygui.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "rawlog.hpp"
 #include "palette.hpp"
 #include "plugingui.hpp"

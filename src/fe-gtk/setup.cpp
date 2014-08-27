@@ -33,7 +33,7 @@
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "palette.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "menu.hpp"
 #include "plugin-tray.hpp"
 #include "gtk_helpers.hpp"

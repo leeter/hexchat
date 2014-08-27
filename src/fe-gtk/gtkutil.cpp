@@ -40,7 +40,7 @@
 #include "../common/hexchatc.hpp"
 #include "../common/typedef.h"
 #include "gtkutil.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 
 #ifdef WIN32
 #include <io.h>

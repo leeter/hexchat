@@ -26,7 +26,7 @@
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"
 #include "fe-gtk.hpp"
-#include "pixmaps.h"
+#include "pixmaps.hpp"
 #include "maingui.hpp"
 #include "menu.hpp"
 #include "plugin-tray.hpp"

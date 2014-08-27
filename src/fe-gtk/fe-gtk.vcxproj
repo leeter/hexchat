@@ -129,7 +129,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="menu.hpp" />
     <ClInclude Include="notifygui.hpp" />
     <ClInclude Include="palette.hpp" />
-    <ClInclude Include="pixmaps.h" />
+    <ClInclude Include="pixmaps.hpp" />
     <ClInclude Include="plugin-tray.hpp" />
     <ClInclude Include="plugingui.hpp" />
     <ClInclude Include="rawlog.hpp" />
