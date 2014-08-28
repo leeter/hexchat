@@ -40,9 +40,9 @@
 #include "palette.hpp"
 #include "textgui.hpp"
 typedef std::char_traits < unsigned char > uchar_traits;
-extern "C" struct text_event te[];
-extern "C" char *pntevts_text[];
-extern "C" char *pntevts[];
+extern const text_event te[];
+extern char *pntevts_text[];
+extern char *pntevts[];
 
 static GtkWidget *pevent_dialog = NULL, *pevent_dialog_twid,
 	*pevent_dialog_list, *pevent_dialog_hlist;

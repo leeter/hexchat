@@ -1530,10 +1530,8 @@ setup_create_color_page (void)
 static GtkWidget *sndfile_entry;
 static int ignore_changed = FALSE;
 
-extern "C"{
-extern struct text_event te[]; /* text.c */
+extern const text_event te[]; /* text.c */
 extern char *sound_files[];
-}
 
 static void
 setup_snd_populate (GtkTreeView * treeview)

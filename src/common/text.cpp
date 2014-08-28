@@ -1015,10 +1015,8 @@ PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...)
 
    --AGL
  */
-extern "C" {
 char *pntevts_text[NUM_XP];
 char *pntevts[NUM_XP];
-}
 
 #define pevt_generic_none_help NULL
 
@@ -2252,9 +2250,7 @@ pevent_save (char *fn)
 /* =========================== */
 /* ========== SOUND ========== */
 /* =========================== */
-extern "C"{
  char *sound_files[NUM_XP];
-}
 
 void
 sound_beep (session *sess)
