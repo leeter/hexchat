@@ -68,74 +68,76 @@ editlist_save (GtkWidget *igad, gchar *file)
 	int fh;
 
 	fh = hexchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh != -1)
-	{
-		if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
-		{
-			do
-			{
-				name = NULL;
-				cmd = NULL;
-				gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, NAME_COLUMN, &name, CMD_COLUMN, &cmd, -1);
-				g_snprintf (buf, sizeof (buf), "NAME %s\nCMD %s\n\n", name, cmd);
-				write (fh, buf, strlen (buf));
-				g_free (name);
-				g_free (cmd);
-			} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
-		}
+    if (fh == -1)
+    {
+        return;
+    }
 
-		close (fh);
-		gtk_widget_destroy (editlist_win);
-		if (editlist_list == replace_list)
+	if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
+	{
+		do
 		{
-			list_free (&replace_list);
-			list_loadconf (file, &replace_list, 0);
-		} else if (editlist_list == popup_list)
+			name = NULL;
+			cmd = NULL;
+			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, NAME_COLUMN, &name, CMD_COLUMN, &cmd, -1);
+			g_snprintf (buf, sizeof (buf), "NAME %s\nCMD %s\n\n", name, cmd);
+			write (fh, buf, strlen (buf));
+			g_free (name);
+			g_free (cmd);
+		} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
+	}
+
+	close (fh);
+	gtk_widget_destroy (editlist_win);
+	if (editlist_list == replace_list)
+	{
+		list_free (&replace_list);
+		list_loadconf (file, &replace_list, 0);
+	} else if (editlist_list == popup_list)
+	{
+		list_free (&popup_list);
+		list_loadconf (file, &popup_list, 0);
+	} else if (editlist_list == button_list)
+	{
+		GSList *list = sess_list;
+		struct session *sess;
+		list_free (&button_list);
+		list_loadconf (file, &button_list, 0);
+		while (list)
 		{
-			list_free (&popup_list);
-			list_loadconf (file, &popup_list, 0);
-		} else if (editlist_list == button_list)
-		{
-			GSList *list = sess_list;
-			struct session *sess;
-			list_free (&button_list);
-			list_loadconf (file, &button_list, 0);
-			while (list)
-			{
-				sess = (struct session *) list->data;
-				fe_buttons_update (sess);
-				list = list->next;
-			}
-		} else if (editlist_list == dlgbutton_list)
-		{
-			GSList *list = sess_list;
-			struct session *sess;
-			list_free (&dlgbutton_list);
-			list_loadconf (file, &dlgbutton_list, 0);
-			while (list)
-			{
-				sess = (struct session *) list->data;
-				fe_dlgbuttons_update (sess);
-				list = list->next;
-			}
-		} else if (editlist_list == ctcp_list)
-		{
-			list_free (&ctcp_list);
-			list_loadconf (file, &ctcp_list, 0);
-		} else if (editlist_list == command_list)
-		{
-			list_free (&command_list);
-			list_loadconf (file, &command_list, 0);
-		} else if (editlist_list == usermenu_list)
-		{
-			list_free (&usermenu_list);
-			list_loadconf (file, &usermenu_list, 0);
-			usermenu_update ();
-		} else
-		{
-			list_free (&urlhandler_list);
-			list_loadconf (file, &urlhandler_list, 0);
+			sess = (struct session *) list->data;
+			fe_buttons_update (sess);
+			list = list->next;
 		}
+	} else if (editlist_list == dlgbutton_list)
+	{
+		GSList *list = sess_list;
+		struct session *sess;
+		list_free (&dlgbutton_list);
+		list_loadconf (file, &dlgbutton_list, 0);
+		while (list)
+		{
+			sess = (struct session *) list->data;
+			fe_dlgbuttons_update (sess);
+			list = list->next;
+		}
+	} else if (editlist_list == ctcp_list)
+	{
+		list_free (&ctcp_list);
+		list_loadconf (file, &ctcp_list, 0);
+	} else if (editlist_list == command_list)
+	{
+		list_free (&command_list);
+		list_loadconf (file, &command_list, 0);
+	} else if (editlist_list == usermenu_list)
+	{
+		list_free (&usermenu_list);
+		list_loadconf (file, &usermenu_list, 0);
+		usermenu_update ();
+	} else
+	{
+		list_free (&urlhandler_list);
+		list_loadconf (file, &urlhandler_list, 0);
 	}
 }
 
