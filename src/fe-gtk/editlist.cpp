@@ -41,7 +41,7 @@
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "editlist.hpp"
-
+namespace {
 enum
 {
 	NAME_COLUMN,
@@ -323,7 +323,7 @@ editlist_treeview_new (GtkWidget *box, const char *title1, const char *title2)
 
 	return view;
 }
-
+}
 
 void
 editlist_gui_open (const char *title1, const char *title2, GSList *list, char *title, char *wmclass,
