@@ -42,7 +42,6 @@ extern "C"{
 #ifdef WIN32
 #include <winbase.h>
 #include <io.h>
-//#include <process.h>
 #include <thread>
 #else
 #include <signal.h>
