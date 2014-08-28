@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <string>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -42,16 +43,16 @@ namespace dcc = hexchat::dcc;
 namespace {
 static void
 	ctcp_reply(session *sess, char *nick, char *word[], char *word_eol[],
-	char *conf)
+	const std::string & conf)
 {
 	char tbuf[4096];	/* can receive 2048 from IRC, so this is enough */
 
-	conf = strdup(conf);
+    std::string confs(conf);
+    confs.push_back(0);
 	/* process %C %B etc */
-	check_special_chars(conf, TRUE);
-	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(conf), word, word_eol, "", "", word_eol[5],
+	check_special_chars(&confs[0], TRUE);
+    auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
 		server_get_network(sess->server, TRUE), "", "", nick, "");
-	free(conf);
 	handle_command(sess, tbuf, FALSE);
 }
 
