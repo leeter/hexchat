@@ -21,6 +21,7 @@
 #endif
 #include <algorithm>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <cstring>
 #include <cstdlib>
@@ -1003,22 +1004,21 @@ cmd_deop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	}
 }
 
-typedef struct
+struct multidata
 {
-	char **nicks;
+    std::vector<char*> nicks;
 	int i;
 	session *sess;
 	char *reason;
 	char *tbuf;
-} multidata;
+};
 
 static int
 mdehop_cb (struct User *user, multidata *data)
 {
 	if (user->hop && !user->me)
 	{
-		data->nicks[data->i] = user->nick;
-		data->i++;
+        data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -1026,14 +1026,10 @@ mdehop_cb (struct User *user, multidata *data)
 static int
 cmd_mdehop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = static_cast<char**>(malloc (sizeof (char *) * sess->hops));
 	multidata data;
 
-	data.nicks = nicks;
-	data.i = 0;
 	tree_foreach (static_cast<tree*>(sess->usertree), (tree_traverse_func *)mdehop_cb, &data);
-	send_channel_modes (sess, tbuf, nicks, 0, data.i, '-', 'h', 0);
-	free (nicks);
+	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '-', 'h', 0);
 
 	return TRUE;
 }
@@ -1043,8 +1039,7 @@ mdeop_cb (struct User *user, multidata *data)
 {
 	if (user->op && !user->me)
 	{
-		data->nicks[data->i] = user->nick;
-		data->i++;
+        data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -1052,14 +1047,10 @@ mdeop_cb (struct User *user, multidata *data)
 static int
 cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = static_cast<char**>(malloc(sizeof(char *) * sess->ops));
 	multidata data;
 
-	data.nicks = nicks;
-	data.i = 0;
 	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mdeop_cb, &data);
-	send_channel_modes (sess, tbuf, nicks, 0, data.i, '-', 'o', 0);
-	free (nicks);
+	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '-', 'o', 0);
 
 	return TRUE;
 }
@@ -2728,8 +2719,7 @@ mop_cb (struct User *user, multidata *data)
 {
 	if (!user->op)
 	{
-		data->nicks[data->i] = user->nick;
-		data->i++;
+        data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -2737,15 +2727,10 @@ mop_cb (struct User *user, multidata *data)
 static int
 cmd_mop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = static_cast<char**>(malloc(sizeof(char *) * (sess->total - sess->ops)));
 	multidata data;
 
-	data.nicks = nicks;
-	data.i = 0;
 	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mop_cb, &data);
-	send_channel_modes (sess, tbuf, nicks, 0, data.i, '+', 'o', 0);
-
-	free (nicks);
+	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '+', 'o', 0);
 
 	return TRUE;
 }
@@ -3790,10 +3775,10 @@ static int
 cmd_wallchop (struct session *sess, char *tbuf, char *word[],
 				  char *word_eol[])
 {
-	multidata data;
-
 	if (!(*word_eol[2]))
 		return FALSE;
+   
+    multidata data;
 
 	strcpy (tbuf, "NOTICE ");
 
