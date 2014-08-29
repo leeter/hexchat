@@ -719,7 +719,7 @@ cmd_ctcp (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				cmd += mbl;
 			}
 
-			sess->server->p_ctcp (sess->server, to, msg);
+			sess->server->p_ctcp (to, msg);
 
 			EMIT_SIGNAL (XP_TE_CTCPSEND, sess, to, msg, NULL, NULL, 0);
 

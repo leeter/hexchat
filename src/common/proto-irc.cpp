@@ -263,10 +263,11 @@ irc_set_away (server *serv, char *reason)
 	tcp_sendf (serv, "AWAY :%s\r\n", reason);
 }
 
-static void
-irc_ctcp (server *serv, const char *to, char *msg)
+// TODO: split appropriately
+void
+server::p_ctcp(const std::string & to, const std::string & msg)
 {
-	tcp_sendf (serv, "PRIVMSG %s :\001%s\001\r\n", to, msg);
+	tcp_sendf (this, "PRIVMSG %s :\001%s\001\r\n", to.c_str(), msg.c_str());
 }
 
 static void
@@ -1574,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_ctcp = irc_ctcp;
 	serv->p_nctcp = irc_nctcp;
 	serv->p_quit = irc_quit;
 	serv->p_kick = irc_kick;

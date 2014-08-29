@@ -1277,7 +1277,7 @@ dcc_connect(::dcc::DCC *dcc)
 		else
 			snprintf(tbuf, sizeof(tbuf), "DCC CHAT chat %u %d %d",
 			dcc->addr, dcc->port, dcc->pasvid);
-		dcc->serv->p_ctcp(dcc->serv, dcc->nick, tbuf);
+		dcc->serv->p_ctcp(dcc->nick, tbuf);
 	}
 	else
 	{
@@ -2172,7 +2172,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 							file_part (dcc->file), dcc->addr,
 							dcc->port, dcc->size);
 				}
-				sess->server->p_ctcp (sess->server, to, outbuf);
+				sess->server->p_ctcp (to, outbuf);
 
 				char * mutable_to = strdup(to);
 				EMIT_SIGNAL (XP_TE_DCCOFFER, sess, file_part (dcc->file),
@@ -2371,7 +2371,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 			snprintf (outbuf, sizeof (outbuf), "DCC CHAT chat %u %d",
 						 dcc->addr, dcc->port);
 		}
-		dcc->serv->p_ctcp (dcc->serv, nick, outbuf);
+		dcc->serv->p_ctcp (nick, outbuf);
 		EMIT_SIGNAL (XP_TE_DCCCHATOFFERING, sess, nick, NULL, NULL, NULL, 0);
 	} else
 	{
@@ -2396,7 +2396,7 @@ dcc_resume (::dcc::DCC *dcc)
 		if (dcc->pasvid)
  			sprintf (tbuf + strlen (tbuf), " %d", dcc->pasvid);
 
-		dcc->serv->p_ctcp (dcc->serv, dcc->nick, tbuf);
+		dcc->serv->p_ctcp (dcc->nick, tbuf);
 		return 1;
 	}
 
@@ -2498,7 +2498,7 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 							"DCC ACCEPT %s %d %"DCC_SFMT,
 							file_part (dcc->file), port, dcc->resumable);
 
-				dcc->serv->p_ctcp (dcc->serv, dcc->nick, tbuf);
+				dcc->serv->p_ctcp (dcc->nick, tbuf);
 			}
 			sprintf (tbuf, "%"DCC_SFMT, dcc->pos);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_DCCRESUMEREQUEST, sess, nick,
