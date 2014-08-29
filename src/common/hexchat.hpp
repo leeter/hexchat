@@ -476,7 +476,7 @@ struct server
 	void p_invite(const std::string& channel, const std::string &nick);
     void p_cycle(const std::string& channel, const std::string& key);
 	void p_ctcp(const std::string & to, const std::string & msg);
-	void (*p_nctcp)(struct server *, char *to, char *msg);
+    void p_nctcp(const std::string & to, const std::string & msg);
 	void (*p_quit)(struct server *, char *reason);
 	void (*p_kick)(struct server *, char *channel, char *nick, char *reason);
 	void (*p_part)(struct server *, char *channel, char *reason);

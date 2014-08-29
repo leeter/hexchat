@@ -2834,7 +2834,7 @@ cmd_nctcp (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (*word_eol[3])
 	{
-		sess->server->p_nctcp (sess->server, word[2], word_eol[3]);
+		sess->server->p_nctcp (word[2], word_eol[3]);
 		return TRUE;
 	}
 	return FALSE;

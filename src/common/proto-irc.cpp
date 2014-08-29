@@ -270,10 +270,10 @@ server::p_ctcp(const std::string & to, const std::string & msg)
 	tcp_sendf (this, "PRIVMSG %s :\001%s\001\r\n", to.c_str(), msg.c_str());
 }
 
-static void
-irc_nctcp (server *serv, char *to, char *msg)
+void
+server::p_nctcp(const std::string & to, const std::string & msg)
 {
-	tcp_sendf (serv, "NOTICE %s :\001%s\001\r\n", to, msg);
+	tcp_sendf (this, "NOTICE %s :\001%s\001\r\n", to, msg);
 }
 
 void
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_nctcp = irc_nctcp;
 	serv->p_quit = irc_quit;
 	serv->p_kick = irc_kick;
 	serv->p_part = irc_part;
