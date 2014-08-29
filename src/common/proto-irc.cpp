@@ -232,13 +232,13 @@ irc_part (server *serv, char *channel, char *reason)
 		tcp_sendf (serv, "PART %s\r\n", channel);
 }
 
-static void
-irc_quit (server *serv, char *reason)
+void
+server::p_quit (const std::string & reason)
 {
-	if (reason[0])
-		tcp_sendf (serv, "QUIT :%s\r\n", reason);
+	if (!reason.empty())
+		tcp_sendf (this, "QUIT :%s\r\n", reason);
 	else
-		tcp_send_len (serv, "QUIT\r\n", 6);
+		tcp_send_len (this, "QUIT\r\n", 6);
 }
 
 static void
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_quit = irc_quit;
 	serv->p_kick = irc_kick;
 	serv->p_part = irc_part;
 	serv->p_ns_identify = irc_ns_identify;

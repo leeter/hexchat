@@ -157,12 +157,12 @@ server_sendquit (session * sess)
 		check_special_chars (colrea, FALSE);
 		rea = random_line (colrea);
 		free (colrea);
-		sess->server->p_quit (sess->server, rea);
+		sess->server->p_quit (rea);
 		free (rea);
 	} else
 	{
 		/* reason set by /quit, /close argument */
-		sess->server->p_quit (sess->server, sess->quitreason);
+		sess->server->p_quit (sess->quitreason);
 	}
 }
 
