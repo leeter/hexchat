@@ -430,7 +430,7 @@ cmd_back (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-static char *
+static std::string
 create_mask(session * sess, std::string mask, const std::string &mode, const std::string &typestr, int deop)
 {
 	int type;
@@ -550,20 +550,16 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		//snprintf (buf, sizeof (buf), "%s %s", mode, mask);
 	}
 	
-	return g_strdup (buf.str().c_str());
+	return buf.str();
 }
 
 static void
 ban (session * sess, char *tbuf, char *mask, char *bantypestr, int deop)
 {
-	char *banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
+	std::string banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
 	server *serv = sess->server;
-	
-	if (banmask)
-	{
-		serv->p_mode (serv, sess->channel, banmask);
-		g_free (banmask);
-	}
+    banmask.push_back(0);
+    serv->p_mode(serv, sess->channel, &banmask[0]);
 }
 
 static int
@@ -3071,7 +3067,6 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static int
 cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char *quietmask;
 	server *serv = sess->server;
 
 	if (strchr (serv->chanmodes, 'q') == NULL)
@@ -3082,13 +3077,9 @@ cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (*word[2])
 	{
-		quietmask = create_mask (sess, word[2], "+q", word[3], 0);
-	
-		if (quietmask)
-		{
-			serv->p_mode (serv, sess->channel, quietmask);
-			g_free (quietmask);
-		}
+		std::string quietmask = create_mask (sess, word[2], "+q", word[3], 0);
+        quietmask.push_back(0);
+        serv->p_mode(serv, sess->channel, &quietmask[0]);
 	}
 	else
 	{
