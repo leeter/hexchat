@@ -117,9 +117,8 @@ nick_command (session * sess, char *cmd)
 void
 nick_command_parse (session *sess, const std::string & cmd, const std::string& nick, const std::string& allnick)
 {
-	char *buf;
-	char *host = _("Host unknown");
-	char *account = _("Account unknown");
+	const char *host = _("Host unknown");
+	const char *account = _("Account unknown");
 	struct User *user;
 	int len;
 
@@ -143,15 +142,13 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 
 	/* this can't overflow, since popup->cmd is only 256 */
 	len = cmd.length() + nick.length() + allnick.length() + 512;
-	buf = static_cast<char*>(malloc (len));
+    std::string buf(len, '\0');
 
-	auto_insert (buf, len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
+	auto_insert (&buf[0], len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
 					 server_get_network (sess->server, TRUE), host,
 					 sess->server->nick, nick.c_str(), account);
 
-	nick_command (sess, buf);
-
-	free (buf);
+    nick_command(sess, &buf[0]);
 }
 
 /* userlist button has been clicked */
