@@ -137,12 +137,12 @@ server_sendpart (server * serv, char *channel, char *reason)
 	if (!reason)
 	{
 		reason = random_line (prefs.hex_irc_part_reason);
-		serv->p_part (serv, channel, reason);
+		serv->p_part (channel, reason);
 		free (reason);
 	} else
 	{
 		/* reason set by /quit, /close argument */
-		serv->p_part (serv, channel, reason);
+		serv->p_part (channel, reason);
 	}
 }
 

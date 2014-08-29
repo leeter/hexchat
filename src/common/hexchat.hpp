@@ -479,7 +479,7 @@ struct server
     void p_nctcp(const std::string & to, const std::string & msg);
 	void p_quit(const std::string& reason);
     void p_kick(const std::string& channel, const std::string &nick, const std::string & reason);
-	void (*p_part)(struct server *, char *channel, char *reason);
+    void p_part(const std::string& channel, const std::string & reason);
 	void (*p_ns_identify)(struct server *, char *pass);
 	void (*p_ns_ghost)(struct server *, char *usname, char *pass);
 	void p_join(const std::string& channel, const std::string& key);

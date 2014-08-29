@@ -223,20 +223,20 @@ irc_join_list (server *serv, GSList *favorites)
 	g_slist_free (favlist);
 }
 
-static void
-irc_part (server *serv, char *channel, char *reason)
+void
+server::p_part(const std::string& channel, const std::string & reason)
 {
-	if (reason[0])
-		tcp_sendf (serv, "PART %s :%s\r\n", channel, reason);
+	if (!reason.empty())
+		tcp_sendf (this, "PART %s :%s\r\n", channel.c_str(), reason.c_str());
 	else
-		tcp_sendf (serv, "PART %s\r\n", channel);
+		tcp_sendf (this, "PART %s\r\n", channel.c_str());
 }
 
 void
 server::p_quit (const std::string & reason)
 {
 	if (!reason.empty())
-		tcp_sendf (this, "QUIT :%s\r\n", reason);
+		tcp_sendf (this, "QUIT :%s\r\n", reason.c_str());
 	else
 		tcp_send_len (this, "QUIT\r\n", 6);
 }
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_part = irc_part;
 	serv->p_ns_identify = irc_ns_identify;
 	serv->p_ns_ghost = irc_ns_ghost;
 	serv->p_join_list = irc_join_list;
