@@ -549,11 +549,10 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	{
 		if (*arg)
 		{
-			char *buf = static_cast<char*>(malloc (strlen (chan) + strlen (arg) + 2));
-			sprintf (buf, "%s %s", chan, arg);
+            std::string buf(strlen(chan) + strlen(arg) + 2, '\0');
+            sprintf(&buf[0], "%s %s", chan, arg);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
-										  outbuf + 2, buf, 0, tags_data->timestamp);
-			free (buf);
+										  outbuf + 2, &buf[0], 0, tags_data->timestamp);
 		} else
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, chan, 0, tags_data->timestamp);
