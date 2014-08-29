@@ -282,13 +282,13 @@ server::p_cycle(const std::string& channel, const std::string& key)
     tcp_sendf(this, "PART %s\r\nJOIN %s %s\r\n", channel.c_str(), channel.c_str(), key.c_str());
 }
 
-static void
-irc_kick (server *serv, char *channel, char *nick, char *reason)
+void
+server::p_kick(const std::string& channel, const std::string &nick, const std::string & reason)
 {
-	if (reason[0])
-		tcp_sendf (serv, "KICK %s %s :%s\r\n", channel, nick, reason);
+	if (!reason.empty())
+		tcp_sendf (this, "KICK %s %s :%s\r\n", channel.c_str(), nick.c_str(), reason.c_str());
 	else
-		tcp_sendf (serv, "KICK %s %s\r\n", channel, nick);
+		tcp_sendf (this, "KICK %s %s\r\n", channel.c_str(), nick.c_str());
 }
 
 void
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_kick = irc_kick;
 	serv->p_part = irc_part;
 	serv->p_ns_identify = irc_ns_identify;
 	serv->p_ns_ghost = irc_ns_ghost;

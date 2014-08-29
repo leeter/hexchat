@@ -1365,7 +1365,7 @@ static int
 mkick_cb (struct User *user, multidata *data)
 {
 	if (!user->op && !user->me)
-		data->sess->server->p_kick (data->sess->server, data->sess->channel, user->nick, data->reason);
+		data->sess->server->p_kick (data->sess->channel, user->nick, data->reason ? data->reason : "");
 	return TRUE;
 }
 
@@ -1373,7 +1373,7 @@ static int
 mkickops_cb (struct User *user, multidata *data)
 {
 	if (user->op && !user->me)
-		data->sess->server->p_kick (data->sess->server, data->sess->channel, user->nick, data->reason);
+        data->sess->server->p_kick(data->sess->channel, user->nick, data->reason ? data->reason : "");
 	return TRUE;
 }
 
@@ -2389,7 +2389,7 @@ cmd_kick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	char *reason = word_eol[3];
 	if (*nick)
 	{
-		sess->server->p_kick (sess->server, sess->channel, nick, reason);
+		sess->server->p_kick (sess->channel, nick, reason ? reason : "");
 		return TRUE;
 	}
 	return FALSE;
@@ -2415,7 +2415,7 @@ cmd_kickban (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		} else
 			ban (sess, tbuf, nick, "", (user && user->op));
 
-		sess->server->p_kick (sess->server, sess->channel, nick, reason);
+		sess->server->p_kick (sess->channel, nick, reason ? reason : "");
 
 		return TRUE;
 	}
