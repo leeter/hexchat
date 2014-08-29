@@ -64,50 +64,50 @@ irc_login (server *serv, char *user, char *realname)
 }
 
 static void
-irc_nickserv (server *serv, char *cmd, char *arg1, char *arg2, char *arg3)
+irc_nickserv(server *serv, const std::string& cmd, const std::string& arg1, const std::string& arg2, const std::string& arg3)
 {
 	/* are all ircd authors idiots? */
 	switch (serv->loginmethod)
 	{
 		case LOGIN_MSG_NICKSERV:
-			tcp_sendf (serv, "PRIVMSG NICKSERV :%s %s%s%s\r\n", cmd, arg1, arg2, arg3);
+            tcp_sendf(serv, "PRIVMSG NICKSERV :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_NICKSERV:
-			tcp_sendf (serv, "NICKSERV %s %s%s%s\r\n", cmd, arg1, arg2, arg3);
+            tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		default: /* This may not work but at least it tries something when using /id or /ghost cmd */
-			tcp_sendf (serv, "NICKSERV %s %s%s%s\r\n", cmd, arg1, arg2, arg3);
+            tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 #if 0
 		case LOGIN_MSG_NS:
-			tcp_sendf (serv, "PRIVMSG NS :%s %s%s%s\r\n", cmd, arg1, arg2, arg3);
+            tcp_sendf (serv, "PRIVMSG NS :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_NS:
-			tcp_sendf (serv, "NS %s %s%s%s\r\n", cmd, arg1, arg2, arg3);
+            tcp_sendf (serv, "NS %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_AUTH:
 			/* why couldn't QuakeNet implement one of the existing ones? */
-			tcp_sendf (serv, "AUTH %s %s\r\n", arg1, arg2);
+            tcp_sendf (serv, "AUTH %s %s\r\n", arg1.c_str(), arg2.c_str());
 			break;
 #endif
 	}
 }
 
-static void
-irc_ns_identify (server *serv, char *pass)
+void
+server::p_ns_identify(const std::string &pass)
 {
-	switch (serv->loginmethod)
+	switch (this->loginmethod)
 	{
 		case LOGIN_CHALLENGEAUTH:
-			tcp_sendf (serv, "PRIVMSG %s :CHALLENGE\r\n", CHALLENGEAUTH_NICK);	/* request a challenge from Q */
+			tcp_sendf (this, "PRIVMSG %s :CHALLENGE\r\n", CHALLENGEAUTH_NICK);	/* request a challenge from Q */
 			break;
 #if 0
 		case LOGIN_AUTH:
-			irc_nickserv (serv, "", serv->nick, pass, "");
+			irc_nickserv (this, "", this->nick, pass, "");
 			break;
 #endif
 		default:
-			irc_nickserv (serv, "IDENTIFY", pass, "", "");
+			irc_nickserv (this, "IDENTIFY", pass, "", "");
 	}
 }
 
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_ns_identify = irc_ns_identify;
 	serv->p_ns_ghost = irc_ns_ghost;
 	serv->p_join_list = irc_join_list;
 	serv->p_login = irc_login;

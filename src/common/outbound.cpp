@@ -2260,7 +2260,7 @@ cmd_id (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (word[2][0])
 	{
-		sess->server->p_ns_identify (sess->server, word[2]);
+		sess->server->p_ns_identify (word[2]);
 		return TRUE;
 	}
 

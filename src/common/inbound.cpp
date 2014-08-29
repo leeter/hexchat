@@ -1594,7 +1594,7 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 			/* send nickserv password */
 			if (((ircnet *)serv->network)->pass && inbound_nickserv_login (serv))
 			{
-				serv->p_ns_identify (serv, ((ircnet *)serv->network)->pass);
+				serv->p_ns_identify (((ircnet *)serv->network)->pass);
 			}
 		}
 
