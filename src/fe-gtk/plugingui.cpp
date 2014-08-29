@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <string>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -138,18 +139,17 @@ fe_pluginlist_update (void)
 }
 
 static void
-plugingui_load_cb (session *sess, char *file)
+plugingui_load_cb (session *sess, const char *file)
 {
 	if (file)
 	{
-		char *buf = static_cast<char*>(malloc (strlen (file) + 9));
+        std::string buf(strlen(file) + 9, '\0');
 
 		if (strchr (file, ' '))
-			sprintf (buf, "LOAD \"%s\"", file);
+            sprintf(&buf[0], "LOAD \"%s\"", file);
 		else
-			sprintf (buf, "LOAD %s", file);
-		handle_command (sess, buf, FALSE);
-		free (buf);
+            sprintf(&buf[0], "LOAD %s", file);
+		handle_command (sess, &buf[0], FALSE);
 	}
 }
 
@@ -211,14 +211,12 @@ plugingui_reloadbutton_cb (GtkWidget *wid, GtkTreeView *view)
 
 	if (file)
 	{
-		char *buf = static_cast<char*>(malloc (strlen (file) + 9));
-
+        std::string buf(strlen(file) + 9, '\0');
 		if (strchr (file, ' '))
-			sprintf (buf, "RELOAD \"%s\"", file);
+			sprintf (&buf[0], "RELOAD \"%s\"", file);
 		else
-			sprintf (buf, "RELOAD %s", file);
-		handle_command (current_sess, buf, FALSE);
-		free (buf);
+            sprintf(&buf[0], "RELOAD %s", file);
+        handle_command(current_sess, &buf[0], FALSE);
 		g_free (file);
 	}
 }
