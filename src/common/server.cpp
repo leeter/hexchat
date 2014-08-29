@@ -1282,7 +1282,6 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 
 	packetlen = 4 + 1 + serverAddr.length() + 2;
 	sc2.resize(packetlen);
-	//sc2 = malloc (packetlen);
 	sc2[0] = 5;						  /* version */
 	sc2[1] = 1;						  /* command */
 	sc2[2] = 0;						  /* reserved */
@@ -1296,7 +1295,6 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 		*((unsigned short *)&(*it)) = htons(port);
 		send(sok, (char*)&sc2[0], packetlen, 0);
 	}
-	//free (sc2);
 
 	/* consume all of the reply */
 	if (recv (sok, (char*)buf, 4, 0) != 4)
