@@ -1176,7 +1176,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int i = 0, finds = 0, found;
 	int idx = 2;
 	int prev_numeric;
-	char *var, *val, *prev_string;
+	char *var, *val;
 
 	if (g_ascii_strcasecmp (word[2], "-e") == 0)
 	{
@@ -1243,21 +1243,17 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				if (erase || *val)
 				{
 					/* save the previous value until we print it out */
-					prev_string = (char*) malloc (vars[i].len + 1);
-					if (!prev_string)
-						return false;
-					strncpy (prev_string, (char *) &prefs + vars[i].offset, vars[i].len);
+                    std::string prev_string(vars[i].len, '\0');
+                    std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, prev_string.begin());
 
 					/* update the variable */
-					strncpy ((char *) &prefs + vars[i].offset, val, vars[i].len);
+                    std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, val);
 					((char *) &prefs)[vars[i].offset + vars[i].len - 1] = 0;
 
 					if (!quiet)
 					{
-						PrintTextf (sess, "%s set to: %s (was: %s)\n", var, (char *) &prefs + vars[i].offset, prev_string);
+						PrintTextf (sess, "%s set to: %s (was: %s)\n", var, (char *) &prefs + vars[i].offset, prev_string.c_str());
 					}
-
-					free (prev_string);
 				}
 				else
 				{
