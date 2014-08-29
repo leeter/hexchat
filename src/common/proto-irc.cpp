@@ -275,10 +275,10 @@ irc_nctcp (server *serv, char *to, char *msg)
 	tcp_sendf (serv, "NOTICE %s :\001%s\001\r\n", to, msg);
 }
 
-static void
-irc_cycle (server *serv, char *channel, char *key)
+void
+server::p_cycle(const std::string& channel, const std::string& key)
 {
-	tcp_sendf (serv, "PART %s\r\nJOIN %s %s\r\n", channel, channel, key);
+    tcp_sendf(this, "PART %s\r\nJOIN %s %s\r\n", channel.c_str(), channel.c_str(), key.c_str());
 }
 
 static void
@@ -1574,7 +1574,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_cycle = irc_cycle;
 	serv->p_ctcp = irc_ctcp;
 	serv->p_nctcp = irc_nctcp;
 	serv->p_quit = irc_quit;

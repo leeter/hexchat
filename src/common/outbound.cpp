@@ -773,7 +773,7 @@ cmd_cycle (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		if (chan_sess && chan_sess->type == SESS_CHANNEL)
 		{
 			key = chan_sess->channelkey;
-			sess->server->p_cycle (sess->server, chan, key);
+			sess->server->p_cycle (chan, key);
 			return TRUE;
 		}
 	}
