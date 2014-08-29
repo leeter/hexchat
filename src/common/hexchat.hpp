@@ -494,7 +494,7 @@ struct server
 	void (*p_get_ip_uh)(struct server *, char *nick);
 	void (*p_set_back)(struct server *);
 	void (*p_set_away)(struct server *, char *reason);
-	void (*p_message)(struct server *, char *channel, char *text);
+	void p_message(const std::string & channel, const std::string & text);
 	void (*p_action)(struct server *, char *channel, char *act);
 	void (*p_notice)(struct server *, char *channel, char *text);
 	void (*p_topic)(struct server *, char *channel, char *topic);

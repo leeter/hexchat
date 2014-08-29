@@ -355,10 +355,10 @@ server::p_whois (const std::string& nicks)
 	tcp_sendf (this, "WHOIS %s\r\n", nicks.c_str());
 }
 
-static void
-irc_message (server *serv, char *channel, char *text)
+void
+server::p_message(const std::string & channel, const std::string & text)
 {
-	tcp_sendf (serv, "PRIVMSG %s :%s\r\n", channel, text);
+	tcp_sendf (this, "PRIVMSG %s :%s\r\n", channel.c_str(), text.c_str());
 }
 
 static void
@@ -1595,7 +1595,6 @@ proto_fill_her_up (server *serv)
 	serv->p_get_ip_uh = irc_userhost;
 	serv->p_set_back = irc_set_back;
 	serv->p_set_away = irc_set_away;
-	serv->p_message = irc_message;
 	serv->p_action = irc_action;
 	serv->p_notice = irc_notice;
 	serv->p_topic = irc_topic;

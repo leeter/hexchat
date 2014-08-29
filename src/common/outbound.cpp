@@ -2772,14 +2772,14 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 				{
-					sess->server->p_message (sess->server, nick, split_text);
+					sess->server->p_message (nick, split_text);
 
 					if (*split_text)
 						offset += strlen(split_text);
 
 					g_free(split_text);
 				}
-				sess->server->p_message (sess->server, nick, msg + offset);
+				sess->server->p_message (nick, msg + offset);
 				offset = 0;
 			}
 			newsess = find_dialog (sess->server, nick);
@@ -3043,7 +3043,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 			while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 			{
-				sess->server->p_message (sess->server, nick, split_text);
+				sess->server->p_message (nick, split_text);
 				inbound_chanmsg (nick_sess->server, nick_sess, nick_sess->channel,
 								 nick_sess->server->nick, split_text, TRUE, FALSE,
 								 &no_tags);
@@ -3053,7 +3053,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 				g_free(split_text);
 			}
-			sess->server->p_message (sess->server, nick, msg + offset);
+			sess->server->p_message (nick, msg + offset);
 			inbound_chanmsg (nick_sess->server, nick_sess, nick_sess->channel,
 							 nick_sess->server->nick, msg + offset, TRUE, FALSE,
 							 &no_tags);
@@ -3808,7 +3808,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 				inbound_chanmsg (sess->server, NULL, sess->channel,
 									  sess->server->nick, word_eol[2], TRUE, FALSE, 
 									  &no_tags);
-				sess->server->p_message (sess->server, sess->channel, word_eol[2]);
+				sess->server->p_message (sess->channel, word_eol[2]);
 			}
 			list = list->next;
 		}
@@ -4547,7 +4547,7 @@ handle_say (session *sess, char *text, int check_spch)
 		{
 			inbound_chanmsg (sess->server, sess, sess->channel, sess->server->nick,
 								  split_text, TRUE, FALSE, &no_tags);
-			sess->server->p_message (sess->server, sess->channel, split_text);
+			sess->server->p_message (sess->channel, split_text);
 			
 			if (*split_text)
 				offset += strlen(split_text);
@@ -4557,7 +4557,7 @@ handle_say (session *sess, char *text, int check_spch)
 
 		inbound_chanmsg (sess->server, sess, sess->channel, sess->server->nick,
 							  text + offset, TRUE, FALSE, &no_tags);
-		sess->server->p_message (sess->server, sess->channel, text + offset);
+		sess->server->p_message (sess->channel, text + offset);
 	} else
 	{
 		notc_msg (sess);
