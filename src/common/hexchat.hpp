@@ -456,10 +456,10 @@ struct msproxy_state_t
 #define MECH_AES 2
 #define MECH_EXTERNAL 3
 
-typedef struct server
+struct server
 {
 	/*  server control operations (in server*.c) */
-	void (*connect)(struct server *, char *hostname, int port, bool no_login);
+	void connect(char *hostname, int port, bool no_login);
 	void (*disconnect)(struct session *, int sendquit, int err);
 	int  (*cleanup)(struct server *);
 	void (*flush_queue)(struct server *);
@@ -482,7 +482,7 @@ typedef struct server
 	void (*p_mode)(struct server *, char *target, char *mode);
 	void (*p_user_list)(struct server *, char *channel);
 	void (*p_away_status)(struct server *, char *channel);
-	void (*p_whois)(struct server *, char *nicks);
+	void p_whois(const std::string& nicks);
 	void (*p_get_ip)(struct server *, char *nick);
 	void (*p_get_ip_uh)(struct server *, char *nick);
 	void (*p_set_back)(struct server *);
@@ -605,7 +605,7 @@ typedef struct server
 	unsigned int use_ssl:1;				  /* is server SSL capable? */
 	unsigned int accept_invalid_cert:1;/* ignore result of server's cert. verify */
 #endif
-} server;
+};
 
 typedef int (*cmd_callback) (struct session * sess, char *tbuf, char *word[],
 									  char *word_eol[]);

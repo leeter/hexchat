@@ -1924,9 +1924,9 @@ cmd_gate (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 #endif
 		server_fill_her_up (serv);
 		if (*port)
-			serv->connect (serv, server_name, atoi (port), TRUE);
+			serv->connect (server_name, atoi (port), true);
 		else
-			serv->connect (serv, server_name, 23, TRUE);
+			serv->connect (server_name, 23, true);
 		return TRUE;
 	}
 	return FALSE;
@@ -3426,11 +3426,11 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (*port)
 	{
-		serv->connect (serv, server_name, atoi (port), FALSE);
+		serv->connect (server_name, atoi (port), false);
 	} else
 	{
 		/* -1 for default port */
-		serv->connect (serv, server_name, -1, FALSE);
+		serv->connect (server_name, -1, false);
 	}
 
 	/* try to associate this connection with a listed network */

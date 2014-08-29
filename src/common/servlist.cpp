@@ -661,15 +661,15 @@ servlist_connect (session *sess, ircnet *net, gboolean join)
 #ifdef USE_OPENSSL
 			serv->use_ssl = TRUE;
 #endif
-			serv->connect (serv, ircserv->hostname, atoi (port + 2), FALSE);
+			serv->connect (ircserv->hostname, atoi (port + 2), false);
 		} else
 		{
-			serv->connect (serv, ircserv->hostname, atoi (port + 1), FALSE);
+			serv->connect (ircserv->hostname, atoi (port + 1), false);
 		}
 
 		*port = '/';
 	} else
-		serv->connect (serv, ircserv->hostname, -1, FALSE);
+		serv->connect (ircserv->hostname, -1, false);
 
 	server_set_encoding (serv, net->encoding);
 }

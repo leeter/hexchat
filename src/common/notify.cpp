@@ -275,11 +275,9 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	{
 
 	    /* Let's do whois with idle time (like in /quote WHOIS %s %s) */
-
-	    char *wii_str = static_cast<char*>(malloc (strlen (nick) * 2 + 2));
-	    sprintf (wii_str, "%s %s", nick, nick);
-	    serv->p_whois (serv, wii_str);
-	    free (wii_str);
+        std::string wii_str(strlen(nick) * 2 + 2, '\0');
+	    sprintf (&wii_str[0], "%s %s", nick, nick);
+	    serv->p_whois (wii_str);
 	}
 }
 

@@ -96,7 +96,6 @@ GSList *serv_list = NULL;
 static void auto_reconnect (server *serv, int send_quit, int err);
 static void server_disconnect (session * sess, int sendquit, int err);
 static int server_cleanup (server * serv);
-static void server_connect (server *serv, char *hostname, int port, bool no_login);
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -799,7 +798,7 @@ timeout_auto_reconnect (server *serv)
 		serv->recondelay_tag = 0;
 		if (!serv->connected && !serv->connecting && serv->server_session)
 		{
-			server_connect (serv, serv->hostname, serv->port, false);
+			serv->connect (serv->hostname, serv->port, false);
 		}
 	}
 	return 0;			  /* returning 0 should remove the timeout handler */
@@ -1673,15 +1672,15 @@ xit:
 	/* cppcheck-suppress memleak */
 }
 
-static void
-server_connect (server *serv, char *hostname, int port, bool no_login)
+void
+server::connect (char *hostname, int port, bool no_login)
 {
 	int read_des[2] = { 0 };
 	unsigned int pid;
-	session *sess = serv->server_session;
+	session *sess = this->server_session;
 
 #ifdef USE_OPENSSL
-	if (!ctx && serv->use_ssl)
+	if (!ctx && this->use_ssl)
 	{
 		if (!(ctx = _SSL_context_init (ssl_cb_info, FALSE)))
 		{
@@ -1699,37 +1698,37 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 		/* use default port for this server type */
 		port = 6667;
 #ifdef USE_OPENSSL
-		if (serv->use_ssl)
+		if (this->use_ssl)
 			port = 6697;
 #endif
 	}
 	port &= 0xffff;	/* wrap around */
 
-	if (serv->connected || serv->connecting || serv->recondelay_tag)
+	if (this->connected || this->connecting || this->recondelay_tag)
 		server_disconnect (sess, TRUE, -1);
 
 	fe_progressbar_start (sess);
 
 	EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, hostname, NULL, NULL, NULL, 0);
 
-	safe_strcpy (serv->servername, hostname, sizeof (serv->servername));
+	safe_strcpy (this->servername, hostname, sizeof (this->servername));
 	/* overlap illegal in strncpy */
-	if (hostname != serv->hostname)
-		safe_strcpy (serv->hostname, hostname, sizeof (serv->hostname));
+	if (hostname != this->hostname)
+		safe_strcpy (this->hostname, hostname, sizeof (this->hostname));
 
 #ifdef USE_OPENSSL
-	if (serv->use_ssl)
+	if (this->use_ssl)
 	{
 		char *cert_file;
-		serv->have_cert = false;
+		this->have_cert = false;
 
 		/* first try network specific cert/key */
 		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
-					 get_xdir (), server_get_network (serv, TRUE));
+					 get_xdir (), server_get_network (this, TRUE));
 		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 		{
 			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-				serv->have_cert = true;
+				this->have_cert = true;
 		}
 		else
 		{
@@ -1738,21 +1737,21 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 			{
 				if (SSL_CTX_use_PrivateKey_file(ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-					serv->have_cert = true;
+					this->have_cert = true;
 			}
 		}
 		g_free (cert_file);
 	}
 #endif
 
-	server_set_defaults (serv);
-	serv->connecting = true;
-	serv->port = port;
-	serv->no_login = no_login;
+	server_set_defaults (this);
+	this->connecting = true;
+	this->port = port;
+	this->no_login = no_login;
 
-	fe_server_event (serv, FE_SE_CONNECTING, 0);
-	fe_set_away (serv);
-	server_flush_queue (serv);
+	fe_server_event (this, FE_SE_CONNECTING, 0);
+	fe_set_away (this);
+	server_flush_queue (this);
 
 #ifdef WIN32
 	if (_pipe (read_des, 4096, _O_BINARY) < 0)
@@ -1764,24 +1763,24 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 	setmode (read_des[0], O_BINARY);
 	setmode (read_des[1], O_BINARY);
 #endif
-	serv->childread = read_des[0];
-	serv->childwrite = read_des[1];
+	this->childread = read_des[0];
+	this->childwrite = read_des[1];
 
 	/* create both sockets now, drop one later */
-	net_sockets (&serv->sok4, &serv->sok6);
+	net_sockets (&this->sok4, &this->sok6);
 #ifdef USE_MSPROXY
 	/* In case of MS Proxy we have a separate UDP control connection */
-	if (!serv->dont_use_proxy && (serv->proxy_type == 5))
-		udp_sockets (&serv->proxy_sok4, &serv->proxy_sok6);
+	if (!this->dont_use_proxy && (this->proxy_type == 5))
+		udp_sockets (&this->proxy_sok4, &this->proxy_sok6);
 	else
 #endif
 	{
-		serv->proxy_sok4 = -1;
-		serv->proxy_sok6 = -1;
+		this->proxy_sok4 = -1;
+		this->proxy_sok6 = -1;
 	}
 
 #ifdef WIN32
-	std::thread server_thread(server_child, serv);
+	std::thread server_thread(server_child, this);
 	pid = GetThreadId(server_thread.native_handle());
 	server_thread.detach();
 #else
@@ -1800,23 +1799,22 @@ server_connect (server *serv, char *hostname, int port, bool no_login)
 	case 0:
 		/* this is the child */
 		setuid (getuid ());
-		server_child (serv);
+		server_child (this);
 		_exit (0);
 	}
 #endif
-	serv->childpid = pid;
+	this->childpid = pid;
 #ifdef WIN32
-	serv->iotag = fe_input_add(serv->childread, FIA_READ | FIA_FD, (GIOFunc)server_read_child,
+	this->iotag = fe_input_add(this->childread, FIA_READ | FIA_FD, (GIOFunc)server_read_child,
 #else
-	serv->iotag = fe_input_add (serv->childread, FIA_READ, (GIOFunc)server_read_child,
+	this->iotag = fe_input_add (this->childread, FIA_READ, (GIOFunc)server_read_child,
 #endif
-										 serv);
+										 this);
 }
 
 void
 server_fill_her_up (server *serv)
 {
-	serv->connect = server_connect;
 	serv->disconnect = server_disconnect;
 	serv->cleanup = server_cleanup;
 	serv->flush_queue = server_flush_queue;
@@ -1863,9 +1861,7 @@ server_new (void)
 	static int id = 0;
 	server *serv;
 
-	serv = new(std::nothrow) server();// calloc(1, sizeof(*serv));
-	if (!serv)
-		return NULL;
+	serv = new server();// calloc(1, sizeof(*serv))
 
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up (serv);

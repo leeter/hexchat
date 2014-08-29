@@ -45,7 +45,7 @@
 #include "url.hpp"
 #include "servlist.hpp"
 
-namespace {
+
 static void
 irc_login (server *serv, char *user, char *realname)
 {
@@ -349,10 +349,10 @@ irc_get_ip (server *serv, char *nick)
  *  Command: WHOIS
  *     Parameters: [<server>] <nickmask>[,<nickmask>[,...]]
  */
-static void
-irc_user_whois (server *serv, char *nicks)
+void
+server::p_whois (const std::string& nicks)
 {
-	tcp_sendf (serv, "WHOIS %s\r\n", nicks);
+	tcp_sendf (this, "WHOIS %s\r\n", nicks.c_str());
 }
 
 static void
@@ -1570,7 +1570,6 @@ xit:
 	if (pdibuf != pdibuf_static)
 		free (pdibuf);
 }
-}
 
 void
 proto_fill_her_up (server *serv)
@@ -1593,7 +1592,6 @@ proto_fill_her_up (server *serv)
 	serv->p_user_list = irc_user_list;
 	serv->p_away_status = irc_away_status;
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_whois = irc_user_whois;
 	serv->p_get_ip = irc_user_list;
 	serv->p_get_ip_uh = irc_userhost;
 	serv->p_set_back = irc_set_back;
