@@ -657,7 +657,7 @@ inbound_ukick (server *serv, char *chan, char *kicker, char *reason,
 		clear_channel (sess);
 		if (prefs.hex_irc_auto_rejoin)
 		{
-			serv->p_join (serv, chan, sess->channelkey);
+			serv->p_join (chan, sess->channelkey);
 			safe_strcpy (sess->waitchannel, chan, CHANLEN);
 		}
 	}

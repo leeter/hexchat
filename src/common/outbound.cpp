@@ -2365,7 +2365,7 @@ cmd_join (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		sess_find = find_channel (sess->server, chan);
 		if (!sess_find)
 		{
-			sess->server->p_join (sess->server, chan, pass);
+			sess->server->p_join (chan, pass ? pass : "");
 			if (sess->channel[0] == 0 && sess->waitchannel[0])
 			{
 				po = strchr (chan, ',');
@@ -3630,9 +3630,9 @@ url_join_only (server *serv, char *tbuf, char *channel, char *key)
 	/* tbuf is 4kb */
 	safe_strcpy ((tbuf + 1), channel, 256);
 	if (key)
-		serv->p_join (serv, tbuf, key);
+		serv->p_join (tbuf, key);
 	else
-		serv->p_join (serv, tbuf, "");
+		serv->p_join (tbuf, "");
 }
 
 static int

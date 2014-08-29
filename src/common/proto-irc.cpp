@@ -120,13 +120,13 @@ irc_ns_ghost (server *serv, char *usname, char *pass)
 	}
 }
 
-static void
-irc_join (server *serv, char *channel, char *key)
+void
+server::p_join(const std::string& channel, const std::string& key)
 {
-	if (key[0])
-		tcp_sendf (serv, "JOIN %s %s\r\n", channel, key);
+	if (!key.empty())
+		tcp_sendf (this, "JOIN %s %s\r\n", channel.c_str(), key.c_str());
 	else
-		tcp_sendf (serv, "JOIN %s\r\n", channel);
+		tcp_sendf (this, "JOIN %s\r\n", channel.c_str());
 }
 
 static void
@@ -1584,7 +1584,6 @@ proto_fill_her_up (server *serv)
 	serv->p_part = irc_part;
 	serv->p_ns_identify = irc_ns_identify;
 	serv->p_ns_ghost = irc_ns_ghost;
-	serv->p_join = irc_join;
 	serv->p_join_list = irc_join_list;
 	serv->p_login = irc_login;
 	serv->p_join_info = irc_join_info;
