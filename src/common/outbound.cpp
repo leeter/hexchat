@@ -2347,9 +2347,9 @@ cmd_invite (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!*word[2])
 		return FALSE;
 	if (*word[3])
-		sess->server->p_invite (sess->server, word[3], word[2]);
+		sess->server->p_invite (word[3], word[2]);
 	else
-		sess->server->p_invite (sess->server, sess->channel, word[2]);
+		sess->server->p_invite (sess->channel, word[2]);
 	return TRUE;
 }
 

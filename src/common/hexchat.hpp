@@ -473,7 +473,7 @@ struct server
 	void auto_reconnect(bool send_quit, int err);
 	/* irc protocol functions (in proto*.c) */
 	void p_inline(char *buf, int len);
-	void (*p_invite)(struct server *, char *channel, char *nick);
+	void p_invite(const std::string& channel, const std::string &nick);
 	void (*p_cycle)(struct server *, char *channel, char *key);
 	void (*p_ctcp)(struct server *, const char *to, char *msg);
 	void (*p_nctcp)(struct server *, char *to, char *msg);

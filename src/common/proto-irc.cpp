@@ -290,10 +290,10 @@ irc_kick (server *serv, char *channel, char *nick, char *reason)
 		tcp_sendf (serv, "KICK %s %s\r\n", channel, nick);
 }
 
-static void
-irc_invite (server *serv, char *channel, char *nick)
+void
+server::p_invite (const std::string & channel, const std::string & nick)
 {
-	tcp_sendf (serv, "INVITE %s %s\r\n", nick, channel);
+	tcp_sendf (this, "INVITE %s %s\r\n", nick.c_str(), channel.c_str());
 }
 
 static void
@@ -1574,7 +1574,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_invite = irc_invite;
 	serv->p_cycle = irc_cycle;
 	serv->p_ctcp = irc_ctcp;
 	serv->p_nctcp = irc_nctcp;
