@@ -273,7 +273,7 @@ server::p_ctcp(const std::string & to, const std::string & msg)
 void
 server::p_nctcp(const std::string & to, const std::string & msg)
 {
-	tcp_sendf (this, "NOTICE %s :\001%s\001\r\n", to, msg);
+	tcp_sendf (this, "NOTICE %s :\001%s\001\r\n", to.c_str(), msg.c_str());
 }
 
 void
