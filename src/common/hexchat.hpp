@@ -456,12 +456,19 @@ struct msproxy_state_t
 #define MECH_AES 2
 #define MECH_EXTERNAL 3
 
+enum class server_cleanup_result{
+    not_connected,
+    still_connecting,
+    connected,
+    reconnecting
+};
+
 struct server
 {
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void (*disconnect)(struct session *, int sendquit, int err);
-	int  (*cleanup)(struct server *);
+    server_cleanup_result  cleanup();
 	void (*flush_queue)(struct server *);
 	void (*auto_reconnect)(struct server *, int send_quit, int err);
 	/* irc protocol functions (in proto*.c) */

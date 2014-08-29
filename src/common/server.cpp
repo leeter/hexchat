@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <cstdarg>
 #include <cerrno>
 #include <fcntl.h>
 
@@ -95,7 +96,6 @@ GSList *serv_list = NULL;
 
 static void auto_reconnect (server *serv, int send_quit, int err);
 static void server_disconnect (session * sess, int sendquit, int err);
-static int server_cleanup (server * serv);
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -655,7 +655,7 @@ ssl_do_connect (server * serv)
 			if (ERR_GET_REASON (err) == SSL_R_WRONG_VERSION_NUMBER)
 				PrintText (serv->server_session, _("Are you sure this is a SSL capable server and port?\n"));
 
-			server_cleanup (serv);
+			serv->cleanup();
 
 			if (prefs.hex_net_auto_reconnectonfail)
 				auto_reconnect (serv, FALSE, -1);
@@ -759,7 +759,7 @@ ssl_do_connect (server * serv)
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 
-			server_cleanup (serv);
+			serv->cleanup ();
 
 			return (0);
 		}
@@ -777,7 +777,7 @@ ssl_do_connect (server * serv)
 			snprintf (buf, sizeof (buf), "SSL handshake timed out");
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL,
 							 NULL, NULL, 0);
-			server_cleanup (serv); /* ->connecting = FALSE */
+			serv->cleanup (); /* ->connecting = FALSE */
 
 			if (prefs.hex_net_auto_reconnectonfail)
 				auto_reconnect (serv, FALSE, -1);
@@ -877,7 +877,7 @@ server_connect_success (server *serv)
 		{
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, NULL,
 							 NULL, NULL, 0);
-			server_cleanup (serv);	/* ->connecting = FALSE */
+			serv->cleanup ();	/* ->connecting = FALSE */
 			return;
 		}
 		/* FIXME: it'll be needed by new servers */
@@ -1040,64 +1040,64 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 /* kill all sockets & iotags of a server. Stop a connection attempt, or
    disconnect if already connected. */
 
-static int
-server_cleanup (server * serv)
+server_cleanup_result
+server::cleanup ()
 {
-	fe_set_lag (serv, 0);
+	fe_set_lag (this, 0);
 
-	if (serv->iotag)
+	if (this->iotag)
 	{
-		fe_input_remove (serv->iotag);
-		serv->iotag = 0;
+		fe_input_remove (this->iotag);
+		this->iotag = 0;
 	}
 
-	if (serv->joindelay_tag)
+	if (this->joindelay_tag)
 	{
-		fe_timeout_remove (serv->joindelay_tag);
-		serv->joindelay_tag = 0;
+		fe_timeout_remove (this->joindelay_tag);
+		this->joindelay_tag = 0;
 	}
 
 #ifdef USE_OPENSSL
-	if (serv->ssl)
+	if (this->ssl)
 	{
-		SSL_shutdown (serv->ssl);
-		SSL_free (serv->ssl);
-		serv->ssl = NULL;
+		SSL_shutdown (this->ssl);
+		SSL_free (this->ssl);
+		this->ssl = NULL;
 	}
 #endif
 
-	if (serv->connecting)
+	if (this->connecting)
 	{
-		server_stopconnecting (serv);
-		closesocket (serv->sok4);
-		if (serv->proxy_sok4 != -1)
-			closesocket (serv->proxy_sok4);
-		if (serv->sok6 != -1)
-			closesocket (serv->sok6);
-		if (serv->proxy_sok6 != -1)
-			closesocket (serv->proxy_sok6);
-		return 1;
+		server_stopconnecting (this);
+		closesocket (this->sok4);
+		if (this->proxy_sok4 != -1)
+			closesocket (this->proxy_sok4);
+		if (this->sok6 != -1)
+			closesocket (this->sok6);
+		if (this->proxy_sok6 != -1)
+			closesocket (this->proxy_sok6);
+        return server_cleanup_result::still_connecting;
 	}
 
-	if (serv->connected)
+	if (this->connected)
 	{
-		close_socket (serv->sok);
-		if (serv->proxy_sok)
-			close_socket (serv->proxy_sok);
-		serv->connected = FALSE;
-		serv->end_of_motd = FALSE;
-		return 2;
+		close_socket (this->sok);
+		if (this->proxy_sok)
+			close_socket (this->proxy_sok);
+		this->connected = FALSE;
+		this->end_of_motd = FALSE;
+        return server_cleanup_result::connected;
 	}
 
 	/* is this server in a reconnect delay? remove it! */
-	if (serv->recondelay_tag)
+	if (this->recondelay_tag)
 	{
-		fe_timeout_remove (serv->recondelay_tag);
-		serv->recondelay_tag = 0;
-		return 3;
+		fe_timeout_remove (this->recondelay_tag);
+		this->recondelay_tag = 0;
+        return server_cleanup_result::reconnecting;
 	}
 
-	return 0;
+    return server_cleanup_result::not_connected;
 }
 
 static void
@@ -1117,16 +1117,16 @@ server_disconnect (session * sess, int sendquit, int err)
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
 
 	/* close all sockets & io tags */
-	switch (server_cleanup (serv))
+	switch (serv->cleanup ())
 	{
-	case 0:							  /* it wasn't even connected! */
+    case server_cleanup_result::not_connected:							  /* it wasn't even connected! */
 		notc_msg (sess);
 		return;
-	case 1:							  /* it was in the process of connecting */
+    case server_cleanup_result::still_connecting:							  /* it was in the process of connecting */
 		sprintf (tbuf, "%d", sess->server->childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, NULL, NULL, NULL, 0);
 		return;
-	case 3:
+    case server_cleanup_result::reconnecting:
 		shutup = TRUE;	/* won't print "disconnected" in channels */
 	}
 
@@ -1816,7 +1816,6 @@ void
 server_fill_her_up (server *serv)
 {
 	serv->disconnect = server_disconnect;
-	serv->cleanup = server_cleanup;
 	serv->flush_queue = server_flush_queue;
 	serv->auto_reconnect = auto_reconnect;
 
@@ -2038,7 +2037,7 @@ server_away_save_message (server *serv, char *nick, char *msg)
 void
 server_free (server *serv)
 {
-	serv->cleanup (serv);
+	serv->cleanup ();
 
 	serv_list = g_slist_remove (serv_list, serv);
 
