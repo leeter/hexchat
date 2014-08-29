@@ -25,6 +25,7 @@
 
 /* we only use 32 bits, but without this define, you get only 31! */
 #define _FILE_OFFSET_BITS 64
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -1299,7 +1300,6 @@ dcc_connect(::dcc::DCC *dcc)
 static gboolean
 dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 {
-	char *buf;
 	int len, sent, sok = dcc->sok;
 
 	if (prefs.hex_dcc_blocksize < 1) /* this is too little! */
@@ -1323,20 +1323,16 @@ dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	else if (!dcc->wiotag)
 		dcc->wiotag = fe_input_add(sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
 
-	buf = static_cast<char*>(malloc(prefs.hex_dcc_blocksize));
-	if (!buf)
-		return TRUE;
-
+    std::vector<char> buf(prefs.hex_dcc_blocksize);
 	lseek(dcc->fp, dcc->pos, SEEK_SET);
-	len = read(dcc->fp, buf, prefs.hex_dcc_blocksize);
+	len = read(dcc->fp, &buf[0], prefs.hex_dcc_blocksize);
 	if (len < 1)
 		goto abortit;
-	sent = send(sok, buf, len, 0);
+    sent = send(sok, &buf[0], len, 0);
 
 	if (sent < 0 && !(would_block()))
 	{
 	abortit:
-		free(buf);
 		EMIT_SIGNAL(XP_TE_DCCSENDFAIL, dcc->serv->front_session,
 			file_part(dcc->file), dcc->nick,
 			errorstring(sock_error()), NULL, 0);
@@ -1359,9 +1355,6 @@ dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			dcc->wiotag = 0;
 		}
 	}
-
-	free(buf);
-
 	return TRUE;
 }
 
