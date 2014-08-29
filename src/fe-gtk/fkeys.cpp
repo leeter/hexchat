@@ -935,7 +935,7 @@ key_load_kbs_helper_mod (char *buf, GdkModifierType *out)
 static int
 key_load_kbs (void)
 {
-	char *buf, *ibuf;
+	char *buf = nullptr, *ibuf = nullptr;
 	struct stat st;
 	struct key_binding *kb = NULL;
 	int fd, len, state = 0, pnt = 0;
