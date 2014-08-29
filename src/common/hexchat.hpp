@@ -467,10 +467,10 @@ struct server
 {
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
-	void (*disconnect)(struct session *, int sendquit, int err);
+	void (*disconnect)(struct session *, bool sendquit, int err);
     server_cleanup_result  cleanup();
 	void flush_queue();
-	void (*auto_reconnect)(struct server *, int send_quit, int err);
+	void auto_reconnect(bool send_quit, int err);
 	/* irc protocol functions (in proto*.c) */
 	void (*p_inline)(struct server *, char *buf, int len);
 	void (*p_invite)(struct server *, char *channel, char *nick);

@@ -3138,7 +3138,7 @@ cmd_reconnect (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			serv = static_cast<server*>(list->data);
 			if (serv->connected)
-				serv->auto_reconnect (serv, TRUE, -1);
+				serv->auto_reconnect (true, -1);
 			list = list->next;
 		}
 	}
@@ -3164,11 +3164,11 @@ cmd_reconnect (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		if (*word[3+offset])
 			serv->port = atoi (word[3+offset]);
 		safe_strcpy (serv->hostname, word[2+offset], sizeof (serv->hostname));
-		serv->auto_reconnect (serv, TRUE, -1);
+		serv->auto_reconnect (true, -1);
 	}
 	else
 	{
-		serv->auto_reconnect (serv, TRUE, -1);
+		serv->auto_reconnect (true, -1);
 	}
 	prefs.hex_net_reconnect_delay = tmp;
 

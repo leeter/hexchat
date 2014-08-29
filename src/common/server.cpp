@@ -94,8 +94,7 @@ static struct session *g_sess = NULL;
 static GSList *away_list = NULL;
 GSList *serv_list = NULL;
 
-static void auto_reconnect (server *serv, int send_quit, int err);
-static void server_disconnect (session * sess, int sendquit, int err);
+static void server_disconnect (session * sess, bool sendquit, int err);
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -452,12 +451,12 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				if (!servlist_cycle (serv))
 				{
 					if (prefs.hex_net_auto_reconnect)
-						auto_reconnect (serv, FALSE, error);
+						serv->auto_reconnect (false, error);
 				}
 			} else
 			{
 				if (prefs.hex_net_auto_reconnect)
-					auto_reconnect (serv, FALSE, error);
+					serv->auto_reconnect (false, error);
 				else
 					server_disconnect (serv->server_session, FALSE, error);
 			}
@@ -658,7 +657,7 @@ ssl_do_connect (server * serv)
 			serv->cleanup();
 
 			if (prefs.hex_net_auto_reconnectonfail)
-				auto_reconnect (serv, FALSE, -1);
+				serv->auto_reconnect (false, -1);
 
 			return (0);				  /* remove it (0) */
 		}
@@ -780,7 +779,7 @@ ssl_do_connect (server * serv)
 			serv->cleanup (); /* ->connecting = FALSE */
 
 			if (prefs.hex_net_auto_reconnectonfail)
-				auto_reconnect (serv, FALSE, -1);
+				serv->auto_reconnect (false, -1);
 
 			return (0);				  /* remove it (0) */
 		}
@@ -804,14 +803,14 @@ timeout_auto_reconnect (server *serv)
 	return 0;			  /* returning 0 should remove the timeout handler */
 }
 
-static void
-auto_reconnect (server *serv, int send_quit, int err)
+void
+server::auto_reconnect (bool send_quit, int err)
 {
 	session *s;
 	GSList *list;
 	int del;
 
-	if (serv->server_session == NULL)
+	if (this->server_session == NULL)
 		return;
 
 	list = sess_list;
@@ -826,8 +825,8 @@ auto_reconnect (server *serv, int send_quit, int err)
 		list = list->next;
 	}
 
-	if (serv->connected)
-		server_disconnect (serv->server_session, send_quit, err);
+	if (this->connected)
+		server_disconnect (this->server_session, send_quit, err);
 
 	del = prefs.hex_net_reconnect_delay * 1000;
 	if (del < 1000)
@@ -838,17 +837,17 @@ auto_reconnect (server *serv, int send_quit, int err)
 #else
 	if (err == -1 || err == 0 || err == WSAECONNRESET || err == WSAETIMEDOUT)
 #endif
-		serv->reconnect_away = serv->is_away;
+		this->reconnect_away = this->is_away;
 
 	/* is this server in a reconnect delay? remove it! */
-	if (serv->recondelay_tag)
+	if (this->recondelay_tag)
 	{
-		fe_timeout_remove (serv->recondelay_tag);
-		serv->recondelay_tag = 0;
+		fe_timeout_remove (this->recondelay_tag);
+		this->recondelay_tag = 0;
 	}
 
-	serv->recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, serv);
-	fe_server_event (serv, FE_SE_RECONDELAY, del);
+	this->recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, this);
+	fe_server_event (this, FE_SE_RECONDELAY, del);
 }
 
 void
@@ -931,7 +930,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		EMIT_SIGNAL (XP_TE_UKNHOST, sess, NULL, NULL, NULL, NULL, 0);
 		if (!servlist_cycle (serv))
 			if (prefs.hex_net_auto_reconnectonfail)
-				auto_reconnect (serv, FALSE, -1);
+				serv->auto_reconnect (false, -1);
 		break;
 	case '2':						  /* connection failed */
 		waitline2 (source, tbuf, sizeof tbuf);
@@ -949,7 +948,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 						 NULL, NULL, 0);
 		if (!servlist_cycle (serv))
 			if (prefs.hex_net_auto_reconnectonfail)
-				auto_reconnect (serv, FALSE, -1);
+				serv->auto_reconnect (false, -1);
 		break;
 	case '3':						  /* gethostbyname finished */
 		waitline2 (source, host, sizeof host);
@@ -1101,7 +1100,7 @@ server::cleanup ()
 }
 
 static void
-server_disconnect (session * sess, int sendquit, int err)
+server_disconnect (session * sess, bool sendquit, int err)
 {
 	server *serv = sess->server;
 	GSList *list;
@@ -1816,7 +1815,6 @@ void
 server_fill_her_up (server *serv)
 {
 	serv->disconnect = server_disconnect;
-	serv->auto_reconnect = auto_reconnect;
 
 	proto_fill_her_up (serv);
 }

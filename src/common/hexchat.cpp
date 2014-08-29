@@ -291,7 +291,7 @@ lag_check (void)
 				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv->server_session, tbuf, nullptr,
 								 nullptr, nullptr, 0);
 				if (prefs.hex_net_auto_reconnect)
-					serv->auto_reconnect (serv, FALSE, -1);
+					serv->auto_reconnect (false, -1);
 			} else
 			{
 				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
