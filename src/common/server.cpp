@@ -851,12 +851,12 @@ auto_reconnect (server *serv, int send_quit, int err)
 	fe_server_event (serv, FE_SE_RECONDELAY, del);
 }
 
-static void
-server_flush_queue (server *serv)
+void
+server::flush_queue ()
 {
-	list_free (&serv->outbound_queue);
-	serv->sendq_len = 0;
-	fe_set_throttle (serv);
+	list_free (&this->outbound_queue);
+	this->sendq_len = 0;
+	fe_set_throttle (this);
 }
 
 /* connect() successed */
@@ -1130,7 +1130,7 @@ server_disconnect (session * sess, int sendquit, int err)
 		shutup = TRUE;	/* won't print "disconnected" in channels */
 	}
 
-	server_flush_queue (serv);
+	serv->flush_queue ();
 
 	list = sess_list;
 	while (list)
@@ -1751,7 +1751,7 @@ server::connect (char *hostname, int port, bool no_login)
 
 	fe_server_event (this, FE_SE_CONNECTING, 0);
 	fe_set_away (this);
-	server_flush_queue (this);
+	this->flush_queue ();
 
 #ifdef WIN32
 	if (_pipe (read_des, 4096, _O_BINARY) < 0)
@@ -1816,7 +1816,6 @@ void
 server_fill_her_up (server *serv)
 {
 	serv->disconnect = server_disconnect;
-	serv->flush_queue = server_flush_queue;
 	serv->auto_reconnect = auto_reconnect;
 
 	proto_fill_her_up (serv);
@@ -2042,7 +2041,7 @@ server_free (server *serv)
 	serv_list = g_slist_remove (serv_list, serv);
 
 	dcc::dcc_notify_kill (serv);
-	serv->flush_queue (serv);
+	serv->flush_queue ();
 	server_away_free_messages (serv);
 
 	free (serv->nick_modes);

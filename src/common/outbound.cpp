@@ -1897,7 +1897,7 @@ cmd_flushq (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	sprintf (tbuf, "Flushing server send queue, %d bytes.\n", sess->server->sendq_len);
 	PrintText (sess, tbuf);
-	sess->server->flush_queue (sess->server);
+	sess->server->flush_queue ();
 	return TRUE;
 }
 

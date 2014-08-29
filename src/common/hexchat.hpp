@@ -469,7 +469,7 @@ struct server
 	void connect(char *hostname, int port, bool no_login);
 	void (*disconnect)(struct session *, int sendquit, int err);
     server_cleanup_result  cleanup();
-	void (*flush_queue)(struct server *);
+	void flush_queue();
 	void (*auto_reconnect)(struct server *, int send_quit, int err);
 	/* irc protocol functions (in proto*.c) */
 	void (*p_inline)(struct server *, char *buf, int len);
