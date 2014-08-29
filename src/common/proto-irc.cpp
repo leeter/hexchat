@@ -1475,8 +1475,8 @@ handle_message_tags (server *serv, const char *tags_str,
 }
 
 /* irc_inline() - 1 single line received from serv */
-static void
-irc_inline (server *serv, char *buf, int len)
+void
+server::p_inline (char *buf, int len)
 {
 	session *sess, *tmp;
 	char *type, *text;
@@ -1490,7 +1490,7 @@ irc_inline (server *serv, char *buf, int len)
 	if (len >= sizeof (pdibuf_static))
 		pdibuf = static_cast<char*>(malloc (len + 1));
 
-	sess = serv->front_session;
+	sess = this->front_session;
 
 	/* Python relies on this */
 	word[PDIWORDS] = NULL;
@@ -1507,7 +1507,7 @@ irc_inline (server *serv, char *buf, int len)
 		*sep = '\0';
 		buf = sep + 1;
 
-		handle_message_tags(serv, tags, &tags_data);
+		handle_message_tags(this, tags, &tags_data);
 	}
 
 	url_check_line (buf, len);
@@ -1518,9 +1518,9 @@ irc_inline (server *serv, char *buf, int len)
 	if (buf[0] == ':')
 	{
 		/* find a context for this message */
-		if (is_channel (serv, word[3]))
+		if (is_channel (this, word[3]))
 		{
-			tmp = find_channel (serv, word[3]);
+			tmp = find_channel (this, word[3]);
 			if (tmp)
 				sess = tmp;
 		}
@@ -1574,7 +1574,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_inline = irc_inline;
 	serv->p_invite = irc_invite;
 	serv->p_cycle = irc_cycle;
 	serv->p_ctcp = irc_ctcp;
