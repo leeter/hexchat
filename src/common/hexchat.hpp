@@ -484,7 +484,7 @@ struct server
     void p_ns_ghost(const std::string& usname, const std::string& pass);
 	void p_join(const std::string& channel, const std::string& key);
 	void p_join_list(GSList *favorites);
-	void (*p_login)(struct server *, char *user, char *realname);
+    void p_login(const std::string& user, const std::string& realname);
 	void (*p_join_info)(struct server *, char *channel);
 	void (*p_mode)(struct server *, char *target, char *mode);
 	void (*p_user_list)(struct server *, char *channel);

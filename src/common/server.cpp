@@ -508,18 +508,18 @@ server_connected (server * serv)
 						 NULL, 0);
 		if (serv->network)
 		{
-			serv->p_login (serv,
-								(!(((ircnet *)serv->network)->flags & FLAG_USE_GLOBAL) &&
-								 (((ircnet *)serv->network)->user)) ?
-								(((ircnet *)serv->network)->user) :
+            ircnet* net = static_cast<ircnet*>(serv->network);
+			serv->p_login (	(!(net->flags & FLAG_USE_GLOBAL) &&
+								 (net->user)) ?
+								(net->user) :
 								prefs.hex_irc_user_name,
-								(!(((ircnet *)serv->network)->flags & FLAG_USE_GLOBAL) &&
-								 (((ircnet *)serv->network)->real)) ?
-								(((ircnet *)serv->network)->real) :
+								(!(net->flags & FLAG_USE_GLOBAL) &&
+								 (net->real)) ?
+								(net->real) :
 								prefs.hex_irc_real_name);
 		} else
 		{
-			serv->p_login (serv, prefs.hex_irc_user_name, prefs.hex_irc_real_name);
+			serv->p_login (prefs.hex_irc_user_name, prefs.hex_irc_real_name);
 		}
 	} else
 	{

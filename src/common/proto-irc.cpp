@@ -46,21 +46,21 @@
 #include "servlist.hpp"
 
 
-static void
-irc_login (server *serv, char *user, char *realname)
+void
+server::p_login(const std::string& user, const std::string& realname)
 {
-	tcp_sendf (serv, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
-	serv->sent_capend = FALSE;	/* track if we have finished */
+	tcp_sendf (this, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
+	this->sent_capend = FALSE;	/* track if we have finished */
 
-	if (serv->password[0] && serv->loginmethod == LOGIN_PASS)
+	if (this->password[0] && this->loginmethod == LOGIN_PASS)
 	{
-		tcp_sendf (serv, "PASS %s\r\n", serv->password);
+		tcp_sendf (this, "PASS %s\r\n", this->password);
 	}
 
-	tcp_sendf (serv,
+	tcp_sendf (this,
 				  "NICK %s\r\n"
 				  "USER %s %s %s :%s\r\n",
-				  serv->nick, user, user, serv->servername, realname);
+                  this->nick, user.c_str(), user.c_str(), this->servername, realname.c_str());
 }
 
 static void
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_login = irc_login;
 	serv->p_join_info = irc_join_info;
 	serv->p_mode = irc_mode;
 	serv->p_user_list = irc_user_list;
