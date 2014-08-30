@@ -2885,7 +2885,7 @@ cmd_notice (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		while ((split_text = split_up_text (sess, text + offset, cmd_length, split_text)))
 		{
-			sess->server->p_notice (sess->server, word[2], split_text);
+			sess->server->p_notice (word[2], split_text);
 			EMIT_SIGNAL (XP_TE_NOTICESEND, sess, word[2], split_text, NULL, NULL, 0);
 			
 			if (*split_text)
@@ -2894,7 +2894,7 @@ cmd_notice (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			g_free(split_text);
 		}
 
-		sess->server->p_notice (sess->server, word[2], text + offset);
+		sess->server->p_notice (word[2], text + offset);
 		EMIT_SIGNAL (XP_TE_NOTICESEND, sess, word[2], text + offset, NULL, NULL, 0);
 
 		return TRUE;

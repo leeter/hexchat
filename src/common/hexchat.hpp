@@ -496,7 +496,7 @@ struct server
     void p_set_away(const std::string & reason);
 	void p_message(const std::string & channel, const std::string & text);
     void p_action(const std::string & channel, const std::string & act);
-	void (*p_notice)(struct server *, char *channel, char *text);
+    void p_notice(const std::string & channel, const std::string & text);
 	void (*p_topic)(struct server *, char *channel, char *topic);
 	void (*p_list_channels)(struct server *, char *arg, int min_users);
 	void (*p_change_nick)(struct server *, char *new_nick);

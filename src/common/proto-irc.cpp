@@ -360,10 +360,10 @@ server::p_action(const std::string & channel, const std::string & act)
 	tcp_sendf (this, "PRIVMSG %s :\001ACTION %s\001\r\n", channel.c_str(), act.c_str());
 }
 
-static void
-irc_notice (server *serv, char *channel, char *text)
+void
+server::p_notice(const std::string & channel, const std::string & text)
 {
-	tcp_sendf (serv, "NOTICE %s :%s\r\n", channel, text);
+	tcp_sendf (this, "NOTICE %s :%s\r\n", channel.c_str(), text.c_str());
 }
 
 static void
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_notice = irc_notice;
 	serv->p_topic = irc_topic;
 	serv->p_list_channels = irc_list_channels;
 	serv->p_change_nick = irc_change_nick;
