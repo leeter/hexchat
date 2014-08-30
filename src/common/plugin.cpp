@@ -976,7 +976,7 @@ hexchat_print (hexchat_plugin *ph, const char *text)
 		return;
 	}
 
-	PrintText (ph->context, (char *)text);
+	PrintText (ph->context, text);
 }
 
 void

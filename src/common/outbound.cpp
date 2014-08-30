@@ -1540,7 +1540,7 @@ cmd_execw (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	}
 	std::string temp(word_eol[2]);
 	temp += "\n\0";
-	PrintText(sess, &temp[0]);
+	PrintText(sess, temp);
 	write(sess->running_exec->myfd, temp.c_str(), temp.size());
 	return TRUE;
 }
@@ -2203,7 +2203,6 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		struct popup *pop;
         std::string buf(4096, '\0');
-		//char *buf = static_cast<char*>(malloc(4096));
 		help_list hl;
 
 		hl.longfmt = longfmt;
@@ -2221,7 +2220,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			i++;
 		}
 		strcat (&buf[0], "\n");
-		PrintText (sess, &buf[0]);
+		PrintText (sess, buf);
 
 		PrintTextf (sess, "\n%s\n\n", _("User defined commands:"));
 		buf[0] = ' ';
@@ -2237,7 +2236,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			list = list->next;
 		}
 		strcat (&buf[0], "\n");
-		PrintText (sess, &buf[0]);
+		PrintText (sess, buf);
 
 		PrintTextf (sess, "\n%s\n\n", _("Plugin defined commands:"));
 		buf[0] = ' ';
@@ -2247,8 +2246,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		hl.i = 0;
 		plugin_command_foreach (sess, &hl, (void (*)(session*, void*, char*, char*))show_help_line);
         strcat(&buf[0], "\n");
-        PrintText(sess, &buf[0]);
-
+        PrintText(sess, buf);
 		PrintTextf (sess, "\n%s\n\n", _("Type /HELP <command> for more information, or /HELP -l"));
 	}
 	return TRUE;

@@ -927,7 +927,7 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 }
 
 void
-PrintText (session *sess, char *text)
+PrintText (session *sess, const std::string & text)
 {
 	PrintTextTimeStamp (sess, text, 0);
 }
