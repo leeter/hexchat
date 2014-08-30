@@ -77,9 +77,9 @@ enum
 struct setting
 {
 	int type;
-	char *label;
+	const char *label;
 	int offset;
-	char *tooltip;
+	const char *tooltip;
 	char const *const *list;
 	int extra;
 };
@@ -626,7 +626,7 @@ setup_3oggle_cb (GtkToggleButton *but, unsigned int *setting)
 }
 
 static void
-setup_headlabel (GtkWidget *tab, int row, int col, char *text)
+setup_headlabel (GtkWidget *tab, int row, int col, const char *text)
 {
 	GtkWidget *label;
 	char buf[128];
@@ -748,7 +748,7 @@ setup_create_toggleL (GtkWidget *tab, int row, const setting *set)
 }
 
 static GtkWidget *
-setup_create_italic_label (char *text)
+setup_create_italic_label (const char *text)
 {
 	GtkWidget *label;
 	char buf[256];
@@ -1028,7 +1028,7 @@ setup_create_menu (GtkWidget *table, int row, const setting *set)
 }
 
 static void
-setup_filereq_cb (GtkWidget *entry, char *file)
+setup_filereq_cb (GtkWidget *entry, const char *file)
 {
 	if (file)
 	{
@@ -1216,7 +1216,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 }
 
 static void
-setup_create_header (GtkWidget *table, int row, char *labeltext)
+setup_create_header (GtkWidget *table, int row, const char *labeltext)
 {
 	GtkWidget *label;
 	char buf[128];
@@ -1234,7 +1234,7 @@ setup_create_header (GtkWidget *table, int row, char *labeltext)
 }
 
 static void
-setup_create_button (GtkWidget *table, int row, char *label, GCallback callback)
+setup_create_button (GtkWidget *table, int row, const char *label, GCallback callback)
 {
 	GtkWidget *but = gtk_button_new_with_label (label);
 	gtk_table_attach (GTK_TABLE (table), but, 2, 3, row, row + 1,
@@ -1437,7 +1437,7 @@ setup_create_color_button (GtkWidget *table, int num, int row, int col)
 }
 
 static void
-setup_create_other_colorR (char *text, int num, int row, GtkWidget *tab)
+setup_create_other_colorR (const char *text, int num, int row, GtkWidget *tab)
 {
 	GtkWidget *label;
 
@@ -1449,7 +1449,7 @@ setup_create_other_colorR (char *text, int num, int row, GtkWidget *tab)
 }
 
 static void
-setup_create_other_color (char *text, int num, int row, GtkWidget *tab)
+setup_create_other_color (const char *text, int num, int row, GtkWidget *tab)
 {
 	GtkWidget *label;
 
