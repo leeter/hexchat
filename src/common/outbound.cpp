@@ -2091,7 +2091,7 @@ cmd_ghost (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[2][0])
 		return FALSE;
 
-	sess->server->p_ns_ghost (sess->server, word[2], word[3]);
+	sess->server->p_ns_ghost (word[2], word[3]);
 	return TRUE;
 }
 

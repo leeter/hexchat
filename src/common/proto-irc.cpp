@@ -111,12 +111,12 @@ server::p_ns_identify(const std::string &pass)
 	}
 }
 
-static void
-irc_ns_ghost (server *serv, char *usname, char *pass)
+void
+server::p_ns_ghost(const std::string& usname, const std::string& pass)
 {
-	if (serv->loginmethod != LOGIN_CHALLENGEAUTH)
+	if (this->loginmethod != LOGIN_CHALLENGEAUTH)
 	{
-		irc_nickserv (serv, "GHOST", usname, " ", pass);
+		irc_nickserv (this, "GHOST", usname, " ", pass);
 	}
 }
 
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_ns_ghost = irc_ns_ghost;
 	serv->p_join_list = irc_join_list;
 	serv->p_login = irc_login;
 	serv->p_join_info = irc_join_info;
