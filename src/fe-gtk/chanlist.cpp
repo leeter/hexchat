@@ -303,14 +303,14 @@ chanlist_do_refresh (server *serv)
 	if (serv->use_listargs)
 	{
 		/* yes - it will download faster */
-		serv->p_list_channels (serv, "", serv->gui->chanlist_minusers);
+		serv->p_list_channels ("", serv->gui->chanlist_minusers);
 		/* don't allow the spin button below this value from now on */
 		serv->gui->chanlist_minusers_downloaded = serv->gui->chanlist_minusers;
 	}
 	else
 	{
 		/* download all, filter minusers locally only */
-		serv->p_list_channels (serv, "", 1);
+		serv->p_list_channels ("", 1);
 		serv->gui->chanlist_minusers_downloaded = 1;
 	}
 

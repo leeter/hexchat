@@ -2497,7 +2497,7 @@ cmd_lastlog (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static int
 cmd_list (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	fe_open_chan_list (sess->server, word_eol[2], TRUE);
+	fe_open_chan_list (sess->server, word_eol[2] ? word_eol[2] : "", TRUE);
 
 	return TRUE;
 }

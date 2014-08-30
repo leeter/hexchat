@@ -498,7 +498,7 @@ struct server
     void p_action(const std::string & channel, const std::string & act);
     void p_notice(const std::string & channel, const std::string & text);
     void p_topic(const std::string & channel, const char *topic);
-	void (*p_list_channels)(struct server *, char *arg, int min_users);
+    void p_list_channels(const std::string & arg, int min_users);
 	void (*p_change_nick)(struct server *, char *new_nick);
 	void (*p_names)(struct server *, char *channel);
 	void (*p_ping)(struct server *, char *to, char *timestring);

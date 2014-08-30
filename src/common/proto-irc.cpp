@@ -377,19 +377,19 @@ server::p_topic(const std::string & channel, const char *topic)
 		tcp_sendf (this, "TOPIC %s\r\n", channel.c_str());
 }
 
-static void
-irc_list_channels (server *serv, char *arg, int min_users)
+void
+server::p_list_channels(const std::string & arg, int min_users)
 {
-	if (arg[0])
+	if (!arg.empty())
 	{
-		tcp_sendf (serv, "LIST %s\r\n", arg);
+		tcp_sendf (this, "LIST %s\r\n", arg.c_str());
 		return;
 	}
 
-	if (serv->use_listargs)
-		tcp_sendf (serv, "LIST >%d,<10000\r\n", min_users - 1);
+	if (this->use_listargs)
+		tcp_sendf (this, "LIST >%d,<10000\r\n", min_users - 1);
 	else
-		tcp_send_len (serv, "LIST\r\n", 6);
+		tcp_send_len (this, "LIST\r\n", 6);
 }
 
 static void
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_list_channels = irc_list_channels;
 	serv->p_change_nick = irc_change_nick;
 	serv->p_names = irc_names;
 	serv->p_ping = irc_ping;
