@@ -2861,7 +2861,7 @@ cmd_nick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (*nick)
 	{
 		if (sess->server->connected)
-			sess->server->p_change_nick (sess->server, nick);
+			sess->server->p_change_nick (nick);
 		else
 		{
 			message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;

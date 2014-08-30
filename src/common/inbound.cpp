@@ -1244,7 +1244,7 @@ inbound_next_nick (session *sess, char *nick, int error,
 		{
 			newnick = net->nick2;
 		}
-		serv->p_change_nick (serv, newnick);
+		serv->p_change_nick (newnick);
 		if (error)
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_NICKERROR, sess, nick, newnick, nullptr, nullptr,
@@ -1258,7 +1258,7 @@ inbound_next_nick (session *sess, char *nick, int error,
 		break;
 
 	case 3:
-		serv->p_change_nick (serv, prefs.hex_irc_nick3);
+		serv->p_change_nick (prefs.hex_irc_nick3);
 		if (error)
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_NICKERROR, sess, nick, prefs.hex_irc_nick3,

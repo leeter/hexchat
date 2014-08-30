@@ -398,10 +398,10 @@ irc_names (server *serv, char *channel)
 	tcp_sendf (serv, "NAMES %s\r\n", channel);
 }
 
-static void
-irc_change_nick (server *serv, char *new_nick)
+void
+server::p_change_nick(const std::string & new_nick)
 {
-	tcp_sendf (serv, "NICK %s\r\n", new_nick);
+	tcp_sendf (this, "NICK %s\r\n", new_nick.c_str());
 }
 
 static void
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_change_nick = irc_change_nick;
 	serv->p_names = irc_names;
 	serv->p_ping = irc_ping;
 	serv->p_raw = irc_raw;
