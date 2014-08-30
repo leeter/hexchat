@@ -465,6 +465,10 @@ enum class server_cleanup_result{
 
 struct server
 {
+private:
+    void reset_to_defaults();
+    friend server *server_new(void);
+public:
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void disconnect(struct session *, bool sendquit, int err);
@@ -507,6 +511,7 @@ struct server
 	int (*p_cmp)(const char *s1, const char *s2);
 
     void set_name(const std::string& name);
+    
 
 	int port;
 	int sok;					/* is equal to sok4 or sok6 (the one we are using) */

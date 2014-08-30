@@ -1741,7 +1741,7 @@ server::connect (char *hostname, int port, bool no_login)
 	}
 #endif
 
-	server_set_defaults (this);
+    this->reset_to_defaults();
 	this->connecting = true;
 	this->port = port;
 	this->no_login = no_login;
@@ -1860,7 +1860,7 @@ server_new (void)
 	serv->id = id++;
 	serv->sok = -1;
 	strcpy (serv->nick, prefs.hex_irc_nick1);
-	server_set_defaults (serv);
+    serv->reset_to_defaults();
 
 	serv_list = g_slist_prepend (serv_list, serv);
 
@@ -1876,40 +1876,40 @@ is_server (server *serv)
 }
 
 void
-server_set_defaults (server *serv)
+server::reset_to_defaults()
 {
-	if (serv->chantypes)
-		free (serv->chantypes);
-	if (serv->chanmodes)
-		free (serv->chanmodes);
-	if (serv->nick_prefixes)
-		free (serv->nick_prefixes);
-	if (serv->nick_modes)
-		free (serv->nick_modes);
+	if (this->chantypes)
+		free (this->chantypes);
+	if (this->chanmodes)
+		free (this->chanmodes);
+	if (this->nick_prefixes)
+		free (this->nick_prefixes);
+	if (this->nick_modes)
+		free (this->nick_modes);
 
-	serv->chantypes = strdup ("#&!+");
-	serv->chanmodes = strdup ("beI,k,l");
-	serv->nick_prefixes = strdup ("@%+");
-	serv->nick_modes = strdup ("ohv");
+	this->chantypes = strdup ("#&!+");
+	this->chanmodes = strdup ("beI,k,l");
+	this->nick_prefixes = strdup ("@%+");
+	this->nick_modes = strdup ("ohv");
 
-	serv->nickcount = 1;
-	serv->end_of_motd = false;
-	serv->is_away = false;
-	serv->supports_watch = false;
-	serv->supports_monitor = false;
-	serv->bad_prefix = false;
-	serv->use_who = true;
-	serv->have_namesx = false;
-	serv->have_awaynotify = false;
-	serv->have_uhnames = false;
-	serv->have_whox = false;
-	serv->have_idmsg = false;
-	serv->have_accnotify = false;
-	serv->have_extjoin = false;
-	serv->have_server_time = false;
-	serv->have_sasl = false;
-	serv->have_except = false;
-	serv->have_invite = false;
+	this->nickcount = 1;
+	this->end_of_motd = false;
+	this->is_away = false;
+	this->supports_watch = false;
+	this->supports_monitor = false;
+	this->bad_prefix = false;
+	this->use_who = true;
+	this->have_namesx = false;
+	this->have_awaynotify = false;
+	this->have_uhnames = false;
+	this->have_whox = false;
+	this->have_idmsg = false;
+	this->have_accnotify = false;
+	this->have_extjoin = false;
+	this->have_server_time = false;
+	this->have_sasl = false;
+	this->have_except = false;
+	this->have_invite = false;
 }
 
 char *
