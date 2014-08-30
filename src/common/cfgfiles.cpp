@@ -618,6 +618,7 @@ convert_with_fallback (const char *str, const char *fallback)
 	if (!utf)
 		utf = g_strdup (fallback);
 #else
+    UNREFERENCED_PARAMETER(fallback);
 	/* On Windows, they return a string in utf-8, so don't do anything to it. The fallback isn't needed. */
 	utf = g_strdup(str);
 #endif
@@ -658,7 +659,8 @@ get_default_language (void)
 	 */
 	lang = g_strdup (locale);
 
-	if ((p = strchr (lang, '.')))
+    p = strchr(lang, '.');
+	if (p)
 		*p='\0';
 
 	lang_no = find_language_number (lang);
@@ -669,7 +671,8 @@ get_default_language (void)
 		return lang_no;
 	}
 
-	if ((p = strchr (lang, '_')))
+    p = strchr(lang, '_');
+	if (p)
 		*p='\0';
 
 	lang_no = find_language_number (lang);

@@ -86,7 +86,7 @@ chanopt_value (guint8 val)
 /* handle the /CHANOPT command */
 
 int
-chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[])
+chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 {
 	int dots, j, p = 0;
 	guint8 val;

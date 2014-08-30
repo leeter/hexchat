@@ -319,7 +319,7 @@ chanlist_do_refresh (server *serv)
 }
 
 static void
-chanlist_refresh (GtkWidget * wid, server *serv)
+chanlist_refresh (GtkWidget *, server *serv)
 {
 	chanlist_do_refresh (serv);
 }
@@ -396,7 +396,7 @@ fe_chan_list_end (server *serv)
 }
 
 static void
-chanlist_search_pressed (GtkButton * button, server *serv)
+chanlist_search_pressed (GtkButton *, server *serv)
 {
 	chanlist_build_gui_list (serv);
 }
@@ -448,7 +448,7 @@ chanlist_get_selected (server *serv, gboolean get_topic)
 }
 
 static void
-chanlist_join (GtkWidget * wid, server *serv)
+chanlist_join (GtkWidget *, server *serv)
 {
 	char tbuf[CHANLEN + 6];
 	char *chan = chanlist_get_selected (serv, FALSE);
@@ -506,7 +506,7 @@ chanlist_filereq_done (server *serv, char *file)
 }
 
 static void
-chanlist_save (GtkWidget * wid, server *serv)
+chanlist_save (GtkWidget *, server *serv)
 {
 	GtkTreeIter iter;
 	GtkTreeModel *model = GET_MODEL (serv);
@@ -558,14 +558,14 @@ chanlist_maxusers (GtkSpinButton *wid, server *serv)
 }
 
 static void
-chanlist_dclick_cb (GtkTreeView *view, GtkTreePath *path,
-						  GtkTreeViewColumn *column, gpointer data)
+chanlist_dclick_cb (GtkTreeView *, GtkTreePath *,
+						  GtkTreeViewColumn *, gpointer data)
 {
 	chanlist_join (0, (server *) data);	/* double clicked a row */
 }
 
 static void
-chanlist_menu_destroy (GtkWidget *menu, gpointer userdata)
+chanlist_menu_destroy (GtkWidget *menu, gpointer)
 {
 	gtk_widget_destroy (menu);
 	g_object_unref (menu);
@@ -638,7 +638,7 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 }
 
 static void
-chanlist_destroy_widget (GtkWidget *wid, server *serv)
+chanlist_destroy_widget (GtkWidget *, server *serv)
 {
 	custom_list_clear ((CustomList *)GET_MODEL (serv));
 	chanlist_data_free (serv);
@@ -663,7 +663,7 @@ chanlist_destroy_widget (GtkWidget *wid, server *serv)
 }
 
 static void
-chanlist_closegui (GtkWidget *wid, server *serv)
+chanlist_closegui (GtkWidget *, server *serv)
 {
 	if (is_server (serv))
 		serv->gui->chanlist_window = NULL;

@@ -126,7 +126,7 @@ static int tab_right_is_moving = 0;
 * request, even at the expense of resizing the top-level window.
 */
 static void
-cv_tabs_sizerequest(GtkWidget *viewport, GtkRequisition *requisition, chanview *cv)
+cv_tabs_sizerequest(GtkWidget *, GtkRequisition *requisition, chanview *cv)
 {
 	if (!cv->vertical)
 		requisition->width = 1;
@@ -135,7 +135,7 @@ cv_tabs_sizerequest(GtkWidget *viewport, GtkRequisition *requisition, chanview *
 }
 
 static void
-cv_tabs_sizealloc(GtkWidget *widget, GtkAllocation *allocation, chanview *cv)
+cv_tabs_sizealloc(GtkWidget *, GtkAllocation *, chanview *cv)
 {
 	GtkAdjustment *adj;
 	GtkWidget *inner;
@@ -211,7 +211,7 @@ gboolean forward, gboolean vertical)
 }
 
 static void
-tab_scroll_left_up_clicked(GtkWidget *widget, chanview *cv)
+tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 {
 	GtkAdjustment *adj;
 	gint viewport_size;
