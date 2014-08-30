@@ -419,7 +419,6 @@ server::p_raw(const std::string &raw)
 	char tbuf[4096];
 	if (!raw.empty())
 	{
-		//len = strlen (raw);
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
             auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
