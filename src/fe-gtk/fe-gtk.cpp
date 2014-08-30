@@ -1128,7 +1128,7 @@ fe_get_file (const char *title, char *initial,
 }
 
 void
-fe_open_chan_list (server *serv, char *filter, int do_refresh)
+fe_open_chan_list (server *serv, const char*, int do_refresh)
 {
 	chanlist_opengui (serv, do_refresh);
 }
