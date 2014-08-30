@@ -44,7 +44,7 @@
 #endif
 #include "sexy-spell-entry.hpp"
 
-extern "C"{ GtkStyle *create_input_style(GtkStyle *); }
+GtkStyle *create_input_style(GtkStyle *);
 
 #define LABEL_INDENT 12
 

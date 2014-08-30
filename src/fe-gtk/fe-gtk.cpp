@@ -259,7 +259,7 @@ extern "C" const char cursor_color_rc[] =
 	"}"
 	"widget \"*.hexchat-inputbox\" style : application \"xc-ib-st\"";
 
-extern "C" GtkStyle *
+GtkStyle *
 create_input_style (GtkStyle *style)
 {
 	char buf[256];
