@@ -2822,9 +2822,9 @@ static int
 cmd_names (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (*word[2])
-	  	sess->server->p_names (sess->server, word[2]);
+	  	sess->server->p_names (word[2]);
 	else
-		sess->server->p_names (sess->server, sess->channel);
+		sess->server->p_names (sess->channel);
 	return TRUE;
 }
 

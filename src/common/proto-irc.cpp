@@ -392,10 +392,10 @@ server::p_list_channels(const std::string & arg, int min_users)
 		tcp_send_len (this, "LIST\r\n", 6);
 }
 
-static void
-irc_names (server *serv, char *channel)
+void
+server::p_names(const std::string & channel)
 {
-	tcp_sendf (serv, "NAMES %s\r\n", channel);
+	tcp_sendf (this, "NAMES %s\r\n", channel.c_str());
 }
 
 void
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_names = irc_names;
 	serv->p_ping = irc_ping;
 	serv->p_raw = irc_raw;
 	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
