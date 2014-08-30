@@ -501,7 +501,7 @@ struct server
     void p_list_channels(const std::string & arg, int min_users);
     void p_change_nick(const std::string & new_nick);
     void p_names(const std::string & channel);
-	void (*p_ping)(struct server *, char *to, char *timestring);
+    void p_ping(const std::string & to, const std::string & timestring);
 /*	void (*p_set_away)(struct server *);*/
 	int (*p_raw)(struct server *, const char *raw);
 	int (*p_cmp)(const char *s1, const char *s2);

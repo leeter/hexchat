@@ -2988,7 +2988,7 @@ cmd_ping (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	tim = make_ping_time ();
 
 	snprintf (timestring, sizeof (timestring), "%lu", tim);
-	sess->server->p_ping (sess->server, to, timestring);
+	sess->server->p_ping (to, timestring);
 
 	return TRUE;
 }

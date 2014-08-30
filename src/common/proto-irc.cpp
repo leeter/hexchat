@@ -404,13 +404,13 @@ server::p_change_nick(const std::string & new_nick)
 	tcp_sendf (this, "NICK %s\r\n", new_nick.c_str());
 }
 
-static void
-irc_ping (server *serv, char *to, char *timestring)
+void
+server::p_ping(const std::string & to, const std::string & timestring)
 {
-	if (*to)
-		tcp_sendf (serv, "PRIVMSG %s :\001PING %s\001\r\n", to, timestring);
+	if (!to.empty())
+		tcp_sendf (this, "PRIVMSG %s :\001PING %s\001\r\n", to.c_str(), timestring.c_str());
 	else
-		tcp_sendf (serv, "PING %s\r\n", timestring);
+		tcp_sendf (this, "PING %s\r\n", timestring.c_str());
 }
 
 static int
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_ping = irc_ping;
 	serv->p_raw = irc_raw;
 	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
 }

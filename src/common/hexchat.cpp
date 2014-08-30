@@ -295,7 +295,7 @@ lag_check (void)
 			} else
 			{
 				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
-				serv->p_ping (serv, "", tbuf);
+				serv->p_ping ("", tbuf);
 				
 				if (!serv->lag_sent)
 				{
