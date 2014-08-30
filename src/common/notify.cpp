@@ -51,7 +51,7 @@ int notify_tag = 0;
 
 
 static char *
-despacify_dup (char *str)
+despacify_dup (const char *str)
 {
 	char *p, *res = static_cast<char*>(malloc (strlen (str) + 1));
 	if (!res)

@@ -70,12 +70,13 @@ static ca_context *ca_con;
 #endif
 
 static void mkdir_p (char *filename);
-static char *log_create_filename (char *channame);
+static std::string log_create_filename (const std::string& channame);
 
 static char *
 scrollback_get_filename (session *sess)
 {
-	char *net, *chan, *buf;
+    const char *net;
+    char *buf;
 
 	net = server_get_network (sess->server, FALSE);
 	if (!net)
@@ -85,12 +86,11 @@ scrollback_get_filename (session *sess)
 	mkdir_p (buf);
 	g_free (buf);
 
-	chan = log_create_filename (sess->channel);
-	if (chan[0])
-		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan);
+	auto chan = log_create_filename (sess->channel);
+	if (!chan.empty())
+		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan.c_str());
 	else
 		buf = NULL;
-	free (chan);
 
 	return buf;
 }
@@ -407,16 +407,15 @@ mkdir_p (char *filename)
 	g_free (dirname);
 }
 
-static char *
-log_create_filename (char *channame)
+static std::string
+log_create_filename (const std::string & channame)
 {
-	char *tmp, *ret;
+    std::string ret(channame);
 	int mbl;
 
-	ret = tmp = strdup (channame);
-	while (*tmp)
+    for (auto tmp = ret.begin(); tmp != ret.end();)
 	{
-		mbl = g_utf8_skip[((unsigned char *)tmp)[0]];
+		mbl = g_utf8_skip[*tmp];
 		if (mbl == 1)
 		{
 #ifndef WIN32
@@ -439,7 +438,7 @@ log_create_filename (char *channame)
 /* like strcpy, but % turns into %% */
 
 static char *
-log_escape_strcpy (char *dest, char *src, char *end)
+log_escape_strcpy (char *dest, const char *src, const char *end)
 {
 	while (*src)
 	{
@@ -465,7 +464,7 @@ log_escape_strcpy (char *dest, char *src, char *end)
 /* substitutes %c %n %s into buffer */
 
 static void
-log_insert_vars (char *buf, int bufsize, char *fmt, char *c, char *n, char *s)
+log_insert_vars (char *buf, size_t bufsize, const char *fmt, const char *c, const char *n, const char *s)
 {
 	char *end = buf + bufsize;
 
@@ -541,34 +540,33 @@ logmask_is_fullpath ()
 }
 
 static char *
-log_create_pathname (char *servname, char *channame, char *netname)
+log_create_pathname (const char *servname, const char *channame, const char *netname)
 {
 	char fname[384];
 	char fnametime[384];
 	time_t now;
+    std::string net_name, chan_name;
 
 	if (!netname)
 	{
-		netname = strdup ("NETWORK");
+		net_name = "NETWORK";
 	}
 	else
 	{
-		netname = log_create_filename (netname);
+		net_name = log_create_filename (netname);
 	}
 
 	/* first, everything is in UTF-8 */
 	if (!rfc_casecmp (channame, servname))
 	{
-		channame = strdup ("server");
+		chan_name = "server";
 	}
 	else
 	{
-		channame = log_create_filename (channame);
+		chan_name = log_create_filename (channame);
 	}
 
-	log_insert_vars (fname, sizeof (fname), prefs.hex_irc_logmask, channame, netname, servname);
-	free (channame);
-	free (netname);
+	log_insert_vars (fname, sizeof (fname), prefs.hex_irc_logmask, chan_name.c_str(), net_name.c_str(), servname);
 
 	/* insert time/date */
 	now = time (NULL);
@@ -591,7 +589,7 @@ log_create_pathname (char *servname, char *channame, char *netname)
 }
 
 static int
-log_open_file (char *servname, char *channame, char *netname)
+log_open_file (const char *servname, const char *channame, const char *netname)
 {
 	char buf[512];
 	int fd;
@@ -631,12 +629,12 @@ log_open (session *sess)
 	if (!log_error && sess->logfd == -1)
 	{
 		char *message;
-
-		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"),
-			log_create_pathname (sess->server->servername, sess->channel, server_get_network (sess->server, FALSE)));
+        char * path = log_create_pathname(sess->server->servername, sess->channel, server_get_network(sess->server, FALSE));
+		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"), path);
+        g_free(path);
 
 		fe_message (message, FE_MSG_WAIT | FE_MSG_ERROR);
-
+        
 		g_free (message);
 		log_error = true;
 	}
