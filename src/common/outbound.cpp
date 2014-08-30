@@ -558,8 +558,7 @@ ban (session * sess, char *tbuf, char *mask, char *bantypestr, int deop)
 {
 	std::string banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
 	server *serv = sess->server;
-    banmask.push_back(0);
-    serv->p_mode(serv, sess->channel, &banmask[0]);
+    serv->p_mode(sess->channel, banmask);
 }
 
 static int
@@ -572,7 +571,7 @@ cmd_ban (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		ban (sess, tbuf, mask, word[3], 0);
 	} else
 	{
-		sess->server->p_mode (sess->server, sess->channel, "+b");	/* banlist */
+		sess->server->p_mode (sess->channel, "+b");	/* banlist */
 	}
 
 	return TRUE;
@@ -2703,10 +2702,10 @@ cmd_mode (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		if(sess->channel[0] == 0)
 			return FALSE;
-		sess->server->p_mode (sess->server, sess->channel, word_eol[2]);
+		sess->server->p_mode (sess->channel, word_eol[2]);
 	}
 	else
-		sess->server->p_mode (sess->server, word[2], word_eol[3]);
+		sess->server->p_mode (word[2], word_eol[3]);
 	return TRUE;
 }
 
@@ -3078,12 +3077,11 @@ cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (*word[2])
 	{
 		std::string quietmask = create_mask (sess, word[2], "+q", word[3], 0);
-        quietmask.push_back(0);
-        serv->p_mode(serv, sess->channel, &quietmask[0]);
+        serv->p_mode(sess->channel, quietmask);
 	}
 	else
 	{
-		serv->p_mode (serv, sess->channel, "+q");	/* quietlist */
+		serv->p_mode (sess->channel, "+q");	/* quietlist */
 	}
 
 	return TRUE;

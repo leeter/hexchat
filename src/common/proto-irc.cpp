@@ -297,10 +297,10 @@ server::p_invite (const std::string & channel, const std::string & nick)
 	tcp_sendf (this, "INVITE %s %s\r\n", nick.c_str(), channel.c_str());
 }
 
-static void
-irc_mode (server *serv, char *target, char *mode)
+void
+server::p_mode(const std::string & target, const std::string & mode)
 {
-	tcp_sendf (serv, "MODE %s %s\r\n", target, mode);
+	tcp_sendf (this, "MODE %s %s\r\n", target.c_str(), mode.c_str());
 }
 
 /* find channel info when joined */
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_mode = irc_mode;
 	serv->p_user_list = irc_user_list;
 	serv->p_away_status = irc_away_status;
 	/*serv->p_get_ip = irc_get_ip;*/

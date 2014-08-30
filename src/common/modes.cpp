@@ -118,7 +118,7 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 			strcat (tbuf, " ");
 			strcat (tbuf, word[wpos + i]);
 		}
-		serv->p_mode (serv, sess->channel, tbuf);
+		serv->p_mode (sess->channel, tbuf);
 
 		wpos += usable_modes;
 	}
