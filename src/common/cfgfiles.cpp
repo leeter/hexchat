@@ -97,8 +97,6 @@ list_load_from_data (GSList ** list, const std::string &ibuf)
 {
 	char cmd[384];
 	char name[128];
-	//char *buf;
-	int pnt = 0;
 
 	cmd[0] = 0;
 	name[0] = 0;
