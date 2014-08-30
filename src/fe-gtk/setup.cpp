@@ -1963,7 +1963,7 @@ setup_apply_entry_style (GtkWidget *entry)
 	gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]);
 	gtk_widget_modify_font (entry, input_style->font_desc);
 }
-extern "C" char cursor_color_rc[];
+extern const char cursor_color_rc[];
 static void
 setup_apply_to_sess (session_gui *gui)
 {

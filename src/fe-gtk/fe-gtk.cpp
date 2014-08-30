@@ -252,7 +252,7 @@ fe_args (int argc, char *argv[])
 	return -1;
 }
 
-extern "C" const char cursor_color_rc[] =
+extern const char cursor_color_rc[] =
 	"style \"xc-ib-st\""
 	"{"
 		"GtkEntry::cursor-color=\"#%02x%02x%02x\""
