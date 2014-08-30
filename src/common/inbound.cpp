@@ -1203,7 +1203,7 @@ check_autojoin_channels (server *serv)
 
 	if (sess_channels)
 	{
-		serv->p_join_list (serv, sess_channels);
+		serv->p_join_list (sess_channels);
 		g_slist_free_full (sess_channels, (GDestroyNotify) servlist_favchan_free);
 	}
 	else
@@ -1211,7 +1211,7 @@ check_autojoin_channels (server *serv)
 		/* If there's no session, just autojoin to favorites. */
 		if (serv->favlist)
 		{
-			serv->p_join_list (serv, serv->favlist);
+			serv->p_join_list (serv->favlist);
 			i++;
 
 			/* FIXME this is not going to work and is not needed either. server_free() does the job already. */

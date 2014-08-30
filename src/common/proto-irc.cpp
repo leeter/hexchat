@@ -130,7 +130,7 @@ server::p_join(const std::string& channel, const std::string& key)
 }
 
 static void
-irc_join_list_flush (server *serv, GString *channels, GString *keys, int send_keys)
+irc_join_list_flush (server *serv, GString *channels, GString *keys, bool send_keys)
 {
 	char *chanstr;
 	char *keystr;
@@ -155,11 +155,11 @@ irc_join_list_flush (server *serv, GString *channels, GString *keys, int send_ke
  * to get around the 512 limit.
  */
 
-static void
-irc_join_list (server *serv, GSList *favorites)
+void
+server::p_join_list (GSList *favorites)
 {
 	bool first_item = true;										/* determine whether we add commas or not */
-	int send_keys = 0;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
+	bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
 	int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
 	favchannel *fav;
 	GString *chanlist = g_string_new (NULL);
@@ -180,14 +180,14 @@ irc_join_list (server *serv, GSList *favorites)
 
 		if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
 		{
-			irc_join_list_flush (serv, chanlist, keylist, send_keys);
+			irc_join_list_flush (this, chanlist, keylist, send_keys);
 
 			chanlist = g_string_new (NULL);
 			keylist = g_string_new (NULL);
 
 			len = 9;
 			first_item = true;									/* list dumped, omit commas once again */
-			send_keys = 0;									/* also omit keys until we actually find one */
+			send_keys = false;									/* also omit keys until we actually find one */
 		}
 
 		if (!first_item)
@@ -208,7 +208,7 @@ irc_join_list (server *serv, GSList *favorites)
 		if (fav->key)
 		{
 			g_string_append (keylist, fav->key);
-			send_keys = 1;
+			send_keys = true;
 		}
 		else
 		{
@@ -219,7 +219,7 @@ irc_join_list (server *serv, GSList *favorites)
 		favlist = favlist->next;
 	}
 
-	irc_join_list_flush (serv, chanlist, keylist, send_keys);
+	irc_join_list_flush (this, chanlist, keylist, send_keys);
 	g_slist_free (favlist);
 }
 
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_join_list = irc_join_list;
 	serv->p_login = irc_login;
 	serv->p_join_info = irc_join_info;
 	serv->p_mode = irc_mode;
