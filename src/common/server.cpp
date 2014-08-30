@@ -88,11 +88,11 @@ namespace dcc = ::hexchat::dcc;
 #ifdef USE_OPENSSL
 extern SSL_CTX *ctx;				  /* hexchat.c */
 /* local variables */
-static struct session *g_sess = NULL;
+static struct session *g_sess = nullptr;
 #endif
 
-static GSList *away_list = NULL;
-GSList *serv_list = NULL;
+static GSList *away_list = nullptr;
+GSList *serv_list = nullptr;
 
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
@@ -108,9 +108,9 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 	char *locale;
 	gsize loc_len;
 
-	if (encoding == NULL)	/* system */
+	if (encoding == nullptr)	/* system */
 	{
-		locale = NULL;
+		locale = nullptr;
 		if (!prefs.utf8_locale)
 		{
 			const gchar *charset;
@@ -259,8 +259,8 @@ tcp_send_len (server *serv, const char *buf, int len)
 		if (g_ascii_strncasecmp (dbuf + 1, "WHO ", 4) == 0 ||
 		/* but only MODE queries, not changes */
 			(g_ascii_strncasecmp (dbuf + 1, "MODE", 4) == 0 &&
-			 strchr (dbuf, '-') == NULL &&
-			 strchr (dbuf, '+') == NULL))
+			 strchr (dbuf, '-') == nullptr &&
+			 strchr (dbuf, '+') == nullptr))
 			dbuf[0] = 0;
 	}
 
@@ -318,12 +318,12 @@ close_socket (int sok)
 static void
 server_inline (server *serv, char *line, int len)
 {
-	char *utf_line_allocated = NULL;
+	char *utf_line_allocated = nullptr;
 
 	/* Checks whether we're set to use UTF-8 charset */
 	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
-		(serv->encoding == NULL && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
-	    (serv->encoding != NULL &&				/* OR 3. explicitly set to UTF-8 */
+		(serv->encoding == nullptr && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
+	    (serv->encoding != nullptr &&				/* OR 3. explicitly set to UTF-8 */
 		 (g_ascii_strcasecmp (serv->encoding, "UTF8") == 0 ||
 		  g_ascii_strcasecmp (serv->encoding, "UTF-8") == 0)))
 	{
@@ -342,14 +342,14 @@ server_inline (server *serv, char *line, int len)
 		errnoeous octets till the string is convertable in the
 		said charset. */
 
-		const char *encoding = NULL;
+		const char *encoding = nullptr;
 
-		if (serv->encoding != NULL)
+		if (serv->encoding != nullptr)
 			encoding = serv->encoding;
 		else
 			g_get_charset (&encoding);
 
-		if (encoding != NULL)
+		if (encoding != nullptr)
 		{
 			char *conv_line; /* holds a copy of the original string */
 			int conv_len; /* tells g_convert how much of line to convert */
@@ -370,10 +370,10 @@ server_inline (server *serv, char *line, int len)
 
 			do
 			{
-				err = NULL;
+				err = nullptr;
 				retry = FALSE;
 				utf_line_allocated = g_convert_with_fallback (conv_line, conv_len, "UTF-8", encoding, "?", &read_len, &utf_len, &err);
-				if (err != NULL)
+				if (err != nullptr)
 				{
 					if (err->code == G_CONVERT_ERROR_ILLEGAL_SEQUENCE && conv_len > (read_len + 1))
 					{
@@ -391,7 +391,7 @@ server_inline (server *serv, char *line, int len)
 
 			/* If any conversion has occured at all. Conversion might fail
 			due to errors other than invalid sequences, e.g. unknown charset. */
-			if (utf_line_allocated != NULL)
+			if (utf_line_allocated != nullptr)
 			{
 				line = utf_line_allocated;
 				len = utf_len;
@@ -411,7 +411,7 @@ server_inline (server *serv, char *line, int len)
 	/* let proto-irc.c handle it */
 	serv->p_inline (line, len);
 
-	if (utf_line_allocated != NULL) /* only if a special copy was allocated */
+	if (utf_line_allocated != nullptr) /* only if a special copy was allocated */
 		g_free (utf_line_allocated);
 }
 
@@ -445,7 +445,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 			}
 			if (!serv->end_of_motd)
 			{
-				serv->disconnect (serv->server_session, FALSE, error);
+				serv->disconnect (serv->server_session, false, error);
 				if (!servlist_cycle (serv))
 				{
 					if (prefs.hex_net_auto_reconnect)
@@ -456,7 +456,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				if (prefs.hex_net_auto_reconnect)
 					serv->auto_reconnect (false, error);
 				else
-					serv->disconnect (serv->server_session, FALSE, error);
+					serv->disconnect (serv->server_session, false, error);
 			}
 			return TRUE;
 		}
@@ -497,13 +497,13 @@ server_connected (server * serv)
 	prefs.wait_on_exit = TRUE;
 	serv->ping_recv = time (0);
 	serv->lag_sent = 0;
-	serv->connected = TRUE;
+	serv->connected = true;
 	set_nonblocking (serv->sok);
 	serv->iotag = fe_input_add(serv->sok, FIA_READ | FIA_EX, (GIOFunc)server_read, serv);
 	if (!serv->no_login)
 	{
-		EMIT_SIGNAL (XP_TE_CONNECTED, serv->server_session, NULL, NULL, NULL,
-						 NULL, 0);
+		EMIT_SIGNAL (XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
+						 nullptr, 0);
 		if (serv->network)
 		{
             ircnet* net = static_cast<ircnet*>(serv->network);
@@ -521,8 +521,8 @@ server_connected (server * serv)
 		}
 	} else
 	{
-		EMIT_SIGNAL (XP_TE_SERVERCONNECTED, serv->server_session, NULL, NULL,
-						 NULL, NULL, 0);
+		EMIT_SIGNAL (XP_TE_SERVERCONNECTED, serv->server_session, nullptr, nullptr,
+						 nullptr, nullptr, 0);
 	}
 
 	server_set_name (serv, serv->servername);
@@ -560,7 +560,7 @@ server_stopconnecting (server * serv)
 #ifndef WIN32
 	/* kill the child process trying to connect */
 	kill (serv->childpid, SIGKILL);
-	waitpid (serv->childpid, NULL, 0);
+	waitpid (serv->childpid, nullptr, 0);
 
 	close (serv->childwrite);
 	close (serv->childread);
@@ -588,7 +588,7 @@ server_stopconnecting (server * serv)
 
 	fe_progressbar_end (serv);
 
-	serv->connecting = FALSE;
+	serv->connecting = false;
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
 }
 
@@ -623,9 +623,9 @@ ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
 							 sizeof (issuer));
 
 	snprintf (buf, sizeof (buf), "* Subject: %s", subject);
-	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
+	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, nullptr, nullptr, nullptr, 0);
 	snprintf (buf, sizeof (buf), "* Issuer: %s", issuer);
-	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
+	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, nullptr, nullptr, nullptr, 0);
 
 	return (TRUE);					  /* always ok */
 }
@@ -641,13 +641,13 @@ ssl_do_connect (server * serv)
 		char err_buf[128];
 		int err;
 
-		g_sess = NULL;
+		g_sess = nullptr;
 		if ((err = ERR_get_error ()) > 0)
 		{
 			ERR_error_string (err, err_buf);
 			snprintf (buf, sizeof (buf), "(%d) %s", err, err_buf);
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL,
-							 NULL, NULL, 0);
+			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
+							 nullptr, nullptr, 0);
 
 			if (ERR_GET_REASON (err) == SSL_R_WRONG_VERSION_NUMBER)
 				PrintText (serv->server_session, _("Are you sure this is a SSL capable server and port?\n"));
@@ -660,7 +660,7 @@ ssl_do_connect (server * serv)
 			return (0);				  /* remove it (0) */
 		}
 	}
-	g_sess = NULL;
+	g_sess = nullptr;
 
 	if (SSL_is_init_finished (serv->ssl))
 	{
@@ -671,30 +671,30 @@ ssl_do_connect (server * serv)
 		if (!_SSL_get_cert_info (cert_info, serv->ssl))
 		{
 			snprintf (buf, sizeof (buf), "* Certification info:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 			snprintf (buf, sizeof (buf), "  Subject:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 			for (int i = 0; cert_info.subject_word[i]; i++)
 			{
 				snprintf (buf, sizeof (buf), "    %s", cert_info.subject_word[i]);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-								 NULL, 0);
+				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+								 nullptr, 0);
 			}
 			snprintf (buf, sizeof (buf), "  Issuer:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 			for (int i = 0; cert_info.issuer_word[i]; i++)
 			{
 				snprintf (buf, sizeof (buf), "    %s", cert_info.issuer_word[i]);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-								 NULL, 0);
+				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+								 nullptr, 0);
 			}
 			snprintf (buf, sizeof (buf), "  Public key algorithm: %s (%d bits)",
 						 cert_info.algorithm, cert_info.algorithm_bits);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 			/*if (cert_info.rsa_tmp_bits)
 			{
 				snprintf (buf, sizeof (buf),
@@ -705,27 +705,27 @@ ssl_do_connect (server * serv)
 			}*/
 			snprintf (buf, sizeof (buf), "  Sign algorithm %s",
 						 cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 			snprintf (buf, sizeof (buf), "  Valid since %s to %s",
 						 cert_info.notbefore, cert_info.notafter);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 		} else
 		{
 			snprintf (buf, sizeof (buf), " * No Certificate");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 		}
 
 		chiper_info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
 		snprintf (buf, sizeof (buf), "* Cipher info:");
-		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL,
+		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
 					 chiper_info->version, chiper_info->chiper,
 					 chiper_info->chiper_bits);
-		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL,
+		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 
 		verify_error = SSL_get_verify_result (serv->ssl);
@@ -745,16 +745,16 @@ ssl_do_connect (server * serv)
 				snprintf (buf, sizeof (buf), "* Verify E: %s.? (%d) -- Ignored",
 							 X509_verify_cert_error_string (verify_error),
 							 verify_error);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-								 NULL, 0);
+				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+								 nullptr, 0);
 				break;
 			}
 		default:
 			snprintf (buf, sizeof (buf), "%s.? (%d)",
 						 X509_verify_cert_error_string (verify_error),
 						 verify_error);
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
+							 nullptr, 0);
 
 			serv->cleanup ();
 
@@ -769,11 +769,11 @@ ssl_do_connect (server * serv)
 		return (0);					  /* remove it (0) */
 	} else
 	{
-		if (serv->ssl->session && serv->ssl->session->time + SSLTMOUT < time (NULL))
+		if (serv->ssl->session && serv->ssl->session->time + SSLTMOUT < time (nullptr))
 		{
 			snprintf (buf, sizeof (buf), "SSL handshake timed out");
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL,
-							 NULL, NULL, 0);
+			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
+							 nullptr, nullptr, 0);
 			serv->cleanup (); /* ->connecting = FALSE */
 
 			if (prefs.hex_net_auto_reconnectonfail)
@@ -808,7 +808,7 @@ server::auto_reconnect (bool send_quit, int err)
 	GSList *list;
 	int del;
 
-	if (this->server_session == NULL)
+	if (this->server_session == nullptr)
 		return;
 
 	list = sess_list;
@@ -870,10 +870,10 @@ server_connect_success (server *serv)
 		/* it'll be a memory leak, if connection isn't terminated by
 		   server_cleanup() */
 		serv->ssl = _SSL_socket (ctx, serv->sok);
-		if ((err = _SSL_set_verify (ctx, ssl_cb_verify, NULL)))
+		if ((err = _SSL_set_verify (ctx, ssl_cb_verify, nullptr)))
 		{
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, NULL,
-							 NULL, NULL, 0);
+			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, nullptr,
+							 nullptr, nullptr, 0);
 			serv->cleanup ();	/* ->connecting = FALSE */
 			return;
 		}
@@ -885,7 +885,7 @@ server_connect_success (server *serv)
 		return;
 	}
 
-	serv->ssl = NULL;
+	serv->ssl = nullptr;
 #endif
 	server_stopconnecting (serv);	/* ->connecting = FALSE */
 	/* activate glib poll */
@@ -925,7 +925,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		if (serv->proxy_sok6 != -1)
 			closesocket (serv->proxy_sok6);
 #endif
-		EMIT_SIGNAL (XP_TE_UKNHOST, sess, NULL, NULL, NULL, NULL, 0);
+		EMIT_SIGNAL (XP_TE_UKNHOST, sess, nullptr, nullptr, nullptr, nullptr, 0);
 		if (!servlist_cycle (serv))
 			if (prefs.hex_net_auto_reconnectonfail)
 				serv->auto_reconnect (false, -1);
@@ -942,8 +942,8 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		if (serv->proxy_sok6 != -1)
 			closesocket (serv->proxy_sok6);
 #endif
-		EMIT_SIGNAL (XP_TE_CONNFAIL, sess, errorstring (atoi (tbuf)), NULL,
-						 NULL, NULL, 0);
+		EMIT_SIGNAL (XP_TE_CONNFAIL, sess, errorstring (atoi (tbuf)), nullptr,
+						 nullptr, nullptr, 0);
 		if (!servlist_cycle (serv))
 			if (prefs.hex_net_auto_reconnectonfail)
 				serv->auto_reconnect (false, -1);
@@ -952,7 +952,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		waitline2 (source, host, sizeof host);
 		waitline2 (source, ip, sizeof ip);
 		waitline2 (source, outbuf, sizeof outbuf);
-		EMIT_SIGNAL (XP_TE_CONNECT, sess, host, ip, outbuf, NULL, 0);
+		EMIT_SIGNAL (XP_TE_CONNECT, sess, host, ip, outbuf, nullptr, 0);
 #ifdef WIN32
 		if (prefs.hex_identd)
 		{
@@ -1023,11 +1023,11 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		break;
 	case '8':
 		PrintText (sess, _("Proxy traversal failed.\n"));
-		serv->disconnect (sess, FALSE, -1);
+		serv->disconnect (sess, false, -1);
 		break;
 	case '9':
 		waitline2 (source, tbuf, sizeof tbuf);
-		EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, tbuf, NULL, NULL, NULL, 0);
+		EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, tbuf, nullptr, nullptr, nullptr, 0);
 		break;
 	}
 
@@ -1059,7 +1059,7 @@ server::cleanup ()
 	{
 		SSL_shutdown (this->ssl);
 		SSL_free (this->ssl);
-		this->ssl = NULL;
+		this->ssl = nullptr;
 	}
 #endif
 
@@ -1081,8 +1081,8 @@ server::cleanup ()
 		close_socket (this->sok);
 		if (this->proxy_sok)
 			close_socket (this->proxy_sok);
-		this->connected = FALSE;
-		this->end_of_motd = FALSE;
+		this->connected = false;
+		this->end_of_motd = false;
         return server_cleanup_result::connected;
 	}
 
@@ -1103,7 +1103,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 	server *serv = sess->server;
 	GSList *list;
 	char tbuf[64];
-	gboolean shutup = FALSE;
+	bool shutup = false;
 
 	/* send our QUIT reason */
 	if (sendquit && serv->connected)
@@ -1121,10 +1121,10 @@ server::disconnect (session * sess, bool sendquit, int err)
 		return;
     case server_cleanup_result::still_connecting:							  /* it was in the process of connecting */
 		sprintf (tbuf, "%d", sess->server->childpid);
-		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, NULL, NULL, NULL, 0);
+		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, nullptr, nullptr, nullptr, 0);
 		return;
     case server_cleanup_result::reconnecting:
-		shutup = TRUE;	/* won't print "disconnected" in channels */
+		shutup = true;	/* won't print "disconnected" in channels */
 	}
 
 	serv->flush_queue ();
@@ -1137,7 +1137,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 		{
 			if (!shutup || sess->type == SESS_SERVER)
 				/* print "Disconnected" to each window using this server */
-				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), NULL, NULL, NULL, 0);
+				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), nullptr, nullptr, nullptr, 0);
 
 			if (!sess->channel[0] || sess->type == SESS_CHANNEL)
 				clear_channel (sess);
@@ -1146,8 +1146,8 @@ server::disconnect (session * sess, bool sendquit, int err)
 	}
 
 	serv->pos = 0;
-	serv->motd_skipped = FALSE;
-	serv->no_login = FALSE;
+	serv->motd_skipped = false;
+	serv->no_login = false;
 	serv->servername[0] = 0;
 	serv->lag_sent = 0;
 
@@ -1476,21 +1476,21 @@ static int
 server_child (server * serv)
 {
 	netstore *ns_server;
-	netstore *ns_proxy = NULL;
+	netstore *ns_proxy = nullptr;
 	netstore *ns_local;
 	int port = serv->port;
 	int error;
 	int sok = -1, psok = -1;
 	char *hostname = serv->hostname;
-	char *real_hostname = NULL;
+	char *real_hostname = nullptr;
 	char *ip;
-	char *proxy_ip = NULL;
+	char *proxy_ip = nullptr;
 	char *local_ip;
 	int connect_port;
 	char buf[512];
 	char bound = 0;
 	int proxy_type = 0;
-	char *proxy_host = NULL;
+	char *proxy_host = nullptr;
 	int proxy_port;
 
 	ns_server = net_store_new ();
@@ -1500,7 +1500,7 @@ server_child (server * serv)
 	{
 		ns_local = net_store_new ();
 		local_ip = net_resolve (ns_local, prefs.hex_net_bind_host, 0, &real_hostname);
-		if (local_ip != NULL)
+		if (local_ip != nullptr)
 		{
 			snprintf (buf, sizeof (buf), "5\n%s\n", local_ip);
 			write (serv->childwrite, buf, strlen (buf));
@@ -1515,7 +1515,7 @@ server_child (server * serv)
 
 	if (!serv->dont_use_proxy) /* blocked in serverlist? */
 	{
-		if (FALSE)
+		if (false)
 			;
 #ifdef USE_LIBPROXY
 		else if (prefs.hex_net_proxy_type == 5)
@@ -1702,11 +1702,11 @@ server::connect (char *hostname, int port, bool no_login)
 	port &= 0xffff;	/* wrap around */
 
 	if (this->connected || this->connecting || this->recondelay_tag)
-		this->disconnect (sess, TRUE, -1);
+		this->disconnect (sess, true, -1);
 
 	fe_progressbar_start (sess);
 
-	EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, hostname, NULL, NULL, NULL, 0);
+	EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, hostname, nullptr, nullptr, nullptr, 0);
 
 	safe_strcpy (this->servername, hostname, sizeof (this->servername));
 	/* overlap illegal in strncpy */
@@ -1730,7 +1730,7 @@ server::connect (char *hostname, int port, bool no_login)
 		else
 		{
 			/* if that doesn't exist, try <config>/certs/client.pem */
-			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", NULL);
+			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", nullptr);
 			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 			{
 				if (SSL_CTX_use_PrivateKey_file(ctx, cert_file, SSL_FILETYPE_PEM) == 1)
@@ -1824,9 +1824,9 @@ server_set_encoding (server *serv, char *new_encoding)
 	{
 		free (serv->encoding);
 		/* can be left as NULL to indicate system encoding */
-		serv->encoding = NULL;
-		serv->using_cp1255 = FALSE;
-		serv->using_irc = FALSE;
+		serv->encoding = nullptr;
+		serv->using_cp1255 = false;
+		serv->using_irc = false;
 	}
 
 	if (new_encoding)
@@ -1841,9 +1841,9 @@ server_set_encoding (server *serv, char *new_encoding)
 		/* server_inline() uses these flags */
 		if (!g_ascii_strcasecmp (serv->encoding, "CP1255") ||
 			 !g_ascii_strcasecmp (serv->encoding, "WINDOWS-1255"))
-			serv->using_cp1255 = TRUE;
+			serv->using_cp1255 = true;
 		else if (!g_ascii_strcasecmp (serv->encoding, "IRC"))
-			serv->using_irc = TRUE;
+			serv->using_irc = true;
 	}
 }
 
@@ -1893,23 +1893,23 @@ server_set_defaults (server *serv)
 	serv->nick_modes = strdup ("ohv");
 
 	serv->nickcount = 1;
-	serv->end_of_motd = FALSE;
-	serv->is_away = FALSE;
-	serv->supports_watch = FALSE;
-	serv->supports_monitor = FALSE;
-	serv->bad_prefix = FALSE;
-	serv->use_who = TRUE;
-	serv->have_namesx = FALSE;
-	serv->have_awaynotify = FALSE;
-	serv->have_uhnames = FALSE;
-	serv->have_whox = FALSE;
-	serv->have_idmsg = FALSE;
-	serv->have_accnotify = FALSE;
-	serv->have_extjoin = FALSE;
-	serv->have_server_time = FALSE;
-	serv->have_sasl = FALSE;
-	serv->have_except = FALSE;
-	serv->have_invite = FALSE;
+	serv->end_of_motd = false;
+	serv->is_away = false;
+	serv->supports_watch = false;
+	serv->supports_monitor = false;
+	serv->bad_prefix = false;
+	serv->use_who = true;
+	serv->have_namesx = false;
+	serv->have_awaynotify = false;
+	serv->have_uhnames = false;
+	serv->have_whox = false;
+	serv->have_idmsg = false;
+	serv->have_accnotify = false;
+	serv->have_extjoin = false;
+	serv->have_server_time = false;
+	serv->have_sasl = false;
+	serv->have_except = false;
+	serv->have_invite = false;
 }
 
 char *
@@ -1926,7 +1926,7 @@ server_get_network (server *serv, gboolean fallback)
 	if (fallback)
 		return serv->servername;
 
-	return NULL;
+	return nullptr;
 }
 
 void
@@ -1977,7 +1977,7 @@ server_away_find_message (server *serv, char *nick)
 			return away;
 		list = list->next;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static void

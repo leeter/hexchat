@@ -416,18 +416,17 @@ server::p_ping(const std::string & to, const std::string & timestring)
 bool
 server::p_raw(const std::string &raw)
 {
-    size_t len;
 	char tbuf[4096];
 	if (!raw.empty())
 	{
 		//len = strlen (raw);
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
-			len = snprintf (tbuf, sizeof (tbuf), "%s\r\n", raw.c_str());
+            auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
 			tcp_send_len (this, tbuf, len);
 		} else
 		{
-			tcp_send_len (this, raw.c_str(), len);
+			tcp_send_len (this, raw.c_str(), raw.size());
 			tcp_send_len (this, "\r\n", 2);
 		}
 		return true;
