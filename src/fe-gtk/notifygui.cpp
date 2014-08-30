@@ -296,7 +296,7 @@ notify_gui_update (void)
 	struct notify_per_server *servnot;
 	GSList *list = notify_list;
 	GSList *slist;
-	gchar *name, *status, *server, *seen;
+	const gchar *name, *status, * server, *seen;
 	int servcount, lastseenminutes;
 	bool online;
 	time_t lastseen;

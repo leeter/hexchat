@@ -1054,7 +1054,6 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 	GSList *slist, *clist, *sessions = NULL;
 	server *serv;
 	session *sess;
-	char *netname;
 
 	if (servname == NULL && channel == NULL)
 		return current_sess;
@@ -1063,7 +1062,7 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 	while (slist)
 	{
 		serv = static_cast<server*>(slist->data);
-		netname = server_get_network (serv, TRUE);
+		const char* netname = server_get_network (serv, TRUE);
 
 		if (servname == NULL ||
 			 rfc_casecmp (servname, serv->servername) == 0 ||

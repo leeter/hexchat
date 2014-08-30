@@ -211,11 +211,11 @@ scrollback_shrink (session *sess)
 }
 
 static void
-scrollback_save (session *sess, char *text)
+scrollback_save (session *sess, const std::string & text)
 {
 	char *buf;
 	time_t stamp;
-	int len;
+	size_t len;
 
 	if (sess->type == SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
@@ -250,8 +250,8 @@ scrollback_save (session *sess, char *text)
 	write (sess->scrollfd, buf, strlen (buf));
 	g_free (buf);
 
-	len = strlen (text);
-	write (sess->scrollfd, text, len);
+    len = text.size();
+	write (sess->scrollfd, text.c_str(), text.size());
 	if (len && text[len - 1] != '\n')
 		write (sess->scrollfd, "\n", 1);
 
@@ -693,7 +693,7 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 }
 
 static void
-log_write (session *sess, char *text, time_t ts)
+log_write (session *sess, const std::string & text, time_t ts)
 {
 	char *temp;
 	char *stamp;
@@ -738,7 +738,7 @@ log_write (session *sess, char *text, time_t ts)
 			g_free (stamp);
 		}
 	}
-	temp = strip_color (text, -1, STRIP_ALL);
+	temp = strip_color (text.c_str(), -1, STRIP_ALL);
 	len = strlen (temp);
 	write (sess->logfd, temp, len);
 	/* lots of scripts/plugins print without a \n at the end */
@@ -893,9 +893,10 @@ text_validate (char **text, int *len)
 }
 
 void
-PrintTextTimeStamp (session *sess, char *text, time_t timestamp)
+PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 {
-	char *conv;
+    std::string buf(text);
+	char *conv = nullptr;
 
 	if (!sess)
 	{
@@ -905,19 +906,21 @@ PrintTextTimeStamp (session *sess, char *text, time_t timestamp)
 	}
 
 	/* make sure it's valid utf8 */
-	if (text[0] == 0)
+	if (buf.empty())
 	{
-		text = "\n";
-		conv = NULL;
+		buf = "\n";
+        buf.push_back(0);
 	} else
 	{
 		int len = -1;
-		conv = text_validate ((char **)&text, &len);
+        buf.push_back(0);
+        char* buf_ptr = &buf[0];
+		conv = text_validate (&buf_ptr, &len);
 	}
 
-	log_write (sess, text, timestamp);
-	scrollback_save (sess, text);
-	fe_print_text (sess, text, timestamp, FALSE);
+    log_write(sess, buf, timestamp);
+    scrollback_save(sess, buf);
+    fe_print_text(sess, &buf[0], timestamp, FALSE);
 
 	if (conv)
 		g_free (conv);
