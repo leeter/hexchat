@@ -379,7 +379,7 @@ notify_watch (server * serv, const char *nick, int add)
 	else
 		return;
 
-	serv->p_raw (serv, tbuf);
+	serv->p_raw (tbuf);
 }
 
 static void
@@ -413,7 +413,7 @@ notify_flush_watches(server * serv, std::vector<struct notify*>::const_iterator 
 			buffer << " +";
 		buffer << notify->name;
 	}
-	serv->p_raw (serv, buffer.str().c_str());
+	serv->p_raw (buffer.str());
 }
 
 /* called when logging in. e.g. when End of motd. */
@@ -542,7 +542,7 @@ notify_checklist_for_server (server *serv)
 	}
 
 	if (i)
-		serv->p_raw (serv, outbuf);
+		serv->p_raw (outbuf);
 }
 
 int

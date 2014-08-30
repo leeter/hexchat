@@ -413,26 +413,26 @@ server::p_ping(const std::string & to, const std::string & timestring)
 		tcp_sendf (this, "PING %s\r\n", timestring.c_str());
 }
 
-static int
-irc_raw (server *serv, const char *raw)
+bool
+server::p_raw(const std::string &raw)
 {
-	int len;
+    size_t len;
 	char tbuf[4096];
-	if (*raw)
+	if (!raw.empty())
 	{
-		len = strlen (raw);
-		if (len < sizeof (tbuf) - 3)
+		//len = strlen (raw);
+		if (raw.size() < sizeof (tbuf) - 3)
 		{
-			len = snprintf (tbuf, sizeof (tbuf), "%s\r\n", raw);
-			tcp_send_len (serv, tbuf, len);
+			len = snprintf (tbuf, sizeof (tbuf), "%s\r\n", raw.c_str());
+			tcp_send_len (this, tbuf, len);
 		} else
 		{
-			tcp_send_len (serv, raw, len);
-			tcp_send_len (serv, "\r\n", 2);
+			tcp_send_len (this, raw.c_str(), len);
+			tcp_send_len (this, "\r\n", 2);
 		}
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 /* ============================================================== */
@@ -1568,6 +1568,5 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_raw = irc_raw;
 	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
 }

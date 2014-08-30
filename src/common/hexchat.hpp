@@ -503,7 +503,7 @@ struct server
     void p_names(const std::string & channel);
     void p_ping(const std::string & to, const std::string & timestring);
 /*	void (*p_set_away)(struct server *);*/
-	int (*p_raw)(struct server *, const char *raw);
+    bool p_raw(const std::string & raw);
 	int (*p_cmp)(const char *s1, const char *s2);
 
 	int port;

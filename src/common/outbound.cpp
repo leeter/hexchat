@@ -3117,7 +3117,7 @@ cmd_quote (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *raw = word_eol[2];
 
-	return sess->server->p_raw (sess->server, raw);
+	return sess->server->p_raw (raw);
 }
 
 static int
@@ -3753,7 +3753,7 @@ wallchop_cb (struct User *user, multidata *data)
 		data->i = 0;
 		sprintf (data->tbuf + strlen (data->tbuf),
 					" :[@%s] %s", data->sess->channel, data->reason);
-		data->sess->server->p_raw (data->sess->server, data->tbuf);
+		data->sess->server->p_raw (data->tbuf);
 		strcpy (data->tbuf, "NOTICE ");
 	}
 
@@ -3781,7 +3781,7 @@ cmd_wallchop (struct session *sess, char *tbuf, char *word[],
 	{
 		sprintf (tbuf + strlen (tbuf),
 					" :[@%s] %s", sess->channel, word_eol[2]);
-		sess->server->p_raw (sess->server, tbuf);
+		sess->server->p_raw (tbuf);
 	}
 
 	return TRUE;
@@ -4778,7 +4778,7 @@ handle_command (session *sess, char *cmd, int check_spch)
 		}
 		else
 		{
-			sess->server->p_raw (sess->server, cmd);
+			sess->server->p_raw (cmd);
 		}
 	}
 
