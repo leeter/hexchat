@@ -323,21 +323,22 @@ server::p_user_list(const std::string & channel)
 }
 
 /* userhost */
-
-static void
-irc_userhost (server *serv, char *nick)
+//irc_userhost
+void
+server::p_get_ip_uh(const std::string & nick)
 {
-	tcp_sendf (serv, "USERHOST %s\r\n", nick);
+	tcp_sendf (this, "USERHOST %s\r\n", nick.c_str());
 }
 
-static void
-irc_away_status (server *serv, char *channel)
-{
-	if (serv->have_whox)
-		tcp_sendf (serv, "WHO %s %%chtsunfra,152\r\n", channel);
-	else
-		tcp_sendf (serv, "WHO %s\r\n", channel);
-}
+// TODO: get rid of?
+//void
+//server::p_away_status(const std::string & channel)
+//{
+//	if (this->have_whox)
+//		tcp_sendf (this, "WHO %s %%chtsunfra,152\r\n", channel.c_str());
+//	else
+//        tcp_sendf(this, "WHO %s\r\n", channel.c_str());
+//}
 
 /*static void
 irc_get_ip (server *serv, char *nick)
@@ -1575,9 +1576,7 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_away_status = irc_away_status;
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_get_ip_uh = irc_userhost;
 	serv->p_set_back = irc_set_back;
 	serv->p_set_away = irc_set_away;
 	serv->p_action = irc_action;

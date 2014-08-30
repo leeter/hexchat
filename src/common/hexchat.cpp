@@ -342,7 +342,7 @@ doover:
 					sess->done_away_check = TRUE;
 					sess->doing_who = TRUE;
 					/* this'll send a WHO #channel */
-					sess->server->p_away_status (sess->server, sess->channel);
+					sess->server->p_away_status (sess->channel);
 					sent += sess->total;
 				}
 			}

@@ -1575,7 +1575,7 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 		if (prefs.hex_dcc_ip_from_server && serv->use_who)
 		{
 			serv->skip_next_userhost = TRUE;
-			serv->p_get_ip_uh (serv, serv->nick);	/* sends USERHOST mynick */
+			serv->p_get_ip_uh (serv->nick);	/* sends USERHOST mynick */
 		}
 		set_default_modes (serv);
 
