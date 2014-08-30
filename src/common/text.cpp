@@ -1460,7 +1460,7 @@ static const char * const pevt_dccsendfail_help[] = {
 	N_("Error"),
 };
 
-static const const char * const pevt_dccsendcomp_help[] = {
+static const char * const pevt_dccsendcomp_help[] = {
 	N_("Filename"),
 	N_("Nickname"),
 	N_("CPS"),
