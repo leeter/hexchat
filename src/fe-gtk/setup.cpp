@@ -146,7 +146,7 @@ static const char *const langsmenu[] =
 
 static const setting appearance_settings[] =
 {
-	{ST_HEADER,	N_("General"),0,0,0},
+	{ST_HEADER,	N_("General"),0,0,0, 0},
 #ifdef WIN32
 	{ST_MENU,   N_("Language:"), P_OFFINTNL(hex_gui_lang), 0, langsmenu, 0},
 	{ST_EFONT,  N_("Main font:"), P_OFFSETNL(hex_text_font_main), 0, 0, sizeof prefs.hex_text_font_main},
@@ -154,7 +154,7 @@ static const setting appearance_settings[] =
 	{ST_EFONT,  N_("Font:"), P_OFFSETNL(hex_text_font), 0, 0, sizeof prefs.hex_text_font},
 #endif
 
-	{ST_HEADER,	N_("Text Box"),0,0,0},
+	{ST_HEADER,	N_("Text Box"),0,0,0, 0},
 	{ST_TOGGLE, N_("Colored nick names"), P_OFFINTNL(hex_text_color_nicks), N_("Give each person on IRC a different color"),0,0},
 	{ST_TOGGLR, N_("Indent nick names"), P_OFFINTNL(hex_text_indent), N_("Make nick names right-justified"),0,0},
 	{ST_TOGGLE, N_ ("Show marker line"), P_OFFINTNL (hex_text_show_marker), N_ ("Insert a red line after the last read text."), 0, 0},
@@ -163,7 +163,7 @@ static const setting appearance_settings[] =
 	{ST_HEADER, N_("Transparency Settings"), 0,0,0},
 	{ST_HSCALE, N_("Window Opacity:"), P_OFFINTNL(hex_gui_transparency),0,0,0},
 
-	{ST_HEADER,	N_("Time Stamps"),0,0,0},
+	{ST_HEADER,	N_("Time Stamps"),0,0,0, 0},
 	{ST_TOGGLE, N_("Enable time stamps"), P_OFFINTNL(hex_stamp_text),0,0,1},
 	{ST_ENTRY,  N_("Time stamp format:"), P_OFFSETNL(hex_stamp_text_format),
 #ifdef WIN32
@@ -172,7 +172,7 @@ static const setting appearance_settings[] =
 					N_("See the strftime manpage for details."),0,sizeof prefs.hex_stamp_text_format},
 #endif
 
-	{ST_HEADER,	N_("Title Bar"),0,0,0},
+	{ST_HEADER,	N_("Title Bar"),0,0,0, 0},
 	{ST_TOGGLE, N_("Show channel modes"), P_OFFINTNL(hex_gui_win_modes),0,0,0},
 	{ST_TOGGLR, N_("Show number of users"), P_OFFINTNL(hex_gui_win_ucount),0,0,0},
 
@@ -188,7 +188,7 @@ static const char *const tabcompmenu[] =
 
 static const setting inputbox_settings[] =
 {
-	{ST_HEADER, N_("Input Box"),0,0,0},
+	{ST_HEADER, N_("Input Box"),0,0,0,0},
 	{ST_TOGGLE, N_("Use the Text box font and colors"), P_OFFINTNL(hex_gui_input_style),0,0,0},
 	{ST_TOGGLE, N_("Render colors and attributes"), P_OFFINTNL (hex_gui_input_attr),0,0,0},
 	{ST_TOGGLE, N_("Show nick box"), P_OFFINTNL(hex_gui_input_nick),0,0,1},
@@ -198,10 +198,10 @@ static const setting inputbox_settings[] =
 #ifdef WIN32
 	{ST_LABEL,	N_("Use language codes (as in \"%LOCALAPPDATA%\\enchant\\myspell\\dicts\").\nSeparate multiple entries with commas.")},
 #else
-	{ST_LABEL,	N_("Use language codes. Separate multiple entries with commas.")},
+	{ST_LABEL,	N_("Use language codes. Separate multiple entries with commas."),0,0,0,0},
 #endif
 
-	{ST_HEADER, N_("Nick Completion"),0,0,0},
+	{ST_HEADER, N_("Nick Completion"),0,0,0,0},
 	{ST_ENTRY,	N_("Nick completion suffix:"), P_OFFSETNL(hex_completion_suffix),0,0,sizeof prefs.hex_completion_suffix},
 	{ST_MENU,	N_("Nick completion sorted:"), P_OFFINTNL(hex_completion_sort), 0, tabcompmenu, 0},
 	{ST_NUMBER,	N_("Nick completion amount:"), P_OFFINTNL(hex_completion_amount), N_("Threshold of nicks to start listing instead of completing"), (const char **)N_("nicks."), 1000},
@@ -251,7 +251,7 @@ static const char *const ulpos[] =
 
 static const setting userlist_settings[] =
 {
-	{ST_HEADER,	N_("User List"),0,0,0},
+	{ST_HEADER,	N_("User List"),0,0,0,0},
 	{ST_TOGGLE, N_("Show hostnames in user list"), P_OFFINTNL(hex_gui_ulist_show_hosts), 0, 0, 0},
 	{ST_TOGGLE, N_("Use the Text box font and colors"), P_OFFINTNL(hex_gui_ulist_style),0,0,0},
 	{ST_TOGGLE, N_("Show icons for user modes"), P_OFFINTNL(hex_gui_ulist_icons), N_("Use graphical icons instead of text symbols in the user list."), 0, 0},
@@ -261,14 +261,14 @@ static const setting userlist_settings[] =
 	{ST_MENU,	N_("User list sorted by:"), P_OFFINTNL(hex_gui_ulist_sort), 0, ulmenutext, 0},
 	{ST_MENU,	N_("Show user list at:"), P_OFFINTNL(hex_gui_ulist_pos), 0, ulpos, 1},
 
-	{ST_HEADER,	N_("Away Tracking"),0,0,0},
+	{ST_HEADER,	N_("Away Tracking"),0,0,0,0},
 	{ST_TOGGLE,	N_("Track the Away status of users and mark them in a different color"), P_OFFINTNL(hex_away_track),0,0,1},
 	{ST_NUMBER, N_("On channels smaller than:"), P_OFFINTNL(hex_away_size_max),0,0,10000},
 
-	{ST_HEADER,	N_("Action Upon Double Click"),0,0,0},
+	{ST_HEADER,	N_("Action Upon Double Click"),0,0,0,0},
 	{ST_ENTRY,	N_("Execute command:"), P_OFFSETNL(hex_gui_ulist_doubleclick), 0, 0, sizeof prefs.hex_gui_ulist_doubleclick},
 
-	{ST_HEADER,	N_("Extra Gadgets"),0,0,0},
+	{ST_HEADER,	N_("Extra Gadgets"),0,0,0,0},
 	{ST_MENU,	N_("Lag meter:"), P_OFFINTNL(hex_gui_lagometer), 0, lagmenutext, 0},
 	{ST_MENU,	N_("Throttle meter:"), P_OFFINTNL(hex_gui_throttlemeter), 0, lagmenutext, 0},
 
@@ -322,7 +322,7 @@ static const setting tabs_settings[] =
 	{ST_MENU,	N_("Show channel switcher at:"), P_OFFINTNL(hex_gui_tab_pos), 0, cspos, 1},
 	{ST_NUMBER,	N_("Shorten tab labels to:"), P_OFFINTNL(hex_gui_tab_trunc), 0, (const char **)N_("letters."), 99},
 
-	{ST_HEADER,	N_("Tabs or Windows"),0,0,0},
+	{ST_HEADER,	N_("Tabs or Windows"),0,0,0,0},
 	{ST_MENU,	N_("Open channels in:"), P_OFFINTNL(hex_gui_tab_chans), 0, tabwin, 0},
 	{ST_MENU,	N_("Open dialogs in:"), P_OFFINTNL(hex_gui_tab_dialogs), 0, tabwin, 0},
 	{ST_MENU,	N_("Open utilities in:"), P_OFFINTNL(hex_gui_tab_utils), N_("Open DCC, Ignore, Notify etc, in tabs or windows?"), tabwin, 0},
@@ -395,7 +395,7 @@ static const int beeplist[3] =
 
 static const setting alert_settings[] =
 {
-	{ST_HEADER,	N_("Alerts"),0,0,0},
+	{ST_HEADER,	N_("Alerts"),0,0,0,0},
 
 	{ST_ALERTHEAD},
 #if !defined (WIN32) && !defined (__APPLE__)
@@ -422,7 +422,7 @@ static const setting alert_settings[] =
 	{ST_TOGGLE,	N_("Omit alerts when marked as being away"), P_OFFINTNL(hex_away_omit_alerts), 0, 0, 0},
 	{ST_TOGGLE,	N_("Omit alerts while the window is focused"), P_OFFINTNL(hex_gui_focus_omitalerts), 0, 0, 0},
 
-	{ST_HEADER,	N_("Tray Behavior"), 0, 0, 0},
+	{ST_HEADER,	N_("Tray Behavior"), 0, 0, 0, 0},
 #ifdef WIN32
 	{ST_TOGGLE,	N_("Enable system tray icon"), P_OFFINTNL(hex_gui_tray), 0, 0, 3},
 #else
@@ -435,7 +435,7 @@ static const setting alert_settings[] =
 	{ST_TOGGLE,	N_("Only show tray balloons when hidden or iconified"), P_OFFINTNL(hex_gui_tray_quiet), 0, 0, 0},
 #endif
 
-	{ST_HEADER,	N_("Highlighted Messages"),0,0,0},
+	{ST_HEADER,	N_("Highlighted Messages"),0,0,0,0},
 	{ST_LABEL,	N_("Highlighted messages are ones where your nickname is mentioned, but also:"), 0, 0, 0, 1},
 
 	{ST_ENTRY,	N_("Extra words to highlight:"), P_OFFSETNL(hex_irc_extra_hilight), 0, 0, sizeof prefs.hex_irc_extra_hilight},
@@ -448,7 +448,7 @@ static const setting alert_settings[] =
 
 static const setting alert_settings_unity[] =
 {
-	{ST_HEADER,	N_("Alerts"),0,0,0},
+	{ST_HEADER,	N_("Alerts"),0,0,0,0},
 
 	{ST_ALERTHEAD},
 	{ ST_3OGGLE, N_("Show tray balloons on:"), 0, 0, (const char* const*)balloonlist, 0 },
@@ -458,7 +458,7 @@ static const setting alert_settings_unity[] =
 	{ST_TOGGLE,	N_("Omit alerts when marked as being away"), P_OFFINTNL(hex_away_omit_alerts), 0, 0, 0},
 	{ST_TOGGLE,	N_("Omit alerts while the window is focused"), P_OFFINTNL(hex_gui_focus_omitalerts), 0, 0, 0},
 
-	{ST_HEADER,	N_("Highlighted Messages"),0,0,0},
+	{ST_HEADER,	N_("Highlighted Messages"),0,0,0,0},
 	{ST_LABEL,	N_("Highlighted messages are ones where your nickname is mentioned, but also:"), 0, 0, 0, 1},
 
 	{ST_ENTRY,	N_("Extra words to highlight:"), P_OFFSETNL(hex_irc_extra_hilight), 0, 0, sizeof prefs.hex_irc_extra_hilight},
@@ -471,16 +471,16 @@ static const setting alert_settings_unity[] =
 
 static const setting general_settings[] =
 {
-	{ST_HEADER,	N_("Default Messages"),0,0,0},
+	{ST_HEADER,	N_("Default Messages"),0,0,0,0},
 	{ST_ENTRY,	N_("Quit:"), P_OFFSETNL(hex_irc_quit_reason), 0, 0, sizeof prefs.hex_irc_quit_reason},
 	{ST_ENTRY,	N_("Leave channel:"), P_OFFSETNL(hex_irc_part_reason), 0, 0, sizeof prefs.hex_irc_part_reason},
 	{ST_ENTRY,	N_("Away:"), P_OFFSETNL(hex_away_reason), 0, 0, sizeof prefs.hex_away_reason},
 
-	{ST_HEADER,	N_("Away"),0,0,0},
+	{ST_HEADER,	N_("Away"),0,0,0,0},
 	{ST_TOGGLE,	N_("Show away once"), P_OFFINTNL(hex_away_show_once), N_("Show identical away messages only once."), 0, 0},
 	{ST_TOGGLE,	N_("Automatically unmark away"), P_OFFINTNL(hex_away_auto_unmark), N_("Unmark yourself as away before sending messages."), 0, 0},
 
-	{ST_HEADER,	N_("Miscellaneous"),0,0,0},
+	{ST_HEADER,	N_("Miscellaneous"),0,0,0,0},
 	{ST_TOGGLE,	N_("Display MODEs in raw form"), P_OFFINTNL(hex_irc_raw_modes), 0, 0, 0},
 	{ST_TOGGLE,	N_("WHOIS on notify"), P_OFFINTNL(hex_notify_whois_online), N_("Sends a /WHOIS when a user comes online in your notify list."), 0, 0},
 	{ST_TOGGLE,	N_("Hide join and part messages"), P_OFFINTNL(hex_irc_conf_mode), N_("Hide channel join/part messages by default."), 0, 0},
@@ -500,7 +500,7 @@ static const char *const bantypemenu[] =
 
 static const setting advanced_settings[] =
 {
-	{ST_HEADER,	N_("Auto Copy Behavior"),0,0,0},
+	{ST_HEADER,	N_("Auto Copy Behavior"),0,0,0,0},
 	{ST_TOGGLE, N_("Automatically copy selected text"), P_OFFINTNL(hex_text_autocopy_text),
 					N_("Copy selected text to clipboard when left mouse button is released. "
 						"Otherwise, CONTROL-SHIFT-C will copy the "
@@ -513,7 +513,7 @@ static const setting advanced_settings[] =
 						"Otherwise, include color information if the CONTROL key is held down "
 						"while selecting."), 0, 0},
 
-	{ST_HEADER,	N_("Miscellaneous"), 0, 0, 0},
+	{ST_HEADER,	N_("Miscellaneous"), 0, 0, 0,0},
 	{ST_ENTRY,  N_("Real name:"), P_OFFSETNL(hex_irc_real_name), 0, 0, sizeof prefs.hex_irc_real_name},
 #ifdef WIN32
 	{ST_ENTRY,  N_("Alternative fonts:"), P_OFFSETNL(hex_text_font_alternative), N_("Separate multiple entries with commas without spaces before or after."), 0, sizeof prefs.hex_text_font_alternative},
@@ -530,23 +530,23 @@ static const setting advanced_settings[] =
 
 static const setting logging_settings[] =
 {
-	{ST_HEADER,	N_("Logging"),0,0,0},
+	{ST_HEADER,	N_("Logging"),0,0,0,0},
 	{ST_TOGGLE,	N_("Display scrollback from previous session"), P_OFFINTNL(hex_text_replay), 0, 0, 0},
 	{ST_NUMBER,	N_("Scrollback lines:"), P_OFFINTNL(hex_text_max_lines),0,0,100000},
 	{ST_TOGGLE,	N_("Enable logging of conversations to disk"), P_OFFINTNL(hex_irc_logging), 0, 0, 0},
 	{ST_ENTRY,	N_("Log filename:"), P_OFFSETNL(hex_irc_logmask), 0, 0, sizeof prefs.hex_irc_logmask},
 	{ST_LABEL,	N_("%s=Server %c=Channel %n=Network.")},
 
-	{ST_HEADER,	N_("Time Stamps"),0,0,0},
+	{ST_HEADER,	N_("Time Stamps"),0,0,0,0},
 	{ST_TOGGLE,	N_("Insert timestamps in logs"), P_OFFINTNL(hex_stamp_log), 0, 0, 1},
 	{ST_ENTRY,	N_("Log timestamp format:"), P_OFFSETNL(hex_stamp_log_format), 0, 0, sizeof prefs.hex_stamp_log_format},
 #ifdef WIN32
-	{ST_LABEL,	N_("See the strftime MSDN article for details.")},
+	{ST_LABEL,	N_("See the strftime MSDN article for details."),0,0,0,0},
 #else
-	{ST_LABEL,	N_("See the strftime manpage for details.")},
+    {ST_LABEL,	N_("See the strftime manpage for details."),0,0,0,0},
 #endif
 
-	{ST_HEADER,	N_("URLs"),0,0,0},
+	{ST_HEADER,	N_("URLs"),0,0,0,0},
 	{ST_TOGGLE,	N_("Enable logging of URLs to disk"), P_OFFINTNL(hex_url_logging), 0, 0, 0},
 	{ST_TOGGLE,	N_("Enable URL grabber"), P_OFFINTNL(hex_url_grabber), 0, 0, 1},
 	{ST_NUMBER,	N_("Maximum number of URLs to grab:"), P_OFFINTNL(hex_url_grabber_limit), 0, 0, 9999},
@@ -582,9 +582,9 @@ static const setting network_settings[] =
 {
 	{ST_HEADER,	N_("Your Address"), 0, 0, 0, 0},
 	{ST_ENTRY,	N_("Bind to:"), P_OFFSETNL(hex_net_bind_host), 0, 0, sizeof prefs.hex_net_bind_host},
-	{ST_LABEL,	N_("Only useful for computers with multiple addresses.")},
+	{ST_LABEL,	N_("Only useful for computers with multiple addresses."), 0,0,0,0},
 
-	{ST_HEADER, N_("File Transfers"), 0, 0, 0},
+	{ST_HEADER, N_("File Transfers"), 0, 0, 0,0},
 	{ST_TOGGLE, N_("Get my address from the IRC server"), P_OFFINTNL(hex_dcc_ip_from_server),
 					N_("Asks the IRC server for your real address. Use this if you have a 192.168.*.* address!"), 0, 0},
 	{ST_ENTRY,	N_("DCC IP address:"), P_OFFSETNL(hex_dcc_ip),
