@@ -366,15 +366,15 @@ server::p_notice(const std::string & channel, const std::string & text)
 	tcp_sendf (this, "NOTICE %s :%s\r\n", channel.c_str(), text.c_str());
 }
 
-static void
-irc_topic (server *serv, char *channel, char *topic)
+void
+server::p_topic(const std::string & channel, const char *topic)
 {
-	if (!topic)
-		tcp_sendf (serv, "TOPIC %s :\r\n", channel);
+    if (topic)
+        tcp_sendf(this, "TOPIC %s :\r\n", channel.c_str());
 	else if (topic[0])
-		tcp_sendf (serv, "TOPIC %s :%s\r\n", channel, topic);
+		tcp_sendf (this, "TOPIC %s :%s\r\n", channel.c_str(), topic);
 	else
-		tcp_sendf (serv, "TOPIC %s\r\n", channel);
+		tcp_sendf (this, "TOPIC %s\r\n", channel.c_str());
 }
 
 static void
@@ -1568,7 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_topic = irc_topic;
 	serv->p_list_channels = irc_list_channels;
 	serv->p_change_nick = irc_change_nick;
 	serv->p_names = irc_names;

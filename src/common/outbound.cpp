@@ -3464,9 +3464,9 @@ static int
 cmd_topic (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (word[2][0] && is_channel (sess->server, word[2]))
-		sess->server->p_topic (sess->server, word[2], word_eol[3]);
+		sess->server->p_topic (word[2], word_eol[3]);
 	else
-		sess->server->p_topic (sess->server, sess->channel, word_eol[2]);
+		sess->server->p_topic (sess->channel, word_eol[2]);
 	return TRUE;
 }
 

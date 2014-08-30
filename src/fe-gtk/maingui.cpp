@@ -1774,7 +1774,7 @@ mg_topic_cb (GtkWidget *entry, gpointer userdata)
 		text = (char *)gtk_entry_get_text (GTK_ENTRY (entry));
 		if (text[0] == 0)
 			text = NULL;
-		sess->server->p_topic (sess->server, sess->channel, text);
+		sess->server->p_topic (sess->channel, text);
 	} else
 		gtk_entry_set_text (GTK_ENTRY (entry), "");
 	/* restore focus to the input widget, where the next input will most
