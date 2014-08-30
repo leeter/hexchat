@@ -632,7 +632,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	sess->end_of_names = FALSE;
 
 	/* sends a MODE */
-	serv->p_join_info (sess->server, chan);
+	serv->p_join_info (chan);
 
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_UJOIN, sess, nick, chan, ip, nullptr, 0,
 								  tags_data->timestamp);

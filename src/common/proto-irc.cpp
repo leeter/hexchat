@@ -305,10 +305,10 @@ irc_mode (server *serv, char *target, char *mode)
 
 /* find channel info when joined */
 
-static void
-irc_join_info (server *serv, char *channel)
+void
+server::p_join_info (const std::string& channel)
 {
-	tcp_sendf (serv, "MODE %s\r\n", channel);
+	tcp_sendf (this, "MODE %s\r\n", channel.c_str());
 }
 
 /* initiate userlist retreival */
@@ -1575,7 +1575,6 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_join_info = irc_join_info;
 	serv->p_mode = irc_mode;
 	serv->p_user_list = irc_user_list;
 	serv->p_away_status = irc_away_status;
