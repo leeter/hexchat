@@ -168,11 +168,9 @@ powershell -File "$(SolutionDir)..\win32\version-template.ps1" "$(SolutionDir)..
     </PreBuildEvent>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level4</WarningLevel>
     </ClCompile>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>
