@@ -1431,7 +1431,7 @@ cmd_dns (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				do_dns (sess, user->nick, user->hostname, &no_tags);
 			} else
 			{
-				sess->server->p_get_ip (sess->server, nick);
+				sess->server->p_get_ip (nick);
 				sess->server->doing_dns = TRUE;
 			}
 		} else

@@ -487,10 +487,10 @@ struct server
     void p_login(const std::string& user, const std::string& realname);
 	void p_join_info(const std::string & channel);
     void p_mode(const std::string & target, const std::string &mode);
-	void (*p_user_list)(struct server *, char *channel);
+    void p_user_list(const std::string & channel);
 	void (*p_away_status)(struct server *, char *channel);
 	void p_whois(const std::string& nicks);
-	void (*p_get_ip)(struct server *, char *nick);
+    void p_get_ip(const std::string &nick){ p_user_list(nick); }
 	void (*p_get_ip_uh)(struct server *, char *nick);
 	void (*p_set_back)(struct server *);
 	void (*p_set_away)(struct server *, char *reason);

@@ -313,13 +313,13 @@ server::p_join_info (const std::string& channel)
 
 /* initiate userlist retreival */
 
-static void
-irc_user_list (server *serv, char *channel)
+void
+server::p_user_list(const std::string & channel)
 {
-	if (serv->have_whox)
-		tcp_sendf (serv, "WHO %s %%chtsunfra,152\r\n", channel);
-	else
-		tcp_sendf (serv, "WHO %s\r\n", channel);
+    if (this->have_whox)
+        tcp_sendf(this, "WHO %s %%chtsunfra,152\r\n", channel.c_str());
+    else
+        tcp_sendf(this, "WHO %s\r\n", channel.c_str());
 }
 
 /* userhost */
@@ -1575,10 +1575,8 @@ xit:
 void
 proto_fill_her_up (server *serv)
 {
-	serv->p_user_list = irc_user_list;
 	serv->p_away_status = irc_away_status;
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_get_ip = irc_user_list;
 	serv->p_get_ip_uh = irc_userhost;
 	serv->p_set_back = irc_set_back;
 	serv->p_set_away = irc_set_away;

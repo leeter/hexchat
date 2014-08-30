@@ -640,7 +640,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	if (prefs.hex_irc_who_join)
 	{
 		/* sends WHO #channel */
-		serv->p_user_list (sess->server, chan);
+		serv->p_user_list (chan);
 		sess->doing_who = TRUE;
 	}
 }
