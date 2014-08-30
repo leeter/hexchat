@@ -232,7 +232,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 }
 
 static int
-cfg_put_str (int fh, char *var, char *value)
+cfg_put_str (int fh, const char *var, const char *value)
 {
 	char buf[512];
 	int len;
@@ -254,7 +254,7 @@ cfg_put_color (int fh, int r, int g, int b, char *var)
 }
 
 int
-cfg_put_int (int fh, int value, char *var)
+cfg_put_int (int fh, int value, const char *var)
 {
 	char buf[400];
 	int len;
@@ -280,7 +280,7 @@ cfg_get_color (char *cfg, char *var, int *r, int *g, int *b)
 }
 
 int
-cfg_get_int_with_result (char *cfg, char *var, int *result)
+cfg_get_int_with_result (char *cfg, const char *var, int *result)
 {
 	char str[128];
 

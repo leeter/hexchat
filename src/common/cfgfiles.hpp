@@ -35,9 +35,9 @@ extern const char * const languages[LANGUAGES_LENGTH];
 
 char *cfg_get_str (char *cfg, const char *var, char *dest, int dest_len);
 int cfg_get_bool (char *var);
-int cfg_get_int_with_result (char *cfg, char *var, int *result);
+int cfg_get_int_with_result (char *cfg, const char *var, int *result);
 int cfg_get_int (char *cfg, char *var);
-int cfg_put_int (int fh, int value, char *var);
+int cfg_put_int (int fh, int value, const char *var);
 int cfg_get_color (char *cfg, char *var, int *r, int *g, int *b);
 int cfg_put_color (int fh, int r, int g, int b, char *var);
 char *get_xdir (void);
@@ -73,7 +73,7 @@ hexchat_open_stream(const std::string& file, std::ios::openmode flags, int mode,
 
 struct prefs
 {
-	char *name;
+	const char *name;
 	unsigned short offset;
 	unsigned short len;
 	unsigned short type;
