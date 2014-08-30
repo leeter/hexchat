@@ -339,7 +339,7 @@ ignore_save ()
 }
 
 static gboolean
-flood_autodialog_timeout (gpointer data)
+flood_autodialog_timeout (gpointer)
 {
 	prefs.hex_gui_autoopen_dialog = 1;
 	return FALSE;

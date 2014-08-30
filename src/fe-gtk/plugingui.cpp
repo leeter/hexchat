@@ -99,7 +99,7 @@ plugingui_getfilename (GtkTreeView *view)
 }
 
 static void
-plugingui_close (GtkWidget * wid, gpointer a)
+plugingui_close (GtkWidget *, gpointer)
 {
 	plugin_window = NULL;
 }
@@ -167,13 +167,13 @@ plugingui_load (void)
 }
 
 static void
-plugingui_loadbutton_cb (GtkWidget * wid, gpointer unused)
+plugingui_loadbutton_cb (GtkWidget *, gpointer)
 {
 	plugingui_load ();
 }
 
 static void
-plugingui_unload (GtkWidget * wid, gpointer unused)
+plugingui_unload (GtkWidget *, gpointer)
 {
 	char *modname, *file, *buf;
 	GtkTreeView *view;
@@ -205,7 +205,7 @@ plugingui_unload (GtkWidget * wid, gpointer unused)
 }
 
 static void
-plugingui_reloadbutton_cb (GtkWidget *wid, GtkTreeView *view)
+plugingui_reloadbutton_cb (GtkWidget *, GtkTreeView *view)
 {
 	char *file = plugingui_getfilename(view);
 

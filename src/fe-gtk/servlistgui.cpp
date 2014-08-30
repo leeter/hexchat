@@ -1168,7 +1168,7 @@ servlist_connect_cb (GtkWidget *button, gpointer userdata)
 }
 
 static void
-servlist_celledit_cb (GtkCellRendererText *cell, gchar *arg1, gchar *arg2,
+servlist_celledit_cb (GtkCellRendererText *, gchar *arg1, gchar *arg2,
 							 gpointer user_data)
 {
 	GtkTreeModel *model = (GtkTreeModel *)user_data;
