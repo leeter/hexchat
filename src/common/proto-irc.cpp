@@ -241,10 +241,10 @@ server::p_quit (const std::string & reason)
 		tcp_send_len (this, "QUIT\r\n", 6);
 }
 
-static void
-irc_set_back (server *serv)
+void
+server::p_set_back ()
 {
-	tcp_send_len (serv, "AWAY\r\n", 6);
+	tcp_send_len (this, "AWAY\r\n", 6);
 }
 
 static void
@@ -1577,7 +1577,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_set_back = irc_set_back;
 	serv->p_set_away = irc_set_away;
 	serv->p_action = irc_action;
 	serv->p_notice = irc_notice;

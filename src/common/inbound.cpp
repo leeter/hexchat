@@ -477,7 +477,7 @@ inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 	if (fromme)
 	{
 		if (prefs.hex_away_auto_unmark && serv->is_away && !tags_data->timestamp)
-			sess->server->p_set_back (sess->server);
+			sess->server->p_set_back ();
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANMSG, sess, from, text, nickchar, nullptr,
 									  0, tags_data->timestamp);
 		return;

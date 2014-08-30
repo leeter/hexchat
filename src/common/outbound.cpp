@@ -416,7 +416,7 @@ cmd_back (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (sess->server->is_away)
 	{
-		sess->server->p_set_back (sess->server);
+		sess->server->p_set_back ();
 	}
 	else
 	{

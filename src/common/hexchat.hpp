@@ -492,7 +492,7 @@ struct server
 	void p_whois(const std::string& nicks);
     void p_get_ip(const std::string &nick){ p_user_list(nick); }
     void p_get_ip_uh(const std::string &nick);
-	void (*p_set_back)(struct server *);
+	void p_set_back();
 	void (*p_set_away)(struct server *, char *reason);
 	void p_message(const std::string & channel, const std::string & text);
 	void (*p_action)(struct server *, char *channel, char *act);
