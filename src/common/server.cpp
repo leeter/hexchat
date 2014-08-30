@@ -94,8 +94,6 @@ static struct session *g_sess = NULL;
 static GSList *away_list = NULL;
 GSList *serv_list = NULL;
 
-static void server_disconnect (session * sess, bool sendquit, int err);
-
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
 #endif
@@ -447,7 +445,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 			}
 			if (!serv->end_of_motd)
 			{
-				server_disconnect (serv->server_session, FALSE, error);
+				serv->disconnect (serv->server_session, FALSE, error);
 				if (!servlist_cycle (serv))
 				{
 					if (prefs.hex_net_auto_reconnect)
@@ -458,7 +456,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				if (prefs.hex_net_auto_reconnect)
 					serv->auto_reconnect (false, error);
 				else
-					server_disconnect (serv->server_session, FALSE, error);
+					serv->disconnect (serv->server_session, FALSE, error);
 			}
 			return TRUE;
 		}
@@ -826,7 +824,7 @@ server::auto_reconnect (bool send_quit, int err)
 	}
 
 	if (this->connected)
-		server_disconnect (this->server_session, send_quit, err);
+		this->disconnect (this->server_session, send_quit, err);
 
 	del = prefs.hex_net_reconnect_delay * 1000;
 	if (del < 1000)
@@ -1025,7 +1023,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		break;
 	case '8':
 		PrintText (sess, _("Proxy traversal failed.\n"));
-		server_disconnect (sess, FALSE, -1);
+		serv->disconnect (sess, FALSE, -1);
 		break;
 	case '9':
 		waitline2 (source, tbuf, sizeof tbuf);
@@ -1099,8 +1097,8 @@ server::cleanup ()
     return server_cleanup_result::not_connected;
 }
 
-static void
-server_disconnect (session * sess, bool sendquit, int err)
+void
+server::disconnect (session * sess, bool sendquit, int err)
 {
 	server *serv = sess->server;
 	GSList *list;
@@ -1704,7 +1702,7 @@ server::connect (char *hostname, int port, bool no_login)
 	port &= 0xffff;	/* wrap around */
 
 	if (this->connected || this->connecting || this->recondelay_tag)
-		server_disconnect (sess, TRUE, -1);
+		this->disconnect (sess, TRUE, -1);
 
 	fe_progressbar_start (sess);
 
@@ -1814,9 +1812,7 @@ server::connect (char *hostname, int port, bool no_login)
 void
 server_fill_her_up (server *serv)
 {
-	serv->disconnect = server_disconnect;
-
-	proto_fill_her_up (serv);
+    serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
 }
 
 void
@@ -1860,8 +1856,7 @@ server_new (void)
 	serv = new server();// calloc(1, sizeof(*serv))
 
 	/* use server.c and proto-irc.c functions */
-	server_fill_her_up (serv);
-
+    server_fill_her_up(serv);
 	serv->id = id++;
 	serv->sok = -1;
 	strcpy (serv->nick, prefs.hex_irc_nick1);

@@ -1563,10 +1563,3 @@ xit:
 	if (pdibuf != pdibuf_static)
 		free (pdibuf);
 }
-
-void
-proto_fill_her_up (server *serv)
-{
-	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
-}

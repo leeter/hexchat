@@ -39,6 +39,4 @@ struct message_tags_data
 	time_t timestamp;
 };
 
-void proto_fill_her_up (server *serv);
-
 #endif

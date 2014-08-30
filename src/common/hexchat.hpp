@@ -467,7 +467,7 @@ struct server
 {
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
-	void (*disconnect)(struct session *, bool sendquit, int err);
+	void disconnect(struct session *, bool sendquit, int err);
     server_cleanup_result  cleanup();
 	void flush_queue();
 	void auto_reconnect(bool send_quit, int err);
