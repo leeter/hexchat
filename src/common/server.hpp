@@ -28,7 +28,7 @@ void tcp_sendf (server *serv, const char *fmt, ...) G_GNUC_PRINTF (2, 3);
 int tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len);
 
 server *server_new (void);
-int is_server (server *serv);
+bool is_server (server *serv);
 void server_fill_her_up (server *serv);
 void server_set_encoding (server *serv, char *new_encoding);
 void server_set_defaults (server *serv);

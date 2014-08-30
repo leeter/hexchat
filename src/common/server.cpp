@@ -1869,10 +1869,10 @@ server_new (void)
 	return serv;
 }
 
-int
+bool
 is_server (server *serv)
 {
-	return g_slist_find (serv_list, serv) ? 1 : 0;
+	return g_slist_find (serv_list, serv) ? true : false;
 }
 
 void
