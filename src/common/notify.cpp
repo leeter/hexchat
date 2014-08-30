@@ -73,7 +73,7 @@ despacify_dup (const char *str)
 static int
 notify_netcmp (const char *str, void *serv)
 {
-	char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
+    char *net = despacify_dup(static_cast<server*>(serv)->get_network(true));
 
 	if (rfc_casecmp (str, net) == 0)
 	{
@@ -95,7 +95,7 @@ notify_do_network (struct notify *notify, server *serv)
 	std::istringstream buffer(notify->networks);
 	for (std::string token; std::getline(buffer, token, ',');)
 	{
-		std::string serv_str(server_get_network(static_cast<server*>(serv), TRUE));
+		std::string serv_str(serv->get_network(true));
 		serv_str.erase(
 			std::remove_if(
 				serv_str.begin(),
@@ -245,7 +245,7 @@ notify_announce_offline (server * serv, struct notify_per_server *servnot,
 	servnot->lastoff = time (0);
 	if (!quiet)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, nick, serv->servername,
-									  server_get_network (serv, TRUE), NULL, 0,
+									  serv->get_network (true), NULL, 0,
 									  tags_data->timestamp);
 	fe_notify_update (nick);
 	fe_notify_update (0);
@@ -266,7 +266,7 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	servnot->ison = TRUE;
 	servnot->laston = time (0);
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, nick, serv->servername,
-					 server_get_network (serv, TRUE), NULL, 0,
+					 serv->get_network (true), NULL, 0,
 					 tags_data->timestamp);
 	fe_notify_update (nick);
 	fe_notify_update (0);

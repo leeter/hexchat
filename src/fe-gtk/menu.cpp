@@ -145,7 +145,7 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
     std::string buf(len, '\0');
 
 	auto_insert (&buf[0], len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
-					 server_get_network (sess->server, TRUE), host,
+        sess->server->get_network(true), host,
 					 sess->server->nick, nick.c_str(), account);
 
     nick_command(sess, &buf[0]);

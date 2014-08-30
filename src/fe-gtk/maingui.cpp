@@ -397,11 +397,11 @@ fe_set_title (session *sess)
 	{
 	case SESS_DIALOG:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s %s @ %s",
-					 _("Dialog with"), sess->channel, server_get_network (sess->server, TRUE));
+            _("Dialog with"), sess->channel, sess->server->get_network(true));
 		break;
 	case SESS_SERVER:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s",
-					 sess->server->nick, server_get_network (sess->server, TRUE));
+            sess->server->nick, sess->server->get_network(true));
 		break;
 	case SESS_CHANNEL:
 		/* don't display keys in the titlebar */
@@ -409,14 +409,14 @@ fe_set_title (session *sess)
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
-						 sess->server->nick, server_get_network (sess->server, TRUE),
+                         sess->server->nick, sess->server->get_network(true),
 						 sess->channel, sess->current_modes ? sess->current_modes : "");
 		}
 		else
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s",
-						 sess->server->nick, server_get_network (sess->server, TRUE),
+                         sess->server->nick, sess->server->get_network(true),
 						 sess->channel);
 		}
 		if (prefs.hex_gui_win_ucount)
@@ -427,7 +427,7 @@ fe_set_title (session *sess)
 	case SESS_NOTICES:
 	case SESS_SNOTICES:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s (notices)",
-					 sess->server->nick, server_get_network (sess->server, TRUE));
+            sess->server->nick, sess->server->get_network(true));
 		break;
 	default:
 	def:
@@ -2127,7 +2127,7 @@ mg_dialog_button_cb (GtkWidget *wid, char *cmd)
 		host = topic + 1;
 
 	auto_insert (buf, sizeof (buf), (unsigned char*)cmd, 0, 0, "", "", "",
-					 server_get_network (current_sess->server, TRUE), host, "",
+        current_sess->server->get_network(true), host, "",
 					 current_sess->channel, "");
 
 	handle_command (current_sess, buf, TRUE);

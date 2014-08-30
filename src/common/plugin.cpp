@@ -1062,7 +1062,7 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 	while (slist)
 	{
 		serv = static_cast<server*>(slist->data);
-		const char* netname = server_get_network (serv, TRUE);
+		const char* netname = serv->get_network (true);
 
 		if (servname == NULL ||
 			 rfc_casecmp (servname, serv->servername) == 0 ||
@@ -1180,7 +1180,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return sess->current_modes;
 
 	case 0x6de15a2e:	/* network */
-		return server_get_network (sess->server, FALSE);
+        return sess->server->get_network(false);
 
 	case 0x339763: /* nick */
 		return sess->server->nick;
@@ -1457,7 +1457,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x38b735af: /* context */
 			return static_cast<const char*>(data);	/* this is a session * */
 		case 0x6de15a2e: /* network */
-			return server_get_network (((session *)data)->server, FALSE);
+            return ((session *)data)->server->get_network(false);
 		case 0x8455e723: /* nickprefixes */
 			return ((session *)data)->server->nick_prefixes;
 		case 0x829689ad: /* nickmodes */

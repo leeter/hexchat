@@ -30,7 +30,6 @@ int tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, cons
 server *server_new (void);
 bool is_server (server *serv);
 void server_fill_her_up (server *serv);
-char *server_get_network (server *serv, gboolean fallback);
 void server_free (server *serv);
 
 void server_away_save_message (server *serv, char *nick, char *msg);

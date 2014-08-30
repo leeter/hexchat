@@ -514,6 +514,7 @@ public:
 
     void set_name(const std::string& name);
     void set_encoding(const char* new_encoding);
+    char *get_network(bool fallback);
     
 
 	int port;

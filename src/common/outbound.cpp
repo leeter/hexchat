@@ -4450,7 +4450,7 @@ user_command (session * sess, char *tbuf, char *cmd, char *word[],
 				  char *word_eol[])
 {
 	if (!auto_insert (tbuf, 2048, (const unsigned char*)cmd, word, word_eol, "", sess->channel, "",
-							server_get_network (sess->server, TRUE), "",
+        sess->server->get_network(true), "",
 							sess->server->nick, "", ""))
 	{
 		PrintText (sess, _("Bad arguments for user command.\n"));

@@ -52,7 +52,7 @@ static void
 	/* process %C %B etc */
 	check_special_chars(&confs[0], TRUE);
     auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
-		server_get_network(sess->server, TRUE), "", "", nick, "");
+        sess->server->get_network(TRUE), "", "", nick, "");
 	handle_command(sess, tbuf, FALSE);
 }
 

@@ -1721,7 +1721,7 @@ server::connect (char *hostname, int port, bool no_login)
 
 		/* first try network specific cert/key */
 		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
-					 get_xdir (), server_get_network (this, TRUE));
+					 get_xdir (), this->get_network (true));
 		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 		{
 			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
@@ -1913,18 +1913,18 @@ server::reset_to_defaults()
 }
 
 char *
-server_get_network (server *serv, gboolean fallback)
+server::get_network (bool fallback)
 {
 	/* check the network list */
-	if (serv->network)
-		return serv->network->name;
+	if (this->network)
+		return this->network->name;
 
 	/* check the network name given in 005 NETWORK=... */
-	if (serv->server_session && *serv->server_session->channel)
-		return serv->server_session->channel;
+	if (this->server_session && *this->server_session->channel)
+		return this->server_session->channel;
 
 	if (fallback)
-		return serv->servername;
+		return this->servername;
 
 	return nullptr;
 }

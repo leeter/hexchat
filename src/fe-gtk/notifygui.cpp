@@ -370,7 +370,7 @@ notify_gui_update (void)
 				{
 					if (servcount > 0)
 						name = "";
-					server = server_get_network (servnot->server, TRUE);
+                    server = servnot->server->get_network(true);
 
 					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (0) - lastseen) / 60);
 					seen = agobuf;

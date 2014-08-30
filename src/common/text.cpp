@@ -78,7 +78,7 @@ scrollback_get_filename (session *sess)
     const char *net;
     char *buf;
 
-	net = server_get_network (sess->server, FALSE);
+    net = sess->server->get_network(false);
 	if (!net)
 		return NULL;
 
@@ -624,12 +624,12 @@ log_open (session *sess)
 
 	log_close (sess);
 	sess->logfd = log_open_file (sess->server->servername, sess->channel,
-										  server_get_network (sess->server, FALSE));
+        sess->server->get_network(false));
 
 	if (!log_error && sess->logfd == -1)
 	{
 		char *message;
-        char * path = log_create_pathname(sess->server->servername, sess->channel, server_get_network(sess->server, FALSE));
+        char * path = log_create_pathname(sess->server->servername, sess->channel, sess->server->get_network(false));
 		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"), path);
         g_free(path);
 
@@ -716,14 +716,14 @@ log_write (session *sess, const std::string & text, time_t ts)
 
 	/* change to a different log file? */
 	file = log_create_pathname (sess->server->servername, sess->channel,
-										 server_get_network (sess->server, FALSE));
+        sess->server->get_network(false));
 	if (file)
 	{
 		if (g_access (file, F_OK) != 0)
 		{
 			close (sess->logfd);
 			sess->logfd = log_open_file (sess->server->servername, sess->channel,
-												  server_get_network (sess->server, FALSE));
+                sess->server->get_network(false));
 		}
 		g_free (file);
 	}

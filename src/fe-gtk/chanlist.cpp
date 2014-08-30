@@ -718,7 +718,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	}
 
 	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME": Channel List (%s)"),
-				 server_get_network (serv, TRUE));
+				 serv->get_network (true));
 
 	serv->gui->chanlist_pending_rows = NULL;
 	serv->gui->chanlist_tag = 0;
