@@ -4574,7 +4574,7 @@ command_insert_vars (session *sess, char *cmd)
 {
 	int pos;
 	GString *expanded;
-	ircnet *mynet = (ircnet *) sess->server->network;
+	ircnet *mynet = sess->server->network;
 
 	if (!mynet)										/* shouldn't really happen */
 	{

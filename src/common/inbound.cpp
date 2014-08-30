@@ -1173,7 +1173,7 @@ check_autojoin_channels (server *serv)
 				strcpy (sess->waitchannel, sess->willjoinchannel);
 				sess->willjoinchannel[0] = 0;
 
-				fav = servlist_favchan_find (static_cast<ircnet*>(serv->network), sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
+				fav = servlist_favchan_find (serv->network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
 
 				/* session->channelkey is initially unset for channels joined from the favorites. You have to fill them up manually from favorites settings. */
 				if (fav)
@@ -1238,7 +1238,7 @@ inbound_next_nick (session *sess, char *nick, int error,
 	{
 	case 2:
 		newnick = prefs.hex_irc_nick2;
-		net = static_cast<ircnet*>(serv->network);
+		net = serv->network;
 		/* use network specific "Second choice"? */
 		if (net && !(net->flags & FLAG_USE_GLOBAL) && net->nick2)
 		{
@@ -1583,7 +1583,7 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 		{
 			/* there may be more than 1, separated by \n */
 
-			cmdlist = ((ircnet *)serv->network)->commandlist;
+			cmdlist = serv->network->commandlist;
 			while (cmdlist)
 			{
 				cmd = static_cast<commandentry*>(cmdlist->data);
@@ -1592,16 +1592,16 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 			}
 
 			/* send nickserv password */
-			if (((ircnet *)serv->network)->pass && inbound_nickserv_login (serv))
+			if (serv->network->pass && inbound_nickserv_login (serv))
 			{
-				serv->p_ns_identify (((ircnet *)serv->network)->pass);
+				serv->p_ns_identify (serv->network->pass);
 			}
 		}
 
 		/* wait for join if command or nickserv set */
 		if (serv->network && prefs.hex_irc_join_delay
-			&& ((((ircnet *)serv->network)->pass && inbound_nickserv_login (serv))
-				|| ((ircnet *)serv->network)->commandlist))
+			&& ((serv->network->pass && inbound_nickserv_login (serv))
+				|| serv->network->commandlist))
 		{
 			serv->joindelay_tag = fe_timeout_add(prefs.hex_irc_join_delay * 1000, (GSourceFunc)check_autojoin_channels, serv);
 		}

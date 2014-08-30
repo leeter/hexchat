@@ -1166,11 +1166,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 #ifdef USE_OPENSSL
 				if (!strncmp (text, "CHALLENGE ", 10))		/* QuakeNet CHALLENGE upon our request */
 				{
-					char *response = challengeauth_response (((ircnet *)serv->network)->user ? ((ircnet *)serv->network)->user : prefs.hex_irc_user_name, serv->password, word[5]);
+					char *response = challengeauth_response (serv->network->user ? serv->network->user : prefs.hex_irc_user_name, serv->password, word[5]);
 
 					tcp_sendf (serv, "PRIVMSG %s :CHALLENGEAUTH %s %s %s\r\n",
 						CHALLENGEAUTH_NICK,
-						((ircnet *)serv->network)->user ? ((ircnet *)serv->network)->user : prefs.hex_irc_user_name,
+						serv->network->user ? serv->network->user : prefs.hex_irc_user_name,
 						response,
 						CHALLENGEAUTH_ALGO);
 

@@ -744,7 +744,7 @@ servlist_cycle_cb (server *serv)
 	if (serv->network)
 	{
 		PrintTextf (serv->server_session,
-			_("Cycling to next server in %s...\n"), ((ircnet *)serv->network)->name);
+			_("Cycling to next server in %s...\n"), serv->network->name);
 		servlist_connect(serv->server_session, static_cast<ircnet *>(serv->network), TRUE);
 	}
 
@@ -1459,12 +1459,12 @@ joinlist_find_chan (favchannel *curr_item, const char *channel)
 gboolean
 joinlist_is_in_list (server *serv, char *channel)
 {
-	if (!serv->network || !((ircnet *)serv->network)->favchanlist)
+	if (!serv->network || !serv->network->favchanlist)
 	{
 		return FALSE;
 	}
 
-	if (g_slist_find_custom (((ircnet *)serv->network)->favchanlist, channel, (GCompareFunc) joinlist_find_chan))
+	if (g_slist_find_custom (serv->network->favchanlist, channel, (GCompareFunc) joinlist_find_chan))
 	{
 		return TRUE;
 	}

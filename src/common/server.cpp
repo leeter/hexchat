@@ -506,7 +506,7 @@ server_connected (server * serv)
 						 nullptr, 0);
 		if (serv->network)
 		{
-            ircnet* net = static_cast<ircnet*>(serv->network);
+            ircnet* net = serv->network;
 			serv->p_login (	(!(net->flags & FLAG_USE_GLOBAL) &&
 								 (net->user)) ?
 								(net->user) :
@@ -956,9 +956,9 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 #ifdef WIN32
 		if (prefs.hex_identd)
 		{
-			if (serv->network && ((ircnet *)serv->network)->user)
+			if (serv->network && serv->network->user)
 			{
-				identd_start (((ircnet *)serv->network)->user);
+				identd_start (serv->network->user);
 			}
 			else
 			{
@@ -1917,7 +1917,7 @@ server_get_network (server *serv, gboolean fallback)
 {
 	/* check the network list */
 	if (serv->network)
-		return ((ircnet *)serv->network)->name;
+		return serv->network->name;
 
 	/* check the network name given in 005 NETWORK=... */
 	if (serv->server_session && *serv->server_session->channel)
@@ -1957,7 +1957,7 @@ server::set_name (const std::string& name)
 	{
 		if (this->network)
 		{
-			safe_strcpy (this->server_session->channel, ((ircnet *)this->network)->name, CHANLEN);
+			safe_strcpy (this->server_session->channel, this->network->name, CHANLEN);
 		} else
 		{
 			safe_strcpy (this->server_session->channel, name.c_str(), CHANLEN);

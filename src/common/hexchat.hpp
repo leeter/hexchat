@@ -463,6 +463,8 @@ enum class server_cleanup_result{
     reconnecting
 };
 
+struct ircnet;
+
 struct server
 {
 private:
@@ -552,7 +554,7 @@ public:
 	char *bad_nick_prefixes;		/* for ircd that doesn't give the modes */
 	int modes_per_line;				/* 6 on undernet, 4 on efnet etc... */
 
-	void *network;						/* points to entry in servlist.c or NULL! */
+	ircnet *network;						/* points to entry in servlist.c or NULL! */
 
 	GSList *outbound_queue;
 	time_t next_send;						/* cptr->since in ircu */
