@@ -247,20 +247,10 @@ server::p_set_back ()
 	tcp_send_len (this, "AWAY\r\n", 6);
 }
 
-static void
-irc_set_away (server *serv, char *reason)
+void
+server::p_set_away (const std::string & reason)
 {
-	if (reason)
-	{
-		if (!reason[0])
-			reason = " ";
-	}
-	else
-	{
-		reason = " ";
-	}
-
-	tcp_sendf (serv, "AWAY :%s\r\n", reason);
+	tcp_sendf (this, "AWAY :%s\r\n", reason.empty()? " " : reason.c_str());
 }
 
 // TODO: split appropriately
@@ -363,10 +353,11 @@ server::p_message(const std::string & channel, const std::string & text)
 	tcp_sendf (this, "PRIVMSG %s :%s\r\n", channel.c_str(), text.c_str());
 }
 
-static void
-irc_action (server *serv, char *channel, char *act)
+// TODO: handle splitting it
+void
+server::p_action(const std::string & channel, const std::string & act)
 {
-	tcp_sendf (serv, "PRIVMSG %s :\001ACTION %s\001\r\n", channel, act);
+	tcp_sendf (this, "PRIVMSG %s :\001ACTION %s\001\r\n", channel.c_str(), act.c_str());
 }
 
 static void
@@ -1577,8 +1568,6 @@ void
 proto_fill_her_up (server *serv)
 {
 	/*serv->p_get_ip = irc_get_ip;*/
-	serv->p_set_away = irc_set_away;
-	serv->p_action = irc_action;
 	serv->p_notice = irc_notice;
 	serv->p_topic = irc_topic;
 	serv->p_list_channels = irc_list_channels;

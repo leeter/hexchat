@@ -392,7 +392,7 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			/* must manage memory pointed to by random_line() */
 			reason = random_line (prefs.hex_away_reason);
 	}
-	sess->server->p_set_away (sess->server, reason);
+	sess->server->p_set_away (reason);
 
 	if (sess->server->last_away_reason != reason)
 	{
@@ -2667,7 +2667,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			while ((split_text = split_up_text (sess, act + offset, cmd_length, split_text)))
 			{
-				sess->server->p_action (sess->server, sess->channel, split_text);
+				sess->server->p_action (sess->channel, split_text);
 				/* print it to screen */
 				inbound_action (sess, sess->channel, sess->server->nick, "",
 									 split_text, TRUE, FALSE,
@@ -2679,7 +2679,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				g_free(split_text);
 			}
 
-			sess->server->p_action (sess->server, sess->channel, act + offset);
+			sess->server->p_action (sess->channel, act + offset);
 			/* print it to screen */
 			inbound_action (sess, sess->channel, sess->server->nick, "",
 								 act + offset, TRUE, FALSE, &no_tags);
