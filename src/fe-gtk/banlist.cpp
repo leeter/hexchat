@@ -45,8 +45,8 @@
 
 namespace {
 struct mode_info {
-	const std::string name;		/* Checkbox name, e.g. "Bans" */
-	const std::string type;		/* Type for type column, e.g. "Ban" */
+	const char* name;		/* Checkbox name, e.g. "Bans" */
+	const char* type;		/* Type for type column, e.g. "Ban" */
 	char letter;	/* /mode-command letter, e.g. 'b' for MODE_BAN */
 	int code;		/* rfc RPL_foo code, e.g. 367 for RPL_BANLIST */
 	int endcode;	/* rfc RPL_ENDOFfoo code, e.g. 368 for RPL_ENDOFBANLIST */
@@ -240,7 +240,7 @@ fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rp
 		store = get_store (sess);
 		gtk_list_store_append (store, &iter);
 
-		gtk_list_store_set (store, &iter, TYPE_COLUMN, _(modes[i].type.c_str()), MASK_COLUMN, mask,
+		gtk_list_store_set (store, &iter, TYPE_COLUMN, _(modes[i].type), MASK_COLUMN, mask,
 						FROM_COLUMN, who, DATE_COLUMN, when, -1);
 
 		banl->line_ct++;
@@ -382,7 +382,7 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 }
 
 static gboolean
-banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer userdata)
+banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer)
 {
 	GtkTreePath *path;
 	GtkWidget *menu, *maskitem, *allitem;
@@ -473,7 +473,7 @@ banlist_do_refresh (banlist_info *banl)
 }
 
 static void
-banlist_refresh (GtkWidget * wid, banlist_info *banl)
+banlist_refresh (GtkWidget *, banlist_info *banl)
 {
 	/* JG NOTE: Didn't see actual use of wid here, so just forwarding
 	   *          * this to chanlist_do_refresh because I use it without any widget
@@ -485,7 +485,7 @@ banlist_refresh (GtkWidget * wid, banlist_info *banl)
 }
 
 static int
-banlist_unban_inner (gpointer none, banlist_info *banl, int mode_num)
+banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
 {
 	session *sess = banl->sess;
 	GtkTreeModel *model;
@@ -513,7 +513,7 @@ banlist_unban_inner (gpointer none, banlist_info *banl, int mode_num)
 			gtk_tree_model_get (model, &iter, TYPE_COLUMN, &type, MASK_COLUMN, &mask, -1);
 
 			/* If it's the wrong type of mask, just continue */
-			if (strcmp (_(modes[mode_num].type.c_str()), type) != 0)
+			if (strcmp (_(modes[mode_num].type), type) != 0)
 				continue;
 
 			/* Otherwise add it to our array of mask pointers */
@@ -571,7 +571,7 @@ banlist_clear_cb (GtkDialog *dialog, gint response, gpointer data)
 }
 
 static void
-banlist_clear (GtkWidget * wid, banlist_info *banl)
+banlist_clear (GtkWidget *, banlist_info *banl)
 {
 	GtkWidget *dialog;
 
@@ -586,7 +586,7 @@ banlist_clear (GtkWidget * wid, banlist_info *banl)
 }
 
 static void
-banlist_add_selected_cb (GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data)
+banlist_add_selected_cb (GtkTreeModel *, GtkTreePath *, GtkTreeIter *iter, gpointer data)
 {
 	GSList **lp = static_cast<GSList**>(data);
 	GSList *list = nullptr;
@@ -603,7 +603,7 @@ banlist_add_selected_cb (GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *it
 }
 
 static void
-banlist_crop (GtkWidget * wid, banlist_info *banl)
+banlist_crop (GtkWidget *, banlist_info *banl)
 {
 	session *sess = banl->sess;
 	GtkTreeSelection *select;
@@ -715,7 +715,7 @@ get_time(const std::string& timestr)
 }
 }
 gint
-banlist_date_sort (GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer user_data)
+banlist_date_sort (GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer)
 {
 	/*struct tm tm1, tm2;*/
 	time_t t1, t2;
@@ -788,7 +788,7 @@ banlist_treeview_new (GtkWidget *box, banlist_info *banl)
 }
 
 static void
-banlist_closegui (GtkWidget *wid, banlist_info *banl)
+banlist_closegui (GtkWidget *, banlist_info *banl)
 {
 	session *sess = banl->sess;
 
@@ -858,7 +858,7 @@ banlist_opengui (struct session *sess)
 	{
 		if (!(banl->capable & 1<<i))
 			continue;
-		banl->checkboxes[i] = gtk_check_button_new_with_label (_(modes[i].name.c_str()));
+		banl->checkboxes[i] = gtk_check_button_new_with_label (_(modes[i].name));
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (banl->checkboxes[i]), (banl->checked & 1<<i? TRUE: FALSE));
 		g_signal_connect (G_OBJECT (banl->checkboxes[i]), "toggled",
 								G_CALLBACK (banlist_toggle), banl);

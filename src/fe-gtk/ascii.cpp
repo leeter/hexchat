@@ -85,7 +85,7 @@ static const unsigned char table[]=
 };
 
 static gboolean
-ascii_enter (GtkWidget * wid, GdkEventCrossing *event, GtkWidget *label)
+ascii_enter (GtkWidget * wid, GdkEventCrossing *, GtkWidget *label)
 {
 	char buf[64];
 	const char *text;
@@ -100,7 +100,7 @@ ascii_enter (GtkWidget * wid, GdkEventCrossing *event, GtkWidget *label)
 }
 
 static void
-ascii_click (GtkWidget * wid, gpointer userdata)
+ascii_click (GtkWidget * wid, gpointer)
 {
 	int tmp_pos;
 	const char *text;
