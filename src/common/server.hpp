@@ -33,7 +33,6 @@ void server_fill_her_up (server *serv);
 void server_set_encoding (server *serv, char *new_encoding);
 void server_set_defaults (server *serv);
 char *server_get_network (server *serv, gboolean fallback);
-void server_set_name (server *serv, char *name);
 void server_free (server *serv);
 
 void server_away_save_message (server *serv, char *nick, char *msg);

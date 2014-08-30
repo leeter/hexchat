@@ -506,6 +506,8 @@ struct server
     bool p_raw(const std::string & raw);
 	int (*p_cmp)(const char *s1, const char *s2);
 
+    void set_name(const std::string& name);
+
 	int port;
 	int sok;					/* is equal to sok4 or sok6 (the one we are using) */
 	int sok4;					/* tcp4 socket */

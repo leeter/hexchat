@@ -1375,7 +1375,7 @@ inbound_login_start (session *sess, char *nick, char *servname,
 							const message_tags_data *tags_data)
 {
 	inbound_newnick (sess->server, sess->server->nick, nick, TRUE, tags_data);
-	server_set_name (sess->server, servname);
+    sess->server->set_name(servname);
 	if (sess->type == SESS_SERVER)
 		log_open_or_close (sess);
 	/* reset our away status */

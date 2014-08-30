@@ -525,7 +525,7 @@ server_connected (server * serv)
 						 nullptr, nullptr, 0);
 	}
 
-	server_set_name (serv, serv->servername);
+	serv->set_name (serv->servername);
 	fe_server_event (serv, FE_SE_CONNECT, 0);
 }
 
@@ -1930,38 +1930,39 @@ server_get_network (server *serv, gboolean fallback)
 }
 
 void
-server_set_name (server *serv, char *name)
+server::set_name (const std::string& name)
 {
 	GSList *list = sess_list;
 	session *sess;
+    std::string name_to_set = name;
 
-	if (name[0] == 0)
-		name = serv->hostname;
+	if (name.empty())
+		name_to_set = this->hostname;
 
 	/* strncpy parameters must NOT overlap */
-	if (name != serv->servername)
+	if (name != this->servername)
 	{
-		safe_strcpy (serv->servername, name, sizeof (serv->servername));
+		safe_strcpy (this->servername, name.c_str(), sizeof (this->servername));
 	}
 
 	while (list)
 	{
 		sess = (session *) list->data;
-		if (sess->server == serv)
+		if (sess->server == this)
 			fe_set_title (sess);
 		list = list->next;
 	}
 
-	if (serv->server_session->type == SESS_SERVER)
+	if (this->server_session->type == SESS_SERVER)
 	{
-		if (serv->network)
+		if (this->network)
 		{
-			safe_strcpy (serv->server_session->channel, ((ircnet *)serv->network)->name, CHANLEN);
+			safe_strcpy (this->server_session->channel, ((ircnet *)this->network)->name, CHANLEN);
 		} else
 		{
-			safe_strcpy (serv->server_session->channel, name, CHANLEN);
+			safe_strcpy (this->server_session->channel, name.c_str(), CHANLEN);
 		}
-		fe_set_channel (serv->server_session);
+		fe_set_channel (this->server_session);
 	}
 }
 
