@@ -114,6 +114,12 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</SDLCheck>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
+    <Link>
+      <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</LargeAddressAware>
+    </Link>
+    <Link>
+      <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</LargeAddressAware>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ascii.hpp" />
