@@ -1670,7 +1670,7 @@ pevent_find (char *name, int *i_i)
 }
 
 int
-pevent_load (char *filename)
+pevent_load (const char *filename)
 {
 	/* AGL, I've changed this file and pevent_save, could you please take a look at
 	 *      the changes and possibly modify them to suit you
