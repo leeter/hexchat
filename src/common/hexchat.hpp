@@ -513,6 +513,7 @@ public:
 	int (*p_cmp)(const char *s1, const char *s2);
 
     void set_name(const std::string& name);
+    void set_encoding(const char* new_encoding);
     
 
 	int port;

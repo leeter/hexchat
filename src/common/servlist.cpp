@@ -671,7 +671,7 @@ servlist_connect (session *sess, ircnet *net, gboolean join)
 	} else
 		serv->connect (ircserv->hostname, -1, false);
 
-	server_set_encoding (serv, net->encoding);
+	serv->set_encoding (net->encoding);
 }
 
 int

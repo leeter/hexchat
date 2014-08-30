@@ -1816,34 +1816,34 @@ server_fill_her_up (server *serv)
 }
 
 void
-server_set_encoding (server *serv, char *new_encoding)
+server::set_encoding (const char *new_encoding)
 {
 	char *space;
 
-	if (serv->encoding)
+	if (this->encoding)
 	{
-		free (serv->encoding);
+		free (this->encoding);
 		/* can be left as NULL to indicate system encoding */
-		serv->encoding = nullptr;
-		serv->using_cp1255 = false;
-		serv->using_irc = false;
+		this->encoding = nullptr;
+		this->using_cp1255 = false;
+		this->using_irc = false;
 	}
 
 	if (new_encoding)
 	{
-		serv->encoding = strdup (new_encoding);
+		this->encoding = strdup (new_encoding);
 		/* the serverlist GUI might have added a space 
 			and short description - remove it. */
-		space = strchr (serv->encoding, ' ');
+		space = strchr (this->encoding, ' ');
 		if (space)
 			space[0] = 0;
 
 		/* server_inline() uses these flags */
-		if (!g_ascii_strcasecmp (serv->encoding, "CP1255") ||
-			 !g_ascii_strcasecmp (serv->encoding, "WINDOWS-1255"))
-			serv->using_cp1255 = true;
-		else if (!g_ascii_strcasecmp (serv->encoding, "IRC"))
-			serv->using_irc = true;
+		if (!g_ascii_strcasecmp (this->encoding, "CP1255") ||
+			 !g_ascii_strcasecmp (this->encoding, "WINDOWS-1255"))
+			this->using_cp1255 = true;
+		else if (!g_ascii_strcasecmp (this->encoding, "IRC"))
+			this->using_irc = true;
 	}
 }
 

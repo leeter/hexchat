@@ -628,7 +628,7 @@ cmd_charset (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (servlist_check_encoding (word[2 + offset]))
 	{
-		server_set_encoding (serv, word[2 + offset]);
+		serv->set_encoding (word[2 + offset]);
 		if (offset < 1)
 			PrintTextf (sess, "Charset changed to: %s\n", word[2 + offset]);
 	} else
