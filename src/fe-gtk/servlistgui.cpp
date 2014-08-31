@@ -62,7 +62,7 @@ enum {
 		SERVER_TREE,
 		CHANNEL_TREE,
 		CMD_TREE,
-		N_TREES,
+		N_TREES
 };
 
 /* edit area */
@@ -216,7 +216,16 @@ servlist_channels_populate (ircnet *net, GtkWidget *treeview)
 	{
 		favchan = static_cast<favchannel *>(list->data);
 		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, favchan->name, 1, favchan->key, 2, TRUE, -1);
+		gtk_list_store_set (
+            store,
+            &iter,
+            0,
+            favchan->name.c_str(),
+            1,
+            favchan->key ? favchan->key->c_str() : nullptr,
+            2,
+            TRUE,
+            -1);
 
 		if (net->selected == i)
 		{
