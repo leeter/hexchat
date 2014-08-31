@@ -1163,7 +1163,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 			const char *locale;
 
 			if (sess->server->encoding)
-				return sess->server->encoding;
+				return sess->server->encoding->c_str();
 
 			locale = NULL;
 			g_get_charset (&locale);

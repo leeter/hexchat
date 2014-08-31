@@ -164,7 +164,7 @@ server_send_real (server *serv, const char *buf, int len)
 
 	url_check_line (buf, len);
 
-	return tcp_send_real (serv->ssl, serv->sok, serv->encoding, serv->using_irc,
+	return tcp_send_real (serv->ssl, serv->sok, serv->encoding ? serv->encoding->c_str() : nullptr, serv->using_irc,
 								 buf, len);
 }
 
@@ -322,10 +322,10 @@ server_inline (server *serv, char *line, int len)
 
 	/* Checks whether we're set to use UTF-8 charset */
 	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
-		(serv->encoding == nullptr && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
-	    (serv->encoding != nullptr &&				/* OR 3. explicitly set to UTF-8 */
-		 (g_ascii_strcasecmp (serv->encoding, "UTF8") == 0 ||
-		  g_ascii_strcasecmp (serv->encoding, "UTF-8") == 0)))
+		(serv->encoding && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
+	    (!serv->encoding &&				/* OR 3. explicitly set to UTF-8 */
+		 (g_ascii_strcasecmp (serv->encoding->c_str(), "UTF8") == 0 ||
+		  g_ascii_strcasecmp (serv->encoding->c_str(), "UTF-8") == 0)))
 	{
 		/* The user has the UTF-8 charset set, either via /charset
 		command or from his UTF-8 locale. Thus, we first try the
@@ -344,8 +344,8 @@ server_inline (server *serv, char *line, int len)
 
 		const char *encoding = nullptr;
 
-		if (serv->encoding != nullptr)
-			encoding = serv->encoding;
+		if (serv->encoding)
+			encoding = serv->encoding->c_str();
 		else
 			g_get_charset (&encoding);
 
@@ -1818,31 +1818,28 @@ server_fill_her_up (server *serv)
 void
 server::set_encoding (const char *new_encoding)
 {
-	char *space;
-
 	if (this->encoding)
 	{
-		free (this->encoding);
-		/* can be left as NULL to indicate system encoding */
-		this->encoding = nullptr;
+		/* can be left as uninitialized to indicate system encoding */
+        this->encoding = boost::optional<std::string>();
 		this->using_cp1255 = false;
 		this->using_irc = false;
 	}
 
 	if (new_encoding)
 	{
-		this->encoding = strdup (new_encoding);
+		this->encoding = new_encoding;
 		/* the serverlist GUI might have added a space 
 			and short description - remove it. */
-		space = strchr (this->encoding, ' ');
-		if (space)
-			space[0] = 0;
+		auto space = this->encoding->find_first_of(' ');
+        if (space != std::string::npos)
+            this->encoding->erase(space);
 
 		/* server_inline() uses these flags */
-		if (!g_ascii_strcasecmp (this->encoding, "CP1255") ||
-			 !g_ascii_strcasecmp (this->encoding, "WINDOWS-1255"))
+		if (!g_ascii_strcasecmp (this->encoding->c_str(), "CP1255") ||
+            !g_ascii_strcasecmp(this->encoding->c_str(), "WINDOWS-1255"))
 			this->using_cp1255 = true;
-		else if (!g_ascii_strcasecmp (this->encoding, "IRC"))
+        else if (!g_ascii_strcasecmp(this->encoding->c_str(), "IRC"))
 			this->using_irc = true;
 	}
 }
@@ -1896,7 +1893,6 @@ server::server()
     lag_sent(),   /* we are still waiting for this ping response*/
     ping_recv(),					/* when we last got a ping reply */
     away_time(),					/* when we were marked away */
-    encoding(),					/* NULL for system */
     favlist(),			/* list of channels & keys to join */
 
     motd_skipped(),
@@ -2128,7 +2124,7 @@ server_free (server *serv)
 	serv->flush_queue ();
 	server_away_free_messages (serv);
 
-	free (serv->encoding);
+
 	if (serv->favlist)
 		g_slist_free_full (serv->favlist, (GDestroyNotify) servlist_favchan_free);
 

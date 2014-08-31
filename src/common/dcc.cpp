@@ -382,7 +382,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	else if (dcc->serv->encoding == NULL)     /* system */
 		utf = g_locale_to_utf8(line, len, NULL, &utf_len, NULL);
 	else
-		utf = g_convert(line, len, "UTF-8", dcc->serv->encoding, 0, &utf_len, 0);
+		utf = g_convert(line, len, "UTF-8", dcc->serv->encoding->c_str(), 0, &utf_len, 0);
 
 	if (utf)
 	{
@@ -2031,7 +2031,7 @@ dcc_write_chat (char *nick, char *text)
 	if (dcc && dcc->dccstat == STAT_ACTIVE)
 	{
 		len = strlen (text);
-		tcp_send_real (NULL, dcc->sok, dcc->serv->encoding, dcc->serv->using_irc,
+		tcp_send_real (NULL, dcc->sok, dcc->serv->encoding->c_str(), dcc->serv->using_irc,
 							text, len);
 		send (dcc->sok, "\n", 1, 0);
 		dcc->size += len;

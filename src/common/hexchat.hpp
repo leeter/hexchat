@@ -28,6 +28,7 @@
 
 #include <string>
 #include <ctime>			/* need time_t */
+#include <boost/optional.hpp>
 
 #ifdef USE_OPENSSL
 #ifdef __APPLE__
@@ -581,7 +582,7 @@ public:
 	time_t ping_recv;					/* when we last got a ping reply */
 	time_t away_time;					/* when we were marked away */
 
-	char *encoding;					/* NULL for system */
+	boost::optional<std::string> encoding;					/* NULL for system */
 	GSList *favlist;			/* list of channels & keys to join */
 
 	bool motd_skipped;

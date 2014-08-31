@@ -612,7 +612,7 @@ cmd_charset (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		g_get_charset (&locale);
 		PrintTextf (sess, "Current charset: %s\n",
-						serv->encoding ? serv->encoding : locale);
+						serv->encoding ? serv->encoding->c_str() : locale);
 		return TRUE;
 	}
 
