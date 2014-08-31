@@ -1447,7 +1447,7 @@ servlist_editchannel_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, 
 		}
 
 		favchan->name = newval;
-		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, favchan->name, -1);
+		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, favchan->name.c_str(), -1);
 	}
 }
 
