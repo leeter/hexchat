@@ -1410,11 +1410,11 @@ servlist_save (void)
 
 			if (favchan->key)
 			{
-				fprintf (fp, "J=%s,%s\n", favchan->name, favchan->key);
+				fprintf (fp, "J=%s,%s\n", favchan->name.c_str(), favchan->key->c_str());
 			}
 			else
 			{
-				fprintf (fp, "J=%s\n", favchan->name);
+				fprintf (fp, "J=%s\n", favchan->name.c_str());
 			}
 
 			favlist = favlist->next;
