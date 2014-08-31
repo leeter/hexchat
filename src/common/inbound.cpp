@@ -1189,7 +1189,7 @@ check_autojoin_channels (server *serv)
 				/* for easier checks, ensure that favchannel->key is just NULL when session->channelkey is empty i.e. '' */
 				if (strlen (sess->channelkey))
 				{
-                    sess_channels.push_back(favchannel{ sess->waitchannel, sess->channelkey });
+                    sess_channels.push_back(favchannel{ sess->waitchannel, boost::make_optional<std::string>(sess->channelkey) });
 				}
 				else
 				{
