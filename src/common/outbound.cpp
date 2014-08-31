@@ -93,8 +93,8 @@ notc_msg (struct session *sess)
 	PrintText (sess, _("Not connected. Try /server <host> [<port>]\n"));
 }
 
-static char *
-random_line (char *file_name)
+static std::string
+random_line (const std::string & file_name)
 {
 	FILE *fh;
 	char buf[512];
@@ -103,13 +103,16 @@ random_line (char *file_name)
 	if (!file_name[0])
 		goto nofile;
 
-	fh = hexchat_fopen_file (file_name, "r", 0);
+	fh = hexchat_fopen_file (file_name.c_str(), "r", 0);
 	if (!fh)
 	{
 	 nofile:
 		/* reason is not a file, an actual reason! */
-		return strdup (file_name);
+		return file_name;
 	}
+    BOOST_SCOPE_EXIT((fh)){
+        fclose(fh);
+    }BOOST_SCOPE_EXIT_END
 
 	/* count number of lines in file */
 	lines = 0;
@@ -128,8 +131,7 @@ random_line (char *file_name)
 		lines--;
 	}
 	while (lines > ran);
-	fclose (fh);
-	return strdup (buf);
+	return buf;
 }
 
 void
@@ -137,10 +139,7 @@ server_sendpart (server * serv, char *channel, char *reason)
 {
 	if (!reason)
 	{
-        char * temp = random_line(prefs.hex_irc_part_reason);
-        BOOST_SCOPE_EXIT((temp)){
-            free(temp);
-        }BOOST_SCOPE_EXIT_END
+        std::string temp = random_line(prefs.hex_irc_part_reason);
 		serv->p_part (channel, temp);
 	} else
 	{
@@ -152,16 +151,12 @@ server_sendpart (server * serv, char *channel, char *reason)
 void
 server_sendquit (session * sess)
 {
-	char *rea, *colrea;
-
 	if (!sess->quitreason)
 	{
-		colrea = strdup (prefs.hex_irc_quit_reason);
-		check_special_chars (colrea, FALSE);
-		rea = random_line (colrea);
-		free (colrea);
+		std::string colrea = strdup (prefs.hex_irc_quit_reason);
+		check_special_chars (&colrea[0], FALSE);
+        std::string rea = random_line(colrea);
 		sess->server->p_quit (rea);
-		free (rea);
 	} else
 	{
 		/* reason set by /quit, /close argument */
@@ -393,13 +388,7 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			reason = sess->server->last_away_reason;
         else
         {
-            /* must manage memory pointed to by random_line() */
-            char* r_str = random_line(prefs.hex_away_reason);
-            // TODO: replace with string!
-            BOOST_SCOPE_EXIT((r_str)){
-                free(r_str);
-            }BOOST_SCOPE_EXIT_END
-            reason = r_str;
+            reason = random_line(prefs.hex_away_reason);
         }
 	}
 	sess->server->p_set_away (reason);
