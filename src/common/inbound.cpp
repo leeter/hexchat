@@ -1193,7 +1193,7 @@ check_autojoin_channels (server *serv)
 				}
 				else
 				{
-                    sess_channels.push_back(favchannel{ sess->waitchannel, boost::none_t() });
+                    sess_channels.push_back(favchannel{ sess->waitchannel, boost::none });
 				}
 				i++;
 			}

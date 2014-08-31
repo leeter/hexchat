@@ -1482,10 +1482,10 @@ servlist_editkey_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpoi
 		}
 		else					/* if key's empty, make sure we actually remove the key */
 		{
-			favchan->key = boost::optional<std::string>();
+            favchan->key = boost::none;
 		}
 
-		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 1, favchan->key, -1);
+		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 1, favchan->key ? favchan->key->c_str() : nullptr, -1);
 	}
 }
 
