@@ -56,7 +56,7 @@ namespace{
 	static char*
 		check_version()
 	{
-		inet_handle hOpen = InternetOpen(TEXT("Update Checker"),
+		inet_handle hOpen = InternetOpenW(L"Update Checker",
 			INTERNET_OPEN_TYPE_PRECONFIG,
 			nullptr,
 			nullptr,
@@ -66,8 +66,8 @@ namespace{
 			return "Unknown";
 		}
 
-		inet_handle hConnect = InternetConnect(hOpen,
-			TEXT("raw.github.com"),
+		inet_handle hConnect = InternetConnectW(hOpen,
+			L"raw.github.com",
 			INTERNET_DEFAULT_HTTPS_PORT,
 			nullptr,
 			nullptr,
@@ -79,9 +79,9 @@ namespace{
 			return "Unknown";
 		}
 
-		inet_handle hResource = HttpOpenRequest(hConnect,
-			TEXT("GET"),
-			TEXT("/hexchat/hexchat/master/win32/version.txt"),
+		inet_handle hResource = HttpOpenRequestW(hConnect,
+			L"GET",
+			L"/hexchat/hexchat/master/win32/version.txt",
 			nullptr, // use system setting to determine HTTP version
 			nullptr,
 			nullptr,
@@ -100,8 +100,8 @@ namespace{
 			DWORD dwRead;
 			DWORD infolen = sizeof(infobuffer);
 
-			HttpAddRequestHeaders(hResource, TEXT("Connection: close\r\n"), -1L, HTTP_ADDREQ_FLAG_ADD);	/* workaround for GC bug */
-			HttpSendRequest(hResource, nullptr, 0, nullptr, 0);
+			HttpAddRequestHeadersW(hResource, L"Connection: close\r\n", -1L, HTTP_ADDREQ_FLAG_ADD);	/* workaround for GC bug */
+			HttpSendRequestW(hResource, nullptr, 0, nullptr, 0);
 
 			while (InternetReadFile(hResource, buffer, 1023, &dwRead))
 			{
@@ -112,7 +112,7 @@ namespace{
 				buffer[dwRead] = 0;
 			}
 
-			HttpQueryInfo(hResource,
+			HttpQueryInfoW(hResource,
 				HTTP_QUERY_STATUS_CODE,
 				&infobuffer,
 				&infolen,
@@ -135,7 +135,7 @@ namespace{
 
 		if (!g_ascii_strcasecmp("HELP", word[2]))
 		{
-			hexchat_printf(ph, upd_help);
+			hexchat_print(ph, upd_help);
 			return HEXCHAT_EAT_HEXCHAT;
 		}
 		else if (!g_ascii_strcasecmp("SET", word[2]))
