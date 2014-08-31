@@ -18,6 +18,7 @@
 
 /* IRC RFC1459(+commonly used extensions) protocol implementation */
 
+#include <string>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -130,25 +131,16 @@ server::p_join(const std::string& channel, const std::string& key)
 }
 
 static void
-irc_join_list_flush (server *serv, GString *channels, GString *keys, bool send_keys)
+irc_join_list_flush (server *serv, const std::string & channels, const std::string & keys, bool send_keys)
 {
-	char *chanstr;
-	char *keystr;
-
-	chanstr = g_string_free (channels, FALSE);				/* convert our strings to char arrays */
-	keystr = g_string_free (keys, FALSE);
-
 	if (send_keys)
 	{
-		tcp_sendf (serv, "JOIN %s %s\r\n", chanstr, keystr);	/* send the actual command */
+		tcp_sendf (serv, "JOIN %s %s\r\n", channels.c_str(), keys.c_str());	/* send the actual command */
 	}
 	else
 	{
-		tcp_sendf (serv, "JOIN %s\r\n", chanstr);	/* send the actual command */
+        tcp_sendf(serv, "JOIN %s\r\n", channels.c_str());	/* send the actual command */
 	}
-
-	g_free (chanstr);
-	g_free (keystr);
 }
 
 /* Join a whole list of channels & keys, split to multiple lines
@@ -162,8 +154,8 @@ server::p_join_list (GSList *favorites)
 	bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
 	int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
 	favchannel *fav;
-	GString *chanlist = g_string_new (NULL);
-	GString *keylist = g_string_new (NULL);
+    std::string chanlist;
+    std::string keylist;
 	GSList *favlist;
 
 	favlist = favorites;
@@ -182,9 +174,8 @@ server::p_join_list (GSList *favorites)
 		{
 			irc_join_list_flush (this, chanlist, keylist, send_keys);
 
-			chanlist = g_string_new (NULL);
-			keylist = g_string_new (NULL);
-
+            chanlist.clear();
+            keylist.clear();
 			len = 9;
 			first_item = true;									/* list dumped, omit commas once again */
 			send_keys = false;									/* also omit keys until we actually find one */
@@ -199,20 +190,20 @@ server::p_join_list (GSList *favorites)
 			len += 2;
 
 			/* add separators but only if it's not the 1st element */
-			g_string_append_c (chanlist, ',');
-			g_string_append_c (keylist, ',');
+			chanlist.push_back(',');
+			keylist.push_back(',');
 		}
 
-		g_string_append (chanlist, fav->name.c_str());
+        chanlist += fav->name;
 
 		if (fav->key)
 		{
-			g_string_append (keylist, fav->key->c_str());
+            keylist += *(fav->key);
 			send_keys = true;
 		}
 		else
 		{
-			g_string_append_c (keylist, 'x');				/* 'x' filler for keyless channels so that our JOIN command is always well-formatted */
+			keylist.push_back('x');				/* 'x' filler for keyless channels so that our JOIN command is always well-formatted */
 		}
 
 		first_item = false;
@@ -221,6 +212,65 @@ server::p_join_list (GSList *favorites)
 
 	irc_join_list_flush (this, chanlist, keylist, send_keys);
 	g_slist_free (favlist);
+}
+
+void
+server::p_join_list(const std::vector<favchannel> &favorites)
+{
+    bool first_item = true;										/* determine whether we add commas or not */
+    bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
+    int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
+    std::string chanlist;
+    std::string keylist;
+
+    for (const auto & fav : favorites)
+    {
+        len += fav.name.size();
+        if (fav.key)
+        {
+            len += fav.key->size();
+        }
+
+        if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
+        {
+            irc_join_list_flush(this, chanlist, keylist, send_keys);
+
+            chanlist.clear();
+            keylist.clear();
+            len = 9;
+            first_item = true;									/* list dumped, omit commas once again */
+            send_keys = false;									/* also omit keys until we actually find one */
+        }
+
+        if (!first_item)
+        {
+            /* This should be done before the length check, but channel names
+            * are already at least 2 characters long so it would trigger the
+            * flush anyway.
+            */
+            len += 2;
+
+            /* add separators but only if it's not the 1st element */
+            chanlist.push_back(',');
+            keylist.push_back(',');
+        }
+
+        chanlist += fav.name;
+
+        if (fav.key)
+        {
+            keylist += *(fav.key);
+            send_keys = true;
+        }
+        else
+        {
+            keylist.push_back('x');				/* 'x' filler for keyless channels so that our JOIN command is always well-formatted */
+        }
+
+        first_item = false;
+    }
+
+    irc_join_list_flush(this, chanlist, keylist, send_keys);
 }
 
 void

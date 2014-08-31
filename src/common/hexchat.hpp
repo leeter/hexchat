@@ -27,6 +27,7 @@
 #include <glib/gi18n.h>
 
 #include <string>
+#include <vector>
 #include <ctime>			/* need time_t */
 #include <boost/optional.hpp>
 
@@ -465,6 +466,7 @@ enum class server_cleanup_result{
 };
 
 struct ircnet;
+struct favchannel;
 
 struct server
 {
@@ -492,6 +494,7 @@ public:
     void p_ns_ghost(const std::string& usname, const std::string& pass);
 	void p_join(const std::string& channel, const std::string& key);
 	void p_join_list(GSList *favorites);
+    void p_join_list(const std::vector<favchannel> &favorites);
     void p_login(const std::string& user, const std::string& realname);
 	void p_join_info(const std::string & channel);
     void p_mode(const std::string & target, const std::string &mode);
