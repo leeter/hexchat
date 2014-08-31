@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <vector>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
@@ -1152,7 +1153,7 @@ check_autojoin_channels (server *serv)
 	int i = 0;
 	session *sess;
 	GSList *list = sess_list;
-	GSList *sess_channels = nullptr;			/* joined channels that are not in the favorites list */
+    std::vector<favchannel> sess_channels;      /* joined channels that are not in the favorites list */		
 	favchannel *fav;
 
 	/* shouldn't really happen, the io tag is destroyed in server.c */
@@ -1188,11 +1189,11 @@ check_autojoin_channels (server *serv)
 				/* for easier checks, ensure that favchannel->key is just NULL when session->channelkey is empty i.e. '' */
 				if (strlen (sess->channelkey))
 				{
-					sess_channels = servlist_favchan_listadd (sess_channels, sess->waitchannel, sess->channelkey);
+                    sess_channels.emplace_back(favchannel{ sess->waitchannel, sess->channelkey });
 				}
 				else
 				{
-					sess_channels = servlist_favchan_listadd (sess_channels, sess->waitchannel, nullptr);
+                    sess_channels.emplace_back(favchannel{ sess->waitchannel, boost::none_t() });
 				}
 				i++;
 			}
@@ -1201,10 +1202,10 @@ check_autojoin_channels (server *serv)
 		list = list->next;
 	}
 
-	if (sess_channels)
+	if (!sess_channels.empty())
 	{
 		serv->p_join_list (sess_channels);
-		g_slist_free_full (sess_channels, (GDestroyNotify) servlist_favchan_free);
+		//g_slist_free_full (sess_channels, (GDestroyNotify) servlist_favchan_free);
 	}
 	else
 	{
