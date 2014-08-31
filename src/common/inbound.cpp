@@ -1189,11 +1189,11 @@ check_autojoin_channels (server *serv)
 				/* for easier checks, ensure that favchannel->key is just NULL when session->channelkey is empty i.e. '' */
 				if (strlen (sess->channelkey))
 				{
-                    sess_channels.emplace_back(favchannel{ sess->waitchannel, sess->channelkey });
+                    sess_channels.push_back(favchannel{ sess->waitchannel, sess->channelkey });
 				}
 				else
 				{
-                    sess_channels.emplace_back(favchannel{ sess->waitchannel, boost::none_t() });
+                    sess_channels.push_back(favchannel{ sess->waitchannel, boost::none_t() });
 				}
 				i++;
 			}
@@ -1205,7 +1205,6 @@ check_autojoin_channels (server *serv)
 	if (!sess_channels.empty())
 	{
 		serv->p_join_list (sess_channels);
-		//g_slist_free_full (sess_channels, (GDestroyNotify) servlist_favchan_free);
 	}
 	else
 	{
