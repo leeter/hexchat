@@ -144,7 +144,7 @@
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_WIN64;_AMD64_;NDEBUG;_LIB;$(OwnFlags);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(DepsRoot)\include;$(Glib);$(YourBoostPath);$(Gtk);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DisableSpecificWarnings>4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4351;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -168,6 +168,7 @@ powershell -File "$(SolutionDir)..\win32\version-template.ps1" "$(SolutionDir)..
     </PreBuildEvent>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4351;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>

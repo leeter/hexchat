@@ -19,9 +19,6 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE	/* for memrchr */
 #endif
-#ifndef BOOST_SCOPE_EXIT_CONFIG_USE_LAMBDAS
-#define BOOST_SCOPE_EXIT_CONFIG_USE_LAMBDAS
-#endif
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -397,7 +394,7 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
             /* must manage memory pointed to by random_line() */
             char* r_str = random_line(prefs.hex_away_reason);
             // TODO: replace with string!
-            BOOST_SCOPE_EXIT(r_str){
+            BOOST_SCOPE_EXIT((r_str)){
                 free(r_str);
             }BOOST_SCOPE_EXIT_END
             reason = r_str;
