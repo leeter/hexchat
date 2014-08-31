@@ -17,6 +17,7 @@
  */
 
 #include <atomic>
+#include <random>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -131,6 +132,14 @@ SSL_CTX *ctx = nullptr;
 #ifdef USE_LIBPROXY
 pxProxyFactory *libproxy_factory;
 #endif
+static std::random_device rd;
+static std::mt19937 twstr(rd());
+
+int RAND_INT(int n)
+{
+    std::uniform_int_distribution<int> dist(0, n);
+    return dist(twstr);
+}
 
 /*
  * Update the priority queue of the "interesting sessions"
