@@ -137,9 +137,11 @@ server_sendpart (server * serv, char *channel, char *reason)
 {
 	if (!reason)
 	{
-		reason = random_line (prefs.hex_irc_part_reason);
-		serv->p_part (channel, reason);
-		free (reason);
+        char * temp = random_line(prefs.hex_irc_part_reason);
+        BOOST_SCOPE_EXIT((temp)){
+            free(temp);
+        }BOOST_SCOPE_EXIT_END
+		serv->p_part (channel, temp);
 	} else
 	{
 		/* reason set by /quit, /close argument */
