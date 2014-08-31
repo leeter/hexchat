@@ -1152,7 +1152,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 	{
 	case 0x2de2ee: /* away */
 		if (sess->server->is_away)
-			return sess->server->last_away_reason;
+			return sess->server->last_away_reason.c_str();
 		return NULL;
 
   	case 0x2c0b7d03: /* channel */
@@ -1453,15 +1453,15 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x8cea5e7c: /* channelkey */
 			return ((session *)data)->channelkey;
 		case 0x577e0867: /* chantypes */
-			return ((session *)data)->server->chantypes;
+			return ((session *)data)->server->chantypes.c_str();
 		case 0x38b735af: /* context */
 			return static_cast<const char*>(data);	/* this is a session * */
 		case 0x6de15a2e: /* network */
             return ((session *)data)->server->get_network(false);
 		case 0x8455e723: /* nickprefixes */
-			return ((session *)data)->server->nick_prefixes;
+			return ((session *)data)->server->nick_prefixes.c_str();
 		case 0x829689ad: /* nickmodes */
-			return ((session *)data)->server->nick_modes;
+			return ((session *)data)->server->nick_modes.c_str();
 		case 0xca022f43: /* server */
 			return ((session *)data)->server->servername;
 		}

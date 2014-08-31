@@ -136,22 +136,17 @@ static void
 supports_exempt (banlist_info *banl, int i)
 {
 	server *serv = banl->sess->server;
-	char *cm = serv->chanmodes;
 	int bit = 1<<i;
 
 	if (serv->have_except)
 		goto yes;
 
-	if (!cm)
-		return;
-
-	while (*cm)
+	for(char cm : serv->chanmodes)
 	{
-		if (*cm == ',')
+		if (cm == ',')
 			break;
-		if (*cm == 'e')
+		if (cm == 'e')
 			goto yes;
-		cm++;
 	}
 	return;
 
@@ -164,22 +159,17 @@ static void
 supports_invite (banlist_info *banl, int i)
 {
 	server *serv = banl->sess->server;
-	char *cm = serv->chanmodes;
 	int bit = 1<<i;
 
 	if (serv->have_invite)
 		goto yes;
 
-	if (!cm)
-		return;
-
-	while (*cm)
+    for (char cm : serv->chanmodes)
 	{
-		if (*cm == ',')
+		if (cm == ',')
 			break;
-		if (*cm == 'I')
+		if (cm == 'I')
 			goto yes;
-		cm++;
 	}
 	return;
 
@@ -192,19 +182,14 @@ static void
 supports_quiet (banlist_info *banl, int i)
 {
 	server *serv = banl->sess->server;
-	char *cm = serv->chanmodes;
 	int bit = 1<<i;
 
-	if (!cm)
-		return;
-
-	while (*cm)
+    for (char cm : serv->chanmodes)
 	{
-		if (*cm == ',')
+		if (cm == ',')
 			break;
-		if (*cm == modes[i].letter)
+		if (cm == modes[i].letter)
 			goto yes;
-		cm++;
 	}
 	return;
 

@@ -19,6 +19,9 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE	/* for memrchr */
 #endif
+#ifndef BOOST_SCOPE_EXIT_CONFIG_USE_LAMBDAS
+#define BOOST_SCOPE_EXIT_CONFIG_USE_LAMBDAS
+#endif
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -29,6 +32,7 @@
 #include <cctype>
 #include <climits>
 #include <cerrno>
+#include <boost/scope_exit.hpp>
 
 #define WANTSOCKET
 #define WANTARPA
@@ -375,34 +379,35 @@ cmd_allservers (struct session *sess, char *tbuf, char *word[],
 static int
 cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char *reason = word_eol[2];
+    std::string reason = word_eol[2];
 
-	if (!(*reason))
+	if (!(reason[0]))
 	{
 		if (sess->server->is_away)
 		{
-			if (sess->server->last_away_reason)
-				PrintTextf (sess, _("Already marked away: %s\n"), sess->server->last_away_reason);
+			if (!sess->server->last_away_reason.empty())
+				PrintTextf (sess, _("Already marked away: %s\n"), sess->server->last_away_reason.c_str());
 			return FALSE;
 		}
 
 		if (sess->server->reconnect_away)
 			reason = sess->server->last_away_reason;
-		else
-			/* must manage memory pointed to by random_line() */
-			reason = random_line (prefs.hex_away_reason);
+        else
+        {
+            /* must manage memory pointed to by random_line() */
+            char* r_str = random_line(prefs.hex_away_reason);
+            // TODO: replace with string!
+            BOOST_SCOPE_EXIT(r_str){
+                free(r_str);
+            }BOOST_SCOPE_EXIT_END
+            reason = r_str;
+        }
 	}
 	sess->server->p_set_away (reason);
 
 	if (sess->server->last_away_reason != reason)
 	{
-		if (sess->server->last_away_reason)
-			free (sess->server->last_away_reason);
-
-		if (reason == word_eol[2])
-			sess->server->last_away_reason = strdup (reason);
-		else
-			sess->server->last_away_reason = reason;
+        sess->server->last_away_reason = reason;
 	}
 
 	if (!sess->server->connected)
@@ -423,10 +428,7 @@ cmd_back (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		PrintText (sess, _("Already marked back.\n"));
 	}
 
-	if (sess->server->last_away_reason)
-		free (sess->server->last_away_reason);
-	sess->server->last_away_reason = NULL;
-
+	sess->server->last_away_reason.clear();
 	return TRUE;
 }
 
@@ -3066,7 +3068,7 @@ cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	server *serv = sess->server;
 
-	if (strchr (serv->chanmodes, 'q') == NULL)
+	if (serv->chanmodes.find_first_of('q') == std::string::npos)
 	{
 		PrintText (sess, _("Quiet is not supported by this server."));
 		return TRUE;
@@ -3091,7 +3093,7 @@ cmd_unquiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	/* Allow more than one mask in /unban -- tvk */
 	int i = 2;
 	
-	if (strchr (sess->server->chanmodes, 'q') == NULL)
+	if (sess->server->chanmodes.find_first_of('q') == std::string::npos)
 	{
 		PrintText (sess, _("Quiet is not supported by this server."));
 		return TRUE;

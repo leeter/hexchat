@@ -234,7 +234,7 @@ static gboolean
 match_nick (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
-	const char *nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
+	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
 	char *str;
 
 	if (!regex_match (re_nick (), word, start, end))
@@ -242,11 +242,11 @@ match_nick (const char *word, int *start, int *end)
 
 	/* ignore matches with prefixes that the server doesn't use */
 	if (strchr (NICKPRE, word[*start])
-		&& !strchr (nick_prefixes, word[*start]))
+		&& nick_prefixes.find_first_of(word[*start]) == std::string::npos)
 		return FALSE;
 	
 	/* nick prefix is not part of the matched word */
-	if (strchr (nick_prefixes, word[*start]))
+	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos)
 		(*start)++;
 
 	str = g_strndup (&word[*start], *end - *start);
@@ -266,21 +266,21 @@ static gboolean
 match_channel (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
-	const char *chan_prefixes = serv ? serv->chantypes : CHANPRE;
-	const char *nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
+	const std::string & chan_prefixes = serv ? serv->chantypes : CHANPRE;
+	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
 
 	if (!regex_match (re_channel (), word, start, end))
 		return FALSE;
 
 	/* Check for +#channel (for example whois output) */
-	if (strchr (nick_prefixes, word[*start]) != NULL
-		 && strchr (chan_prefixes, word[*start + 1]) != NULL)
+	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos
+        && chan_prefixes.find_first_of(word[*start + 1]) != std::string::npos)
 	{
 		(*start)++;
 		return TRUE;
 	}
 	/* Or just #channel */
-	else if (strchr (chan_prefixes, word[*start]) != NULL)
+	else if (chan_prefixes.find_first_of(word[*start]) != std::string::npos)
 		return TRUE;
 	
 	return FALSE;

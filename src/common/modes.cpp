@@ -129,9 +129,7 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 bool
 is_channel (const server * serv, const std::string &chan)
 {
-	if (strchr (serv->chantypes, chan[0]))
-		return true;
-	return false;
+    return serv->chantypes.find_first_of(chan[0]) != std::string::npos;
 }
 
 /* is the given char a valid nick mode char? e.g. @ or + */
@@ -139,20 +137,13 @@ is_channel (const server * serv, const std::string &chan)
 static int
 is_prefix_char (const server * serv, char c)
 {
-	int pos = 0;
-	char *np = serv->nick_prefixes;
-
-	while (np[0])
-	{
-		if (np[0] == c)
-			return pos;
-		pos++;
-		np++;
-	}
+    auto pos = serv->nick_prefixes.find_first_of(c);
+    if (pos != std::string::npos)
+        return pos;
 
 	if (serv->bad_prefix)
 	{
-		if (strchr (serv->bad_nick_prefixes, c))
+		if (serv->bad_nick_prefixes.find_first_of(c) != std::string::npos)
 		/* valid prefix char, but mode unknown */
 			return -2;
 	}
@@ -385,7 +376,6 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	session *sess;
 	server *serv = mr.serv;
 	char outbuf[4];
-	char *cm = serv->chanmodes;
 	bool supportsq = false;
 
 	outbuf[0] = sign;
@@ -402,7 +392,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* is this a nick mode? */
-	if (strchr (serv->nick_modes, mode))
+	if (serv->nick_modes.find_first_of(mode) != std::string::npos)
 	{
 		/* update the user in the userlist */
 		userlist_update_mode (sess, /*nickname */ arg, mode, sign);
@@ -413,15 +403,13 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* Is q a chanmode on this server? */
-	if (cm)
-		while (*cm)
-		{
-			if (*cm == ',')
-				break;
-			if (*cm == 'q')
-				supportsq = true;
-			cm++;
-		}
+    for (char cm : serv->chanmodes)
+	{
+		if (cm == ',')
+			break;
+		if (cm == 'q')
+			supportsq = true;
+	}
 
 	switch (sign)
 	{
@@ -567,7 +555,7 @@ mode_has_arg (server * serv, char sign, char mode)
 	int type;
 
 	/* if it's a nickmode, it must have an arg */
-	if (strchr (serv->nick_modes, mode))
+	if (serv->nick_modes.find_first_of(mode) != std::string::npos)
 		return 1;
 
 	type = mode_chanmode_type (serv, mode);
@@ -592,20 +580,19 @@ static int
 mode_chanmode_type (server * serv, char mode)
 {
 	/* see what numeric 005 CHANMODES=xxx said */
-	char *cm = serv->chanmodes;
 	int type = 0;
-	int found = 0;
+	bool found = false;
 
-	while (*cm && !found)
+	for(char cm : serv->chanmodes)
 	{
-		if (*cm == ',')
+		if (cm == ',')
 		{
 			type++;
-		} else if (*cm == mode)
+		} else if (cm == mode)
 		{
-			found = 1;
+			found = true;
+            break;
 		}
-		cm++;
 	}
 	if (found)
 		return type;
@@ -785,29 +772,25 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 			serv->modes_per_line = atoi (word[w] + 6);
 		} else if (strncmp (word[w], "CHANTYPES=", 10) == 0)
 		{
-			free (serv->chantypes);
-			serv->chantypes = strdup (word[w] + 10);
+			serv->chantypes.clear();
+			serv->chantypes = (word[w] + 10);
 		} else if (strncmp (word[w], "CHANMODES=", 10) == 0)
 		{
-			free (serv->chanmodes);
-			serv->chanmodes = strdup (word[w] + 10);
+			serv->chanmodes = (word[w] + 10);
 		} else if (strncmp (word[w], "PREFIX=", 7) == 0)
 		{
 			pre = strchr (word[w] + 7, ')');
 			if (pre)
 			{
 				pre[0] = 0;			  /* NULL out the ')' */
-				free (serv->nick_prefixes);
-				free (serv->nick_modes);
-				serv->nick_prefixes = strdup (pre + 1);
-				serv->nick_modes = strdup (word[w] + 8);
+				serv->nick_prefixes = (pre + 1);
+				serv->nick_modes = (word[w] + 8);
 			} else
 			{
 				/* bad! some ircds don't give us the modes. */
 				/* in this case, we use it only to strip /NAMES */
-				serv->bad_prefix = TRUE;
-				free (serv->bad_nick_prefixes);
-				serv->bad_nick_prefixes = strdup (word[w] + 7);
+				serv->bad_prefix = true;
+				serv->bad_nick_prefixes = (word[w] + 7);
 			}
 		} else if (strncmp (word[w], "WATCH=", 6) == 0)
 		{

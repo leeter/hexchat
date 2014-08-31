@@ -1847,13 +1847,107 @@ server::set_encoding (const char *new_encoding)
 	}
 }
 
+server::server()
+    :p_cmp(),
+    port(),
+    sok(),					/* is equal to sok4 or sok6 (the one we are using) */
+    sok4(),					/* tcp4 socket */
+    sok6(),					/* tcp6 socket */
+    proxy_type(),
+    proxy_sok(),				/* Additional information for MS Proxy beast */
+    proxy_sok4(),
+    proxy_sok6(),
+    msp_state(),
+    id(),				/* unique ID number (for plugin API) */
+    ssl(),
+#ifdef USE_OPENSSL
+    ssl_do_connect_tag(),
+#endif
+    childread(),
+    childwrite(),
+    childpid(),
+    iotag(),
+    recondelay_tag(),				/* reconnect delay timeout */
+    joindelay_tag(),				/* waiting before we send JOIN */
+    hostname(),				/* real ip number */
+    servername(),			/* what the server says is its name */
+    password(),
+    nick(),
+    linebuf(),
+    pos(),								/* current position in linebuf */
+    nickcount(),
+    loginmethod(),
+    modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
+    network(),						/* points to entry in servlist.c or NULL! */
+    outbound_queue(),
+    next_send(),						/* cptr->since in ircu */
+    prev_now(),					/* previous now-time */
+    sendq_len(),						/* queue size */
+    lag(),								/* milliseconds */
+    front_session(),	/* front-most window/tab */
+    server_session(),	/* server window/tab */
+    gui(),		  /* initialized by fe_new_server */
+    ctcp_counter(),	  /*flood */
+    ctcp_last_time(),
+    msg_counter(),	  /*counts the msg tab opened in a certain time */
+    msg_last_time(),
+
+    /*time_t connect_time;*/				/* when did it connect? */
+    lag_sent(),   /* we are still waiting for this ping response*/
+    ping_recv(),					/* when we last got a ping reply */
+    away_time(),					/* when we were marked away */
+    encoding(),					/* NULL for system */
+    favlist(),			/* list of channels & keys to join */
+
+    motd_skipped(),
+    connected(),
+    connecting(),
+    no_login(),
+    skip_next_userhost(),/* used for "get my ip from server" */
+    skip_next_whois(),	/* hide whois output */
+    inside_whois(),
+    doing_dns(),			/* /dns has been done */
+    retry_sasl(),   	/* retrying another sasl mech */
+    end_of_motd(),		/* end of motd reached (logged in) */
+    sent_quit(),			/* sent a QUIT already? */
+    use_listargs(),		/* undernet and dalnet need /list >0,<10000 */
+    is_away(),
+    reconnect_away(),	/* whether to reconnect in is_away state */
+    dont_use_proxy(),	/* to proxy or not to proxy */
+    supports_watch(),	/* supports the WATCH command */
+    supports_monitor(),	/* supports the MONITOR command */
+    bad_prefix(),			/* gave us a bad PREFIX= 005 number */
+    have_namesx(),		/* 005 tokens NAMESX and UHNAMES */
+    have_awaynotify(),
+    have_uhnames(),
+    have_whox(),		/* have undernet's WHOX features */
+    have_idmsg(),		/* freenode's IDENTIFY-MSG */
+    have_accnotify(), /* cap account-notify */
+    have_extjoin(),	/* cap extended-join */
+    have_server_time(),	/* cap server-time */
+    have_sasl(),		/* SASL capability */
+    have_except(),	/* ban exemptions +e */
+    have_invite(),	/* invite exemptions +I */
+    have_cert(),	/* have loaded a cert */
+    using_cp1255(), 	/* encoding is CP1255/WINDOWS-1255? */
+    using_irc(),		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
+    use_who(),			/* whether to use WHO command to get dcc_ip */
+    sasl_mech(),			/* mechanism for sasl auth */
+    sent_saslauth(),	/* have sent AUTHENICATE yet */
+    sent_capend()	/* have sent CAP END yet */
+#ifdef USE_OPENSSL
+    ,use_ssl(),
+    accept_invalid_cert()
+#endif
+{}
+
 server *
 server_new (void)
 {
 	static int id = 0;
 	server *serv;
 
-	serv = new server();// calloc(1, sizeof(*serv))
+	serv = new server;// calloc(1, sizeof(*serv))
 
 	/* use server.c and proto-irc.c functions */
     server_fill_her_up(serv);
@@ -1878,19 +1972,15 @@ is_server (server *serv)
 void
 server::reset_to_defaults()
 {
-	if (this->chantypes)
-		free (this->chantypes);
-	if (this->chanmodes)
-		free (this->chanmodes);
-	if (this->nick_prefixes)
-		free (this->nick_prefixes);
-	if (this->nick_modes)
-		free (this->nick_modes);
+    this->chantypes.clear();
+    this->chanmodes.clear();
+    this->nick_prefixes.clear();
+    this->nick_modes.clear();
 
-	this->chantypes = strdup ("#&!+");
-	this->chanmodes = strdup ("beI,k,l");
-	this->nick_prefixes = strdup ("@%+");
-	this->nick_modes = strdup ("ohv");
+	this->chantypes = "#&!+";
+	this->chanmodes = "beI,k,l";
+	this->nick_prefixes = "@%+";
+	this->nick_modes = "ohv";
 
 	this->nickcount = 1;
 	this->end_of_motd = false;
@@ -2038,13 +2128,6 @@ server_free (server *serv)
 	serv->flush_queue ();
 	server_away_free_messages (serv);
 
-	free (serv->nick_modes);
-	free (serv->nick_prefixes);
-	free (serv->chanmodes);
-	free (serv->chantypes);
-
-	free (serv->bad_nick_prefixes);
-	free (serv->last_away_reason);
 	free (serv->encoding);
 	if (serv->favlist)
 		g_slist_free_full (serv->favlist, (GDestroyNotify) servlist_favchan_free);

@@ -933,7 +933,7 @@ mg_populate (session *sess)
 	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
 	{
 		/* Hide if mode not supported */
-		if (sess->server && strchr (sess->server->chanmodes, chan_flags[i]) == NULL)
+		if (sess->server && sess->server->chanmodes.find_first_of(chan_flags[i]) == std::string::npos)
 			gtk_widget_hide (sess->gui->flag_wid[i]);
 		else
 			gtk_widget_show (sess->gui->flag_wid[i]);

@@ -722,7 +722,7 @@ inbound_nameslist (server *serv, char *chan, char *names,
 			nopre_name = name_list[i];
 
 			/* Ignore prefixes so '!' won't cause issues */
-			while (strchr (serv->nick_prefixes, *nopre_name) != nullptr)
+			while (serv->nick_prefixes.find_first_of(*nopre_name) != std::string::npos)
 			{
 				nopre_name++;
 				offset++;
@@ -955,7 +955,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 		sess = find_channel (serv, ptr);
 
 	/* /notice [mode-prefix]#channel should end up in that channel */
-	if (!sess && strchr(serv->nick_prefixes, ptr[0]) != nullptr)
+	if (!sess && serv->nick_prefixes.find_first_of(ptr[0]) != std::string::npos)
 	{
 		ptr++;
 		sess = find_channel (serv, ptr);

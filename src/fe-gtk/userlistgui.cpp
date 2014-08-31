@@ -53,7 +53,6 @@ enum
 GdkPixbuf *
 get_user_icon (server *serv, struct User *user)
 {
-	char *pre;
 	int level;
 
 	if (!user)
@@ -69,14 +68,14 @@ get_user_icon (server *serv, struct User *user)
 	}
 
 	/* find out how many levels above Op this user is */
-	pre = strchr (serv->nick_prefixes, '@');
-	if (pre && pre != serv->nick_prefixes)
+	auto pre = serv->nick_prefixes.find_first_of('@');
+	if (pre != std::string::npos && pre)
 	{
 		pre--;
 		level = 0;
 		while (1)
 		{
-			if (pre[0] == user->prefix[0])
+            if (serv->nick_prefixes[pre] == user->prefix[0])
 			{
 				switch (level)
 				{
@@ -87,7 +86,7 @@ get_user_icon (server *serv, struct User *user)
 				break;	/* 4+, no icons */
 			}
 			level++;
-			if (pre == serv->nick_prefixes)
+			if (!pre)
 				break;
 			pre--;
 		}

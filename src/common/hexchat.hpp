@@ -471,6 +471,7 @@ private:
     void reset_to_defaults();
     friend server *server_new(void);
 public:
+    server();
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void disconnect(struct session *, bool sendquit, int err);
@@ -544,16 +545,16 @@ public:
 	char password[86];
 	char nick[NICKLEN];
 	char linebuf[2048];				/* RFC says 512 chars including \r\n */
-	char *last_away_reason;
+	std::string last_away_reason;
 	int pos;								/* current position in linebuf */
 	int nickcount;
 	int loginmethod;					/* see login_types[] */
 
-	char *chantypes;					/* for 005 numeric - free me */
-	char *chanmodes;					/* for 005 numeric - free me */
-	char *nick_prefixes;				/* e.g. "*@%+" */
-	char *nick_modes;					/* e.g. "aohv" */
-	char *bad_nick_prefixes;		/* for ircd that doesn't give the modes */
+	std::string chantypes;					/* for 005 numeric - free me */
+	std::string chanmodes;					/* for 005 numeric - free me */
+	std::string nick_prefixes;				/* e.g. "*@%+" */
+    std::string nick_modes;             /* e.g. "aohv" */					
+	std::string bad_nick_prefixes;		/* for ircd that doesn't give the modes */
 	int modes_per_line;				/* 6 on undernet, 4 on efnet etc... */
 
 	ircnet *network;						/* points to entry in servlist.c or NULL! */
