@@ -1446,10 +1446,8 @@ servlist_editchannel_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, 
 			return;
 		}
 
-		chan = favchan->name;
-		favchan->name = g_strdup (newval);
+		favchan->name = newval;
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, favchan->name, -1);
-		g_free (chan);
 	}
 }
 
@@ -1478,19 +1476,16 @@ servlist_editkey_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpoi
 
 	if (favchan)
 	{
-		key = favchan->key;
-
 		if (strlen (newval))	/* check key length, the field can be empty in order to delete the key! */
 		{
-			favchan->key = g_strdup (newval);
+			favchan->key = newval;
 		}
 		else					/* if key's empty, make sure we actually remove the key */
 		{
-			favchan->key = NULL;
+			favchan->key = boost::optional<std::string>();
 		}
 
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 1, favchan->key, -1);
-		g_free (key);
 	}
 }
 

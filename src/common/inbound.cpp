@@ -1181,7 +1181,7 @@ check_autojoin_channels (server *serv)
 					/* session->channelkey is set if there was a key change during the session. In that case, use the session key, not the one from favorites. */
 					if (fav->key && !strlen (sess->channelkey))
 					{
-						safe_strcpy (sess->channelkey, fav->key, sizeof (sess->channelkey));
+						safe_strcpy (sess->channelkey, fav->key->c_str(), sizeof (sess->channelkey));
 					}
 				}
 

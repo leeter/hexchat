@@ -172,10 +172,10 @@ server::p_join_list (GSList *favorites)
 	{
 		fav = static_cast<favchannel*>(favlist->data);
 
-		len += strlen (fav->name);
+		len += fav->name.size();
 		if (fav->key)
 		{
-			len += strlen (fav->key);
+            len += fav->key->size();
 		}
 
 		if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
@@ -203,11 +203,11 @@ server::p_join_list (GSList *favorites)
 			g_string_append_c (keylist, ',');
 		}
 
-		g_string_append (chanlist, fav->name);
+		g_string_append (chanlist, fav->name.c_str());
 
 		if (fav->key)
 		{
-			g_string_append (keylist, fav->key);
+			g_string_append (keylist, fav->key->c_str());
 			send_keys = true;
 		}
 		else

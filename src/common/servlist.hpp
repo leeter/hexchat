@@ -20,6 +20,9 @@
 #ifndef HEXCHAT_SERVLIST_HPP
 #define HEXCHAT_SERVLIST_HPP
 
+#include <string>
+#include <boost/optional.hpp>
+
 struct ircserver
 {
 	char *hostname;
@@ -32,8 +35,8 @@ struct commandentry
 
 struct favchannel
 {
-	char *name;
-	char *key;
+	std::string name;
+	boost::optional<std::string> key;
 };
 
 struct ircnet

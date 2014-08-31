@@ -564,16 +564,8 @@ servlist_slist_copy_deep (GSList *list, GCopyFunc func, gpointer user_data)
 favchannel *
 servlist_favchan_copy (favchannel *fav)
 {
-	favchannel *newfav;
-
-	newfav = static_cast<favchannel*>(calloc (1, sizeof (favchannel)));
-	if (!newfav)
-		return NULL;
-
-	newfav->name = g_strdup (fav->name);
-	newfav->key = g_strdup (fav->key);		/* g_strdup() can handle NULLs so no need to check it */
-
-	return newfav;
+    if (!fav) return nullptr;
+    return new favchannel(*fav);
 }
 
 void
@@ -827,7 +819,7 @@ servlist_favchan_find (ircnet *net, char *channel, int *pos)
 	while (list)
 	{
 		favchan = static_cast<favchannel*>(list->data);
-		if (g_ascii_strcasecmp (favchan->name, channel) == 0)
+		if (g_ascii_strcasecmp (favchan->name.c_str(), channel) == 0)
 		{
 			if (pos)
 			{
@@ -955,12 +947,12 @@ servlist_favchan_listadd (GSList *chanlist, const char *channel, const char *key
 {
 	favchannel *chan;
 
-	chan = static_cast<favchannel*>(calloc(1, sizeof(*chan)));
-	if (!chan)
-		return NULL;
+	chan = new favchannel;
+    if (channel)
+	    chan->name = channel;
+    if (key)
+	    chan->key = key;
 
-	chan->name = g_strdup (channel);
-	chan->key = g_strdup (key);
 	chanlist = g_slist_append (chanlist, chan);
 
 	return chanlist;
@@ -1028,9 +1020,7 @@ servlist_command_remove (ircnet *net, commandentry *entry)
 void
 servlist_favchan_free (favchannel *channel)
 {
-	g_free (channel->name);
-	g_free (channel->key);
-	free (channel);
+	delete channel;
 }
 
 void
@@ -1134,7 +1124,7 @@ servlist_load_defaults (void)
 	ircnet *net = NULL;
 	guint def_hash = g_str_hash ("freenode");
 
-	while (1)
+	while (true)
 	{
 		if (def[i].network)
 		{
@@ -1446,7 +1436,7 @@ servlist_save (void)
 static int
 joinlist_find_chan (favchannel *curr_item, const char *channel)
 {
-	if (!g_ascii_strcasecmp (curr_item->name, channel))
+	if (!g_ascii_strcasecmp (curr_item->name.c_str(), channel))
 	{
 		return 0;
 	}
