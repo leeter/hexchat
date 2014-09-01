@@ -40,6 +40,7 @@ class connection{
 public:
     static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner );
     virtual void enqueue_message(const std::string & message) = 0;
+    virtual ~connection(){}
 };
 
 #endif
