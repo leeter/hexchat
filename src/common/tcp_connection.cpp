@@ -87,7 +87,7 @@ namespace{
         if (!error)
         {
             socket_.async_handshake(boost::asio::ssl::stream_base::client,
-                boost::bind(&basic_connection<typename SocketType_>::handle_handshake, this,
+                boost::bind(&basic_connection::handle_handshake, this,
                 boost::asio::placeholders::error));
         }
         else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
@@ -95,7 +95,7 @@ namespace{
             socket_.lowest_layer().close();
             boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
             socket_.lowest_layer().async_connect(endpoint,
-                boost::bind(&basic_connection<typename SocketType_>::handle_connect, this,
+                boost::bind(&basic_connection::handle_connect, this,
                 boost::asio::placeholders::error, ++endpoint_iterator));
         }
         else
@@ -130,7 +130,7 @@ namespace{
         if (!error)
         {
             boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
-                boost::bind(&basic_connection<typename SocketType_>::handle_read, this,
+                boost::bind(&basic_connection::handle_read, this,
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
         }
@@ -153,7 +153,7 @@ namespace{
 
             boost::asio::async_write(socket_,
                 boost::asio::buffer(next_message.get()),
-                boost::bind(&basic_connection<typename SocketType_>::handle_write, this,
+                boost::bind(&basic_connection::handle_write, this,
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
             // TODO: push read to server
