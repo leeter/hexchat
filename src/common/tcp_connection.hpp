@@ -20,11 +20,15 @@
 #ifndef HEXCHAT_TCP_CONNECTION_HPP
 #define HEXCHAT_TCP_CONNECTION_HPP
 
+#include <functional>
 #include <memory>
 #include <queue>
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/optional.hpp>
+
+#include "hexchat.hpp"
 
 struct context;
 
@@ -36,21 +40,8 @@ enum class connection_security{
 
 class connection{
 public:
-    static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
-    virtual ~connection(){}
-    virtual void handle_connect(const boost::system::error_code& error,
-        boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
-    virtual void handle_handshake(const boost::system::error_code& error) = 0;
-    virtual void handle_write(const boost::system::error_code& error,
-        size_t bytes_transferred) = 0;
-    virtual void handle_read(const boost::system::error_code& error,
-        size_t bytes_transferred) = 0;
-protected:
-    connection(std::shared_ptr<context> _ctx);
-    connection(){};
-private:
-    std::shared_ptr<context> ctx_;
-    std::queue<std::string> outbound_queue_;
+    static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner );
+    virtual void enqueue_message(const std::string & message) = 0;
 };
 
 #endif
