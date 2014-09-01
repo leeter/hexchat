@@ -26,9 +26,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
-#include "hexchat.hpp"
-
 struct context;
+struct server;
 
 enum class connection_security{
     none,
@@ -38,7 +37,7 @@ enum class connection_security{
 
 class connection{
 public:
-    static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner );
+    static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner );
     virtual void enqueue_message(const std::string & message) = 0;
     virtual ~connection(){}
 };

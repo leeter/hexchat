@@ -26,6 +26,7 @@
 #include <glib/gstdio.h>
 #include <glib/gi18n.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <ctime>			/* need time_t */
@@ -467,6 +468,7 @@ enum class server_cleanup_result{
 
 struct ircnet;
 struct favchannel;
+struct connection;
 
 struct server
 {
@@ -532,6 +534,7 @@ public:
 	int proxy_sok6;
 	struct msproxy_state_t msp_state;
 	int id;					/* unique ID number (for plugin API) */
+    std::shared_ptr<connection> server_connection;
 #ifdef USE_OPENSSL
 	SSL *ssl;
 	int ssl_do_connect_tag;

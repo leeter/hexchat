@@ -23,6 +23,9 @@
 #include <utility>
 #include <boost/bind.hpp>
 #include "tcp_connection.hpp"
+#include "fe.hpp"
+#include "hexchat.hpp"
+
 
 struct context{
     context(boost::asio::io_service& io_service, boost::asio::ssl::context::verify_mode mode)
@@ -199,14 +202,14 @@ namespace{
     }
 }
 
-std::unique_ptr<connection>
+std::shared_ptr<connection>
 connection::create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner)
 {
     auto ctx = std::make_shared<context>(io_service, security == connection_security::enforced ? boost::asio::ssl::context::verify_peer : boost::asio::ssl::context::verify_none);
     if (security == connection_security::enforced || security == connection_security::no_verify)
     {
-        return std::unique_ptr<ssl_connection>(new ssl_connection(ctx, endpoint_iterator, io_service, ctx->ssl_ctx));
+        return std::make_shared<ssl_connection>(ctx, endpoint_iterator, io_service, ctx->ssl_ctx);
     }
-    return std::unique_ptr<tcp_connection>(new tcp_connection(ctx, endpoint_iterator, io_service));
+    return std::make_shared<tcp_connection>(ctx, endpoint_iterator, io_service);
 }
 
