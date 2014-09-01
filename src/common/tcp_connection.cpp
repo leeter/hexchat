@@ -49,7 +49,6 @@ namespace{
                 boost::bind(&basic_connection::handle_connect, this,
                 boost::asio::placeholders::error, ++endpoint_iterator));
         }
-
         basic_connection(){};
         void enqueue_message(const std::string & message);
     private:
@@ -75,14 +74,14 @@ namespace{
 
     template<class SocketType_>
     void
-    basic_connection<typename SocketType_>::enqueue_message(const std::string & message)
+    basic_connection<SocketType_>::enqueue_message(const std::string & message)
     {
         this->outbound_queue_.push(message);
     }
 
     template<class SocketType_>
     void
-    basic_connection<typename SocketType_>::handle_connect(const boost::system::error_code& error,
+    basic_connection<SocketType_>::handle_connect(const boost::system::error_code& error,
             boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
     {
         if (!error)
@@ -107,7 +106,7 @@ namespace{
 
     template<class SocketType_>
     void
-    basic_connection<typename SocketType_>::handle_handshake(const boost::system::error_code& error)
+    basic_connection<SocketType_>::handle_handshake(const boost::system::error_code& error)
     {
         if (!error)
         {           
@@ -125,7 +124,7 @@ namespace{
 
     template<class SocketType_>
     void
-    basic_connection<typename SocketType_>::handle_write(const boost::system::error_code& error,
+    basic_connection<SocketType_>::handle_write(const boost::system::error_code& error,
         size_t bytes_transferred)
     {
         if (!error)
@@ -143,7 +142,7 @@ namespace{
 
     template<class SocketType_>
     void
-    basic_connection<typename SocketType_>::handle_read(const boost::system::error_code& error,
+    basic_connection<SocketType_>::handle_read(const boost::system::error_code& error,
         size_t bytes_transferred)
     {
         if (!error)
