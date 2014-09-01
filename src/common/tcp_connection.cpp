@@ -67,8 +67,8 @@ namespace{
         boost::asio::streambuf input_buffer_;
         std::shared_ptr<context> ctx_;
         std::queue<std::string> outbound_queue_;
-        boost::asio::strand strand_;
         SocketType_ socket_;
+        boost::asio::strand strand_;
     };
 
     template<class SocketType_>
