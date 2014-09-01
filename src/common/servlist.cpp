@@ -49,478 +49,487 @@ struct defaultserver
 
 static const struct defaultserver def[] =
 {
-	{"2600net",	0},
-	{0,			"irc.2600.net"},
+	{"2600net",	0, 0, 0, 0, 0},
+    { 0, "irc.2600.net", 0, 0, 0, 0 },
 
 	{"2ch", 0, 0, "iso-2022-jp", 0, 0},
-	{0,			"irc.2ch.sc"},
-	{0,			"irc.nurs.or.jp"},
-	{0,			"irc.juggler.jp"},
+    { 0, "irc.2ch.sc", 0, 0, 0, 0 },
+    { 0, "irc.nurs.or.jp", 0, 0, 0, 0 },
+    { 0, "irc.juggler.jp", 0, 0, 0, 0 },
 
-	{"AccessIRC",	0},
-	{0,			"irc.accessirc.net"},
-	{0,			"eu.accessirc.net"},
+    { "AccessIRC", 0, 0, 0, 0, 0 },
+    { 0, "irc.accessirc.net", 0, 0, 0, 0 },
+    { 0, "eu.accessirc.net", 0, 0, 0, 0 },
 
-	{"AfterNET",	0},
-	{0,			"irc.afternet.org"},
-	{0,			"us.afternet.org"},
-	{0,			"eu.afternet.org"},
+    { "AfterNET", 0, 0, 0, 0, 0 },
+    { 0, "irc.afternet.org", 0, 0, 0, 0 },
+    { 0, "us.afternet.org", 0, 0, 0, 0 },
+    { 0, "eu.afternet.org", 0, 0, 0, 0 },
 
-	{"Aitvaras",	0},
+    { "Aitvaras", 0, 0, 0, 0, 0 },
 #ifdef USE_IPV6
 #ifdef USE_OPENSSL
-	{0,			"irc6.ktu.lt/+7668"},
+    { 0, "irc6.ktu.lt/+7668", 0, 0, 0, 0 },
 #endif
-	{0,			"irc6.ktu.lt/7666"},
+    { 0, "irc6.ktu.lt/7666", 0, 0, 0, 0 },
 #endif
 #ifdef USE_OPENSSL
-	{0,			"irc.data.lt/+6668"},
-	{0,			"irc.omnitel.net/+6668"},
-	{0,			"irc.ktu.lt/+6668"},
-	{0,			"irc.kis.lt/+6668"},
-	{0,			"irc.vub.lt/+6668"},
+    { 0, "irc.data.lt/+6668", 0, 0, 0, 0 },
+    { 0, "irc.omnitel.net/+6668", 0, 0, 0, 0 },
+    { 0, "irc.ktu.lt/+6668", 0, 0, 0, 0 },
+    { 0, "irc.kis.lt/+6668", 0, 0, 0, 0 },
+    { 0, "irc.vub.lt/+6668", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.data.lt"},
-	{0,			"irc.omnitel.net"},
-	{0,			"irc.ktu.lt"},
-	{0,			"irc.kis.lt"},
-	{0,			"irc.vub.lt"},
+    { 0, "irc.data.lt", 0, 0, 0, 0 },
+    { 0, "irc.omnitel.net", 0, 0, 0, 0 },
+    { 0, "irc.ktu.lt", 0, 0, 0, 0 },
+    { 0, "irc.kis.lt", 0, 0, 0, 0 },
+    { 0, "irc.vub.lt", 0, 0, 0, 0 },
 
 	{"AlphaChat",	0, 0, 0, LOGIN_SASL},
-	{0,			"irc.alphachat.net"},
-	{0,			"na.alphachat.net"},
-	{0,			"eu.alphachat.net"},
-	{0,			"au.alphachat.net"},
-	{0,			"za.alphachat.net"},
+    { 0, "irc.alphachat.net", 0, 0, 0, 0 },
+    { 0, "na.alphachat.net", 0, 0, 0, 0 },
+    { 0, "eu.alphachat.net", 0, 0, 0, 0 },
+    { 0, "au.alphachat.net", 0, 0, 0, 0 },
+    { 0, "za.alphachat.net", 0, 0, 0, 0 },
 
-	{"Anthrochat", 0},
+    { "Anthrochat", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.anthrochat.net/+6697"},
+    { 0, "irc.anthrochat.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.anthrochat.net"},
+    { 0, "irc.anthrochat.net", 0, 0, 0, 0 },
 
-	{"ARCNet",	0},
-	{0,			"se1.arcnet.vapor.com"},
-	{0,			"us1.arcnet.vapor.com"},
-	{0,			"us2.arcnet.vapor.com"},
-	{0,			"us3.arcnet.vapor.com"},
-	{0,			"ca1.arcnet.vapor.com"},
-	{0,			"de1.arcnet.vapor.com"},
-	{0,			"de3.arcnet.vapor.com"},
-	{0,			"ch1.arcnet.vapor.com"},
-	{0,			"be1.arcnet.vapor.com"},
-	{0,			"nl3.arcnet.vapor.com"},
-	{0,			"uk1.arcnet.vapor.com"},
-	{0,			"uk2.arcnet.vapor.com"},
-	{0,			"fr1.arcnet.vapor.com"},
+    { "ARCNet", 0, 0, 0, 0, 0 },
+    { 0, "se1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "us1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "us2.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "us3.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "ca1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "de1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "de3.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "ch1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "be1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "nl3.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "uk1.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "uk2.arcnet.vapor.com", 0, 0, 0, 0 },
+    { 0, "fr1.arcnet.vapor.com", 0, 0, 0, 0 },
 
-	{"AustNet",	0},
-	{0,			"au.austnet.org"},
-	{0,			"us.austnet.org"},
+    { "AustNet", 0, 0, 0, 0, 0 },
+    { 0, "au.austnet.org", 0, 0, 0, 0 },
+    { 0, "us.austnet.org", 0, 0, 0, 0 },
 
-	{"AzzurraNet",	0},
-	{0,			"irc.azzurra.org"},
-	{0,			"crypto.azzurra.org"},
+    { "AzzurraNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.azzurra.org", 0, 0, 0, 0 },
+    { 0, "crypto.azzurra.org", 0, 0, 0, 0 },
 
-	{"Canternet", 0, 0, 0, LOGIN_SASL},
+	{"Canternet", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0, 		"irc.canternet.org/+6697"},
+    { 0, "irc.canternet.org/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.canternet.org"},
+    { 0, "irc.canternet.org", 0, 0, 0, 0 },
 
 	{"Chat4all", 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.chat4all.org/+7001"},
+    { 0, "irc.chat4all.org/+7001", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.chat4all.org"},
+    { 0, "irc.chat4all.org", 0, 0, 0, 0 },
 
-	{"ChattingAway", 0},
-	{0,			"irc.chattingaway.com"},
+    { "ChattingAway", 0, 0, 0, 0, 0 },
+    { 0, "irc.chattingaway.com", 0, 0, 0, 0 },
 
-	{"ChatJunkies",	0},
-	{0,			"irc.chatjunkies.org"},
-	{0,			"nl.chatjunkies.org"},
+    { "ChatJunkies", 0, 0, 0, 0, 0 },
+    { 0, "irc.chatjunkies.org", 0, 0, 0, 0 },
+    { 0, "nl.chatjunkies.org", 0, 0, 0, 0 },
 
-	{"ChatNet",	0},
-	{0,			"US.ChatNet.Org"},
+    { "ChatNet", 0, 0, 0, 0, 0 },
+    { 0, "US.ChatNet.Org", 0, 0, 0, 0 },
 
-	{"ChatSpike", 0},
-	{0,			"irc.chatspike.net"},
+    { "ChatSpike", 0, 0, 0, 0, 0 },
+    { 0, "irc.chatspike.net", 0, 0, 0, 0 },
 
-	{"Criten", 0},
-	{0,			"irc.criten.net"},
-	{0,			"irc.eu.criten.net"},
+    { "Criten", 0, 0, 0, 0, 0 },
+    { 0, "irc.criten.net", 0, 0, 0, 0 },
+    { 0, "irc.eu.criten.net", 0, 0, 0, 0 },
 
-	{"DALnet", 0},
-	{0,			"irc.dal.net"},
-	{0,			"irc.eu.dal.net"},
+    { "DALnet", 0, 0, 0, 0, 0 },
+    { 0, "irc.dal.net", 0, 0, 0, 0 },
+    { 0, "irc.eu.dal.net", 0, 0, 0, 0 },
 
-	{"Dark-Tou-Net",	0},
-	{0,			"irc.d-t-net.de"},
-	{0,			"bw.d-t-net.de"},
-	{0,			"nc.d-t-net.de"},
+    { "Dark-Tou-Net", 0, 0, 0, 0, 0 },
+    { 0, "irc.d-t-net.de", 0, 0, 0, 0 },
+    { 0, "bw.d-t-net.de", 0, 0, 0, 0 },
+    { 0, "nc.d-t-net.de", 0, 0, 0, 0 },
 
-	{"DarkMyst", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.darkmyst.org"},
+	{"DarkMyst", 0, 0, 0, LOGIN_SASL, 0},
+    { 0, "irc.darkmyst.org", 0, 0, 0, 0 },
 
-	{"DeepIRC", 0},
-	{0,			"irc.deepirc.net"},
+    { "DeepIRC", 0, 0, 0, 0, 0 },
+    { 0, "irc.deepirc.net", 0, 0, 0, 0 },
 
-	{"DeltaAnime", 0},
-	{0,			"irc.deltaanime.net"},
+    { "DeltaAnime", 0, 0, 0, 0, 0 },
+    { 0, "irc.deltaanime.net", 0, 0, 0, 0 },
 
-	{"EFnet",	0},
-	{0,			"irc.blackened.com"},
-	{0,			"irc.Prison.NET"},
-	{0,			"irc.Qeast.net"},
-	{0,			"irc.efnet.pl"},
-	{0,			"irc.lightning.net"},
-	{0,			"irc.servercentral.net"},
+    { "EFnet", 0, 0, 0, 0, 0 },
+    { 0, "irc.blackened.com", 0, 0, 0, 0 },
+    { 0, "irc.Prison.NET", 0, 0, 0, 0 },
+    { 0, "irc.Qeast.net", 0, 0, 0, 0 },
+    { 0, "irc.efnet.pl", 0, 0, 0, 0 },
+    { 0, "irc.lightning.net", 0, 0, 0, 0 },
+    { 0, "irc.servercentral.net", 0, 0, 0, 0 },
 
-	{"ElectroCode",		0},
+    { "ElectroCode", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
 
-	{0,			"irc.electrocode.net/+6697"},
+    { 0, "irc.electrocode.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.electrocode.net"},
+    { 0, "irc.electrocode.net", 0, 0, 0, 0 },
 
-	{"EnterTheGame",	0},
-	{0,			"IRC.EnterTheGame.Com"},
+    { "EnterTheGame", 0, 0, 0, 0, 0 },
+    { 0, "IRC.EnterTheGame.Com", 0, 0, 0, 0 },
 
-	{"EntropyNet",	0, 0, 0, LOGIN_SASL},
+	{"EntropyNet",	0, 0, 0, LOGIN_SASL,0},
 #ifdef USE_OPENSSL
-	{0,			"irc.entropynet.net/+6697"},
+    { 0, "irc.entropynet.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.entropynet.net"},
+    { 0, "irc.entropynet.net", 0, 0, 0, 0 },
 #ifdef USE_IPV6
 #ifdef USE_OPENSSL
-	{0,			"irc6.entropynet.net/+6697"},
+    { 0, "irc6.entropynet.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc6.entropynet.net"},
+    { 0, "irc6.entropynet.net", 0, 0, 0, 0 },
 #endif
 
-	{"EsperNet", 0, 0, 0, LOGIN_SASL},
+	{"EsperNet", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.esper.net/+6697"},
+    { 0, "irc.esper.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.esper.net"},
+    { 0, "irc.esper.net", 0, 0, 0, 0 },
 
-	{"EUIrc",	0},
-	{0,			"irc.euirc.net"},
-	{0,			"irc.ham.de.euirc.net"},
-	{0,			"irc.ber.de.euirc.net"},
-	{0,			"irc.ffm.de.euirc.net"},
-	{0,			"irc.bre.de.euirc.net"},
-	{0,			"irc.hes.de.euirc.net"},
-	{0,			"irc.inn.at.euirc.net"},
-	{0,			"irc.bas.ch.euirc.net"},
+    { "EUIrc", 0, 0, 0, 0, 0 },
+    { 0, "irc.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.ham.de.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.ber.de.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.ffm.de.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.bre.de.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.hes.de.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.inn.at.euirc.net", 0, 0, 0, 0 },
+    { 0, "irc.bas.ch.euirc.net", 0, 0, 0, 0 },
 
-	{"EuropNet", 0},
-	{0,			"irc.europnet.org"},
+    { "EuropNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.europnet.org", 0, 0, 0, 0 },
 
-	{"FDFNet",	0},
-	{0,			"irc.fdfnet.net"},
-	{0,			"irc.eu.fdfnet.net"},
+    { "FDFNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.fdfnet.net", 0, 0, 0, 0 },
+    { 0, "irc.eu.fdfnet.net", 0, 0, 0, 0 },
 
-	{"FEFNet", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.fef.net"},
+	{"FEFNet", 0, 0, 0, LOGIN_SASL,0},
+    { 0, "irc.fef.net", 0, 0, 0, 0 },
 
-	{"freenode", 0, 0, 0, LOGIN_SASL},
+	{"freenode", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,				"chat.freenode.net/+6697"},
+    { 0, "chat.freenode.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,				"chat.freenode.net"},
+    { 0, "chat.freenode.net", 0, 0, 0, 0 },
 	/* irc. points to chat. but many users and urls still reference it */
-	{0,				"irc.freenode.net"},
+    { 0, "irc.freenode.net", 0, 0, 0, 0 },
 
-	{"Furnet",	0},
+    { "Furnet", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.furnet.org/+6697"},
+    { 0, "irc.furnet.org/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.furnet.org"},
+    { 0, "irc.furnet.org", 0, 0, 0, 0 },
 
 	{"GalaxyNet",	0},
 	{0,			"irc.galaxynet.org"},
 
-	{"GameSurge", 0},
-	{0,			"irc.gamesurge.net"},
+    { "GameSurge", 0, 0, 0, 0, 0 },
+    { 0, "irc.gamesurge.net", 0, 0, 0, 0 },
 	
-	{"GeeksIRC", 0, 0, 0, LOGIN_SASL},
+	{"GeeksIRC", 0, 0, 0, LOGIN_SASL,0},
 #ifdef USE_OPENSSL
-	{0,			"irc.geeksirc.net/+6697"},
+    { 0, "irc.geeksirc.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.geeksirc.net"},
+    { 0, "irc.geeksirc.net", 0, 0, 0, 0 },
 
-	{"GeekShed",	0},
-	{0,			"irc.geekshed.net"},
+    { "GeekShed", 0, 0, 0, 0, 0 },
+    { 0, "irc.geekshed.net", 0, 0, 0, 0 },
 
-	{"German-Elite",	0},
-	{0,			"dominion.german-elite.net"},
-	{0,			"komatu.german-elite.net"},
+    { "German-Elite", 0, 0, 0, 0, 0 },
+    { 0, "dominion.german-elite.net", 0, 0, 0, 0 },
+    { 0, "komatu.german-elite.net", 0, 0, 0, 0 },
 
-	{"GIMPNet",		0},
-	{0,			"irc.gimp.org"},
-	{0,			"irc.gnome.org"},
+    { "GIMPNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.gimp.org", 0, 0, 0, 0 },
+    { 0, "irc.gnome.org", 0, 0, 0, 0 },
 
 	{"Hashmark",	0},
-	{0,			"irc.hashmark.net"},
+    { 0, "irc.hashmark.net", 0, 0, 0, 0 },
 
-	{"IdleMonkeys", 0},
-	{0,			"irc.idlemonkeys.net"},
+    { "IdleMonkeys", 0, 0, 0, 0, 0 },
+    { 0, "irc.idlemonkeys.net", 0, 0, 0, 0 },
 
-	{"IndirectIRC", 0},
+    { "IndirectIRC", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.indirectirc.com/+6697"},
+    { 0, "irc.indirectirc.com/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.indirectirc.com"},
+    { 0, "irc.indirectirc.com", 0, 0, 0, 0 },
 	
-	{"Interlinked", 0, 0, 0, LOGIN_SASL},
+	{"Interlinked", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.interlinked.me/+6697"},
+    { 0, "irc.interlinked.me/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.interlinked.me"},
+    { 0, "irc.interlinked.me", 0, 0, 0, 0 },
 
-	{"IRC4Fun", 0, 0, 0, LOGIN_SASL},
+	{"IRC4Fun", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,				"irc.irc4fun.net/+6697"},
+    { 0, "irc.irc4fun.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,				"irc.irc4fun.net"},
+    { 0, "irc.irc4fun.net", 0, 0, 0, 0 },
 
-	{"IRCHighWay",	0},
+    { "IRCHighWay", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,				"irc.irchighway.net/+9999"},
+    { 0, "irc.irchighway.net/+9999", 0, 0, 0, 0 },
 #endif
-	{0,				"irc.irchighway.net"},
+    { 0, "irc.irchighway.net", 0, 0, 0, 0 },
 
-	{"IrcLink",	0},
-	{0,			"irc.irclink.net"},
-	{0,			"Alesund.no.eu.irclink.net"},
-	{0,			"Oslo.no.eu.irclink.net"},
-	{0,			"frogn.no.eu.irclink.net"},
-	{0,			"tonsberg.no.eu.irclink.net"},
+    { "IrcLink", 0, 0, 0, 0, 0 },
+    { 0, "irc.irclink.net", 0, 0, 0, 0 },
+    { 0, "Alesund.no.eu.irclink.net", 0, 0, 0, 0 },
+    { 0, "Oslo.no.eu.irclink.net", 0, 0, 0, 0 },
+    { 0, "frogn.no.eu.irclink.net", 0, 0, 0, 0 },
+    { 0, "tonsberg.no.eu.irclink.net", 0, 0, 0, 0 },
 
-	{"IRCNet",		0},
-	{0,				"open.ircnet.net"},
-	{0,				"irc.de.ircnet.net"},
+    { "IRCNet", 0, 0, 0, 0, 0 },
+    { 0, "open.ircnet.net", 0, 0, 0, 0 },
+    { 0, "irc.de.ircnet.net", 0, 0, 0, 0 },
 	
-	{"IRCNode", 0, 0, 0, LOGIN_SASL},
+	{"IRCNode", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.ircnode.org/+6697"},
+    { 0, "irc.ircnode.org/+6697", 0, 0, 0, 0 },
 #endif
-	{0,                     "irc.ircnode.org"},
+    { 0, "irc.ircnode.org", 0, 0, 0, 0 },
 
-	{"Irctoo.net",	0},
-	{0,			"irc.irctoo.net"},
+    { "Irctoo.net", 0, 0, 0, 0, 0 },
+    { 0, "irc.irctoo.net", 0, 0, 0, 0 },
 
-	{"iZ-smart.net",	0},
-	{0,			"irc.iZ-smart.net/6666"},
-	{0,			"irc.iZ-smart.net/6667"},
-	{0,			"irc.iZ-smart.net/6668"},
+    { "iZ-smart.net", 0, 0, 0, 0, 0 },
+    { 0, "irc.iZ-smart.net/6666", 0, 0, 0, 0 },
+    { 0, "irc.iZ-smart.net/6667", 0, 0, 0, 0 },
+    { 0, "irc.iZ-smart.net/6668", 0, 0, 0, 0 },
 
-	{"Krstarica", 0},
-	{0,			"irc.krstarica.com"},
+    { "Krstarica", 0, 0, 0, 0, 0 },
+    { 0, "irc.krstarica.com", 0, 0, 0, 0 },
 
 #ifdef USE_OPENSSL
-	{"LinkNet",	0},
-	{0,			"irc.link-net.org/+7000"},
-	{0,			"as.link-net.org/+7000"},
-	{0,			"eu.link-net.org/+7000"},
-	{0,			"us.link-net.org/+7000"},
+    { "LinkNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.link-net.org/+7000", 0, 0, 0, 0 },
+    { 0, "as.link-net.org/+7000", 0, 0, 0, 0 },
+    { 0, "eu.link-net.org/+7000", 0, 0, 0, 0 },
+    { 0, "us.link-net.org/+7000", 0, 0, 0, 0 },
 #ifdef USE_IPV6
-	{0,			"irc6.link-net.org/+7000"},
+    { 0, "irc6.link-net.org/+7000", 0, 0, 0, 0 },
 #endif
 #endif
 
-	{"MindForge",	0},
-	{0,			"irc.mindforge.org"},
+    { "MindForge", 0, 0, 0, 0, 0 },
+    { 0, "irc.mindforge.org", 0, 0, 0, 0 },
 
-	{"MIXXnet",		0},
-	{0,			"irc.mixxnet.net"},
+    { "MIXXnet", 0, 0, 0, 0, 0 },
+    { 0, "irc.mixxnet.net", 0, 0, 0, 0 },
 
-	{"Moznet",		0},
-	{0,			"irc.mozilla.org"},
+    { "Moznet", 0, 0, 0, 0, 0 },
+    { 0, "irc.mozilla.org", 0, 0, 0, 0 },
 	
-	{"ObsidianIRC",  0},
-	{0,      "irc.obsidianirc.net"}, 
+    { "ObsidianIRC", 0, 0, 0, 0, 0 },
+    { 0, "irc.obsidianirc.net", 0, 0, 0, 0 },
 
-	{"Oceanius", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.oceanius.com"},
+	{"Oceanius", 0, 0, 0, LOGIN_SASL, 0},
+    { 0, "irc.oceanius.com", 0, 0, 0, 0 },
 
-	{"OFTC",	0},
-	{0,			"irc.oftc.net"},
+    { "OFTC", 0, 0, 0, 0, 0 },
+    { 0, "irc.oftc.net", 0, 0, 0, 0 },
 
-	{"OtherNet",	0},
-	{0,			"irc.othernet.org"},
+    { "OtherNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.othernet.org", 0, 0, 0, 0 },
 
-	{"OzNet",	0},
-	{0,			"irc.oz.org"},
+    { "OzNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.oz.org", 0, 0, 0, 0 },
 
-	{"PIRC.PL",	0},
-	{0,			"irc.pirc.pl"},
+    { "PIRC.PL", 0, 0, 0, 0, 0 },
+    { 0, "irc.pirc.pl", 0, 0, 0, 0 },
 	
-	{"PonyChat", 0, 0, 0, LOGIN_SASL},
+    { "PonyChat", 0, 0, 0, LOGIN_SASL, 0 },
 #ifdef USE_OPENSSL
-	{0, 		"irc.ponychat.net/+6697"},
+    { 0, "irc.ponychat.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.ponychat.net"},
+    { 0, "irc.ponychat.net", 0, 0, 0, 0 },
 
-	{"PTNet.org",   0},
-	{0,			"irc.PTNet.org"},
-	{0,			"world.PTnet.org"},
-	{0,			"netvisao.PTnet.org"},
-	{0,			"uevora.PTnet.org"},
-	{0,			"vianetworks.PTnet.org"},
-	{0,			"uc.PTnet.org"},
-	{0,			"nfsi.ptnet.org"},
-	{0,			"fctunl.ptnet.org"},
+    { "PTNet.org", 0, 0, 0, 0, 0 },
+    { 0, "irc.PTNet.org", 0, 0, 0, 0 },
+    { 0, "world.PTnet.org", 0, 0, 0, 0 },
+    { 0, "netvisao.PTnet.org", 0, 0, 0, 0 },
+    { 0, "uevora.PTnet.org", 0, 0, 0, 0 },
+    { 0, "vianetworks.PTnet.org", 0, 0, 0, 0 },
+    { 0, "uc.PTnet.org", 0, 0, 0, 0 },
+    { 0, "nfsi.ptnet.org", 0, 0, 0, 0 },
+    { 0, "fctunl.ptnet.org", 0, 0, 0, 0 },
 
-	{"QuakeNet", 0, 0, 0, LOGIN_CHALLENGEAUTH},
-	{0,			"irc.quakenet.org"},
-	{0,			"irc.se.quakenet.org"},
-	{0,			"irc.dk.quakenet.org"},
-	{0,			"irc.no.quakenet.org"},
-	{0,			"irc.fi.quakenet.org"},
-	{0,			"irc.be.quakenet.org"},
-	{0,			"irc.uk.quakenet.org"},
-	{0,			"irc.it.quakenet.org"},
+	{"QuakeNet", 0, 0, 0, LOGIN_CHALLENGEAUTH, 0},
+    { 0, "irc.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.se.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.dk.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.no.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.fi.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.be.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.uk.quakenet.org", 0, 0, 0, 0 },
+    { 0, "irc.it.quakenet.org", 0, 0, 0, 0 },
 
-	{"Rizon", 0},
-	{0,			"irc.rizon.net"},
-
-	{"RusNet", 0, 0, "KOI8-R (Cyrillic)"},
-	{0,			"irc.tomsk.net"},
-	{0,			"irc.run.net"},
-	{0,			"irc.ru"},
-	{0,			"irc.lucky.net"},
-
-	{"SceneNet",	0},
-	{0,			"irc.scene.org"},
-	{0,			"irc.eu.scene.org"},
-	{0,			"irc.us.scene.org"},
-
-	{"SeilEn.de",	0},
-	{0,			"irc.seilen.de"},
-
-	{"SeionIRC", 0, 0, 0, LOGIN_SASL},
+    { "Rizon", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.seion.us/+6697"},
+    { 0, "irc.rizon.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.seion.us"},
-
-	{"Serenity-IRC",	0},
-	{0,			"irc.serenity-irc.net"},
-	{0,			"eu.serenity-irc.net"},
-	{0,			"us.serenity-irc.net"},
-
-	{"SlashNET",	0},
-	{0,			"irc.slashnet.org"},
-	{0,			"area51.slashnet.org"},
-	{0,			"moo.slashnet.org"},
-	{0,			"radon.slashnet.org"},
-
-	{"Snoonet", 0, 0, 0, LOGIN_SASL},
+    { 0, "irc.rizon.net", 0, 0, 0, 0 },
+#ifdef USE_IPV6
 #ifdef USE_OPENSSL
-	{0,			"irc.snoonet.org/+6697"},
+    { 0, "irc6.rizon.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.snoonet.org/6667"},
+    { 0, "irc6.rizon.net", 0, 0, 0, 0 },
+#endif
 
-	{"Snyde", 0},
-	{0,			"irc.snyde.net/6667"},
+	{"RusNet", 0, 0, "KOI8-R (Cyrillic)", 0},
+    { 0, "irc.tomsk.net", 0, 0, 0, 0 },
+    { 0, "irc.run.net", 0, 0, 0, 0 },
+    { 0, "irc.ru", 0, 0, 0, 0 },
+    { 0, "irc.lucky.net", 0, 0, 0, 0 },
 
-	{"Sohbet.Net", 0},
-	{0,			"irc.sohbet.net"},
+    { "SceneNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.scene.org", 0, 0, 0, 0 },
+    { 0, "irc.eu.scene.org", 0, 0, 0, 0 },
+    { 0, "irc.us.scene.org", 0, 0, 0, 0 },
 
-	{"SolidIRC", 0},
-	{0,			"irc.solidirc.com"},
+    { "SeilEn.de", 0, 0, 0, 0, 0 },
+    { 0, "irc.seilen.de", 0, 0, 0, 0 },
 
-	{"SorceryNet", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.sorcery.net/9000"},
-	{0,			"irc.us.sorcery.net/9000"},
-	{0,			"irc.eu.sorcery.net/9000"},
+	{"SeionIRC", 0, 0, 0, LOGIN_SASL, 0},
+#ifdef USE_OPENSSL
+    { 0, "irc.seion.us/+6697", 0, 0, 0, 0 },
+#endif
+    { 0, "irc.seion.us", 0, 0, 0, 0 },
+
+    { "Serenity-IRC", 0, 0, 0, 0, 0 },
+    { 0, "irc.serenity-irc.net", 0, 0, 0, 0 },
+    { 0, "eu.serenity-irc.net", 0, 0, 0, 0 },
+    { 0, "us.serenity-irc.net", 0, 0, 0, 0 },
+
+    { "SlashNET", 0, 0, 0, 0, 0 },
+    { 0, "irc.slashnet.org", 0, 0, 0, 0 },
+    { 0, "area51.slashnet.org", 0, 0, 0, 0 },
+    { 0, "moo.slashnet.org", 0, 0, 0, 0 },
+    { 0, "radon.slashnet.org", 0, 0, 0, 0 },
+
+	{"Snoonet", 0, 0, 0, LOGIN_SASL, 0},
+#ifdef USE_OPENSSL
+    { 0, "irc.snoonet.org/+6697", 0, 0, 0, 0 },
+#endif
+    { 0, "irc.snoonet.org/6667", 0, 0, 0, 0 },
+
+    { "Snyde", 0, 0, 0, 0, 0 },
+    { 0, "irc.snyde.net/6667", 0, 0, 0, 0 },
+
+    { "Sohbet.Net", 0, 0, 0, 0, 0 },
+    { 0, "irc.sohbet.net", 0, 0, 0, 0 },
+
+    { "SolidIRC", 0, 0, 0, 0, 0 },
+    { 0, "irc.solidirc.com", 0, 0, 0, 0 },
+
+	{"SorceryNet", 0, 0, 0, LOGIN_SASL, 0},
+    { 0, "irc.sorcery.net/9000", 0, 0, 0, 0 },
+    { 0, "irc.us.sorcery.net/9000", 0, 0, 0, 0 },
+    { 0, "irc.eu.sorcery.net/9000", 0, 0, 0, 0 },
 	
-	{"SpotChat", 0, 0, 0, LOGIN_SASL},
+	{"SpotChat", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.spotchat.org/+6697"},
+    { 0, "irc.spotchat.org/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.spotchat.org/6667"},
+    { 0, "irc.spotchat.org/6667", 0, 0, 0, 0 },
 
-	{"StarChat", 0},
-	{0,			"irc.starchat.net"},
-	{0,			"gainesville.starchat.net"},
-	{0,			"freebsd.starchat.net"},
-	{0,			"sunset.starchat.net"},
-	{0,			"revenge.starchat.net"},
-	{0,			"tahoma.starchat.net"},
-	{0,			"neo.starchat.net"},
+    { "StarChat", 0, 0, 0, 0, 0 },
+    { 0, "irc.starchat.net", 0, 0, 0, 0 },
+    { 0, "gainesville.starchat.net", 0, 0, 0, 0 },
+    { 0, "freebsd.starchat.net", 0, 0, 0, 0 },
+    { 0, "sunset.starchat.net", 0, 0, 0, 0 },
+    { 0, "revenge.starchat.net", 0, 0, 0, 0 },
+    { 0, "tahoma.starchat.net", 0, 0, 0, 0 },
+    { 0, "neo.starchat.net", 0, 0, 0, 0 },
 
-	{"StaticBox", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.staticbox.net"},
+	{"StaticBox", 0, 0, 0, LOGIN_SASL, 0},
+    { 0, "irc.staticbox.net", 0, 0, 0, 0 },
 
-	{"Station51", 0},
+    { "Station51", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.station51.net/+6697"},
+    { 0, "irc.station51.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.station51.net"},
+    { 0, "irc.station51.net", 0, 0, 0, 0 },
 
-	{"StormBit", 0, 0, 0, LOGIN_SASL},
+	{"StormBit", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.stormbit.net/+6697"},
+    { 0, "irc.stormbit.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.stormbit.net"},
+    { 0, "irc.stormbit.net", 0, 0, 0, 0 },
 
-	{"SwiftIRC", 0},
+    { "SwiftIRC", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.swiftirc.net/+6697"},
+    { 0, "irc.swiftirc.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.swiftirc.net/6667"},
+    { 0, "irc.swiftirc.net/6667", 0, 0, 0, 0 },
 
-	{"synIRC", 0},
+    { "synIRC", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0, "irc.synirc.net/+6697"},
+    { 0, "irc.synirc.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0, "irc.synirc.net/6667"},
+    { 0, "irc.synirc.net/6667", 0, 0, 0, 0 },
 
-	{"Techman's World IRC",	0, 0, 0, LOGIN_SASL},
+	{"Techman's World IRC",	0, 0, 0, LOGIN_SASL,0},
 #ifdef USE_OPENSSL
-	{0,			"irc.techmansworld.com/+6697"},
+    { 0, "irc.techmansworld.com/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.techmansworld.com/6667"},
+    { 0, "irc.techmansworld.com/6667", 0, 0, 0, 0 },
 
-	{"TinyCrab", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.tinycrab.net"},
+	{"TinyCrab", 0, 0, 0, LOGIN_SASL, 0},
+    { 0, "irc.tinycrab.net", 0, 0, 0, 0 },
 
-	{"TURLINet",			0},
-	{0,			"irc.turli.net"},
-	{0,			"irc.servx.ru"},
-	{0,			"irc.gavnos.ru"},
+    { "TURLINet", 0, 0, 0, 0, 0 },
+    { 0, "irc.turli.net", 0, 0, 0, 0 },
+    { 0, "irc.servx.ru", 0, 0, 0, 0 },
+    { 0, "irc.gavnos.ru", 0, 0, 0, 0 },
 
 	{"UnderNet", 0, 0, 0, LOGIN_CUSTOM, "MSG x@channels.undernet.org login %u %p"},
-	{0,			"us.undernet.org"},
+    { 0, "us.undernet.org", 0, 0, 0, 0 },
 
 	{"UniBG", 0, 0, 0, LOGIN_CUSTOM, "MSG NS IDENTIFY %p"},
-	{0,			"irc.lirex.com"},
-	{0,			"irc.naturella.com"},
-	{0,			"irc.techno-link.com"},
+    { 0, "irc.lirex.com", 0, 0, 0, 0 },
+    { 0, "irc.naturella.com", 0, 0, 0, 0 },
+    { 0, "irc.techno-link.com", 0, 0, 0, 0 },
 	
-	{"ValleyNode", 0, 0, 0, LOGIN_SASL},
-	{0,			"irc.valleynode.net"},
+	{"ValleyNode", 0, 0, 0, LOGIN_SASL,0},
+    { 0, "irc.valleynode.net", 0, 0, 0, 0 },
 
-	{"Worldnet",		0},
-	{0,			"irc.worldnet.net"},
+    { "Worldnet", 0, 0, 0, 0, 0 },
+    { 0, "irc.worldnet.net", 0, 0, 0, 0 },
 
-	{"Windfyre",		0},
+    { "Windfyre", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
-	{0,			"irc.windfyre.net/+6697"},
+    { 0, "irc.windfyre.net/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.windfyre.net"},
+    { 0, "irc.windfyre.net", 0, 0, 0, 0 },
 
-	{"Xertion", 0, 0, 0, LOGIN_SASL},
+	{"Xertion", 0, 0, 0, LOGIN_SASL, 0},
 #ifdef USE_OPENSSL
-	{0,			"irc.xertion.org/+6697"},
+    { 0, "irc.xertion.org/+6697", 0, 0, 0, 0 },
 #endif
-	{0,			"irc.xertion.org"},
+    { 0, "irc.xertion.org", 0, 0, 0, 0 },
 
-	{0,0}
+    { 0, 0, 0, 0, 0, 0 }
 };
 
 GSList *network_list = 0;
