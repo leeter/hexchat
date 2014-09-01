@@ -36,6 +36,7 @@
     <ClInclude Include="server.hpp" />
     <ClInclude Include="servlist.hpp" />
     <ClInclude Include="ssl.hpp" />
+    <ClInclude Include="tcp_connection.hpp" />
     <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
     <ClInclude Include="textevents.h" />
@@ -69,6 +70,7 @@
     <ClCompile Include="server.cpp" />
     <ClCompile Include="servlist.cpp" />
     <ClCompile Include="ssl.cpp" />
+    <ClCompile Include="tcp_connection.cpp" />
     <ClCompile Include="text.cpp" />
     <ClCompile Include="tree.cpp" />
     <ClCompile Include="url.cpp" />

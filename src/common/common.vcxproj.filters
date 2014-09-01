@@ -113,6 +113,9 @@
     <ClInclude Include="chanopt.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tcp_connection.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">
@@ -191,6 +194,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="msproxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tcp_connection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
