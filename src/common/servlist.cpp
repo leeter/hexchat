@@ -128,7 +128,7 @@ static const struct defaultserver def[] =
 #endif
     { 0, "irc.canternet.org", 0, 0, 0, 0 },
 
-	{"Chat4all", 0},
+    { "Chat4all", 0, 0, 0, 0, 0 },
 #ifdef USE_OPENSSL
     { 0, "irc.chat4all.org/+7001", 0, 0, 0, 0 },
 #endif
@@ -239,8 +239,8 @@ static const struct defaultserver def[] =
 #endif
     { 0, "irc.furnet.org", 0, 0, 0, 0 },
 
-	{"GalaxyNet",	0},
-	{0,			"irc.galaxynet.org"},
+    { "GalaxyNet", 0, 0, 0, 0, 0 },
+    { 0, "irc.galaxynet.org", 0, 0, 0, 0 },
 
     { "GameSurge", 0, 0, 0, 0, 0 },
     { 0, "irc.gamesurge.net", 0, 0, 0, 0 },
@@ -262,7 +262,7 @@ static const struct defaultserver def[] =
     { 0, "irc.gimp.org", 0, 0, 0, 0 },
     { 0, "irc.gnome.org", 0, 0, 0, 0 },
 
-	{"Hashmark",	0},
+    { "Hashmark", 0, 0, 0, 0, 0 },
     { 0, "irc.hashmark.net", 0, 0, 0, 0 },
 
     { "IdleMonkeys", 0, 0, 0, 0, 0 },
