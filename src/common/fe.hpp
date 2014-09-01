@@ -141,7 +141,7 @@ typedef enum {
 	FE_GUI_ICONIFY,
 	FE_GUI_MENU,
 	FE_GUI_ATTACH,
-	FE_GUI_APPLY,
+	FE_GUI_APPLY
 } fe_gui_action;
 void fe_ctrl_gui (session *sess, fe_gui_action action, int arg);
 int fe_gui_info (session *sess, int info_type);
