@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <queue>
 #include <utility>
 #include <boost/bind.hpp>
 #include "tcp_connection.hpp"
@@ -41,8 +42,8 @@ namespace{
     public:
         ~basic_connection(){}
         template<class... Types_>
-        basic_connection(std::shared_ptr<context>& ctx, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, Types_&& ... args)
-            :ctx_(ctx), socket_(std::forward<Types_>(args)...)
+        basic_connection(std::shared_ptr<context>& ctx, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, boost::asio::io_service & service, Types_&& ... args)
+            :ctx_(ctx), socket_(service, std::forward<Types_>(args)...), strand_(service)
         {
             boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
             socket_.lowest_layer().async_connect(endpoint,
@@ -60,23 +61,44 @@ namespace{
         void handle_write(const boost::system::error_code& error,
             size_t bytes_transferred);
 
-        boost::optional<std::string> get_next_message() const;
-        void pop_output_queue();
-        boost::asio::streambuf input_buffer_;
+        void write_impl(const std::string& message);
+        void write();
     private:
+        boost::asio::streambuf input_buffer_;
         std::shared_ptr<context> ctx_;
         std::queue<std::string> outbound_queue_;
+        boost::asio::strand strand_;
         SocketType_ socket_;
+    };
 
-        friend std::unique_ptr<connection>
-        connection::create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner);
-    };        
+    template<class SocketType_>
+    void
+    basic_connection<SocketType_>::write_impl(const std::string & message)
+    {
+        this->outbound_queue_.push(message);
+        // return if we have a pending write
+        if (this->outbound_queue_.size() > 1)
+            return;
+        this->write();
+    }
+
+    template<class SocketType_>
+    void
+    basic_connection<SocketType_>::write()
+    {
+        const std::string& message = this->outbound_queue_.front();
+        boost::asio::async_write(socket_,
+            boost::asio::buffer(message),
+            boost::bind(&basic_connection::handle_write, this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
+    }
 
     template<class SocketType_>
     void
     basic_connection<SocketType_>::enqueue_message(const std::string & message)
     {
-        this->outbound_queue_.push(message);
+        this->strand_.post(std::bind(std::mem_fn(&basic_connection::write_impl), this, message));
     }
 
     template<class SocketType_>
@@ -127,8 +149,26 @@ namespace{
     basic_connection<SocketType_>::handle_write(const boost::system::error_code& error,
         size_t bytes_transferred)
     {
+        if (error)
+        {
+            // TODO: print error to session
+            return;
+        }
+        this->outbound_queue_.pop();
+        if (!this->outbound_queue_.empty()){
+            this->write();
+        }
+       
+    }
+
+    template<class SocketType_>
+    void
+    basic_connection<SocketType_>::handle_read(const boost::system::error_code& error,
+        size_t bytes_transferred)
+    {
         if (!error)
         {
+            // TODO: push read to server
             boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
                 boost::bind(&basic_connection::handle_read, this,
                 boost::asio::placeholders::error,
@@ -139,31 +179,6 @@ namespace{
             // TODO: print error to session
         }
     }
-
-    template<class SocketType_>
-    void
-    basic_connection<SocketType_>::handle_read(const boost::system::error_code& error,
-        size_t bytes_transferred)
-    {
-        if (!error)
-        {
-            auto next_message = this->get_next_message();
-            if (!next_message)
-                return;
-
-            boost::asio::async_write(socket_,
-                boost::asio::buffer(next_message.get()),
-                boost::bind(&basic_connection::handle_write, this,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
-            // TODO: push read to server
-        }
-        else
-        {
-            // TODO: print error to session
-        }
-    }
-
 }
 
 typedef basic_connection < boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > ssl_connection;

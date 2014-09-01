@@ -22,11 +22,9 @@
 
 #include <functional>
 #include <memory>
-#include <queue>
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <boost/optional.hpp>
 
 #include "hexchat.hpp"
 
