@@ -254,7 +254,7 @@ namespace io{
         {
             if (security == connection_security::enforced || security == connection_security::no_verify)
             {
-                auto ctx = std::make_shared<context>(io_service, security == connection_security::enforced ? boost::asio::ssl::verify_peer : boost::asio::ssl::verify_none);
+                auto ctx = std::make_shared<context>(io_service, 0);
                 return std::make_shared<ssl_connection>(ctx, io_service, ctx->ssl_ctx);
             }
             return std::make_shared<tcp_connection>(io_service);
