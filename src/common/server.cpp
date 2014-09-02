@@ -33,12 +33,11 @@
 #include <cstdarg>
 #include <cerrno>
 #include <fcntl.h>
+#include <boost/asio.hpp>
 
 #define WANTSOCKET
 #define WANTARPA
-extern "C"{
 #include "inet.hpp"
-}
 
 #ifdef WIN32
 #include <winbase.h>

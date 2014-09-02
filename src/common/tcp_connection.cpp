@@ -25,8 +25,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
-#include "fe.hpp"
-#include "hexchat.hpp"
 
 boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port)
 {
@@ -226,7 +224,7 @@ namespace{
     {
         if (!error)
         {
-            std::istream stream(input_buffer_);
+            std::istream stream(&input_buffer_);
             for (std::string message; std::getline(stream, message))
                 this->on_message(message);
             
