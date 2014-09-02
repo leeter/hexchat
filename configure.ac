@@ -167,6 +167,8 @@ AC_ARG_WITH(theme-manager,
 BOOST_REQUIRE([1.46])
 BOOST_IOSTREAMS
 BOOST_FILESYSTEM
+BOOST_SIGNALS2
+BOOST_ASIO
 
 
 dnl *********************************************************************

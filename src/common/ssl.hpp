@@ -53,8 +53,8 @@ char *_SSL_set_verify(SSL_CTX *ctx, int(*verify_callback)(int, X509_STORE_CTX*),
 */
 void _SSL_close (SSL * ssl);
 
-int _SSL_get_cert_info (cert_info &cert_info, SSL * ssl);
-struct chiper_info *_SSL_get_cipher_info (SSL * ssl);
+int _SSL_get_cert_info (cert_info &cert_info, const SSL * ssl);
+struct chiper_info *_SSL_get_cipher_info (const SSL * ssl);
 
 /*char *_SSL_add_keypair (SSL_CTX *ctx, char *privkey, char *cert);*/
 /*void _SSL_add_random_keypair(SSL_CTX *ctx, int bits);*/

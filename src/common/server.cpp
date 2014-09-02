@@ -681,6 +681,70 @@ ssl_cb_info (const SSL * s, int where, int ret)
 		fprintf (stderr, "%s\n", buf);*/
 }
 
+static void
+ssl_print_cert_info(server *serv, const SSL* ctx)
+{
+    char buf[512];
+    cert_info cert_info = { 0 };
+    struct chiper_info *chiper_info;
+    int verify_error;
+
+    if (!_SSL_get_cert_info(cert_info, ctx))
+    {
+        snprintf(buf, sizeof(buf), "* Certification info:");
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+        snprintf(buf, sizeof(buf), "  Subject:");
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+        for (int i = 0; cert_info.subject_word[i]; i++)
+        {
+            snprintf(buf, sizeof(buf), "    %s", cert_info.subject_word[i]);
+            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+                nullptr, 0);
+        }
+        snprintf(buf, sizeof(buf), "  Issuer:");
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+        for (int i = 0; cert_info.issuer_word[i]; i++)
+        {
+            snprintf(buf, sizeof(buf), "    %s", cert_info.issuer_word[i]);
+            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+                nullptr, 0);
+        }
+        snprintf(buf, sizeof(buf), "  Public key algorithm: %s (%d bits)",
+            cert_info.algorithm, cert_info.algorithm_bits);
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+        /*if (cert_info.rsa_tmp_bits)
+        {
+        snprintf (buf, sizeof (buf),
+        "  Public key algorithm uses ephemeral key with %d bits",
+        cert_info.rsa_tmp_bits);
+        EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
+        NULL, 0);
+        }*/
+        snprintf(buf, sizeof(buf), "  Sign algorithm %s",
+            cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+        snprintf(buf, sizeof(buf), "  Valid since %s to %s",
+            cert_info.notbefore, cert_info.notafter);
+        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+    }
+
+    chiper_info = _SSL_get_cipher_info(ctx);	/* static buffer */
+    snprintf(buf, sizeof(buf), "* Cipher info:");
+    EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+        0);
+    snprintf(buf, sizeof(buf), "  Version: %s, cipher %s (%u bits)",
+        chiper_info->version, chiper_info->chiper,
+        chiper_info->chiper_bits);
+    EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+        0);
+}
+
 static int
 ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
 {
@@ -1765,6 +1829,7 @@ server::connect (char *hostname, int port, bool no_login)
     this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str(), sizeof(this->servername)); });
     this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
     this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
+    this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
     this->server_connection->connect(resolved);
     
     this->reset_to_defaults();

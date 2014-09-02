@@ -142,7 +142,7 @@ broke_oneline (char *oneline, char *parray[])
 	    (openssl x509 -text -in servcert.pem)
 */
 int
-_SSL_get_cert_info (cert_info &cert_info, SSL * ssl)
+_SSL_get_cert_info (cert_info &cert_info, const SSL * ssl)
 {
 	X509 *peer_cert;
 	EVP_PKEY *peer_pkey;
@@ -202,7 +202,7 @@ _SSL_get_cert_info (cert_info &cert_info, SSL * ssl)
 
 
 struct chiper_info *
-_SSL_get_cipher_info (SSL * ssl)
+_SSL_get_cipher_info (const SSL * ssl)
 {
 	const SSL_CIPHER *c;
 

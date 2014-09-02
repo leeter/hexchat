@@ -70,7 +70,7 @@ libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp hexchat.c
 	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp server.cpp servlist.cpp \
 	$(ssl_c) tcp_connection.cpp text.cpp tree.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
-libhexchatcommon_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS)
+libhexchatcommon_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
 
 textenums.h: textevents.h
 
