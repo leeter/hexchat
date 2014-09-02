@@ -62,13 +62,17 @@ net_ip (guint32 addr)
 	return inet_ntoa (ia);
 }
 
+netstore::~netstore()
+{
+#ifdef USE_IPV6
+    if (this->ip6_hostent)
+        freeaddrinfo(this->ip6_hostent);
+#endif
+}
+
 void
 net_store_destroy (netstore * ns)
 {
-#ifdef USE_IPV6
-	if (ns->ip6_hostent)
-		freeaddrinfo (ns->ip6_hostent);
-#endif
 	delete (ns);
 }
 
@@ -77,7 +81,7 @@ net_store_new (void)
 {
 	netstore *ns;
 
-	ns = new(std::nothrow) netstore();// calloc(1, sizeof(netstore));
+	ns = new netstore();// calloc(1, sizeof(netstore));
 
 	return ns;
 }
