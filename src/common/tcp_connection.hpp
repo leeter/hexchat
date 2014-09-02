@@ -1,6 +1,5 @@
 /* HexChat
-* Copyright (C) 1998-2010 Peter Zelezny.
-* Copyright (C) 2009-2013 Berke Viktor.
+* Copyright (C) 2014 Berke Viktor.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -24,7 +23,7 @@
 #include <memory>
 #include <string>
 #include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
+#include <boost/signals2.hpp>
 
 struct context;
 struct server;
@@ -37,9 +36,16 @@ enum class connection_security{
 
 class connection{
 public:
-    static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator, server& owner );
+    static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
     virtual void enqueue_message(const std::string & message) = 0;
+    virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
     virtual ~connection(){}
+    boost::signals2::signal<void(const boost::system::error_code&)> on_connect;
+    boost::signals2::signal<void(const boost::system::error_code&)> on_error;
+    boost::signals2::signal<void(const std::string & message)> on_message;
+    boost::signals2::signal<void(const SSL*)> on_ssl_handshakecomplete;
 };
+
+boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
 
 #endif
