@@ -225,7 +225,7 @@ namespace{
         if (!error)
         {
             std::istream stream(&input_buffer_);
-            for (std::string message; std::getline(stream, message))
+            for (std::string message; std::getline(stream, message);)
                 this->on_message(message);
             
             boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",

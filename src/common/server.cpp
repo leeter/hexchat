@@ -93,6 +93,8 @@ static struct session *g_sess = nullptr;
 static GSList *away_list = nullptr;
 GSList *serv_list = nullptr;
 
+static boost::asio::io_service io_service;
+
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
 #endif
