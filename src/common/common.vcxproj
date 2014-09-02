@@ -16,6 +16,7 @@
   <ItemGroup>
     <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.hpp" />
+    <ClInclude Include="charset_helpers.hpp" />
     <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />
@@ -52,6 +53,7 @@
   <ItemGroup>
     <ClCompile Include="cfgfiles.cpp" />
     <ClCompile Include="chanopt.cpp" />
+    <ClCompile Include="charset_helpers.cpp" />
     <ClCompile Include="ctcp.cpp" />
     <ClCompile Include="dcc.cpp" />
     <ClCompile Include="history.cpp" />

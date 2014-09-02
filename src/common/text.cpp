@@ -46,6 +46,7 @@
 #include "outbound.hpp"
 #include "hexchatc.hpp"
 #include "text.hpp"
+#include "charset_helpers.hpp"
 #include "typedef.h"
 
 #ifdef WIN32
@@ -2299,9 +2300,7 @@ sound_play (const char *file, gboolean quiet)
 	if (g_access (wavfile, R_OK) == 0)
 	{
 #ifdef WIN32
-		std::wostringstream path;
-		path << wavfile;
-		PlaySoundW (path.str().c_str(), NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
+		PlaySoundW (charset::widen(wavfile).c_str(), NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
 #else
 #ifdef USE_LIBCANBERRA
 		if (ca_con == NULL)
