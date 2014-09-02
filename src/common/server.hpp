@@ -21,11 +21,12 @@
 #define HEXCHAT_SERVER_HPP
 
 extern GSList *serv_list;
+struct server;
 
 /* eventually need to keep the tcp_* functions isolated to server.c */
 int tcp_send_len (server *serv, const char *buf, int len);
 void tcp_sendf (server *serv, const char *fmt, ...) G_GNUC_PRINTF (2, 3);
-int tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len);
+int tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server *);
 
 server *server_new (void);
 bool is_server (server *serv);

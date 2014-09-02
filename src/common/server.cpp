@@ -63,6 +63,7 @@
 #include "servlist.hpp"
 #include "server.hpp"
 #include "dcc.hpp"
+#include "tcp_connection.hpp"
 
 namespace dcc = ::hexchat::dcc;
 
@@ -103,7 +104,7 @@ extern pxProxyFactory *libproxy_factory;
    send via SSL. server/dcc both use this function. */
 
 int
-tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len)
+tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server * serv)
 {
 	int ret;
 	char *locale;
@@ -133,6 +134,8 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 
 	if (locale)
 	{
+        serv->server_connection->enqueue_message(locale);
+#if 0
 		len = loc_len;
 #ifdef USE_OPENSSL
 		if (!ssl)
@@ -142,9 +145,12 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 #else
 		ret = send (sok, locale, len, 0);
 #endif
+#endif
 		g_free (locale);
 	} else
 	{
+        serv->server_connection->enqueue_message(buf);
+#if 0
 #ifdef USE_OPENSSL
 		if (!ssl)
 			ret = send (sok, buf, len, 0);
@@ -152,6 +158,7 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 			ret = _SSL_send (static_cast<SSL*>(ssl), buf, len);
 #else
 		ret = send (sok, buf, len, 0);
+#endif
 #endif
 	}
 
@@ -164,9 +171,9 @@ server_send_real (server *serv, const char *buf, int len)
 	fe_add_rawlog (serv, buf, len, TRUE);
 
 	url_check_line (buf, len);
-
+    
 	return tcp_send_real (serv->ssl, serv->sok, serv->encoding ? serv->encoding->c_str() : nullptr, serv->using_irc,
-								 buf, len);
+								 buf, len, serv);
 }
 
 /* new throttling system, uses the same method as the Undernet
@@ -417,6 +424,32 @@ server_inline (server *serv, char *line, int len)
 }
 
 /* read data from socket */
+static void 
+server_read_cb(server * serv, const std::string & message, size_t length)
+{
+    for (int i = 0; i < length; ++i)
+    {
+        switch (message[i])
+        {
+        case '\r':
+            break;
+
+        case '\n':
+            serv->linebuf[serv->pos] = 0;
+            server_inline(serv, serv->linebuf, serv->pos);
+            serv->pos = 0;
+            break;
+
+        default:
+            serv->linebuf[serv->pos] = message[i];
+            if (serv->pos >= (sizeof(serv->linebuf) - 1))
+                fprintf(stderr,
+                "*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
+            else
+                serv->pos++;
+        }
+    }
+}
 
 static gboolean
 server_read (GIOChannel *source, GIOCondition condition, server *serv)
@@ -493,6 +526,44 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 }
 
 static void
+server_connected1(server * serv, const boost::system::error_code & error)
+{
+    prefs.wait_on_exit = TRUE;
+    serv->ping_recv = time(0);
+    serv->lag_sent = 0;
+    serv->connected = true;
+    if (!serv->no_login)
+    {
+        EMIT_SIGNAL(XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
+            nullptr, 0);
+        if (serv->network)
+        {
+            ircnet* net = serv->network;
+            serv->p_login((!(net->flags & FLAG_USE_GLOBAL) &&
+                (net->user)) ?
+                (net->user) :
+                prefs.hex_irc_user_name,
+                (!(net->flags & FLAG_USE_GLOBAL) &&
+                (net->real)) ?
+                (net->real) :
+                prefs.hex_irc_real_name);
+        }
+        else
+        {
+            serv->p_login(prefs.hex_irc_user_name, prefs.hex_irc_real_name);
+        }
+    }
+    else
+    {
+        EMIT_SIGNAL(XP_TE_SERVERCONNECTED, serv->server_session, nullptr, nullptr,
+            nullptr, nullptr, 0);
+    }
+
+    serv->set_name(serv->servername);
+    fe_server_event(serv, FE_SE_CONNECT, 0);
+}
+
+static void
 server_connected (server * serv)
 {
 	prefs.wait_on_exit = TRUE;
@@ -535,8 +606,8 @@ server_connected (server * serv)
 static gboolean
 server_close_pipe (int *pipefd)	/* see comments below */
 {
-	close (pipefd[0]);	/* close WRITE end first to cause an EOF on READ */
-	close (pipefd[1]);	/* in giowin32, and end that thread. */
+//	close (pipefd[0]);	/* close WRITE end first to cause an EOF on READ */
+//	close (pipefd[1]);	/* in giowin32, and end that thread. */
 	free (pipefd);
 	return FALSE;
 }
@@ -1670,13 +1741,42 @@ xit:
 	/* cppcheck-suppress memleak */
 }
 
+static int
+io_poll(void*){
+    io_service.poll();
+    return TRUE;
+}
+
+void server_error(server * serv, const boost::system::error_code & error)
+{
+    PrintText(serv->front_session, error.message());
+}
+
+
 void
 server::connect (char *hostname, int port, bool no_login)
 {
 	int read_des[2] = { 0 };
 	unsigned int pid;
 	session *sess = this->server_session;
+    auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
+    this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
+    this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
+    this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str(), sizeof(this->servername)); });
+    this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
+    this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
+    this->server_connection->connect(resolved);
+    
+    this->reset_to_defaults();
+    this->connecting = true;
+    this->port = port;
+    this->no_login = no_login;
 
+    fe_server_event (this, FE_SE_CONNECTING, 0);
+    fe_set_away (this);
+    this->flush_queue ();
+    fe_timeout_add(50, (GSourceFunc)&io_poll, nullptr);
+#if 0
 #ifdef USE_OPENSSL
 	if (!ctx && this->use_ssl)
 	{
@@ -1808,6 +1908,7 @@ server::connect (char *hostname, int port, bool no_login)
 	this->iotag = fe_input_add (this->childread, FIA_READ, (GIOFunc)server_read_child,
 #endif
 										 this);
+#endif
 }
 
 void

@@ -468,7 +468,12 @@ enum class server_cleanup_result{
 
 struct ircnet;
 struct favchannel;
-struct connection;
+
+namespace io{
+    namespace tcp{
+        class connection;
+    }
+}
 
 struct server
 {
@@ -534,7 +539,7 @@ public:
 	int proxy_sok6;
 	struct msproxy_state_t msp_state;
 	int id;					/* unique ID number (for plugin API) */
-    std::shared_ptr<connection> server_connection;
+    std::shared_ptr<io::tcp::connection> server_connection;
 #ifdef USE_OPENSSL
 	SSL *ssl;
 	int ssl_do_connect_tag;

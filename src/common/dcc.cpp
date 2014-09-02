@@ -2032,7 +2032,7 @@ dcc_write_chat (char *nick, char *text)
 	{
 		len = strlen (text);
 		tcp_send_real (NULL, dcc->sok, dcc->serv->encoding->c_str(), dcc->serv->using_irc,
-							text, len);
+							text, len, nullptr);
 		send (dcc->sok, "\n", 1, 0);
 		dcc->size += len;
 		::fe::fe_dcc_update (dcc);

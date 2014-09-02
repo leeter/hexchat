@@ -16,6 +16,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#include <algorithm>
 #include <istream>
 #include <memory>
 #include <queue>
@@ -26,33 +27,27 @@
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
 
-boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port)
-{
-    boost::asio::ip::tcp::resolver::query query(host, std::to_string(port));
-    boost::asio::ip::tcp::resolver res(io_service);
-    return res.resolve(query);
-}
-
-struct context{
-    context(boost::asio::io_service& io_service, boost::asio::ssl::context::verify_mode mode)
-        :ssl_ctx(io_service, boost::asio::ssl::context::sslv23)
-    {
-        ssl_ctx.set_verify_mode(mode);
-    }
-
-    boost::asio::ssl::context ssl_ctx;
-};
-
 namespace{
 
+    struct context{
+        context(boost::asio::io_service& io_service, boost::asio::ssl::context::verify_mode mode)
+            :ssl_ctx(io_service, boost::asio::ssl::context::sslv23)
+        {
+            ssl_ctx.set_verify_mode(mode);
+        }
+
+        boost::asio::ssl::context ssl_ctx;
+    };
+
     template<class SocketType_>
-    struct basic_connection : public connection
+    struct basic_connection : public io::tcp::connection
     {
         virtual ~basic_connection(){}
         template<class... Types_>
         basic_connection(boost::asio::io_service & service, Types_&& ... args)
-            :socket_(service, std::forward<Types_>(args)...), strand_(service)
-        {            
+            :message_(4096, '\0'), socket_(service, std::forward<Types_>(args)...), strand_(service)
+        {
+            input_buffer_.commit(4092);
         }
 
         basic_connection(){};
@@ -83,6 +78,7 @@ namespace{
             }
             else
             {
+                this->on_valid_connection(endpoint_iterator->host_name());
                 this->handle_connect(error, endpoint_iterator);
             }
         }
@@ -96,6 +92,7 @@ namespace{
         void write_impl(const std::string& message);
         void write();
 
+        std::string message_;
         boost::asio::streambuf input_buffer_;
         std::queue<std::string> outbound_queue_;
         SocketType_ socket_;
@@ -166,6 +163,7 @@ namespace{
 
                 // callback to allow for printing of cipher info
                 this->on_ssl_handshakecomplete(socket_.impl()->ssl);
+                this->on_connect(error);
             }
             else
             {
@@ -195,7 +193,7 @@ namespace{
                 boost::bind(&basic_connection::handle_read, this,
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
-            // print something
+            this->on_connect(error);
         }
     };
 
@@ -225,8 +223,9 @@ namespace{
         if (!error)
         {
             std::istream stream(&input_buffer_);
-            for (std::string message; std::getline(stream, message);)
-                this->on_message(message);
+            size_t to_read = std::min(message_.size(), bytes_transferred);
+            stream.read(&message_[0], to_read);
+            this->on_message(message_, to_read);
             
             boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
                 boost::bind(&basic_connection::handle_read, this,
@@ -240,14 +239,26 @@ namespace{
     }
 }
 
-std::shared_ptr<connection>
-connection::create_connection(connection_security security, boost::asio::io_service& io_service)
-{
-    if (security == connection_security::enforced || security == connection_security::no_verify)
-    {
-        auto ctx = std::make_shared<context>(io_service, security == connection_security::enforced ? boost::asio::ssl::context::verify_peer : boost::asio::ssl::context::verify_none);
-        return std::make_shared<ssl_connection>(ctx, io_service, ctx->ssl_ctx);
+namespace io{
+    namespace tcp{
+
+        boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port)
+        {
+            boost::asio::ip::tcp::resolver::query query(host, std::to_string(port));
+            boost::asio::ip::tcp::resolver res(io_service);
+            return res.resolve(query);
+        }
+
+        std::shared_ptr<connection>
+            connection::create_connection(connection_security security, boost::asio::io_service& io_service)
+        {
+            if (security == connection_security::enforced || security == connection_security::no_verify)
+            {
+                auto ctx = std::make_shared<context>(io_service, security == connection_security::enforced ? boost::asio::ssl::context::verify_peer : boost::asio::ssl::context::verify_none);
+                return std::make_shared<ssl_connection>(ctx, io_service, ctx->ssl_ctx);
+            }
+            return std::make_shared<tcp_connection>(io_service);
+        }
     }
-    return std::make_shared<tcp_connection>(io_service);
 }
 
