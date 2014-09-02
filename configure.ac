@@ -169,6 +169,7 @@ BOOST_IOSTREAMS
 BOOST_FILESYSTEM
 BOOST_SIGNALS2
 BOOST_ASIO
+BOOST_THREAD
 
 
 dnl *********************************************************************

@@ -4,7 +4,7 @@ bin_PROGRAMS = hexchat
 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\"
 
-hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
+hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS)
 
 EXTRA_DIST = \
 	ascii.hpp banlist.hpp chanlist.hpp chanview.hpp \
@@ -32,8 +32,8 @@ hexchat_SOURCES = ascii.cpp banlist.cpp chanlist.cpp chanview.cpp custom-list.cp
 	rawlog.cpp resources.c servlistgui.cpp setup.cpp $(iso_codes_c) \
 	sexy-spell-entry.cpp textgui.cpp urlgrab.cpp userlistgui.cpp xtext.cpp
 hexchat_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_builddir)/src/common
-hexchat_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_IOSTREAMS_LDFLAGS) $(BOOST_SYSTEM_LDFLAGS) $(BOOST_ASIO_LDFLAGS) $(BOOST_SIGNALS2_LDFLAGS)
-hexchat_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
+hexchat_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_IOSTREAMS_LDFLAGS) $(BOOST_SYSTEM_LDFLAGS) $(BOOST_ASIO_LDFLAGS) $(BOOST_SIGNALS2_LDFLAGS) $(BOOST_THREAD_LDFLAGS)
+hexchat_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS)
 
 resources.c: $(top_srcdir)/data/hexchat.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(top_srcdir)/data --generate-dependencies $(top_srcdir)/data/hexchat.gresource.xml)
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(top_srcdir)/data --generate-source $<
