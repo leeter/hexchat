@@ -1519,7 +1519,7 @@ handle_message_tags (server *serv, const char *tags_str,
 void
 server::p_inline (char *buf, int len)
 {
-	session *sess, *tmp;
+	session *sess;
 	char *type, *text;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
@@ -1561,9 +1561,9 @@ server::p_inline (char *buf, int len)
 		/* find a context for this message */
 		if (is_channel (this, word[3]))
 		{
-			tmp = find_channel (this, word[3]);
+			auto tmp = find_channel (word[3]);
 			if (tmp)
-				sess = tmp;
+				sess = &(*tmp);
 		}
 
 		/* for server messages, the 2nd word is the "message type" */

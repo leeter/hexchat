@@ -992,7 +992,7 @@ server::flush_queue ()
 	fe_set_throttle (this);
 }
 
-boost::optional<const session&> 
+boost::optional<session&> 
 server::find_channel(const std::string &chan)
 {
     session *sess;
