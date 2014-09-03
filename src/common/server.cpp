@@ -992,6 +992,24 @@ server::flush_queue ()
 	fe_set_throttle (this);
 }
 
+boost::optional<const session&> 
+server::find_channel(const std::string &chan)
+{
+    session *sess;
+    GSList *list = sess_list;
+    while (list)
+    {
+        sess = static_cast<session*>(list->data);
+        if ((this == sess->server) && sess->type == SESS_CHANNEL)
+        {
+            if (!this->p_cmp(chan.c_str(), sess->channel))
+                return *sess;
+        }
+        list = list->next;
+    }
+    return boost::none;
+}
+
 /* connect() successed */
 
 static void
