@@ -26,6 +26,12 @@
 #define REFRESH_TIMEOUT 20
 #define WORDWRAP_LIMIT 24
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
+#include <algorithm>
 #include <string>
 #include <cstring>
 #include <cctype>
@@ -47,7 +53,6 @@
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
 #include <gdk/gdk.h>
@@ -1218,8 +1223,8 @@ lamejump:
 			if (xtext->buffer->last_offset_start == start_offset)
 				ent = end_ent;
 
-			end = MAX (xtext->buffer->last_offset_end, end_offset);
-			start = MIN (xtext->buffer->last_offset_start, start_offset);
+			end = std::max(xtext->buffer->last_offset_end, end_offset);
+			start = std::min (xtext->buffer->last_offset_start, start_offset);
 		}
 
 		xtext->jump_out_offset = end;
@@ -2764,7 +2769,7 @@ gtk_xtext_render_str (GtkXText * xtext, int y, textentry * ent,
 			if (indent >= xtext->clip_x)
 			{
 				xtext_draw_bg (xtext, 0, y - xtext->font->ascent,
-									MIN (indent, xtext->clip_x2), xtext->fontsize);
+									std::min (indent, xtext->clip_x2), xtext->fontsize);
 			}
 		}
 	}
@@ -3082,12 +3087,12 @@ gtk_xtext_render_str (GtkXText * xtext, int y, textentry * ent,
 		gtk_xtext_draw_sep (xtext, y - xtext->font->ascent);
 		if (!xtext->skip_border_fills && xtext->clip_x2 >= x)
 		{
-			int xx = MAX (x, xtext->clip_x);
+			int xx = std::max (x, xtext->clip_x);
 
 			xtext_draw_bg (xtext,
 								xx,	/* x */
 								y - xtext->font->ascent, /* y */
-				MIN (xtext->clip_x2 - xx, (win_width + MARGIN) - xx), /* width */
+				std::min (xtext->clip_x2 - xx, (win_width + MARGIN) - xx), /* width */
 								xtext->fontsize);		/* height */
 		}
 	}

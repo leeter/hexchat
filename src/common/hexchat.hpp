@@ -529,6 +529,7 @@ public:
     char *get_network(bool fallback);
     // BUGBUG return const!!!
     boost::optional<session&> find_channel(const std::string &chan);
+    bool is_channel(const std::string &chan) const;
     
 
 	int port;

@@ -930,7 +930,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 437:
-		if (serv->end_of_motd || is_channel (serv, word[4]))
+        if (serv->end_of_motd || sess->server->is_channel(word[4]))
 			goto def;
 		inbound_next_nick (sess, word[4], 0, tags_data);
 		break;
@@ -1030,7 +1030,7 @@ process_numeric (session * sess, int n,
 		{
 			session *sess;
 		
-			if (is_channel (serv, word[4]))
+			if (serv->is_channel (word[4]))
 			{
 				sess = find_channel (serv, word[4]);
 				if (!sess)
@@ -1282,7 +1282,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 										 tags_data);
 					} else
 					{
-						if (is_channel (serv, to))
+						if (serv->is_channel (to))
 						{
 							if (ignore_check (word[1], IG_CHAN))
 								return;
@@ -1559,7 +1559,7 @@ server::p_inline (char *buf, int len)
 	if (buf[0] == ':')
 	{
 		/* find a context for this message */
-		if (is_channel (this, word[3]))
+		if (this->is_channel (word[3]))
 		{
 			auto tmp = find_channel (word[3]);
 			if (tmp)

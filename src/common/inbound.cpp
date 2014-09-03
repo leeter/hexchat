@@ -350,7 +350,7 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 
 	if (!fromme)
 	{
-		if (is_channel (serv, chan))
+		if (serv->is_channel (chan))
 		{
 			sess = find_channel (serv, chan);
 		} else
@@ -447,7 +447,7 @@ inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 		if (chan)
 		{
 			sess = find_channel (serv, chan);
-			if (!sess && !is_channel (serv, chan))
+			if (!sess && !serv->is_channel (chan))
 				sess = find_dialog (serv, chan);
 		} else
 		{
@@ -952,7 +952,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 	session *sess = 0;
 	bool server_notice = false;
 
-	if (is_channel (serv, ptr))
+	if (serv->is_channel (ptr))
 		sess = find_channel (serv, ptr);
 
 	/* /notice [mode-prefix]#channel should end up in that channel */

@@ -22,10 +22,8 @@
 #ifndef HEXCHAT_MODES_HPP
 #define HEXCHAT_MODES_HPP
 
-#include <string>
 #include "proto-irc.hpp"
 
-bool is_channel (const server *serv, const std::string &chan);
 char get_nick_prefix (const server *serv, unsigned int access);
 unsigned int nick_access (const server *serv, const char *nick, int *modechars);
 int mode_access (const server *serv, char mode, char *prefix);
