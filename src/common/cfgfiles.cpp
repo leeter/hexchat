@@ -1364,12 +1364,16 @@ bio::file_descriptor
 hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
 {
 #ifdef WIN32
-	fs::path file_path(charset::widen(file).c_str());
+	fs::path file_path(charset::widen(file));
 #else
 	fs::path file_path(file);
 #endif
-	if (!(xof_flags & XOF_FULLPATH))
-		file_path = fs::path(get_xdir()) / file_path;
+    if (!(xof_flags & XOF_FULLPATH))
+#ifdef WIN32
+        file_path = fs::path(charset::widen(get_xdir())) / file_path;
+#else
+        file_path = fs::path(get_xdir()) / file_path;
+#endif
 	if (xof_flags & XOF_DOMODE)
 	{
 		int tfd;
