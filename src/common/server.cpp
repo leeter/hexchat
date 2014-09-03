@@ -1197,6 +1197,12 @@ server::cleanup ()
 {
 	fe_set_lag (this, 0);
 
+    if (this->death_timer)
+    {
+        fe_timeout_remove(this->death_timer);
+        this->death_timer = 0;
+    }
+
 	if (this->iotag)
 	{
         fe_timeout_remove(this->iotag);
@@ -1257,6 +1263,14 @@ server::cleanup ()
     return server_cleanup_result::not_connected;
 }
 
+// if the server isn't dead yet, kill it
+static gboolean
+server_kill(session *sess)
+{
+    sess->server->disconnect(sess, false, -1);
+    return false;
+}
+
 void
 server::disconnect (session * sess, bool sendquit, int err)
 {
@@ -1269,6 +1283,8 @@ server::disconnect (session * sess, bool sendquit, int err)
 	if (sendquit && serv->connected)
 	{
 		server_sendquit (sess);
+        serv->death_timer = fe_timeout_add(500, (GSourceFunc)server_kill, sess);
+        return;
 	}
     
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
@@ -2041,7 +2057,8 @@ server::set_encoding (const char *new_encoding)
 }
 
 server::server()
-    :p_cmp(),
+    :death_timer(0),
+    p_cmp(),
     port(),
     sok(),					/* is equal to sok4 or sok6 (the one we are using) */
     sok4(),					/* tcp4 socket */

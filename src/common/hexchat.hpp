@@ -479,6 +479,7 @@ struct server
 {
 private:
     void reset_to_defaults();
+    int death_timer;
     friend server *server_new(void);
 public:
     server();
