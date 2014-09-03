@@ -1814,6 +1814,7 @@ io_poll(void*){
 void server_error(server * serv, const boost::system::error_code & error)
 {
     PrintText(serv->front_session, error.message());
+    PrintText(serv->front_session, std::to_string(error.value()));
 }
 
 
