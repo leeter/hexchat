@@ -35,10 +35,11 @@
 #include "text.hpp"
 #include "hexchatc.hpp"
 #include "typedef.h"
+#include "charset_helpers.hpp"
 
 #ifdef WIN32
-#include <locale>
-#include <codecvt>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <io.h>
 #else
 #include <unistd.h>
@@ -1363,9 +1364,7 @@ bio::file_descriptor
 hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
 {
 #ifdef WIN32
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::wstring wide_file_path = converter.from_bytes(file);
-	fs::path file_path(wide_file_path);
+	fs::path file_path(charset::widen(file).c_str());
 #else
 	fs::path file_path(file);
 #endif

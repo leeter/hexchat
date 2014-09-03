@@ -37,7 +37,8 @@
 #include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
-#include <codecvt>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <sys/timeb.h>
 #include <io.h>
 #include <VersionHelpers.h>
@@ -54,6 +55,7 @@
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "util.hpp"
+#include "charset_helpers.hpp"
 
 #if defined (USING_FREEBSD) || defined (__APPLE__)
 #include <sys/sysctl.h>
@@ -170,8 +172,7 @@ errorstring (int err)
 									  &tbuf[0], tbuf.size(), NULL))
 			{
 				/* now convert to utf8 */
-				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > convert;
-				auto utf8 = convert.to_bytes(tbuf);
+                auto utf8 = charset::narrow(tbuf);
 				/* remove the cr-lf if present */ 
 				auto crlf = utf8.find_first_of("\r\n");
 
