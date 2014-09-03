@@ -31,12 +31,17 @@
 namespace{
 
     struct context{
-        context(boost::asio::io_service& io_service, boost::asio::ssl::context::verify_mode mode)
+        virtual ~context(){}
+
+        boost::asio::io_service io_service;
+    };
+
+    struct ssl_context : public context{
+        ssl_context(boost::asio::ssl::context::verify_mode mode)
             :ssl_ctx(io_service, boost::asio::ssl::context::sslv23)
         {
             ssl_ctx.set_verify_mode(mode);
         }
-
         boost::asio::ssl::context ssl_ctx;
     };
 
@@ -45,23 +50,19 @@ namespace{
     {
         virtual ~basic_connection(){}
         template<class... Types_>
-        basic_connection(boost::asio::io_service & service, Types_&& ... args)
-            :message_(4096, '\0'), socket_(service, std::forward<Types_>(args)...), strand_(service), reconnect_({true})
+        basic_connection(context * ctx, Types_&& ... args)
+            :ctx_(ctx), message_(4096, '\0'), socket_(ctx_->io_service, std::forward<Types_>(args)...), strand_(ctx_->io_service)
         {
             input_buffer_.commit(4092);
         }
 
         basic_connection(){};
 
-        bool reconnect() const
+        bool connected() const
         {
-            return this->reconnect_;
+            return socket_.lowest_layer().is_open();
         }
 
-        void reconnect(bool should_reconnect)
-        {
-            this->reconnect_ = should_reconnect;
-        }
         void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
         {
             boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
@@ -89,11 +90,10 @@ namespace{
             }
             else
             {
-                if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
-                    this->connected_endpoint_ = endpoint_iterator;
-
-                this->on_valid_connection(this->connected_endpoint_->host_name());
-                this->handle_connect(error, this->connected_endpoint_);
+                boost::asio::socket_base::keep_alive option(true);
+                this->socket_.lowest_layer().set_option(option);
+                this->on_valid_connection(endpoint_iterator->host_name());
+                this->handle_connect(error, endpoint_iterator);
             }
         }
         virtual void handle_connect(const boost::system::error_code& error,
@@ -103,23 +103,26 @@ namespace{
         void handle_write(const boost::system::error_code& error,
             size_t bytes_transferred);
         void handle_error(const boost::system::error_code& error);
-
+        void poll()
+        {
+            this->ctx_->io_service.poll();
+        }
         void write_impl(const std::string& message);
         void write();
 
+        std::unique_ptr<context> ctx_;
         std::string message_;
         boost::asio::streambuf input_buffer_;
         std::queue<std::string> outbound_queue_;
         SocketType_ socket_;
         boost::asio::strand strand_;
-        std::atomic_bool reconnect_;
-        boost::asio::ip::tcp::resolver::iterator connected_endpoint_;
+        boost::asio::ip::tcp::endpoint connected_endpoint_;
     };
 
     struct ssl_connection : public basic_connection < boost::asio::ssl::stream<boost::asio::ip::tcp::socket> >
     {
-        ssl_connection(std::shared_ptr<context>& ctx, boost::asio::io_service & service, boost::asio::ssl::context & ssl_context)
-            :basic_connection(service, ssl_context), ctx_(ctx)
+        ssl_connection(ssl_context * ctx)
+            :basic_connection(ctx, ctx->ssl_ctx)
         {}
 
         void handle_connect(const boost::system::error_code& error,
@@ -157,13 +160,12 @@ namespace{
                 this->handle_error(error);
             }
         }
-        std::shared_ptr<context> ctx_;
     };
 
     struct tcp_connection : public basic_connection < boost::asio::ip::tcp::socket >
     {
-        tcp_connection(boost::asio::io_service & service)
-            :basic_connection(service)
+        tcp_connection(context * ctx)
+            :basic_connection(ctx)
         {
         }
 
@@ -258,7 +260,8 @@ namespace{
     template<class SocketType_>
     void basic_connection<SocketType_>::handle_error(const boost::system::error_code& error)
     {
-        switch (error.value())
+        // do reconnect here?
+        /*switch (error.value())
         {
         case boost::system::errc::no_link:
         case boost::system::errc::connection_reset:
@@ -274,7 +277,7 @@ namespace{
             break;
         default:
             break;
-        }
+        }*/
         this->on_error(error);
     }
 }
@@ -294,10 +297,9 @@ namespace io{
         {
             if (security == connection_security::enforced || security == connection_security::no_verify)
             {
-                auto ctx = std::make_shared<context>(io_service, 0);
-                return std::make_shared<ssl_connection>(ctx, io_service, ctx->ssl_ctx);
+                return std::make_shared<ssl_connection>(new ssl_context(0));
             }
-            return std::make_shared<tcp_connection>(io_service);
+            return std::make_shared<tcp_connection>(new context());
         }
     }
 }

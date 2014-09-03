@@ -153,7 +153,7 @@ server_sendquit (session * sess)
 {
 	if (!sess->quitreason)
 	{
-		std::string colrea = strdup (prefs.hex_irc_quit_reason);
+		std::string colrea = prefs.hex_irc_quit_reason;
 		check_special_chars (&colrea[0], FALSE);
         std::string rea = random_line(colrea);
 		sess->server->p_quit (rea);

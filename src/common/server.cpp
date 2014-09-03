@@ -94,8 +94,6 @@ static struct session *g_sess = nullptr;
 static GSList *away_list = nullptr;
 GSList *serv_list = nullptr;
 
-static boost::asio::io_service io_service;
-
 #ifdef USE_LIBPROXY
 extern pxProxyFactory *libproxy_factory;
 #endif
@@ -106,21 +104,23 @@ extern pxProxyFactory *libproxy_factory;
 int
 tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server * serv)
 {
-	int ret;
+	int ret = 0;
 	char *locale;
 	gsize loc_len;
+    if (!serv->server_connection)
+        return 1; // throw?
 
 	if (encoding == nullptr)	/* system */
 	{
 		locale = nullptr;
-		if (!prefs.utf8_locale)
-		{
-			const gchar *charset;
+        if (!prefs.utf8_locale)
+        {
+            const gchar *charset;
 
-			g_get_charset (&charset);
-			locale = g_convert_with_fallback (buf, len, charset, "UTF-8",
-														 "?", 0, &loc_len, 0);
-		}
+            g_get_charset(&charset);
+            locale = g_convert_with_fallback(buf, len, charset, "UTF-8",
+                "?", 0, &loc_len, 0);
+        }
 	} else
 	{
 		if (using_irc)	/* using "IRC" encoding (CP1252/UTF-8 hybrid) */
@@ -532,6 +532,7 @@ server_connected1(server * serv, const boost::system::error_code & error)
     serv->ping_recv = time(0);
     serv->lag_sent = 0;
     serv->connected = true;
+    serv->connecting = false;
     if (!serv->no_login)
     {
         EMIT_SIGNAL(XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
@@ -637,17 +638,17 @@ server_stopconnecting (server * serv)
 	close (serv->childwrite);
 	close (serv->childread);
 #else
-	PostThreadMessageW (serv->childpid, WM_QUIT, 0, 0);
+	//PostThreadMessageW (serv->childpid, WM_QUIT, 0, 0);
 
-	{
-		/* if we close the pipe now, giowin32 will crash. */
-		int *pipefd = static_cast<int*>(malloc (sizeof (int) * 2));
-		if (!pipefd)
-			std::terminate();
-		pipefd[0] = serv->childwrite;
-		pipefd[1] = serv->childread;
-		g_idle_add ((GSourceFunc)server_close_pipe, pipefd);
-	}
+	//{
+	//	/* if we close the pipe now, giowin32 will crash. */
+	//	int *pipefd = static_cast<int*>(malloc (sizeof (int) * 2));
+	//	if (!pipefd)
+	//		std::terminate();
+	//	pipefd[0] = serv->childwrite;
+	//	pipefd[1] = serv->childread;
+	//	g_idle_add ((GSourceFunc)server_close_pipe, pipefd);
+	//}
 #endif
 
 #ifdef USE_OPENSSL
@@ -1198,7 +1199,8 @@ server::cleanup ()
 
 	if (this->iotag)
 	{
-		fe_input_remove (this->iotag);
+        fe_timeout_remove(this->iotag);
+		//fe_input_remove (this->iotag);
 		this->iotag = 0;
 	}
 
@@ -1208,33 +1210,33 @@ server::cleanup ()
 		this->joindelay_tag = 0;
 	}
 
-#ifdef USE_OPENSSL
-	if (this->ssl)
-	{
-		SSL_shutdown (this->ssl);
-		SSL_free (this->ssl);
-		this->ssl = nullptr;
-	}
-#endif
+//#ifdef USE_OPENSSL
+//	if (this->ssl)
+//	{
+//		SSL_shutdown (this->ssl);
+//		SSL_free (this->ssl);
+//		this->ssl = nullptr;
+//	}
+//#endif
 
 	if (this->connecting)
 	{
 		server_stopconnecting (this);
-		closesocket (this->sok4);
+		/*closesocket (this->sok4);
 		if (this->proxy_sok4 != -1)
 			closesocket (this->proxy_sok4);
 		if (this->sok6 != -1)
 			closesocket (this->sok6);
 		if (this->proxy_sok6 != -1)
-			closesocket (this->proxy_sok6);
+			closesocket (this->proxy_sok6);*/
         return server_cleanup_result::still_connecting;
 	}
 
 	if (this->connected)
 	{
-		close_socket (this->sok);
+		/*close_socket (this->sok);
 		if (this->proxy_sok)
-			close_socket (this->proxy_sok);
+			close_socket (this->proxy_sok);*/
 		this->connected = false;
 		this->end_of_motd = false;
         return server_cleanup_result::connected;
@@ -1247,6 +1249,10 @@ server::cleanup ()
 		this->recondelay_tag = 0;
         return server_cleanup_result::reconnecting;
 	}
+    if (this->server_connection)
+    {
+        this->server_connection.reset();
+    }
 
     return server_cleanup_result::not_connected;
 }
@@ -1264,8 +1270,11 @@ server::disconnect (session * sess, bool sendquit, int err)
 	{
 		server_sendquit (sess);
 	}
-
+    
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
+
+    // flush any outgoing messages
+    this->server_connection->poll();
 
 	/* close all sockets & io tags */
 	switch (serv->cleanup ())
@@ -1823,9 +1832,9 @@ xit:
 	/* cppcheck-suppress memleak */
 }
 
-static int
-io_poll(void*){
-    io_service.poll();
+static gboolean
+io_poll(io::tcp::connection * connection){
+    connection->poll();
     return TRUE;
 }
 
@@ -1842,6 +1851,7 @@ server::connect (char *hostname, int port, bool no_login)
 	int read_des[2] = { 0 };
 	unsigned int pid;
 	session *sess = this->server_session;
+    boost::asio::io_service io_service;
     auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
     this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
     this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
@@ -1859,7 +1869,7 @@ server::connect (char *hostname, int port, bool no_login)
     fe_server_event (this, FE_SE_CONNECTING, 0);
     fe_set_away (this);
     this->flush_queue ();
-    fe_timeout_add(50, (GSourceFunc)&io_poll, nullptr);
+    this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
 #if 0
 #ifdef USE_OPENSSL
 	if (!ctx && this->use_ssl)

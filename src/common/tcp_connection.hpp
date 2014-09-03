@@ -39,8 +39,8 @@ namespace io
             static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
             virtual void enqueue_message(const std::string & message) = 0;
             virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
-            virtual bool reconnect() const = 0;
-            virtual void reconnect(bool should_reconnect) = 0;
+            virtual bool connected() const = 0;
+            virtual void poll() = 0;
             virtual ~connection(){}
             boost::signals2::signal<void(const boost::system::error_code&)> on_connect;
             boost::signals2::signal<void(const std::string& hostname)> on_valid_connection;
