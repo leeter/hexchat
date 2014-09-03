@@ -2685,7 +2685,7 @@ cmd_mode (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	/* +channel channels are dying, let those servers whine about modes.
 	 * return info about current channel if available and no info is given */
-    if ((*word[2] == '+') || (*word[2] == 0) || (!sess->server->is_channel(word[2]) &&
+    if ((*word[2] == '+') || (*word[2] == 0) || (!sess->server->is_channel_name(word[2]) &&
 				!(rfc_casecmp(sess->server->nick, word[2]) == 0)))
 	{
 		if(sess->channel[0] == 0)
@@ -2956,7 +2956,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	char *reason = word_eol[3];
 	if (!*chan)
 		chan = sess->channel;
-    if ((*chan) && sess->server->is_channel(chan))
+    if ((*chan) && sess->server->is_channel_name(chan))
 	{
 		if (reason[0] == 0)
 			reason = NULL;
@@ -3012,7 +3012,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		focus = FALSE;
 	}
 
-    if (*nick && !sess->server->is_channel(nick))
+    if (*nick && !sess->server->is_channel_name(nick))
 	{
 		struct session *nick_sess;
 
@@ -3451,7 +3451,7 @@ cmd_servchan (struct session *sess, char *tbuf, char *word[],
 static int
 cmd_topic (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-    if (word[2][0] && sess->server->is_channel(word[2]))
+    if (word[2][0] && sess->server->is_channel_name(word[2]))
 		sess->server->p_topic (word[2], word_eol[3]);
 	else
 		sess->server->p_topic (sess->channel, word_eol[2]);

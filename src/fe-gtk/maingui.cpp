@@ -3520,7 +3520,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	if (!sess->server->front_session)
 		sess->server->front_session = sess;
 
-	if (!sess->server->is_channel (sess->channel))
+	if (!sess->server->is_channel_name (sess->channel))
 		user = userlist_find_global (sess->server, sess->channel);
 
 	if (!tab)

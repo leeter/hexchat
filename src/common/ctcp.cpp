@@ -117,7 +117,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
       ignore as if it was a PRIV/CHAN. */
 	if (!g_ascii_strncasecmp (msg, "ACTION ", 7))
 	{
-		if (serv->is_channel (to))
+		if (serv->is_channel_name (to))
 		{
 			/* treat a channel action as a CHAN */
 			if (ignore_check (word[1], IG_CHAN))
@@ -160,7 +160,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 			if (po)
 				po[0] = 0;
 
-            if (sess->server->is_channel(to))
+            if (sess->server->is_channel_name(to))
 			{
 				chansess = find_channel (sess->server, to);
 				if (!chansess)
@@ -191,7 +191,7 @@ generic:
 	if (po)
 		po[0] = 0;
 
-	if (!sess->server->is_channel (to))
+	if (!sess->server->is_channel_name (to))
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGEN, sess->server->front_session, msg,
 									  nick, NULL, NULL, 0, tags_data->timestamp);

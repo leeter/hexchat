@@ -126,7 +126,7 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 
 /* does 'chan' have a valid prefix? e.g. # or & */
 bool
-server::is_channel(const std::string & chan) const
+server::is_channel_name(const std::string & chan) const
 {
     return this->chantypes.find_first_of(chan[0]) != std::string::npos;
 }
@@ -383,7 +383,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	outbuf[3] = 0;
 
 	sess = find_channel (serv, chan);
-	if (!sess || !serv->is_channel (chan))
+	if (!sess || !serv->is_channel_name (chan))
 	{
 		/* got modes for a chan we're not in! probably nickmode +isw etc */
 		sess = serv->front_session;
