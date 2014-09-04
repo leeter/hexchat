@@ -27,6 +27,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/scope_exit.hpp>
 
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
@@ -39,6 +40,7 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#define STRICT_TYPED_ITEMIDS
 #define NOMINMAX
 #include <io.h>
 #else
@@ -304,11 +306,10 @@ cfg_get_int (char *cfg, char *var)
 	return atoi (str);
 }
 
+
 char *xdir = NULL;	/* utf-8 encoding */
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define STRICT_TYPED_ITEMIDS
 #include <Windows.h>
 #include <ShlObj.h>
 #endif
@@ -321,7 +322,7 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
-		wchar_t* roaming_path_wide;
+		wchar_t* roaming_path_wide = nullptr;
 		gchar* roaming_path;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
@@ -339,12 +340,14 @@ get_xdir (void)
 		}
 		else
 		{
-			roaming_path = g_utf16_to_utf8 ((const gunichar2*)roaming_path_wide, -1, NULL, NULL, NULL);
-			CoTaskMemFree (roaming_path_wide);
+            BOOST_SCOPE_EXIT((roaming_path_wide)){
+                CoTaskMemFree(roaming_path_wide);
+            }BOOST_SCOPE_EXIT_END
 
-			xdir = g_build_filename (roaming_path, "HexChat", NULL);
+            fs::path roaming_path(roaming_path_wide);
+            roaming_path /= L"HexChat";
 
-			g_free (roaming_path);
+            xdir = strdup(charset::narrow(roaming_path.wstring()).c_str());
 		}
 #endif
 	}
@@ -1359,21 +1362,24 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	return fd;
 }
 
+static fs::path
+make_path(const std::string & path)
+{
+#ifdef WIN32
+    return charset::widen(path);
+#else
+    return path;
+#endif
+}
+
 
 bio::file_descriptor
 hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
 {
-#ifdef WIN32
-	fs::path file_path(charset::widen(file));
-#else
-	fs::path file_path(file);
-#endif
+
+    fs::path file_path = make_path(file);
     if (!(xof_flags & XOF_FULLPATH))
-#ifdef WIN32
-        file_path = fs::path(charset::widen(get_xdir())) / file_path;
-#else
-        file_path = fs::path(get_xdir()) / file_path;
-#endif
+        file_path = make_path(get_xdir()) / file_path;
 	if (xof_flags & XOF_DOMODE)
 	{
 		int tfd;
