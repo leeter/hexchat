@@ -347,7 +347,7 @@ get_xdir (void)
             fs::path roaming_path(roaming_path_wide);
             roaming_path /= L"HexChat";
 
-            xdir = strdup(charset::narrow(roaming_path.wstring()).c_str());
+            xdir = g_strdup(charset::narrow(roaming_path.wstring()).c_str());
 		}
 #endif
 	}
