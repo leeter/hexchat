@@ -431,6 +431,7 @@ server_read_cb(server * serv, const std::string & message, size_t length)
     {
         switch (message[i])
         {
+        case '\0':
         case '\r':
             break;
 

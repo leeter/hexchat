@@ -93,6 +93,8 @@ namespace{
             }
             else
             {
+                boost::asio::socket_base::non_blocking_io non_blocking(true);
+                this->socket_.lowest_layer().io_control(non_blocking);
                 boost::asio::socket_base::keep_alive option(true);
                 this->socket_.lowest_layer().set_option(option);
                 this->on_valid_connection(current_endpoint->host_name());
