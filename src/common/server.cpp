@@ -561,7 +561,7 @@ server_connected1(server * serv, const boost::system::error_code & error)
     }
 
     serv->set_name(serv->servername);
-    fe_server_event(serv, FE_SE_CONNECT, 0);
+    fe_server_event(serv, FE_SE_CONNECT, 0);   
 }
 
 static void
@@ -744,6 +744,38 @@ ssl_print_cert_info(server *serv, const SSL* ctx)
         chiper_info->chiper_bits);
     EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
         0);
+
+    verify_error = SSL_get_verify_result(ctx);
+    switch (verify_error)
+    {
+    case X509_V_OK:
+        /* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
+        /* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
+        break;
+    case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
+    case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
+    case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+    case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
+    case X509_V_ERR_CERT_HAS_EXPIRED:
+        if (serv->accept_invalid_cert)
+        {
+            snprintf(buf, sizeof(buf), "* Verify E: %s.? (%d) -- Ignored",
+                X509_verify_cert_error_string(verify_error),
+                verify_error);
+            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+                nullptr, 0);
+            break;
+        }
+    default:
+        break;
+        /*snprintf(buf, sizeof(buf), "%s.? (%d)",
+            X509_verify_cert_error_string(verify_error),
+            verify_error);
+        EMIT_SIGNAL(XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
+            nullptr, 0);
+
+        serv->cleanup();*/
+    }
 }
 
 static int

@@ -19,16 +19,25 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE	/* for memrchr */
 #endif
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #include <algorithm>
+#include <istream>
+#include <limits>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
 #include <climits>
 #include <cerrno>
+#include <boost/filesystem.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/scope_exit.hpp>
 
 #define WANTSOCKET
@@ -50,6 +59,7 @@
 #include "ignore.hpp"
 #include "util.hpp"
 #include "fe.hpp"
+#include "filesystem.hpp"
 #include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.hpp"				/* net_ip() */
 #include "modes.hpp"
@@ -74,6 +84,7 @@ namespace notify{
 
 namespace dcc = hexchat::dcc;
 namespace fe_notify = hexchat::fe::notify;
+namespace bio = boost::iostreams;
 #define TBUFSIZE 4096
 
 static void help (session *sess, char *tbuf, const char *helpcmd, int quiet);
@@ -96,41 +107,39 @@ notc_msg (struct session *sess)
 static std::string
 random_line (const std::string & file_name)
 {
-	FILE *fh;
-	char buf[512];
-	int lines, ran;
-
-	if (!file_name[0])
-		goto nofile;
-
-	fh = hexchat_fopen_file (file_name.c_str(), "r", 0);
-	if (!fh)
-	{
-	 nofile:
-		/* reason is not a file, an actual reason! */
-		return file_name;
-	}
-    BOOST_SCOPE_EXIT((fh)){
-        fclose(fh);
-    }BOOST_SCOPE_EXIT_END
+    if (!file_name[0] || !boost::filesystem::native(file_name))
+        return file_name;
+    
+    boost::iostreams::file_descriptor fd;
+    try
+    {
+        fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
+    } 
+    catch (const boost::exception& ex)
+    {
+        return file_name;
+    }
+    bio::stream_buffer<bio::file_descriptor> buff(fd);
+    std::istream stream(&buff);
 
 	/* count number of lines in file */
-	lines = 0;
-	while (fgets (buf, sizeof (buf), fh))
-		lines++;
+    auto lines = std::count(std::istreambuf_iterator<char>(stream),
+        std::istreambuf_iterator<char>(), '\n');
 
 	if (lines < 1)
-		goto nofile;
+		return file_name;
 
 	/* go down a random number */
-	rewind (fh);
-	ran = RAND_INT (lines);
-	do
+    stream.clear();
+    stream.seekg(std::ios::beg);
+	int lines_from_back_of_file = RAND_INT (lines);
+    std::string buf;
+    while (lines > lines_from_back_of_file)
 	{
-		fgets (buf, sizeof (buf), fh);
+        stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		lines--;
 	}
-	while (lines > ran);
+    std::getline(stream, buf, '\n');
 	return buf;
 }
 

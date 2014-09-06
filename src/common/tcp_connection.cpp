@@ -65,24 +65,27 @@ namespace{
 
         void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
         {
+            boost::asio::ip::tcp::resolver::iterator current_iterator = endpoint_iterator;
             boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
             socket_.lowest_layer().async_connect(endpoint,
                 boost::bind(&basic_connection::do_connect, this,
-                boost::asio::placeholders::error, ++endpoint_iterator));
+                boost::asio::placeholders::error, ++endpoint_iterator, current_iterator));
         }
         void enqueue_message(const std::string & message);
         /* Gets around the thorny issue of calling or referencing a
          * virtual function from the constructor
          */
         void do_connect(const boost::system::error_code& error,
-            boost::asio::ip::tcp::resolver::iterator endpoint_iterator){
+            boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
+            boost::asio::ip::tcp::resolver::iterator current_endpoint){
             if (error && endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
             {
                 socket_.lowest_layer().close();
+                boost::asio::ip::tcp::resolver::iterator current_iterator = endpoint_iterator;
                 boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
                 socket_.lowest_layer().async_connect(endpoint,
                     boost::bind(&basic_connection::do_connect, this,
-                    boost::asio::placeholders::error, ++endpoint_iterator));
+                    boost::asio::placeholders::error, ++endpoint_iterator, current_iterator));
             }
             else if (error)
             {
@@ -92,8 +95,8 @@ namespace{
             {
                 boost::asio::socket_base::keep_alive option(true);
                 this->socket_.lowest_layer().set_option(option);
-                this->on_valid_connection(endpoint_iterator->host_name());
-                this->handle_connect(error, endpoint_iterator);
+                this->on_valid_connection(current_endpoint->host_name());
+                this->handle_connect(error, current_endpoint);
             }
         }
         virtual void handle_connect(const boost::system::error_code& error,
