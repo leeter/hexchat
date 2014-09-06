@@ -494,6 +494,7 @@ session::session(struct server *serv, char *from, int type, int focus)
 	me(nullptr),
 	channel(),
 	waitchannel(),
+    willjoinchannel(),
 
 	quitreason(nullptr),
 	topic(nullptr),
