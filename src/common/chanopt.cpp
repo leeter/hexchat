@@ -19,6 +19,7 @@
 
 /* per-channel/dialog settings :: /CHANOPT */
 
+#include <cstdint>
 #include <cstddef>
 #include <algorithm>
 #include <array>
@@ -35,7 +36,6 @@
 #include "hexchat.hpp"
 #include "chanopt.hpp"
 
-//#include "cfgfiles.hpp"
 #include "text.hpp"
 #include "server.hpp"
 #include "util.hpp"
@@ -73,7 +73,7 @@ static const std::array<channel_options, 7> chanopt =
 #undef S_F
 
 static const char *
-chanopt_value (guint8 val)
+chanopt_value (std::uint8_t val)
 {
 	switch (val)
 	{
@@ -92,7 +92,7 @@ int
 chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 {
 	int dots, j, p = 0;
-	guint8 val;
+    std::uint8_t val;
 	int offset = 2;
 	char *find;
 	bool quiet = false;
@@ -129,7 +129,7 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 		{
 			if (newval != -1)	/* set new value */
 			{
-				*(guint8 *)G_STRUCT_MEMBER_P(sess, op.offset) = newval;
+				*(std::uint8_t*)G_STRUCT_MEMBER_P(sess, op.offset) = newval;
 				chanopt_changed = true;
 			}
 
@@ -147,7 +147,7 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 					tbuf[p++] = '.';
 				tbuf[p++] = 0;
 
-				val = G_STRUCT_MEMBER(guint8, sess, op.offset);
+                val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
 				PrintTextf (sess, "%s\0033:\017 %s", tbuf, chanopt_value (val));
 			}
 		}
@@ -175,15 +175,15 @@ struct chanopt_in_memory
 {
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
-	guint8 alert_beep;
-	guint8 alert_taskbar;
-	guint8 alert_tray;
+	std::uint8_t alert_beep;
+	std::uint8_t alert_taskbar;
+	std::uint8_t alert_tray;
 
 	/* Per-Channel Settings */
-	guint8 text_hidejoinpart;
-	guint8 text_logging;
-	guint8 text_scrollback;
-	guint8 text_strip;
+	std::uint8_t text_hidejoinpart;
+	std::uint8_t text_logging;
+	std::uint8_t text_scrollback;
+	std::uint8_t text_strip;
 
 	std::string network;
 	std::string channel;
@@ -245,7 +245,7 @@ operator>> (std::istream& i, chanopt_in_memory& chanop)
 			{
 				if (first_part == op.name || (op.alias && first_part == op.alias))
 				{
-					*(guint8 *)G_STRUCT_MEMBER_P(&chanop, op.offset) = value;
+					*(std::uint8_t *)G_STRUCT_MEMBER_P(&chanop, op.offset) = value;
 					break;
 				}
 			}
@@ -272,7 +272,7 @@ operator<< (std::ostream& o, const chanopt_in_memory& chanop)
 	buffer << "network = " << chanop.network << "\n";
 	buffer << "channel = " << chanop.channel << "\n";
 	for (const auto& op : chanopt){
-		guint8 val = G_STRUCT_MEMBER(guint8, &chanop, op.offset);
+		std::uint8_t val = G_STRUCT_MEMBER(std::uint8_t, &chanop, op.offset);
 		if (val != SET_DEFAULT)
 		{
 			buffer << op.name << " = " << std::to_string(val) << "\n";
@@ -319,7 +319,7 @@ chanopt_load_all (void)
 void
 chanopt_load (session *sess)
 {
-	guint8 val;
+	std::uint8_t val;
 	const char *network;
 
 	if (sess->name.empty())
@@ -342,16 +342,16 @@ chanopt_load (session *sess)
 	/* fill in all the sess->xxxxx fields */
 	for (const auto & op : chanopt)
 	{
-		val = G_STRUCT_MEMBER(guint8, &(*itr), op.offset);
-		*(guint8 *)G_STRUCT_MEMBER_P(sess, op.offset) = val;
+		val = G_STRUCT_MEMBER(std::uint8_t, &(*itr), op.offset);
+		*(std::uint8_t *)G_STRUCT_MEMBER_P(sess, op.offset) = val;
 	}
 }
 
 void
 chanopt_save (session *sess)
 {
-	guint8 vals;
-	guint8 valm;
+	std::uint8_t vals;
+	std::uint8_t valm;
 	chanopt_in_memory co;
 	const char *network;
 
@@ -369,12 +369,12 @@ chanopt_save (session *sess)
 
 	for (const auto& op : chanopt)
 	{
-		vals = G_STRUCT_MEMBER(guint8, sess, op.offset);
-		valm = G_STRUCT_MEMBER(guint8, &co, op.offset);
+		vals = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
+		valm = G_STRUCT_MEMBER(std::uint8_t, &co, op.offset);
 
 		if (vals != valm)
 		{
-			*(guint8 *)G_STRUCT_MEMBER_P(&co, op.offset) = vals;
+			*(std::uint8_t *)G_STRUCT_MEMBER_P(&co, op.offset) = vals;
 			chanopt_changed = true;
 		}
 	}
