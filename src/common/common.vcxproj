@@ -20,6 +20,7 @@
     <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />
+    <ClInclude Include="filesystem.hpp" />
     <ClInclude Include="history.hpp" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />
@@ -56,6 +57,7 @@
     <ClCompile Include="charset_helpers.cpp" />
     <ClCompile Include="ctcp.cpp" />
     <ClCompile Include="dcc.cpp" />
+    <ClCompile Include="filesystem.cpp" />
     <ClCompile Include="history.cpp" />
     <ClCompile Include="identd.cpp" />
     <ClCompile Include="ignore.cpp" />

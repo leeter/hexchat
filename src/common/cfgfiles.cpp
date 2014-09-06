@@ -1362,41 +1362,6 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	return fd;
 }
 
-static fs::path
-make_path(const std::string & path)
-{
-#ifdef WIN32
-    return charset::widen(path);
-#else
-    return path;
-#endif
-}
-
-
-bio::file_descriptor
-hexchat_open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
-{
-
-    fs::path file_path = make_path(file);
-    if (!(xof_flags & XOF_FULLPATH))
-        file_path = make_path(get_xdir()) / file_path;
-	if (xof_flags & XOF_DOMODE)
-	{
-		int tfd;
-#ifdef WIN32
-		tfd = _wopen(file_path.c_str(), _O_CREAT, mode);
-#else
-		tfd = open(file_path.c_str(), O_CREAT, mode);
-#endif
-		close(tfd);
-	}
-#ifdef WIN32
-	return bio::file_descriptor(file_path, flags | std::ios::binary);
-#else
-	return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
-#endif
-}
-
 FILE *
 hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {

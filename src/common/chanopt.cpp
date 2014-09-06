@@ -19,6 +19,7 @@
 
 /* per-channel/dialog settings :: /CHANOPT */
 
+#include <cstddef>
 #include <algorithm>
 #include <array>
 #include <string>
@@ -34,11 +35,12 @@
 #include "hexchat.hpp"
 #include "chanopt.hpp"
 
-#include "cfgfiles.hpp"
+//#include "cfgfiles.hpp"
 #include "text.hpp"
 #include "server.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"
+#include "filesystem.hpp"
 
 namespace bio = boost::iostreams;
 namespace {
@@ -53,6 +55,7 @@ struct channel_options
 	int offset;
 };
 
+#define STRUCT_OFFSET_STR(name, field) offsetof(name, field)
 #define S_F(xx) STRUCT_OFFSET_STR(struct session,xx)
 
 static const std::array<channel_options, 7> chanopt =
@@ -302,7 +305,7 @@ chanopt_load_all (void)
 	chanopt_in_memory current;
 
 	/* 1. load the old file into our vector */
-	auto fd = hexchat_open_stream("chanopt.conf", std::ios::in, 0, 0);
+	auto fd = io::fs::open_stream("chanopt.conf", std::ios::in, 0, 0);
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::istream stream(&fbuf);
 	while (stream >> current)
@@ -394,7 +397,7 @@ chanopt_save_all (void)
 		return;
 	}
 
-	auto fd = hexchat_open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, XOF_DOMODE);
+	auto fd = io::fs::open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, io::fs::XOF_DOMODE);
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::ostream stream(&fbuf);
 	for (const auto& co : chanopts)
