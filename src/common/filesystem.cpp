@@ -24,7 +24,7 @@
 #include "charset_helpers.hpp"
 #include "filesystem.hpp"
 
-char* get_xdir();
+char* get_xdir(void);
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -51,6 +51,22 @@ namespace io
 #else
             return path;
 #endif
+        }
+
+        boost::filesystem::path make_path(const std::vector<std::string>& segments)
+        {
+            if (segments.empty())
+                return "";
+#ifdef WIN32
+            bfs::path path(charset::widen(segments.front()));
+            for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
+                path /= charset::widen(*it);
+#else
+            bfs::path(segments.front());
+            for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
+                path /= *it;
+#endif
+            return path;
         }
 
         bio::file_descriptor

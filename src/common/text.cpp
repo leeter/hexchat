@@ -41,6 +41,7 @@
 #include "chanopt.hpp"
 #include "plugin.h"
 #include "fe.hpp"
+#include "filesystem.hpp"
 #include "server.hpp"
 #include "util.hpp"
 #include "outbound.hpp"
@@ -82,10 +83,11 @@ scrollback_get_filename (session *sess)
     net = sess->server->get_network(false);
 	if (!net)
 		return NULL;
-
-	buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, "");
+    auto path = io::fs::make_path({ { get_xdir(), "scrollback", net, "" } });
+    boost::filesystem::create_directories(path);
+	/*buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, "");
 	mkdir_p (buf);
-	g_free (buf);
+	g_free (buf);*/
 
 	auto chan = log_create_filename (sess->channel);
 	if (!chan.empty())
@@ -512,7 +514,7 @@ log_insert_vars (char *buf, size_t bufsize, const char *fmt, const char *c, cons
 	}
 }
 
-static int
+static bool
 logmask_is_fullpath ()
 {
 	/* Check if final path/filename is absolute or relative.
@@ -532,11 +534,11 @@ logmask_is_fullpath ()
 	if (prefs.hex_irc_logmask[0] == '/')
 #endif
 	{
-		return 1;
+		return true;
 	}
 	else
 	{
-		return 0;
+		return false;
 	}
 }
 
@@ -1685,7 +1687,7 @@ pevent_load (const char *filename)
 	if (filename == NULL)
 		fd = hexchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
 	else
-		fd = hexchat_open_file (filename, O_RDONLY, 0, XOF_FULLPATH);
+		fd = hexchat_open_file (filename, O_RDONLY, 0, io::fs::XOF_FULLPATH);
 
 	if (fd == -1)
 		return 1;
@@ -2222,10 +2224,10 @@ pevent_save (char *fn)
 
 	if (!fn)
 		fd = hexchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
-									 0x180, XOF_DOMODE);
+            0x180, io::fs::XOF_DOMODE);
 	else
 		fd = hexchat_open_file (fn, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
-									 XOF_FULLPATH | XOF_DOMODE);
+            io::fs::XOF_FULLPATH | io::fs::XOF_DOMODE);
 	if (fd == -1)
 	{
 		/*
@@ -2402,7 +2404,7 @@ sound_save ()
 	char buf[512];
 
 	fd = hexchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
-								 XOF_DOMODE);
+         io::fs::XOF_DOMODE);
 	if (fd == -1)
 		return;
 

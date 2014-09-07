@@ -21,9 +21,17 @@
 
 #include <iosfwd>
 #include <string>
+#include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+
+#ifdef XOF_DOMODE
+#undef XOF_DOMODE
+#endif
+#ifdef XOF_FULLPATH
+#undef XOF_FULLPATH
+#endif
 
 namespace io
 {
@@ -31,6 +39,7 @@ namespace io
     {
 
         boost::filesystem::path make_path(const std::string & path);
+        boost::filesystem::path make_path(const std::vector<std::string>& segments);
 
         typedef int xof_flags;
         enum xof{
