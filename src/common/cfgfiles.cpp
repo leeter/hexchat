@@ -17,6 +17,7 @@
  */
 
 #include <fcntl.h>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <cstdlib>
@@ -27,7 +28,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/scope_exit.hpp>
 
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
@@ -37,6 +37,7 @@
 #include "hexchatc.hpp"
 #include "typedef.h"
 #include "charset_helpers.hpp"
+#include "filesystem.hpp"
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -312,6 +313,8 @@ char *xdir = NULL;	/* utf-8 encoding */
 #ifdef WIN32
 #include <Windows.h>
 #include <ShlObj.h>
+
+static auto com_deleter = [](wchar_t* to_delete){ CoTaskMemFree(to_delete); };
 #endif
 
 char *
@@ -322,27 +325,27 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
+        std::unique_ptr<wchar_t, decltype(com_deleter)> wide_roaming_path;
 		wchar_t* roaming_path_wide = nullptr;
-		gchar* roaming_path;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
 		{
-			char *path;
-			
-			path = g_win32_get_package_installation_directory_of_module (NULL);
-			if (path)
+            std::wstring exe_path(2048, L'\0');
+            DWORD size = GetModuleFileNameW(nullptr, &exe_path[0], exe_path.size());
+			if (size)
 			{
-				xdir = g_build_filename (path, "config", NULL);
-				g_free (path);
+                exe_path.resize(size);
+                auto path = fs::path(exe_path);
+                path = path.remove_filename();
+                path /= L"config";
+                xdir = g_strdup(charset::narrow(path.wstring()).c_str());
 			}
 			else
 				xdir = g_strdup (".\\config");
 		}
 		else
 		{
-            BOOST_SCOPE_EXIT((roaming_path_wide)){
-                CoTaskMemFree(roaming_path_wide);
-            }BOOST_SCOPE_EXIT_END
+            wide_roaming_path.reset(roaming_path_wide);
 
             fs::path roaming_path(roaming_path_wide);
             roaming_path /= L"HexChat";
@@ -1338,9 +1341,9 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 	char *buf;
 	int fd;
 
-	if (xof_flags & XOF_FULLPATH)
+	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
-		if (xof_flags & XOF_DOMODE)
+        if (xof_flags & io::fs::XOF_DOMODE)
 			return g_open (file, flags | OFLAGS, mode);
 		else
 			return g_open (file, flags | OFLAGS, 0);
@@ -1348,7 +1351,7 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 
 	buf = g_build_filename (get_xdir (), file, NULL);
 
-	if (xof_flags & XOF_DOMODE)
+    if (xof_flags & io::fs::XOF_DOMODE)
 	{
 		fd = g_open (buf, flags | OFLAGS, mode);
 	}
@@ -1368,7 +1371,7 @@ hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 	char *buf;
 	FILE *fh;
 
-	if (xof_flags & XOF_FULLPATH)
+    if (xof_flags & io::fs::XOF_FULLPATH)
 		return fopen (file, mode);
 
 	buf = g_build_filename (get_xdir (), file, NULL);
