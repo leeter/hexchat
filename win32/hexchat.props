@@ -9,10 +9,10 @@
 		<YourDepsPath>c:\mozilla-build\hexchat\gtk</YourDepsPath>
 		<YourGendefPath>c:\mozilla-build\gendef</YourGendefPath>
 		<YourMsgfmtPath>c:\mozilla-build\msgfmt</YourMsgfmtPath>
-		<YourBoostPath>C:\mozilla-build\hexchat\boost_1_56_0</YourBoostPath>
-		<YourPerlPath>C:\Strawberry\perl</YourPerlPath>
-		<YourPython2Path>C:\Python27</YourPython2Path>
-		<YourPython3Path>C:\Python34</YourPython3Path>
+		<YourBoostPath>c:\mozilla-build\hexchat\boost_1_56_0</YourBoostPath>
+		<YourPerlPath>c:\mozilla-build\perl-5.20</YourPerlPath>
+		<YourPython2Path>c:\mozilla-build\python-2.7</YourPython2Path>
+		<YourPython3Path>c:\mozilla-build\python-3.4</YourPython3Path>
 
 		<!-- YOU SHOULDN'T TOUCH ANYTHING BELOW -->
 
@@ -22,13 +22,13 @@
 		<DepsRoot>$(YourDepsPath)\$(PlatformName)</DepsRoot>
 		<GendefPath>$(YourGendefPath)</GendefPath>
 		<MsgfmtPath>$(YourMsgfmtPath)</MsgfmtPath>
-		<PerlPath>$(YourPerlPath)</PerlPath>
+		<PerlPath>$(YourPerlPath)\$(PlatformName)</PerlPath>
 		<PerlLib>perl520</PerlLib>
 		<PerlOutput>hcperl</PerlOutput>
-		<Python2Path>$(YourPython2Path)</Python2Path>
+		<Python2Path>$(YourPython2Path)\$(PlatformName)</Python2Path>
 		<Python2Lib>python27</Python2Lib>
 		<Python2Output>hcpython2</Python2Output>
-		<Python3Path>$(YourPython3Path)</Python3Path>
+		<Python3Path>$(YourPython3Path)\$(PlatformName)</Python3Path>
 		<Python3Lib>python34</Python3Lib>
 		<Python3Output>hcpython3</Python3Output>
 		<Glib>$(DepsRoot)\include\glib-2.0;$(DepsRoot)\lib\glib-2.0\include;$(DepsRoot)\include\libxml2</Glib>
