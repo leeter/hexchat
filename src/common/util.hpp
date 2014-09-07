@@ -82,7 +82,7 @@ guint32 str_hash (const char *key);
 guint32 str_ihash (const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, int bytes_left);
 void canonalize_key (char *key);
-int portable_mode ();
+bool portable_mode ();
 int unity_mode ();
 char *encode_sasl_pass_plain (char *user, char *pass);
 char *encode_sasl_pass_blowfish (char *user, char *pass, char *data);

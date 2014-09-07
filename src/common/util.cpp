@@ -1519,20 +1519,20 @@ canonalize_key (char *key)
 	}
 }
 
-int
+bool
 portable_mode ()
 {
 #ifdef WIN32
 	if ((_access( "portable-mode", 0 )) != -1)
 	{
-		return 1;
+		return true;
 	}
 	else
 	{
-		return 0;
+		return false;
 	}
 #else
-	return 0;
+	return false;
 #endif
 }
 
