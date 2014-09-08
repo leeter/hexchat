@@ -62,7 +62,7 @@ namespace io
             for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
                 path /= charset::widen(*it);
 #else
-            bfs::path(segments.front());
+            bfs::path path(segments.front());
             for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
                 path /= *it;
 #endif
