@@ -814,7 +814,7 @@ servlist_server_find (ircnet *net, char *name, int *pos)
 }
 
 favchannel *
-servlist_favchan_find (ircnet *net, char *channel, int *pos)
+servlist_favchan_find (ircnet *net, const std::string& channel, int *pos)
 {
 	GSList *list;
 	favchannel *favchan;
@@ -828,7 +828,7 @@ servlist_favchan_find (ircnet *net, char *channel, int *pos)
 	while (list)
 	{
 		favchan = static_cast<favchannel*>(list->data);
-		if (g_ascii_strcasecmp (favchan->name.c_str(), channel) == 0)
+		if (g_ascii_strcasecmp (favchan->name.c_str(), channel.c_str()) == 0)
 		{
 			if (pos)
 			{

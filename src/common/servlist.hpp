@@ -107,7 +107,7 @@ ircnet *servlist_net_find_from_server (char *server_name);
 
 ircserver *servlist_server_find (ircnet *net, char *name, int *pos);
 commandentry *servlist_command_find (ircnet *net, char *cmd, int *pos);
-favchannel *servlist_favchan_find (ircnet *net, char *channel, int *pos);
+favchannel *servlist_favchan_find (ircnet *net, const std::string& channel, int *pos);
 
 ircserver *servlist_server_add (ircnet *net, const char *name);
 commandentry *servlist_command_add (ircnet *net, const char *command);
