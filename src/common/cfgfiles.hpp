@@ -71,17 +71,19 @@ enum xof {
 #define P_OFFINT(field) STRUCT_OFFSET_INT(struct hexchatprefs, field),0
 #define P_OFFINTNL(field) STRUCT_OFFSET_INT(struct hexchatprefs, field)
 
+enum pref_type : unsigned short{
+    TYPE_STR,
+    TYPE_INT,
+    TYPE_BOOL
+};
+
 struct prefs
 {
 	const char *name;
 	unsigned short offset;
 	unsigned short len;
-	unsigned short type;
+	pref_type type;
 };
-
-#define TYPE_STR 0
-#define TYPE_INT 1
-#define TYPE_BOOL 2
 
 #define HEXCHAT_SOUND_DIR "sounds"
 
