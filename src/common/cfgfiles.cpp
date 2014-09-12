@@ -313,8 +313,6 @@ char *xdir = NULL;	/* utf-8 encoding */
 #ifdef WIN32
 #include <Windows.h>
 #include <ShlObj.h>
-
-static auto com_deleter = [](wchar_t* to_delete){ CoTaskMemFree(to_delete); };
 #endif
 
 char *
@@ -325,7 +323,7 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
-        std::unique_ptr<wchar_t, decltype(com_deleter)> wide_roaming_path;
+        
 		wchar_t* roaming_path_wide = nullptr;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
@@ -345,7 +343,7 @@ get_xdir (void)
 		}
 		else
 		{
-            wide_roaming_path.reset(roaming_path_wide);
+            std::unique_ptr<wchar_t, decltype((CoTaskMemFree))> wide_roaming_path(roaming_path_wide, CoTaskMemFree);
 
             fs::path roaming_path(roaming_path_wide);
             roaming_path /= L"HexChat";
