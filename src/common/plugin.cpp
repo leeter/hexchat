@@ -1558,7 +1558,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0xcacdcff2: /* status */
 			return ((dcc::DCC *)data)->dccstat;
 		case 0x368f3a: /* type */
-			return ((dcc::DCC *)data)->type;
+			return static_cast<int>(((dcc::DCC *)data)->type);
 		}
 		break;
 

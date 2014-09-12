@@ -1163,7 +1163,7 @@ mg_count_dccs (void)
 	while (list)
 	{
 		dcc = static_cast<dcc::DCC*>(list->data);
-		if ((dcc->type == TYPE_SEND || dcc->type == TYPE_RECV) &&
+        if ((dcc->type == dcc::DCC::dcc_type::TYPE_SEND || dcc->type == dcc::DCC::dcc_type::TYPE_RECV) &&
 			 dcc->dccstat == STAT_ACTIVE)
 			dccs++;
 		list = list->next;

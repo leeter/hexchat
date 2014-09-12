@@ -126,7 +126,7 @@ static void
 dcc_unthrottle (::dcc::DCC *dcc)
 {
 	/* don't unthrottle here, but delegate to funcs */
-	if (dcc->type == TYPE_RECV)
+    if (dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 		dcc_read(NULL, static_cast<GIOCondition>(0), dcc);
 	else
 		dcc_send_data(NULL, static_cast<GIOCondition>(0), dcc);
@@ -146,7 +146,7 @@ dcc_calc_cps (::dcc::DCC *dcc)
 
 	/* the pos we use for sends is an average
 		between pos and ack */
-	if (dcc->type == TYPE_SEND)
+    if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND)
 	{
 		/* carefull to avoid 32bit overflow */
 		pos = dcc->pos - ((dcc->pos - dcc->ack) / 2);
@@ -217,9 +217,9 @@ dcc_remove_from_sum (::dcc::DCC *dcc)
 {
 	if (dcc->dccstat != STAT_ACTIVE)
 		return;
-	if (dcc->type == TYPE_SEND)
+    if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND)
 		dcc_sendcpssum -= dcc->cps;
-	else if (dcc->type == TYPE_RECV)
+    else if (dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 		dcc_getcpssum -= dcc->cps;
 }
 
@@ -321,7 +321,7 @@ dcc_close (::dcc::DCC *dcc, int dccstat, int destroy)
 		{
 			/* if we just completed a dcc receive, move the */
 			/* completed file to the completed directory */
-			if(dcc->type == TYPE_RECV)
+			if(dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 			{			
 				/* mgl: change this to handle the case where dccwithnick is set */
 				move_file (prefs.hex_dcc_dir, prefs.hex_dcc_completed_dir, 
@@ -524,7 +524,7 @@ dcc_calc_average_cps(::dcc::DCC *dcc)
 	sec = time(0) - dcc->starttime;
 	if (sec < 1)
 		sec = 1;
-	if (dcc->type == TYPE_SEND)
+    if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND)
 		dcc->cps = (dcc->ack - dcc->resumable) / sec;
 	else
 		dcc->cps = (dcc->pos - dcc->resumable) / sec;
@@ -676,7 +676,7 @@ dcc_did_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		len = sizeof(er);
 		getsockopt(dcc->sok, SOL_SOCKET, SO_ERROR, (char *)&er, &len);
 		EMIT_SIGNAL(XP_TE_DCCCONFAIL, dcc->serv->front_session,
-			dcctypes[dcc->type], dcc->nick, errorstring(er),
+			dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick, errorstring(er),
 			NULL, 0);
 		dcc->dccstat = STAT_FAILED;
 		::fe::fe_dcc_update(dcc);
@@ -696,7 +696,7 @@ dcc_did_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		if (er != EISCONN)
 		{
 			EMIT_SIGNAL(XP_TE_DCCCONFAIL, dcc->serv->front_session,
-				dcctypes[dcc->type], dcc->nick, errorstring(er),
+				dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick, errorstring(er),
 				NULL, 0);
 			dcc->dccstat = STAT_FAILED;
 			::fe::fe_dcc_update(dcc);
@@ -727,12 +727,12 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 
 	switch (dcc->type)
 	{
-	case TYPE_RECV:
+    case ::dcc::DCC::dcc_type::TYPE_RECV:
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read, dcc);
 		EMIT_SIGNAL(XP_TE_DCCCONRECV, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
-	case TYPE_SEND:
+    case ::dcc::DCC::dcc_type::TYPE_SEND:
 		/* passive send */
 		dcc->fastsend = prefs.hex_dcc_fast_send;
 		if (dcc->fastsend)
@@ -742,9 +742,9 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 		EMIT_SIGNAL(XP_TE_DCCCONSEND, dcc->serv->front_session,
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
-	case TYPE_CHATSEND:	/* pchat */
+    case ::dcc::DCC::dcc_type::TYPE_CHATSEND:	/* pchat */
 		dcc_open_query(dcc->serv, dcc->nick);
-	case TYPE_CHATRECV:	/* normal chat */
+    case ::dcc::DCC::dcc_type::TYPE_CHATRECV:	/* normal chat */
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
 		if (!dcc->dccchat)
@@ -1269,7 +1269,7 @@ dcc_connect(::dcc::DCC *dcc)
 			return;
 		}
 		/* possible problems with filenames containing spaces? */
-		if (dcc->type == TYPE_RECV)
+        if (dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 			snprintf(tbuf, sizeof(tbuf), strchr(dcc->file, ' ') ?
 			"DCC SEND \"%s\" %u %d %"DCC_SFMT" %d" :
 			"DCC SEND %s %u %d %"DCC_SFMT" %d", dcc->file,
@@ -1473,7 +1473,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 
 	switch (dcc->type)
 	{
-	case TYPE_SEND:
+    case ::dcc::DCC::dcc_type::TYPE_SEND:
 		if (dcc->fastsend)
 			dcc->wiotag = fe_input_add(sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
 		dcc->iotag = fe_input_add(sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_ack, dcc);
@@ -1482,7 +1482,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
 
-	case TYPE_CHATSEND:
+    case ::dcc::DCC::dcc_type::TYPE_CHATSEND:
 		dcc_open_query(dcc->serv, dcc->nick);
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
@@ -1644,7 +1644,7 @@ dcc_add_chat(session *sess, char *nick, int port, guint32 addr, int pasvid)
 	if (dcc)
 	{
 		dcc->serv = sess->server;
-		dcc->type = TYPE_CHATRECV;
+        dcc->type = ::dcc::DCC::dcc_type::TYPE_CHATRECV;
 		dcc->dccstat = STAT_QUEUED;
 		dcc->addr = addr;
 		dcc->port = port;
@@ -1716,7 +1716,7 @@ dcc_add_file(session *sess, char *file, ::dcc::DCC_SIZE size, int port, char *ni
 		dcc->resumable = 0;
 		dcc->pos = 0;
 		dcc->serv = sess->server;
-		dcc->type = TYPE_RECV;
+        dcc->type = ::dcc::DCC::dcc_type::TYPE_RECV;
 		dcc->dccstat = STAT_QUEUED;
 		dcc->addr = addr;
 		dcc->port = port;
@@ -1759,7 +1759,7 @@ dcc_malformed(struct session *sess, char *nick, char *data)
 }
 
 static ::dcc::DCC *
-find_dcc_from_id(int id, int type)
+find_dcc_from_id(int id, ::dcc::DCC::dcc_type type)
 {
 	::dcc::DCC *dcc;
 	GSList *list = dcc_list;
@@ -1775,7 +1775,7 @@ find_dcc_from_id(int id, int type)
 }
 
 static ::dcc::DCC *
-find_dcc_from_port(int port, int type)
+find_dcc_from_port(int port, ::dcc::DCC::dcc_type type)
 {
 	::dcc::DCC *dcc;
 	GSList *list = dcc_list;
@@ -1863,7 +1863,7 @@ is_resumable(::dcc::DCC *dcc)
 		while (list)
 		{
 			d = static_cast< ::dcc::DCC*>(list->data);
-			if (d->type == TYPE_RECV && d->dccstat != STAT_ABORTED &&
+            if (d->type == ::dcc::DCC::dcc_type::TYPE_RECV && d->dccstat != STAT_ABORTED &&
 				d->dccstat != STAT_DONE && d->dccstat != STAT_FAILED)
 			{
 				if (d != dcc && is_same_file(d, dcc))
@@ -1928,7 +1928,7 @@ dcc_check_timeouts(void)
 			dcc_calc_cps(dcc);
 			::fe::fe_dcc_update(dcc);
 
-			if (dcc->type == TYPE_SEND || dcc->type == TYPE_RECV)
+            if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND || dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 			{
 				if (prefs.hex_dcc_stall_timeout > 0)
 				{
@@ -1936,7 +1936,7 @@ dcc_check_timeouts(void)
 						&& tim - dcc->lasttime > prefs.hex_dcc_stall_timeout)
 					{
 						EMIT_SIGNAL(XP_TE_DCCSTALL, dcc->serv->front_session,
-							dcctypes[dcc->type],
+							dcctypes[static_cast<std::size_t>(dcc->type)],
 							file_part(dcc->file), dcc->nick, NULL, 0);
 						dcc_close(dcc, STAT_ABORTED, FALSE);
 					}
@@ -1944,14 +1944,14 @@ dcc_check_timeouts(void)
 			}
 			break;
 		case STAT_QUEUED:
-			if (dcc->type == TYPE_SEND || dcc->type == TYPE_CHATSEND)
+            if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND || dcc->type == ::dcc::DCC::dcc_type::TYPE_CHATSEND)
 			{
 				if (tim - dcc->offertime > prefs.hex_dcc_timeout)
 				{
 					if (prefs.hex_dcc_timeout > 0)
 					{
 						EMIT_SIGNAL(XP_TE_DCCTOUT, dcc->serv->front_session,
-							dcctypes[dcc->type],
+							dcctypes[static_cast<std::size_t>(dcc->type)],
 							file_part(dcc->file), dcc->nick, NULL, 0);
 						dcc_close(dcc, STAT_ABORTED, FALSE);
 					}
@@ -1982,16 +1982,16 @@ dcc_abort (session *sess, ::dcc::DCC *dcc)
 			dcc_close (dcc, STAT_ABORTED, FALSE);
 			switch (dcc->type)
 			{
-			case TYPE_CHATSEND:
-			case TYPE_CHATRECV:
+            case ::dcc::DCC::dcc_type::TYPE_CHATSEND:
+            case ::dcc::DCC::dcc_type::TYPE_CHATRECV:
 				EMIT_SIGNAL (XP_TE_DCCCHATABORT, sess, dcc->nick, NULL, NULL,
 								 NULL, 0);
 				break;
-			case TYPE_SEND:
+            case ::dcc::DCC::dcc_type::TYPE_SEND:
 				EMIT_SIGNAL (XP_TE_DCCSENDABORT, sess, dcc->nick,
 								 file_part (dcc->file), NULL, NULL, 0);
 				break;
-			case TYPE_RECV:
+            case ::dcc::DCC::dcc_type::TYPE_RECV:
 				EMIT_SIGNAL (XP_TE_DCCRECVABORT, sess, dcc->nick,
 								 dcc->file, NULL, NULL, 0);
 			}
@@ -2025,9 +2025,9 @@ dcc_write_chat (char *nick, char *text)
 	::dcc::DCC *dcc;
 	int len;
 
-	dcc = ::dcc::find_dcc (nick, "", TYPE_CHATRECV);
+    dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
 	if (!dcc)
-		dcc = ::dcc::find_dcc (nick, "", TYPE_CHATSEND);
+        dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
 	if (dcc && dcc->dccstat == STAT_ACTIVE)
 	{
 		len = strlen (text);
@@ -2129,7 +2129,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 		dcc->serv = sess->server;
 		dcc->dccstat = STAT_QUEUED;
 		dcc->size = st.st_size;
-		dcc->type = TYPE_SEND;
+        dcc->type = DCC::dcc_type::TYPE_SEND;
 		dcc->fp = g_open (file, OFLAGS | O_RDONLY, 0);
 		if (dcc->fp != -1)
 		{
@@ -2192,7 +2192,7 @@ xit:
 }
 
 ::dcc::DCC *
-find_dcc (const char *nick, const char *file, int type)
+find_dcc (const char *nick, const char *file, DCC::dcc_type type)
 {
 	GSList *list = dcc_list;
 	::dcc::DCC *dcc;
@@ -2201,7 +2201,7 @@ find_dcc (const char *nick, const char *file, int type)
 		dcc = (::dcc::DCC *) list->data;
 		if (nick == NULL || !rfc_casecmp (nick, dcc->nick))
 		{
-			if (type == -1 || dcc->type == type)
+            if (type == DCC::dcc_type::TYPE_ERROR || dcc->type == type)
 			{
 				if (!file[0])
 					return dcc;
@@ -2246,9 +2246,9 @@ dcc_get (::dcc::DCC *dcc)
 	switch (dcc->dccstat)
 	{
 	case STAT_QUEUED:
-		if (dcc->type != TYPE_CHATSEND)
+		if (dcc->type != DCC::dcc_type::TYPE_CHATSEND)
 		{
-			if (dcc->type == TYPE_RECV && prefs.hex_dcc_auto_resume && dcc->resumable)
+            if (dcc->type == DCC::dcc_type::TYPE_RECV && prefs.hex_dcc_auto_resume && dcc->resumable)
 			{
 				::dcc::dcc_resume (dcc);
 			}
@@ -2292,7 +2292,7 @@ dcc_get_nick (struct session *sess, char *nick)
 		dcc = (::dcc::DCC *) list->data;
 		if (!sess->server->p_cmp (nick, dcc->nick))
 		{
-			if (dcc->dccstat == STAT_QUEUED && dcc->type == TYPE_RECV)
+            if (dcc->dccstat == STAT_QUEUED && dcc->type == DCC::dcc_type::TYPE_RECV)
 			{
 				dcc->resumable = 0;
 				dcc->pos = 0;
@@ -2313,7 +2313,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	char outbuf[512];
 	::dcc::DCC *dcc;
 
-	dcc = ::dcc::find_dcc (nick, "", TYPE_CHATSEND);
+    dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATSEND);
 	if (dcc)
 	{
 		switch (dcc->dccstat)
@@ -2328,7 +2328,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 			dcc_close (dcc, 0, TRUE);
 		}
 	}
-	dcc = ::dcc::find_dcc (nick, "", TYPE_CHATRECV);
+    dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATRECV);
 	if (dcc)
 	{
 		switch (dcc->dccstat)
@@ -2350,7 +2350,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	dcc->starttime = dcc->offertime = time (0);
 	dcc->serv = sess->server;
 	dcc->dccstat = STAT_QUEUED;
-	dcc->type = TYPE_CHATSEND;
+    dcc->type = DCC::dcc_type::TYPE_CHATSEND;
 	dcc->nick = strdup (nick);
 	if (passive || dcc_listen_init (dcc, sess))
 	{
@@ -2437,7 +2437,7 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 
 		if (psend)
 		{
-			dcc = find_dcc_from_id (pasvid, TYPE_CHATSEND);
+            dcc = find_dcc_from_id(pasvid, DCC::dcc_type::TYPE_CHATSEND);
 			if (dcc)
 			{
 				dcc->addr = addr;
@@ -2450,11 +2450,11 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 			return;
 		}
 
-		dcc = ::dcc::find_dcc (nick, "", TYPE_CHATSEND);
+        dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATSEND);
 		if (dcc)
 			dcc_close (dcc, 0, TRUE);
 
-		dcc = ::dcc::find_dcc (nick, "", TYPE_CHATRECV);
+        dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATRECV);
 		if (dcc)
 			dcc_close (dcc, 0, TRUE);
 
@@ -2469,13 +2469,13 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 		if (port == 0)
 		{ /* PASSIVE */
 			pasvid = atoi(word[9]);
-			dcc = find_dcc_from_id(pasvid, TYPE_SEND);
+            dcc = find_dcc_from_id(pasvid, DCC::dcc_type::TYPE_SEND);
 		} else
 		{
-			dcc = find_dcc_from_port (port, TYPE_SEND);
+            dcc = find_dcc_from_port(port, DCC::dcc_type::TYPE_SEND);
 		}
 		if (!dcc)
-			dcc = ::dcc::find_dcc (nick, word[6], TYPE_SEND);
+            dcc = ::dcc::find_dcc(nick, word[6], DCC::dcc_type::TYPE_SEND);
 		if (dcc)
 		{
 			size = BIG_STR_TO_INT (word[8]);
@@ -2510,7 +2510,7 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 	if (!g_ascii_strcasecmp (type, "Accept"))
 	{
 		port = atoi (word[7]);
-		dcc = find_dcc_from_port (port, TYPE_RECV);
+        dcc = find_dcc_from_port(port, DCC::dcc_type::TYPE_RECV);
 		if (dcc && dcc->dccstat == STAT_QUEUED)
 		{
 			dcc_connect (dcc);
@@ -2556,7 +2556,7 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 			 * Connecting to the destination and finally
 			 * sending file.
 			 */
-			dcc = find_dcc_from_id (pasvid, TYPE_SEND);
+            dcc = find_dcc_from_id(pasvid, DCC::dcc_type::TYPE_SEND);
 			if (dcc)
 			{
 				dcc->addr = addr;
@@ -2592,7 +2592,7 @@ dcc_show_list (struct session *sess)
 		dcc = (::dcc::DCC *) list->data;
 		i++;
 		PrintTextf (sess, " %s  %-10.10s %-7.7s %-7"DCC_SFMT" %-7"DCC_SFMT" %s\n",
-					 dcctypes[dcc->type], dcc->nick,
+					 dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick,
 					 _(dccstat[dcc->dccstat].name), dcc->size, dcc->pos,
 					 file_part (dcc->file));
 		list = list->next;

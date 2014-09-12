@@ -796,21 +796,21 @@ cmd_dcc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				goodtype = 0;
 				if (!g_ascii_strcasecmp (word[3], "SEND"))
 				{
-					dcc = dcc::find_dcc (word[4], word[5], TYPE_SEND);
+                    dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_SEND);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
 				if (!g_ascii_strcasecmp (word[3], "GET"))
 				{
-					dcc = dcc::find_dcc (word[4], word[5], TYPE_RECV);
+                    dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_RECV);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
 				if (!g_ascii_strcasecmp (word[3], "CHAT"))
 				{
-					dcc = dcc::find_dcc (word[4], "", TYPE_CHATRECV);
+                    dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
 					if (!dcc)
-						dcc = dcc::find_dcc (word[4], "", TYPE_CHATSEND);
+                        dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
@@ -849,7 +849,7 @@ cmd_dcc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 					dcc::dcc_get_nick (sess, nick);
 			} else
 			{
-				dcc = dcc::find_dcc (nick, file, TYPE_RECV);
+                dcc = dcc::find_dcc(nick, file, ::dcc::DCC::dcc_type::TYPE_RECV);
 				if (dcc)
 					dcc_get (dcc);
 				else

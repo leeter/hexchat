@@ -32,10 +32,7 @@ namespace hexchat{
 #define STAT_CONNECTING 4
 #define STAT_ABORTED 5
 
-#define TYPE_SEND 0
-#define TYPE_RECV 1
-#define TYPE_CHATRECV 2
-#define TYPE_CHATSEND 3
+    
 
 #define CPS_AVG_WINDOW 10
 namespace dcc{
@@ -53,6 +50,13 @@ struct proxy_state;
 
 struct DCC
 {
+    enum class dcc_type {
+        TYPE_ERROR = -1,
+        TYPE_SEND = 0,
+        TYPE_RECV,
+        TYPE_CHATRECV,
+        TYPE_CHATSEND
+    };
 	struct ::server *serv;
 	struct dcc_chat *dccchat;
 	struct proxy_state *proxy;
@@ -84,7 +88,7 @@ struct DCC
 	char *file;					/* utf8 */
 	char *destfile;			/* utf8 */
 	char *nick;
-	unsigned char type;		  /* 0 = SEND  1 = RECV  2 = CHAT */
+	dcc_type type;		  /* 0 = SEND  1 = RECV  2 = CHAT */
 	unsigned char dccstat;	  /* 0 = QUEUED  1 = ACTIVE  2 = FAILED  3 = DONE */
 	unsigned int resume_sent:1;	/* resume request sent */
 	unsigned int fastsend:1;
@@ -127,7 +131,7 @@ void dcc_change_nick (server *serv, char *oldnick, char *newnick);
 void dcc_notify_kill (struct server *serv);
 struct DCC *dcc_write_chat (char *nick, char *text);
 void dcc_send (struct session *sess, const char *to, char *file, int maxcps, int passive);
-struct DCC *find_dcc (const char *nick, const char *file, int type);
+struct DCC *find_dcc(const char *nick, const char *file, DCC::dcc_type type);
 void dcc_get_nick (struct session *sess, char *nick);
 void dcc_chat (session *sess, char *nick, int passive);
 void handle_dcc (session *sess, char *nick, char *word[], char *word_eol[],
