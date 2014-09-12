@@ -29,6 +29,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <queue>
+#include <utility>
 #include <ctime>			/* need time_t */
 #include <boost/optional.hpp>
 
@@ -575,7 +577,7 @@ public:
 
 	ircnet *network;						/* points to entry in servlist.c or NULL! */
 
-	GSList *outbound_queue;
+    std::priority_queue<std::pair<int, std::string> > outbound_queue;
 	time_t next_send;						/* cptr->since in ircu */
 	time_t prev_now;					/* previous now-time */
 	int sendq_len;						/* queue size */

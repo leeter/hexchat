@@ -2084,7 +2084,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 /* also light/dark gray (14/15) */
 /* 5,7,8 are all shades of yellow which happen to look damn near the same */
 
-static char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
+static const char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
 int
 text_color_of (const std::string &name)

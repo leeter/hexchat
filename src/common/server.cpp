@@ -23,10 +23,12 @@
 
 /*#define DEBUG_MSPROXY*/
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <iterator>
 #include <new>
+#include <utility>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -183,9 +185,8 @@ server_send_real (server *serv, const char *buf, int len)
 static int
 tcp_send_queue (server *serv)
 {
-	char *buf, *p;
-	int len, i, pri;
-	GSList *list;
+	const char *p;
+	int  i;
 	time_t now = time (0);
 
 	/* did the server close since the timeout was added? */
@@ -193,48 +194,30 @@ tcp_send_queue (server *serv)
 		return 0;
 
 	/* try priority 2,1,0 */
-	pri = 2;
-	while (pri >= 0)
+	while (!serv->outbound_queue.empty())
 	{
-		list = serv->outbound_queue;
-		while (list)
+        auto & top = serv->outbound_queue.top();
+
+		if (serv->next_send < now)
+			serv->next_send = now;
+		if (serv->next_send - now >= 10)
 		{
-			buf = (char *) list->data;
-			if (buf[0] == pri)
-			{
-				buf++;	/* skip the priority byte */
-				len = strlen (buf);
-
-				if (serv->next_send < now)
-					serv->next_send = now;
-				if (serv->next_send - now >= 10)
-				{
-					/* check for clock skew */
-					if (now >= serv->prev_now)
-						return 1;		  /* don't remove the timeout handler */
-					/* it is skewed, reset to something sane */
-					serv->next_send = now;
-				}
-
-				for (p = buf, i = len; i && *p != ' '; p++, i--);
-				serv->next_send += (2 + i / 120);
-				serv->sendq_len -= len;
-				serv->prev_now = now;
-				fe_set_throttle (serv);
-
-				server_send_real (serv, buf, len);
-
-				buf--;
-				serv->outbound_queue = g_slist_remove (serv->outbound_queue, buf);
-				free (buf);
-				list = serv->outbound_queue;
-			} else
-			{
-				list = list->next;
-			}
+			/* check for clock skew */
+			if (now >= serv->prev_now)
+				return 1;		  /* don't remove the timeout handler */
+			/* it is skewed, reset to something sane */
+			serv->next_send = now;
 		}
-		/* now try pri 0 */
-		pri--;
+
+		for (p = top.second.c_str(), i = top.second.size(); i && *p != ' '; p++, i--);
+		serv->next_send += (2 + i / 120);
+		serv->sendq_len -= top.second.size();
+		serv->prev_now = now;
+		fe_set_throttle (serv);
+
+        server_send_real(serv, top.second.c_str(), top.second.size());
+
+        serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
 	}
 	return 0;						  /* remove the timeout handler */
 }
@@ -242,37 +225,31 @@ tcp_send_queue (server *serv)
 int
 tcp_send_len (server *serv, const char *buf, int len)
 {
-	char *dbuf;
-	int noqueue = !serv->outbound_queue;
+	bool noqueue = serv->outbound_queue.empty();
 
 	if (!prefs.hex_net_throttle)
 		return server_send_real (serv, buf, len);
-
-	dbuf = static_cast<char*>(malloc (len + 2));	/* first byte is the priority */
-	if (!dbuf)
-		return -1;
-	dbuf[0] = 2;	/* pri 2 for most things */
-	memcpy (dbuf + 1, buf, len);
-	dbuf[len + 1] = 0;
+    std::string dbuf(buf, len);
+	int priority = 2;	/* pri 2 for most things */
 
 	/* privmsg and notice get a lower priority */
-	if (g_ascii_strncasecmp (dbuf + 1, "PRIVMSG", 7) == 0 ||
-		 g_ascii_strncasecmp (dbuf + 1, "NOTICE", 6) == 0)
+	if (g_ascii_strncasecmp (dbuf.c_str() + 1, "PRIVMSG", 7) == 0 ||
+		 g_ascii_strncasecmp (dbuf.c_str() + 1, "NOTICE", 6) == 0)
 	{
-		dbuf[0] = 1;
+		priority = 1;
 	}
 	else
 	{
 		/* WHO/MODE get the lowest priority */
-		if (g_ascii_strncasecmp (dbuf + 1, "WHO ", 4) == 0 ||
+        if (g_ascii_strncasecmp(dbuf.c_str() + 1, "WHO ", 4) == 0 ||
 		/* but only MODE queries, not changes */
-			(g_ascii_strncasecmp (dbuf + 1, "MODE", 4) == 0 &&
-			 strchr (dbuf, '-') == nullptr &&
-			 strchr (dbuf, '+') == nullptr))
-			dbuf[0] = 0;
+        (g_ascii_strncasecmp(dbuf.c_str() + 1, "MODE", 4) == 0 &&
+			 dbuf.find_first_of('-') == std::string::npos &&
+             dbuf.find_first_of('+') == std::string::npos))
+			priority = 0;
 	}
 
-	serv->outbound_queue = g_slist_append (serv->outbound_queue, dbuf);
+    serv->outbound_queue.emplace(std::make_pair(priority, dbuf));// = g_slist_append(serv->outbound_queue, dbuf);
 	serv->sendq_len += len; /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (serv) && noqueue)
@@ -1021,7 +998,8 @@ server::auto_reconnect (bool send_quit, int err)
 void
 server::flush_queue ()
 {
-	list_free (&this->outbound_queue);
+    decltype(this->outbound_queue) empty;
+    std::swap(this->outbound_queue, empty);
 	this->sendq_len = 0;
 	fe_set_throttle (this);
 }
@@ -2122,7 +2100,6 @@ server::server()
     loginmethod(),
     modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
     network(),						/* points to entry in servlist.c or NULL! */
-    outbound_queue(),
     next_send(),						/* cptr->since in ircu */
     prev_now(),					/* previous now-time */
     sendq_len(),						/* queue size */
