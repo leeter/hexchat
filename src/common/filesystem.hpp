@@ -26,13 +26,6 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 
-#ifdef XOF_DOMODE
-#undef XOF_DOMODE
-#endif
-#ifdef XOF_FULLPATH
-#undef XOF_FULLPATH
-#endif
-
 namespace io
 {
     namespace fs

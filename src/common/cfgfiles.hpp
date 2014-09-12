@@ -55,8 +55,10 @@ int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
 
-#define XOF_DOMODE 1
-#define XOF_FULLPATH 2
+enum xof {
+    XOF_DOMODE = 1,
+    XOF_FULLPATH = 2
+};
 
 #define STRUCT_OFFSET_STR(type,field) \
 ( (unsigned int) (((char *) (&(((type *) NULL)->field)))- ((char *) NULL)) )
