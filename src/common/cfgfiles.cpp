@@ -52,8 +52,8 @@
 namespace bio = boost::iostreams;
 namespace fs = boost::filesystem;
 
-#define DEF_FONT "Monospace 9"
-#define DEF_FONT_ALTER "Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont"
+const std::string DEF_FONT("Monospace 9");
+const std::string DEF_FONT_ALTER("Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont");
 
 const char * const languages[LANGUAGES_LENGTH] = {
 	"af", "sq", "am", "ast", "az", "eu", "be", "bg", "ca", "zh_CN",      /*  0 ..  9 */
@@ -913,11 +913,11 @@ load_default_config(void)
 	}
 	else
 	{
-		strcpy (prefs.hex_text_font, DEF_FONT);
-		strcpy (prefs.hex_text_font_main, DEF_FONT);
+		strcpy (prefs.hex_text_font, DEF_FONT.c_str());
+		strcpy (prefs.hex_text_font_main, DEF_FONT.c_str());
 	}
 
-	strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER);
+	strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.c_str());
 	langs = get_default_spell_languages ();
 	strcpy (prefs.hex_text_spell_langs, langs);
 
