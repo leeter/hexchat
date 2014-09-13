@@ -2287,7 +2287,7 @@ server::get_away_message(const std::string & nick) const NOEXCEPT
 void 
 server::save_away_message(const std::string& nick, const boost::optional<std::string>& message)
 {
-    this->away_map.emplace(nick, std::make_pair(static_cast<bool>(message), message ? message.get() : ""));
+    this->away_map.insert({ nick, std::make_pair(static_cast<bool>(message), message ? message.get() : "") });
 }
 
 void
