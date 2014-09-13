@@ -1,5 +1,25 @@
-// notifications.cpp : Defines the exported functions for the DLL application.
-//
+/* HexChat
+* Copyright (c) 2014 Leetsoftwerx
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 #include <SDKDDKVer.h>
 #include <roapi.h>
 #include <windows.ui.notifications.h>
@@ -14,7 +34,6 @@ namespace
     const char version[] = "1.0";
     const char helptext[] = "Notifies the user using WinRT notifications";
 
-
     static int
         cmd_cb(const char * const word[], const char * const word_eol[], void *user_data)
     {
@@ -25,7 +44,7 @@ namespace
 int
 hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
-    HRESULT hr = RoInitialize(RO_INIT_MULTITHREADED);
+    HRESULT hr = Windows::Foundation::Initialize();
     if (FAILED(hr))
         return FALSE;
     ph = plugin_handle;
@@ -46,7 +65,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 int
 hexchat_plugin_deinit(void)
 {
-    RoUninitialize();
+    Windows::Foundation::Uninitialize();
     hexchat_command(ph, "MENU DEL \"Set up WinRT Notifications\"");
     hexchat_printf(ph, "%s plugin unloaded\n", name);
     return TRUE;
