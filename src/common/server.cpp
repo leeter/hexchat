@@ -1203,7 +1203,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 /* kill all sockets & iotags of a server. Stop a connection attempt, or
    disconnect if already connected. */
 
-server_cleanup_result
+server::cleanup_result
 server::cleanup ()
 {
 	fe_set_lag (this, 0);
@@ -1246,7 +1246,7 @@ server::cleanup ()
 			closesocket (this->sok6);
 		if (this->proxy_sok6 != -1)
 			closesocket (this->proxy_sok6);*/
-        return server_cleanup_result::still_connecting;
+        return cleanup_result::still_connecting;
 	}
 
 	if (this->connected)
@@ -1256,7 +1256,7 @@ server::cleanup ()
 			close_socket (this->proxy_sok);*/
 		this->connected = false;
 		this->end_of_motd = false;
-        return server_cleanup_result::connected;
+        return cleanup_result::connected;
 	}
 
 	/* is this server in a reconnect delay? remove it! */
@@ -1264,14 +1264,14 @@ server::cleanup ()
 	{
 		fe_timeout_remove (this->recondelay_tag);
 		this->recondelay_tag = 0;
-        return server_cleanup_result::reconnecting;
+        return cleanup_result::reconnecting;
 	}
     if (this->server_connection)
     {
         this->server_connection.reset();
     }
 
-    return server_cleanup_result::not_connected;
+    return cleanup_result::not_connected;
 }
 
 // if the server isn't dead yet, kill it
@@ -1306,14 +1306,14 @@ server::disconnect (session * sess, bool sendquit, int err)
 	/* close all sockets & io tags */
 	switch (serv->cleanup ())
 	{
-    case server_cleanup_result::not_connected:							  /* it wasn't even connected! */
+    case cleanup_result::not_connected:							  /* it wasn't even connected! */
 		notc_msg (sess);
 		return;
-    case server_cleanup_result::still_connecting:							  /* it was in the process of connecting */
+    case cleanup_result::still_connecting:							  /* it was in the process of connecting */
 		sprintf (tbuf, "%d", sess->server->childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, nullptr, nullptr, nullptr, 0);
 		return;
-    case server_cleanup_result::reconnecting:
+    case cleanup_result::reconnecting:
 		shutup = true;	/* won't print "disconnected" in channels */
 	}
 

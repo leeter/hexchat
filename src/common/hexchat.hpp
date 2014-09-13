@@ -461,13 +461,6 @@ struct msproxy_state_t
 #define MECH_AES 2
 #define MECH_EXTERNAL 3
 
-enum class server_cleanup_result{
-    not_connected,
-    still_connecting,
-    connected,
-    reconnecting
-};
-
 struct ircnet;
 struct favchannel;
 
@@ -484,11 +477,18 @@ private:
     int death_timer;
     friend server *server_new(void);
 public:
+    enum class cleanup_result{
+        not_connected,
+        still_connecting,
+        connected,
+        reconnecting
+    };
+public:
     server();
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void disconnect(struct session *, bool sendquit, int err);
-    server_cleanup_result  cleanup();
+    cleanup_result cleanup();
 	void flush_queue();
 	void auto_reconnect(bool send_quit, int err);
 	/* irc protocol functions (in proto*.c) */
