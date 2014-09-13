@@ -1049,17 +1049,17 @@ void
 inbound_away (server *serv, char *nick, char *msg,
 				  const message_tags_data *tags_data)
 {
-	struct away_msg *away = server_away_find_message (serv, nick);
+    auto away_msg = serv->get_away_message(nick);
 	session *sess = nullptr;
 	GSList *list;
 
-	if (away && !strcmp (msg, away->message))	/* Seen the msg before? */
+	if (away_msg && away_msg->second == msg)	/* Seen the msg before? */
 	{
 		if (prefs.hex_away_show_once && !serv->inside_whois)
 			return;
 	} else
 	{
-		server_away_save_message (serv, nick, msg);
+        serv->save_away_message(nick, boost::make_optional<std::string>(msg != nullptr, msg));
 	}
 
 	if (prefs.hex_irc_whois_front)

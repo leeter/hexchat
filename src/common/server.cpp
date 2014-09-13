@@ -2275,65 +2275,19 @@ server::set_name (const std::string& name)
 	}
 }
 
-struct away_msg *
-server_away_find_message (server *serv, char *nick)
+boost::optional<const std::pair<bool, std::string>& >
+server::get_away_message(const std::string & nick) const NOEXCEPT
 {
-	struct away_msg *away;
-	GSList *list = away_list;
-	while (list)
-	{
-		away = (struct away_msg *) list->data;
-		if (away->server == serv && !serv->p_cmp (nick, away->nick))
-			return away;
-		list = list->next;
-	}
-	return nullptr;
+    auto res = this->away_map.find(nick);
+    if (res == this->away_map.cend())
+        return boost::none;
+    return boost::make_optional<const std::pair<bool, std::string>&>(res->second);
 }
 
-static void
-server_away_free_messages (server *serv)
+void 
+server::save_away_message(const std::string& nick, const boost::optional<std::string>& message)
 {
-	GSList *list, *next;
-	struct away_msg *away;
-
-	list = away_list;
-	while (list)
-	{
-		away = static_cast<away_msg*>(list->data);
-		next = list->next;
-		if (away->server == serv)
-		{
-			away_list = g_slist_remove (away_list, away);
-			free (away->message);
-			delete away;
-			next = away_list;
-		}
-		list = next;
-	}
-}
-
-void
-server_away_save_message (server *serv, char *nick, char *msg)
-{
-	struct away_msg *away = server_away_find_message (serv, nick);
-
-	if (away)						  /* Change message for known user */
-	{
-		if (away->message)
-			free (away->message);
-		away->message = strdup (msg);
-	} else
-		/* Create brand new entry */
-	{
-		away = new(std::nothrow) away_msg();// malloc (sizeof (struct away_msg));
-		if (away)
-		{
-			away->server = serv;
-			safe_strcpy (away->nick, nick, sizeof (away->nick));
-			away->message = strdup (msg);
-			away_list = g_slist_prepend (away_list, away);
-		}
-	}
+    this->away_map.emplace(nick, std::make_pair(static_cast<bool>(message), message ? message.get() : ""));
 }
 
 void
@@ -2345,8 +2299,6 @@ server_free (server *serv)
 
 	dcc::dcc_notify_kill (serv);
 	serv->flush_queue ();
-	server_away_free_messages (serv);
-
 
 	if (serv->favlist)
 		g_slist_free_full (serv->favlist, (GDestroyNotify) servlist_favchan_free);

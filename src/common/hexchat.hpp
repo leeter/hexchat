@@ -31,8 +31,15 @@
 #include <vector>
 #include <queue>
 #include <utility>
+#include <unordered_map>
 #include <ctime>			/* need time_t */
 #include <boost/optional.hpp>
+
+#if _MSC_VER < 1900
+#define NOEXCEPT throw()
+#else
+#define NOEXCEPT noexcept
+#endif
 
 #ifdef USE_OPENSSL
 #ifdef __APPLE__
@@ -475,6 +482,8 @@ struct server
 private:
     void reset_to_defaults();
     int death_timer;
+    std::unordered_map<std::string, std::pair<bool, std::string> > away_map;
+
     friend server *server_new(void);
 public:
     enum class cleanup_result{
@@ -533,6 +542,8 @@ public:
     // BUGBUG return const!!!
     boost::optional<session&> find_channel(const std::string &chan);
     bool is_channel_name(const std::string &chan) const;
+    boost::optional<const std::pair<bool, std::string>& > get_away_message(const std::string & nick) const NOEXCEPT;
+    void save_away_message(const std::string& nick, const boost::optional<std::string>& message);
     
 
 	int port;
@@ -655,13 +666,6 @@ struct commands
 	char needchannel;
 	gint16 handle_quotes;
 	const char *help;
-};
-
-struct away_msg
-{
-	struct server *server;
-	char nick[NICKLEN];
-	char *message;
 };
 
 /* not just for popups, but used for usercommands, ctcp replies,

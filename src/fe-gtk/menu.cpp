@@ -589,7 +589,6 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	char unknown[96];
 	char *real, *fmt;
 	const char *users_country;
-	struct away_msg *away;
 	gboolean missing = FALSE;
 	GtkWidget *item;
 
@@ -656,16 +655,16 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 
 	if (user->away)
 	{
-		away = server_away_find_message (current_sess->server, user->nick);
+        auto away = current_sess->server->get_away_message(user->nick);// server_away_find_message(current_sess->server, user->nick);
 		if (away)
 		{
-			char *msg = strip_color (away->message ? away->message : unknown, -1, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
+			char *msg = strip_color (away->first ? away->second.c_str() : unknown, -1, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
 			snprintf (buf, sizeof (buf), fmt, _("Away Msg:"), msg);
 			g_free (msg);
 			item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 			g_signal_connect (G_OBJECT (item), "activate",
 									G_CALLBACK (copy_to_clipboard_cb), 
-									away->message ? away->message : unknown);
+									away->first ? const_cast<char*>(away->second.c_str()) : unknown);
 		}
 		else
 			missing = TRUE;
