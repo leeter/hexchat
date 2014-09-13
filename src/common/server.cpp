@@ -249,7 +249,7 @@ tcp_send_len (server *serv, const char *buf, int len)
 			priority = 0;
 	}
 
-    serv->outbound_queue.emplace(std::make_pair(priority, dbuf));// = g_slist_append(serv->outbound_queue, dbuf);
+    serv->outbound_queue.emplace(std::make_pair(priority, dbuf));
 	serv->sendq_len += len; /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (serv) && noqueue)
@@ -274,7 +274,7 @@ tcp_sendf (server *serv, const char *fmt, ...)
 	int len;
 
 	va_start (args, fmt);
-	len = vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
+	len = std::vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
 	va_end (args);
 
 	send_buf[sizeof (send_buf) - 1] = '\0';
