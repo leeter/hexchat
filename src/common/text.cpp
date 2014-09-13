@@ -637,7 +637,7 @@ log_open (session *sess)
         g_free(path);
 
 		fe_message (message, FE_MSG_WAIT | FE_MSG_ERROR);
-        
+
 		g_free (message);
 		log_error = true;
 	}
@@ -1706,7 +1706,7 @@ pevent_load (const char *filename)
 			continue;
 		if (line[0] == '#')
 			continue;
-		
+
 		auto ofs = line.find_first_of('=');
 		if (ofs == std::string::npos)
 			continue;
@@ -2254,7 +2254,7 @@ pevent_save (char *fn)
 /* =========================== */
 /* ========== SOUND ========== */
 /* =========================== */
- char *sound_files[NUM_XP];
+char *sound_files[NUM_XP];
 
 void
 sound_beep (session *sess)
