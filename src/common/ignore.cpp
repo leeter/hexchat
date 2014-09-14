@@ -345,8 +345,8 @@ flood_autodialog_timeout (gpointer)
 	return FALSE;
 }
 
-int
-flood_check (const char *nick, char *ip, server *serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
+bool
+flood_check (const char *nick, const char *ip, server *serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
 {
 	/*
 	   serv
@@ -389,7 +389,7 @@ flood_check (const char *nick, char *ip, server *serv, session *sess, flood_chec
 
 					/* ignore CTCP */
 					ignore_add (real_ip, IG_CTCP, FALSE);
-					return 0;
+					return false;
 				}
 			}
 		}
@@ -420,12 +420,12 @@ flood_check (const char *nick, char *ip, server *serv, session *sess, flood_chec
 						/* turn it back on in 30 secs */
 						fe_timeout_add (30000, flood_autodialog_timeout, NULL);
 					}
-					return 0;
+					return false;
 				}
 			}
 		}
 	}
-	return 1;
+	return true;
 }
 
 GSList * 
