@@ -35,7 +35,7 @@
 #include <ctime>			/* need time_t */
 #include <boost/optional.hpp>
 
-#if _MSC_VER < 1900
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define NOEXCEPT throw()
 #else
 #define NOEXCEPT noexcept

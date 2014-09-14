@@ -144,16 +144,16 @@ random_line (const std::string & file_name)
 }
 
 void
-server_sendpart (server * serv, char *channel, char *reason)
+server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason)
 {
 	if (!reason)
 	{
         std::string temp = random_line(prefs.hex_irc_part_reason);
-		serv->p_part (channel, temp);
+		serv.p_part (channel, temp);
 	} else
 	{
 		/* reason set by /quit, /close argument */
-		serv->p_part (channel, reason);
+		serv.p_part (channel, reason.get());
 	}
 }
 
@@ -2969,7 +2969,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		if (reason[0] == 0)
 			reason = NULL;
-		server_sendpart (sess->server, chan, reason);
+		server_sendpart (*(sess->server), chan, boost::make_optional<const std::string&>(reason != nullptr, reason));
 		return TRUE;
 	}
 	return FALSE;
