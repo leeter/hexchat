@@ -31,20 +31,26 @@ extern int ignored_chan;
 extern int ignored_noti;
 extern int ignored_invi;
 
-#define IG_PRIV	1
-#define IG_NOTI	2
-#define IG_CHAN	4
-#define IG_CTCP	8
-#define IG_INVI	16
-#define IG_UNIG	32
-#define IG_NOSAVE	64
-#define IG_DCC		128
+
 
 struct ignore
 {
+    typedef unsigned int ignore_type;
+    enum type : ignore_type{
+        IG_PRIV = 1,
+        IG_NOTI = 2,
+        IG_CHAN = 4,
+        IG_CTCP = 8,
+        IG_INVI = 16,
+        IG_UNIG = 32,
+        IG_NOSAVE = 64,
+        IG_DCC = 128,
+        IG_DEFAULTS = IG_CHAN | IG_PRIV | IG_NOTI | IG_CTCP | IG_DCC | IG_INVI
+    };
+    
 	ignore();
 	std::string mask;
-	unsigned int type;	/* one of more of IG_* ORed together */
+	ignore_type type;	/* one of more of IG_* ORed together */
 };
 
 enum class flood_check_type
@@ -58,7 +64,7 @@ struct ignore *ignore_exists (const std::string& mask);
 int ignore_add(const std::string& mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
 bool ignore_del(const std::string& mask, struct ignore *ig);
-bool ignore_check(const std::string& mask, int type);
+bool ignore_check(const std::string& mask, ignore::ignore_type type);
 void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);

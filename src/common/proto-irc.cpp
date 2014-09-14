@@ -1189,7 +1189,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			return;
 			
 		case WORDL('I','N','V','I'):
-			if (ignore_check (word[1], IG_INVI))
+            if (ignore_check(word[1], ignore::IG_INVI))
 				return;
 			
 			if (word[4][0] == ':')
@@ -1239,7 +1239,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 						text++;
 				}
 
-				if (!ignore_check (word[1], IG_NOTI))
+                if (!ignore_check(word[1], ignore::IG_NOTI))
 					inbound_notice (serv, word[3], nick, text, ip, id, tags_data);
 			}
 			return;
@@ -1284,13 +1284,13 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					{
 						if (serv->is_channel_name (to))
 						{
-							if (ignore_check (word[1], IG_CHAN))
+                            if (ignore_check(word[1], ignore::IG_CHAN))
 								return;
 							inbound_chanmsg (serv, NULL, to, nick, text, FALSE, id,
 												  tags_data);
 						} else
 						{
-							if (ignore_check (word[1], IG_PRIV))
+                            if (ignore_check(word[1], ignore::IG_PRIV))
 								return;
 							inbound_privmsg (serv, nick, ip, text, id, tags_data);
 						}

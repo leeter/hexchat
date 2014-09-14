@@ -58,28 +58,28 @@ get_store (void)
 	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (ignorewin), "view")));
 }
 
-static int
+static ignore::ignore_type
 ignore_get_flags (GtkTreeModel *model, GtkTreeIter *iter)
 {
 	gboolean chan, priv, noti, ctcp, dcc, invi, unig;
-	int flags = 0;
+    ignore::ignore_type flags = 0;
 
 	gtk_tree_model_get (model, iter, 1, &chan, 2, &priv, 3, &noti,
 	                    4, &ctcp, 5, &dcc, 6, &invi, 7, &unig, -1);
 	if (chan)
-		flags |= IG_CHAN;
+        flags |= ignore::IG_CHAN;
 	if (priv)
-		flags |= IG_PRIV;
+        flags |= ignore::IG_PRIV;
 	if (noti)
-		flags |= IG_NOTI;
+        flags |= ignore::IG_NOTI;
 	if (ctcp)
-		flags |= IG_CTCP;
+        flags |= ignore::IG_CTCP;
 	if (dcc)
-		flags |= IG_DCC;
+        flags |= ignore::IG_DCC;
 	if (invi)
-		flags |= IG_INVI;
+        flags |= ignore::IG_INVI;
 	if (unig)
-		flags |= IG_UNIG;
+        flags |= ignore::IG_UNIG;
 	return flags;
 }
 
@@ -233,7 +233,7 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
 	GtkTreePath *path;
-	int flags = IG_CHAN | IG_PRIV | IG_NOTI | IG_CTCP | IG_DCC | IG_INVI;
+    ignore::ignore_type flags = ignore::IG_DEFAULTS;
 
 	if (cancel)
 		return;
@@ -391,13 +391,13 @@ ignore_gui_open ()
 		struct ignore *ignore = static_cast<struct ignore *>(temp->data);
 
 		mask = ignore->mask.c_str();
-		chan = (ignore->type & IG_CHAN);
-		priv = (ignore->type & IG_PRIV);
-		notice = (ignore->type & IG_NOTI);
-		ctcp = (ignore->type & IG_CTCP);
-		dcc = (ignore->type & IG_DCC);
-		invite = (ignore->type & IG_INVI);
-		unignore = (ignore->type & IG_UNIG);
+        chan = (ignore->type & ignore::IG_CHAN);
+        priv = (ignore->type & ignore::IG_PRIV);
+        notice = (ignore->type & ignore::IG_NOTI);
+        ctcp = (ignore->type & ignore::IG_CTCP);
+        dcc = (ignore->type & ignore::IG_DCC);
+        invite = (ignore->type & ignore::IG_INVI);
+        unignore = (ignore->type & ignore::IG_UNIG);
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,

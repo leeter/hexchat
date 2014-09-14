@@ -115,7 +115,7 @@ random_line (const std::string & file_name)
     {
         fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
     } 
-    catch (const boost::exception& ex)
+    catch (const boost::exception&)
     {
         return file_name;
     }
@@ -2309,25 +2309,25 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			return TRUE;
 		}
 		if (!g_ascii_strcasecmp (word[i], "UNIGNORE"))
-			type |= IG_UNIG;
+            type |= ignore::IG_UNIG;
 		else if (!g_ascii_strcasecmp (word[i], "ALL"))
-			type |= IG_PRIV | IG_NOTI | IG_CHAN | IG_CTCP | IG_INVI | IG_DCC;
+            type |= ignore::IG_PRIV | ignore::IG_NOTI | ignore::IG_CHAN | ignore::IG_CTCP | ignore::IG_INVI | ignore::IG_DCC;
 		else if (!g_ascii_strcasecmp (word[i], "PRIV"))
-			type |= IG_PRIV;
+            type |= ignore::IG_PRIV;
 		else if (!g_ascii_strcasecmp (word[i], "NOTI"))
-			type |= IG_NOTI;
+            type |= ignore::IG_NOTI;
 		else if (!g_ascii_strcasecmp (word[i], "CHAN"))
-			type |= IG_CHAN;
+            type |= ignore::IG_CHAN;
 		else if (!g_ascii_strcasecmp (word[i], "CTCP"))
-			type |= IG_CTCP;
+            type |= ignore::IG_CTCP;
 		else if (!g_ascii_strcasecmp (word[i], "INVI"))
-			type |= IG_INVI;
+            type |= ignore::IG_INVI;
 		else if (!g_ascii_strcasecmp (word[i], "QUIET"))
 			quiet = 1;
 		else if (!g_ascii_strcasecmp (word[i], "NOSAVE"))
-			type |= IG_NOSAVE;
+            type |= ignore::IG_NOSAVE;
 		else if (!g_ascii_strcasecmp (word[i], "DCC"))
-			type |= IG_DCC;
+            type |= ignore::IG_DCC;
 		else
 		{
 			sprintf (tbuf, _("Unknown arg '%s' ignored."), word[i]);
