@@ -23,8 +23,7 @@
 #include <boost/iostreams/stream.hpp>
 #include "charset_helpers.hpp"
 #include "filesystem.hpp"
-
-char* get_xdir(void);
+#include "cfgfiles.hpp"
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -75,7 +74,7 @@ namespace io
 
             bfs::path file_path = make_path(file);
             if (!(xof_flags & XOF_FULLPATH))
-                file_path = make_path(get_xdir()) / file_path;
+                file_path = make_path(config::config_dir()) / file_path;
             if (xof_flags & XOF_DOMODE)
             {
                 int tfd;

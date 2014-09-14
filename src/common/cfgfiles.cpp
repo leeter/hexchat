@@ -356,6 +356,15 @@ get_xdir (void)
 	return xdir;
 }
 
+namespace config
+{
+    const ::std::string& config_dir()
+    {
+        static const std::string config_dir(get_xdir());
+        return config_dir;
+    }
+}
+
 int
 check_config_dir (void)
 {

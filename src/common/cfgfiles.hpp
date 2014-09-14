@@ -22,6 +22,7 @@
 #ifndef HEXCHAT_CFGFILES_HPP
 #define HEXCHAT_CFGFILES_HPP
 
+#include <string>
 #include <iosfwd>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -32,7 +33,10 @@
 
 extern char *xdir;
 extern const char * const languages[LANGUAGES_LENGTH];
-
+namespace config
+{
+    const ::std::string& config_dir();
+}
 char *cfg_get_str (char *cfg, const char *var, char *dest, int dest_len);
 int cfg_get_bool (char *var);
 int cfg_get_int_with_result (char *cfg, const char *var, int *result);
