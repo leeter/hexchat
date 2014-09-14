@@ -220,7 +220,7 @@ scrollback_save (session *sess, const std::string & text)
 	time_t stamp;
 	size_t len;
 
-	if (sess->type == SESS_SERVER && prefs.hex_gui_tab_server == 1)
+    if (sess->type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
 
 	if (sess->text_scrollback == SET_DEFAULT)

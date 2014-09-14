@@ -372,7 +372,7 @@ log_handler (const gchar   *log_domain,
 
 	sess = find_dialog (static_cast<server*>(serv_list->data), "(warnings)");
 	if (!sess)
-		sess = new_ircwindow (static_cast<server*>(serv_list->data), "(warnings)", SESS_DIALOG, 0);
+        sess = new_ircwindow(static_cast<server*>(serv_list->data), "(warnings)", session::SESS_DIALOG, 0);
 
 	PrintTextf (sess, "%s\t%s\n", log_domain, message);
 	if (getenv ("HEXCHAT_WARNING_ABORT"))
@@ -403,7 +403,7 @@ fe_new_window (session *sess, int focus)
 {
 	int tab = FALSE;
 
-	if (sess->type == SESS_DIALOG)
+    if (sess->type == session::SESS_DIALOG)
 	{
 		if (prefs.hex_gui_tab_dialogs)
 			tab = TRUE;

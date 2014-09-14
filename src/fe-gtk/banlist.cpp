@@ -792,7 +792,7 @@ banlist_opengui (struct session *sess)
 	GtkWidget *table, *vbox, *bbox;
 	char tbuf[256];
 
-	if (sess->type != SESS_CHANNEL || sess->channel[0] == 0)
+    if (sess->type != session::SESS_CHANNEL || sess->channel[0] == 0)
 	{
 		fe_message (_("You can only open the Ban List window while in a channel tab."), FE_MSG_ERROR);
 		return;

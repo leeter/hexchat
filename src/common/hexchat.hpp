@@ -350,13 +350,6 @@ struct hexchatprefs
 	unsigned int save_pevents:1;
 };
 
-/* Session types */
-#define SESS_SERVER	1
-#define SESS_CHANNEL	2
-#define SESS_DIALOG	3
-#define SESS_NOTICES	4
-#define SESS_SNOTICES	5
-
 /* Per-Channel Settings */
 #define SET_OFF 0
 #define SET_ON 1
@@ -387,7 +380,16 @@ inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_se
 
 struct session
 {
-	session(struct server *serv, char *from, int type, int focus);
+    typedef int session_type;
+    /* Session types */
+    enum type: session_type{
+        SESS_SERVER = 1,
+        SESS_CHANNEL,
+        SESS_DIALOG,
+        SESS_NOTICES,
+        SESS_SNOTICES
+    };
+    session(struct server *serv, char *from, session::session_type type, int focus);
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
 	guint8 alert_beep;
@@ -435,7 +437,7 @@ struct session
 	struct session_gui *gui;		/* initialized by fe_new_window */
 	struct restore_gui *res;
 
-	int type;					/* SESS_* */
+	session::session_type type;					/* SESS_* */
 
 	int lastact_idx;		/* the sess_list_by_lastact[] index of the list we're in.
 							 * For valid values, see defines of LACT_*. */

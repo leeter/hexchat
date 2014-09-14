@@ -803,7 +803,7 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 				free (serv->networkname);
 			serv->networkname = strdup (word[w] + 8);*/
 
-			if (serv->server_session->type == SESS_SERVER)
+            if (serv->server_session->type == session::SESS_SERVER)
 			{
 				safe_strcpy (serv->server_session->channel, word[w] + 8, CHANLEN);
 				fe_set_channel (serv->server_session);

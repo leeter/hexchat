@@ -167,7 +167,7 @@ userlist_button_cb (GtkWidget * button, const char *cmd)
 	if (strstr (cmd, "%a"))
 		using_allnicks = true;
 
-	if (sess->type == SESS_DIALOG)
+    if (sess->type == session::SESS_DIALOG)
 	{
 		/* fake a selection */
 		nicks.emplace_back(sess->channel);
@@ -793,7 +793,7 @@ menu_cmbuttons_showhide_cb (session *sess)
 {
 	switch (sess->type)
 	{
-	case SESS_CHANNEL:
+    case session::SESS_CHANNEL:
 		if (prefs.hex_gui_mode_buttons)
 			gtk_widget_show (sess->gui->topicbutton_box);
 		else
@@ -1181,7 +1181,7 @@ menu_newserver_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-	new_ircwindow (NULL, NULL, SESS_SERVER, 0);
+    new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1191,7 +1191,7 @@ menu_newchannel_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-	new_ircwindow (current_sess->server, NULL, SESS_CHANNEL, 0);
+    new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1205,7 +1205,7 @@ menu_newserver_tab (GtkWidget * wid, gpointer none)
 	/* force focus if setting is "only requested tabs" */
 	if (prefs.hex_gui_tab_newtofront == 2)
 		prefs.hex_gui_tab_newtofront = 1;
-	new_ircwindow (NULL, NULL, SESS_SERVER, 0);
+    new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
 	prefs.hex_gui_tab_chans = old;
 	prefs.hex_gui_tab_newtofront = oldf;
 }
@@ -1216,7 +1216,7 @@ menu_newchannel_tab (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 1;
-	new_ircwindow (current_sess->server, NULL, SESS_CHANNEL, 0);
+    new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 

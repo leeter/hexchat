@@ -962,7 +962,7 @@ server::auto_reconnect (bool send_quit, int err)
 	while (list)				  /* make sure auto rejoin can work */
 	{
 		s = static_cast<session*>(list->data);
-		if (s->type == SESS_CHANNEL && s->channel[0])
+        if (s->type == session::SESS_CHANNEL && s->channel[0])
 		{
 			strcpy (s->waitchannel, s->channel);
 			strcpy (s->willjoinchannel, s->channel);
@@ -1012,7 +1012,7 @@ server::find_channel(const std::string &chan)
     while (list)
     {
         sess = static_cast<session*>(list->data);
-        if ((this == sess->server) && sess->type == SESS_CHANNEL)
+        if ((this == sess->server) && sess->type == session::SESS_CHANNEL)
         {
             if (!this->p_cmp(chan.c_str(), sess->channel))
                 return *sess;
@@ -1325,11 +1325,11 @@ server::disconnect (session * sess, bool sendquit, int err)
 		sess = (struct session *) list->data;
 		if (sess->server == serv)
 		{
-			if (!shutup || sess->type == SESS_SERVER)
+            if (!shutup || sess->type == session::SESS_SERVER)
 				/* print "Disconnected" to each window using this server */
 				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), nullptr, nullptr, nullptr, 0);
 
-			if (!sess->channel[0] || sess->type == SESS_CHANNEL)
+            if (!sess->channel[0] || sess->type == session::SESS_CHANNEL)
 				clear_channel (sess);
 		}
 		list = list->next;
@@ -2262,7 +2262,7 @@ server::set_name (const std::string& name)
 		list = list->next;
 	}
 
-	if (this->server_session->type == SESS_SERVER)
+    if (this->server_session->type == session::SESS_SERVER)
 	{
 		if (this->network)
 		{

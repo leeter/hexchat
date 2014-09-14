@@ -128,7 +128,7 @@ tray_count_channels (void)
 	{
 		sess = static_cast<session*>(list->data);
 		if (sess->server->connected && sess->channel[0] &&
-			 sess->type == SESS_CHANNEL)
+            sess->type == session::SESS_CHANNEL)
 			cons++;
 	}
 	return cons;

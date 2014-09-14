@@ -1357,7 +1357,7 @@ static struct gcomp_data old_gcomp;
 static int
 double_chan_cb (session *lsess, GList **list)
 {
-	if (lsess->type == SESS_CHANNEL)
+    if (lsess->type == session::SESS_CHANNEL)
 		*list = g_list_prepend(*list, lsess->channel);
 	return TRUE;
 }
@@ -1495,7 +1495,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 
 	is_nick = (ent[0] == '#' || ent[0] == '&' || is_cmd) ? 0 : 1;
 	
-	if (sess->type == SESS_DIALOG && is_nick)
+    if (sess->type == session::SESS_DIALOG && is_nick)
 	{
 		/* tab in a dialog completes the other person's name */
 		if (rfc_ncasecmp (sess->channel, ent, elen) == 0)

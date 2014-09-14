@@ -264,7 +264,7 @@ cmd_addbutton (struct session *sess, char *tbuf, char *word[],
 {
 	if (*word[2] && *word_eol[3])
 	{
-		if (sess->type == SESS_DIALOG)
+        if (sess->type == session::SESS_DIALOG)
 		{
 			list_addentry (&dlgbutton_list, word_eol[3], word[2]);
 			fe_dlgbuttons_update (sess);
@@ -324,7 +324,7 @@ cmd_allchannels (session *sess, char *tbuf, char *word[], char *word_eol[])
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if (sess->type == SESS_CHANNEL && sess->channel[0] && sess->server->connected)
+        if (sess->type == session::SESS_CHANNEL && sess->channel[0] && sess->server->connected)
 		{
 			handle_command (sess, word_eol[2], FALSE);
 		}
@@ -346,7 +346,7 @@ cmd_allchannelslocal (session *sess, char *tbuf, char *word[], char *word_eol[])
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if (sess->type == SESS_CHANNEL && sess->channel[0] &&
+        if (sess->type == session::SESS_CHANNEL && sess->channel[0] &&
 			 sess->server->connected && sess->server == serv)
 		{
 			handle_command (sess, word_eol[2], FALSE);
@@ -681,7 +681,7 @@ cmd_close (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			sess = static_cast<session*>(list->data);
 			list = list->next;
-			if (sess->type == SESS_DIALOG)
+            if (sess->type == session::SESS_DIALOG)
 				fe_close_window (sess);
 		}
 	} else
@@ -768,7 +768,7 @@ cmd_cycle (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		chan_sess = find_channel (sess->server, chan);
 
-		if (chan_sess && chan_sess->type == SESS_CHANNEL)
+        if (chan_sess && chan_sess->type == session::SESS_CHANNEL)
 		{
 			key = chan_sess->channelkey;
 			sess->server->p_cycle (chan, key);
@@ -948,7 +948,7 @@ cmd_delbutton (struct session *sess, char *tbuf, char *word[],
 {
 	if (*word[2])
 	{
-		if (sess->type == SESS_DIALOG)
+        if (sess->type == session::SESS_DIALOG)
 		{
 			if (list_delentry (&dlgbutton_list, word[2]))
 				fe_dlgbuttons_update (sess);
@@ -2442,7 +2442,7 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 
 	lastlog_sess = find_dialog (sess->server, "(lastlog)");
 	if (!lastlog_sess)
-		lastlog_sess = new_ircwindow (sess->server, "(lastlog)", SESS_DIALOG, 0);
+        lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, 0);
 
 	lastlog_sess->lastlog_sess = sess;
 	lastlog_sess->lastlog_flags = flags;
@@ -2644,7 +2644,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!(*act))
 		return FALSE;
 
-	if (sess->type == SESS_SERVER)
+    if (sess->type == session::SESS_SERVER)
 	{
 		notj_msg (sess);
 		return TRUE;
@@ -2842,11 +2842,11 @@ cmd_newserver (struct session *sess, char *tbuf, char *word[],
 {
 	if (strcmp (word[2], "-noconnect") == 0)
 	{
-		new_ircwindow (NULL, word[3], SESS_SERVER, 0);
+        new_ircwindow(NULL, word[3], session::SESS_SERVER, 0);
 		return TRUE;
 	}
 	
-	sess = new_ircwindow (NULL, NULL, SESS_SERVER, 1);
+    sess = new_ircwindow(NULL, NULL, session::SESS_SERVER, 1);
 	cmd_server (sess, tbuf, word, word_eol);
 	return TRUE;
 }
@@ -2997,7 +2997,7 @@ open_query (server *serv, char *nick, gboolean focus_existing)
 
 	sess = find_dialog (serv, nick);
 	if (!sess)
-		sess = new_ircwindow (serv, nick, SESS_DIALOG, focus_existing);
+        sess = new_ircwindow(serv, nick, session::SESS_DIALOG, focus_existing);
 	else if (focus_existing)
 		fe_ctrl_gui(sess, FE_GUI_FOCUS, 0);	/* bring-to-front */
 
@@ -3796,7 +3796,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 		while (list)
 		{
 			sess = static_cast<session*>(list->data);
-			if (sess->type == SESS_CHANNEL)
+            if (sess->type == session::SESS_CHANNEL)
 			{
 				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
 
@@ -4506,7 +4506,7 @@ handle_say (session *sess, char *text, int check_spch)
 	if (!is_session (sess))
 		goto xit;
 
-	if (!sess->channel[0] || sess->type == SESS_SERVER || sess->type == SESS_NOTICES || sess->type == SESS_SNOTICES)
+    if (!sess->channel[0] || sess->type == session::SESS_SERVER || sess->type == session::SESS_NOTICES || sess->type == session::SESS_SNOTICES)
 	{
 		notj_msg (sess);
 		goto xit;
@@ -4519,7 +4519,7 @@ handle_say (session *sess, char *text, int check_spch)
 
 	text = newcmd;
 
-	if (sess->type == SESS_DIALOG)
+    if (sess->type == session::SESS_DIALOG)
 	{
 		/* try it via dcc, if possible */
 		dcc = dcc::dcc_write_chat (sess->channel, text);

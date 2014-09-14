@@ -134,7 +134,7 @@ inbound_open_dialog (server *serv, char *from,
 {
 	session *sess;
 
-	sess = new_ircwindow (serv, from, SESS_DIALOG, 0);
+    sess = new_ircwindow(serv, from, session::SESS_DIALOG, 0);
 	/* for playing sounds */
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_OPENDIALOG, sess, nullptr, nullptr, nullptr, nullptr, 0,
 								  tags_data->timestamp);
@@ -217,7 +217,7 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 	
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
 
-	if (sess->type == SESS_DIALOG && !nodiag)
+    if (sess->type == session::SESS_DIALOG && !nodiag)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, nullptr, 0,
 									  tags_data->timestamp);
 	else
@@ -424,7 +424,7 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 	else if (!privaction)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANACTION, sess, from, text, nickchar,
 									  idtext, 0, tags_data->timestamp);
-	else if (sess->type == SESS_DIALOG)
+    else if (sess->type == session::SESS_DIALOG)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVACTION, sess, from, text, idtext, nullptr,
 									  0, tags_data->timestamp);
 	else
@@ -489,7 +489,7 @@ inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 	if (is_hilight (from, text, sess, serv))
 		hilight = true;
 
-	if (sess->type == SESS_DIALOG)
+    if (sess->type == session::SESS_DIALOG)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, nullptr, 0,
 									  tags_data->timestamp);
 	else if (hilight)
@@ -519,7 +519,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 		sess = static_cast<session*>(list->data);
 		if (sess->server == serv)
 		{
-			if (userlist_change (sess, nick, newnick) || (me && sess->type == SESS_SERVER))
+            if (userlist_change(sess, nick, newnick) || (me && sess->type == session::SESS_SERVER))
 			{
 				if (!quiet)
 				{
@@ -532,7 +532,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 													  newnick, nullptr, nullptr, 0, tags_data->timestamp);
 				}
 			}
-			if (sess->type == SESS_DIALOG && !serv->p_cmp (sess->channel, nick))
+            if (sess->type == session::SESS_DIALOG && !serv->p_cmp(sess->channel, nick))
 			{
 				safe_strcpy (sess->channel, newnick, CHANLEN);
 				fe_set_channel (sess);
@@ -557,7 +557,7 @@ find_unused_session (server *serv)
 	while (list)
 	{
 		sess = (session *) list->data;
-		if (sess->type == SESS_CHANNEL && sess->channel[0] == 0 &&
+        if (sess->type == session::SESS_CHANNEL && sess->channel[0] == 0 &&
 			 sess->server == serv)
 		{
 			if (sess->waitchannel[0] == 0)
@@ -576,7 +576,7 @@ find_session_from_waitchannel (char *chan, struct server *serv)
 	while (list)
 	{
 		sess = (session *) list->data;
-		if (sess->server == serv && sess->channel[0] == 0 && sess->type == SESS_CHANNEL)
+        if (sess->server == serv && sess->channel[0] == 0 && sess->type == session::SESS_CHANNEL)
 		{
 			if (!serv->p_cmp (chan, sess->waitchannel))
 				return sess;
@@ -606,7 +606,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 			found_unused = sess != nullptr;
 			if (!sess)
 				/* last resort, open a new tab/window */
-				sess = new_ircwindow (serv, chan, SESS_CHANNEL, 1);
+                sess = new_ircwindow(serv, chan, session::SESS_CHANNEL, 1);
 		}
 	}
 
@@ -857,7 +857,8 @@ inbound_quit (server *serv, char *nick, char *ip, char *reason,
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, nick, reason, ip, nullptr, 0,
 											  tags_data->timestamp);
 				userlist_remove_user (sess, user);
-			} else if (sess->type == SESS_DIALOG && !serv->p_cmp (sess->channel, nick))
+            }
+            else if (sess->type == session::SESS_DIALOG && !serv->p_cmp(sess->channel, nick))
 			{
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, nick, reason, ip, nullptr, 0,
 											  tags_data->timestamp);
@@ -990,14 +991,14 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 				sess = find_session_from_nick (nick, serv);
 		} else if (prefs.hex_irc_notice_pos == 1)
 		{
-			int stype = server_notice ? SESS_SNOTICES : SESS_NOTICES;
+            int stype = server_notice ? session::SESS_SNOTICES : session::SESS_NOTICES;
 			sess = find_session_from_type (stype, serv);
 			if (!sess)
 			{
-				if (stype == SESS_NOTICES)
-					sess = new_ircwindow (serv, "(notices)", SESS_NOTICES, 0);
+                if (stype == session::SESS_NOTICES)
+                    sess = new_ircwindow(serv, "(notices)", session::SESS_NOTICES, 0);
 				else
-					sess = new_ircwindow (serv, "(snotices)", SESS_SNOTICES, 0);
+                    sess = new_ircwindow(serv, "(snotices)", session::SESS_SNOTICES, 0);
 				fe_set_channel (sess);
 				fe_set_title (sess);
 				fe_set_nonchannel (sess, FALSE);
@@ -1376,7 +1377,7 @@ inbound_login_start (session *sess, char *nick, char *servname,
 {
 	inbound_newnick (sess->server, sess->server->nick, nick, TRUE, tags_data);
     sess->server->set_name(servname);
-	if (sess->type == SESS_SERVER)
+    if (sess->type == session::SESS_SERVER)
 		log_open_or_close (sess);
 	/* reset our away status */
 	if (sess->server->reconnect_away)
@@ -1482,7 +1483,7 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 		for (list = sess_list; list; list = list->next)
 		{
 			sess = static_cast<session*>(list->data);
-			if (sess->type == SESS_CHANNEL && sess->server == serv)
+            if (sess->type == session::SESS_CHANNEL && sess->server == serv)
 			{
 				userlist_add_hostname (sess, nick, uhost, realname, servname, account, away);
 			}
