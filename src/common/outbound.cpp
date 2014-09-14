@@ -107,7 +107,7 @@ notc_msg (struct session *sess)
 static std::string
 random_line (const std::string & file_name)
 {
-    if (!file_name[0] || !boost::filesystem::native(file_name))
+    if (!file_name.empty() || !boost::filesystem::native(file_name))
         return file_name;
     
     boost::iostreams::file_descriptor fd;
