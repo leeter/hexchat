@@ -221,7 +221,7 @@ is_session (session * sess)
 }
 
 session *
-find_dialog (server *serv, char *nick)
+find_dialog (server *serv, const char *nick)
 {
 	GSList *list = sess_list;
 	session *sess;

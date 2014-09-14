@@ -346,7 +346,7 @@ flood_autodialog_timeout (gpointer)
 }
 
 int
-flood_check (char *nick, char *ip, server *serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
+flood_check (const char *nick, char *ip, server *serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
 {
 	/*
 	   serv

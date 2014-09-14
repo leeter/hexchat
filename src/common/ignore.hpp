@@ -63,6 +63,6 @@ void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);
 void ignore_gui_update (int level);
-int flood_check (char *nick, char *ip, server *serv, session *sess, flood_check_type what);
+int flood_check (const char *nick, char *ip, server *serv, session *sess, flood_check_type what);
 
 #endif
