@@ -24,6 +24,8 @@
 #define STRICT_TYPED_ITEMIDS
 #include <memory>
 #include <string>
+#include <locale>
+#include <codecvt>
 #include <boost/filesystem.hpp>
 
 #include <Windows.h>
@@ -57,7 +59,17 @@ namespace
         return HEXCHAT_EAT_ALL;
     }
 
-    
+    std::wstring widen(const std::string & to_widen)
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+        return converter.from_bytes(to_widen);
+    }
+
+    std::string narrow(const std::wstring & to_narrow)
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+        return converter.to_bytes(to_narrow);
+    }
 
     // we have to create an app compatible shortcut to use toast notifications
     HRESULT InstallShortcut(const std::wstring& shortcutPath)
@@ -138,22 +150,37 @@ namespace
     }
     
     static int handle_incoming(const char *const word[], const char *const word_eol[], void *userdata) {
-        auto toastTemplate = Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
-            Windows::UI::Notifications::ToastTemplateType::ToastText01);
-        auto node_list = toastTemplate->GetElementsByTagName(L"text");
-        node_list->GetAt(0)->AppendChild(toastTemplate->CreateTextNode(L"Test"));
-        auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier();
-        notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
-        return HEXCHAT_EAT_ALL;
+        try
+        {
+            auto toastTemplate = Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
+                Windows::UI::Notifications::ToastTemplateType::ToastText01);
+            auto node_list = toastTemplate->GetElementsByTagName(L"text");
+            UINT node_count = node_list->Length;
+            for (UINT i = 0; i < node_count; ++i)
+            {
+                auto node = node_list->GetAt(i);
+                node->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen(word[4] ? word[4] : "").c_str())));
+            }
+
+            auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
+            notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
+        }
+        catch (Platform::Exception ^ ex)
+        {
+            auto what = ex->Message;
+
+            hexchat_print(ph, narrow(what->Data()).c_str());
+        }
+        return HEXCHAT_EAT_NONE;
     }
 }
 
 int
 hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
-    if (!IsWindows8Point1OrGreater())
+    if (!IsWindows8OrGreater())
         return FALSE;
-    HRESULT hr = Windows::Foundation::Initialize(RO_INIT_MULTITHREADED);
+    HRESULT hr = Windows::Foundation::Initialize();
     if (FAILED(hr))
         return FALSE;
     ph = plugin_handle;
