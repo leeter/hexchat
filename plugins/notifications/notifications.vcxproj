@@ -47,12 +47,16 @@
     <TargetName>hcnotifications</TargetName>
     <OutDir>$(HexChatBin)</OutDir>
     <IntDir>$(HexChatObj)$(ProjectName)\</IntDir>
+    <IncludePath>$(YourBoostPath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(HexChatBin)</OutDir>
     <TargetName>hcnotifications</TargetName>
     <IntDir>$(HexChatObj)$(ProjectName)\</IntDir>
+    <IncludePath>$(YourBoostPath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -78,7 +82,8 @@
       <LargeAddressAware>true</LargeAddressAware>
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
-      <AdditionalDependencies>mincore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(YourBoostPath)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -105,7 +110,8 @@
       <LargeAddressAware>true</LargeAddressAware>
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
-      <AdditionalDependencies>mincore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(YourBoostPath)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
