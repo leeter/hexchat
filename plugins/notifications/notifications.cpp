@@ -27,6 +27,7 @@
 #include <locale>
 #include <codecvt>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <Windows.h>
 #include <SDKDDKVer.h>
@@ -47,10 +48,10 @@
 namespace
 {
     hexchat_plugin * ph;
-    const char name[] = "Windows notifications";
-    const char desc[] = "Displays WinRT notifications";
+    const char name[] = "Windows Toast Notifications";
+    const char desc[] = "Displays Toast notifications";
     const char version[] = "1.0";
-    const char helptext[] = "Notifies the user using WinRT notifications";
+    const char helptext[] = "Notifies the user using Toast notifications";
     const wchar_t AppId[] = L"Hexchat.Desktop.Notify";
 
     static int
@@ -129,10 +130,11 @@ namespace
     HRESULT TryInstallAppShortcut()
     {
         wchar_t*roaming_path_wide = nullptr;
-        HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide);
+        HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &roaming_path_wide);
         if (FAILED(hr))
             return hr;
-        std::unique_ptr<wchar_t, decltype((CoTaskMemFree))> roaming_path(roaming_path_wide, CoTaskMemFree);
+        std::function<void (void*)> deleter(CoTaskMemFree);
+        std::unique_ptr<wchar_t, decltype(deleter)> roaming_path(roaming_path_wide, deleter);
         boost::filesystem::path path(roaming_path_wide);
 
         path /= L"\\Microsoft\\Windows\\Start Menu\\Programs\\Hexchat.lnk";
@@ -153,23 +155,35 @@ namespace
         try
         {
             auto toastTemplate = Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
-                Windows::UI::Notifications::ToastTemplateType::ToastText01);
+                Windows::UI::Notifications::ToastTemplateType::ToastText04);
             auto node_list = toastTemplate->GetElementsByTagName(L"text");
             UINT node_count = node_list->Length;
-            for (UINT i = 0; i < node_count; ++i)
-            {
-                auto node = node_list->GetAt(i);
-                node->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen(word[4] ? word[4] : "").c_str())));
-            }
+            // put the channel name first
+            node_list->GetAt(0)->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen(word[3]).c_str())));
+            // this should be the nick
+            auto wide_nick = widen(word[1]);
+            auto bang_loc = wide_nick.find_first_of(L'!');
+            if (bang_loc != std::wstring::npos)
+                wide_nick.erase(bang_loc, std::wstring::npos);
+            wide_nick.erase(0, 1);
+            node_list->GetAt(1)->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(wide_nick.c_str())));
+            // then the message
+            auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
+            std::unique_ptr<char, decltype(sanitizer_del)> sanitized(hexchat_strip(ph, word_eol[4], static_cast<int>(strlen(word_eol[4])), 7 /*STRIP_ALL*/), sanitizer_del);
+            auto widen_str = widen(sanitized.get());
+            widen_str.erase(0, 1);
+            boost::algorithm::erase_all(widen_str, L"\x1");
+            auto node2 = node_list->GetAt(2);
+            node2->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen_str.c_str())));
 
             auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
             notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
         }
         catch (Platform::Exception ^ ex)
         {
-            auto what = ex->Message;
+            auto what = ex->ToString();
 
-            hexchat_print(ph, narrow(what->Data()).c_str());
+            hexchat_printf(ph, "An Error Occured Printing a Notification HRESULT: %#X : %s", static_cast<unsigned long>(ex->HResult), narrow(what->Data()).c_str());
         }
         return HEXCHAT_EAT_NONE;
     }
@@ -180,7 +194,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 {
     if (!IsWindows8OrGreater())
         return FALSE;
-    HRESULT hr = Windows::Foundation::Initialize();
+    HRESULT hr = Windows::Foundation::Initialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr))
         return FALSE;
     ph = plugin_handle;
@@ -195,7 +209,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
     
     hexchat_hook_command(ph, "RTNOTIFIY", HEXCHAT_PRI_NORM, cmd_cb, helptext, nullptr);
     hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
-    hexchat_command(ph, "MENU -ishare\\system.png ADD \"Set up WinRT Notifications\" \"RTNOTIFY\"");
+    hexchat_command(ph, "MENU -ishare\\system.png ADD \"Window/Set up WinRT Notifications\" \"RTNOTIFY\"");
     
     hexchat_printf(ph, "%s plugin loaded\n", name);
 
@@ -207,7 +221,7 @@ int
 hexchat_plugin_deinit(void)
 {
     Windows::Foundation::Uninitialize();
-    hexchat_command(ph, "MENU DEL \"Set up WinRT Notifications\"");
+    hexchat_command(ph, "MENU DEL \"Window/Set up WinRT Notifications\"");
     hexchat_printf(ph, "%s plugin unloaded\n", name);
     return TRUE;
 }
