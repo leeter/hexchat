@@ -1,4 +1,4 @@
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 
 noinst_LIBRARIES = libhexchatdbus.a
 libhexchatdbus_a_SOURCES =			\

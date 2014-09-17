@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_HPP
 #define HEXCHAT_HPP
 
-#include "../../config.h"
+#include "config.h"
 
 #include <glib.h>
 #include <glib/gstdio.h>
