@@ -33,11 +33,12 @@
 #define HEXCHAT_FD_WRITE		2
 #define HEXCHAT_FD_EXCEPTION	4
 #define HEXCHAT_FD_NOTSOCKET	8
-
-#define HEXCHAT_EAT_NONE		0	/* pass it on through! */
-#define HEXCHAT_EAT_HEXCHAT		1	/* don't let HexChat see this event */
-#define HEXCHAT_EAT_PLUGIN	2	/* don't let other plugins see this event */
-#define HEXCHAT_EAT_ALL		(HEXCHAT_EAT_HEXCHAT|HEXCHAT_EAT_PLUGIN)	/* don't let anything see this event */
+enum hexchat_handle_msg{
+    HEXCHAT_EAT_NONE =  	0,	/* pass it on through! */
+    HEXCHAT_EAT_HEXCHAT	=	1,	/* don't let HexChat see this event */
+    HEXCHAT_EAT_PLUGIN  =	2,	/* don't let other plugins see this event */
+    HEXCHAT_EAT_ALL	=	(HEXCHAT_EAT_HEXCHAT|HEXCHAT_EAT_PLUGIN)	/* don't let anything see this event */
+};
 
 #ifdef __cplusplus
 extern "C" {

@@ -19,6 +19,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT_TYPED_ITEMIDS
@@ -151,30 +152,41 @@ namespace
         return hr;
     }
     
-    static int handle_incoming(const char *const word[], const char *const word_eol[], void *userdata) {
+    static int handle_incoming(const char *const word[], const char *const word_eol[], void*) {
         try
         {
-            auto toastTemplate = Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
-                Windows::UI::Notifications::ToastTemplateType::ToastText04);
+            auto toastTemplate =
+                Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
+                    Windows::UI::Notifications::ToastTemplateType::ToastText04);
             auto node_list = toastTemplate->GetElementsByTagName(L"text");
             UINT node_count = node_list->Length;
             // put the channel name first
-            node_list->GetAt(0)->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen(word[3]).c_str())));
+            node_list->GetAt(0)->AppendChild(
+                toastTemplate->CreateTextNode(
+                    ref new Platform::String(widen(word[3]).c_str())));
+
             // this should be the nick
             auto wide_nick = widen(word[1]);
             auto bang_loc = wide_nick.find_first_of(L'!');
             if (bang_loc != std::wstring::npos)
                 wide_nick.erase(bang_loc, std::wstring::npos);
             wide_nick.erase(0, 1);
-            node_list->GetAt(1)->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(wide_nick.c_str())));
+            node_list->GetAt(1)->AppendChild(
+                toastTemplate->CreateTextNode(
+                    ref new Platform::String(wide_nick.c_str())));
+
             // then the message
             auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
-            std::unique_ptr<char, decltype(sanitizer_del)> sanitized(hexchat_strip(ph, word_eol[4], static_cast<int>(strlen(word_eol[4])), 7 /*STRIP_ALL*/), sanitizer_del);
+            std::unique_ptr<char, decltype(sanitizer_del)> sanitized(
+                hexchat_strip(ph, word_eol[4], static_cast<int>(strlen(word_eol[4])), 7 /*STRIP_ALL*/),
+                sanitizer_del);
             auto widen_str = widen(sanitized.get());
             widen_str.erase(0, 1);
             boost::algorithm::erase_all(widen_str, L"\x1");
             auto node2 = node_list->GetAt(2);
-            node2->AppendChild(toastTemplate->CreateTextNode(ref new Platform::String(widen_str.c_str())));
+            node2->AppendChild(
+                toastTemplate->CreateTextNode(
+                    ref new Platform::String(widen_str.c_str())));
 
             auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
             notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
