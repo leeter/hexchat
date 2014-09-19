@@ -2969,7 +2969,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		if (reason[0] == 0)
 			reason = NULL;
-		server_sendpart (*(sess->server), chan, boost::make_optional<const std::string&>(reason != nullptr, reason));
+		server_sendpart (*(sess->server), chan, reason ? boost::make_optional<const std::string&>(std::string(reason)) : boost::none);
 		return TRUE;
 	}
 	return FALSE;
