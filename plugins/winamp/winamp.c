@@ -54,55 +54,55 @@ char current_play[2048], *p;
 char p_esc[2048];
 char cur_esc[2048];
 char truc[2048];
-HWND hwndWinamp = FindWindow("Winamp v1.x",NULL);
+HWND hwndWinamp = FindWindowW(L"Winamp v1.x",NULL);
 
     if (hwndWinamp)
 	{
 	    {
 	        if (!stricmp("PAUSE", word[2]))
 			{
-			   if (SendMessage(hwndWinamp,WM_USER, 0, 104))
+			   if (SendMessageW(hwndWinamp,WM_USER, 0, 104))
 				{
-			   	   SendMessage(hwndWinamp, WM_COMMAND, 40046, 0);
+			   	   SendMessageW(hwndWinamp, WM_COMMAND, 40046, 0);
 			
-			       if (SendMessage(hwndWinamp, WM_USER, 0, 104) == PLAYING)
-			   	       hexchat_printf(ph, "Winamp: playing");
+			       if (SendMessageW(hwndWinamp, WM_USER, 0, 104) == PLAYING)
+			   	       hexchat_print(ph, "Winamp: playing");
 			       else
-                       hexchat_printf(ph, "Winamp: paused");
+                       hexchat_print(ph, "Winamp: paused");
 				}
             }
 			else
 		        if (!stricmp("STOP", word[2]))
 			    {
-			       SendMessage(hwndWinamp, WM_COMMAND, 40047, 0);
-			       hexchat_printf(ph, "Winamp: stopped");
+			       SendMessageW(hwndWinamp, WM_COMMAND, 40047, 0);
+			       hexchat_print(ph, "Winamp: stopped");
 			    }
 			else
 			    if (!stricmp("PLAY", word[2]))
 			    {
-			         SendMessage(hwndWinamp, WM_COMMAND, 40045, 0);
-			         hexchat_printf(ph, "Winamp: playing");
+			         SendMessageW(hwndWinamp, WM_COMMAND, 40045, 0);
+			         hexchat_print(ph, "Winamp: playing");
 			    }
         	else
 
 			    if (!stricmp("NEXT", word[2]))
 			    {
-			         SendMessage(hwndWinamp, WM_COMMAND, 40048, 0);
-			         hexchat_printf(ph, "Winamp: next playlist entry");
+			         SendMessageW(hwndWinamp, WM_COMMAND, 40048, 0);
+			         hexchat_print(ph, "Winamp: next playlist entry");
 			    }
 			else
 
                 if (!stricmp("PREV", word[2]))
 			    {
-			         SendMessage(hwndWinamp, WM_COMMAND, 40044, 0);
-			         hexchat_printf(ph, "Winamp: previous playlist entry");
+			         SendMessageW(hwndWinamp, WM_COMMAND, 40044, 0);
+			         hexchat_print(ph, "Winamp: previous playlist entry");
 			    }
 		    else
 
                 if (!stricmp("START", word[2]))
 			    {
-			         SendMessage(hwndWinamp, WM_COMMAND, 40154, 0);
-			         hexchat_printf(ph, "Winamp: playlist start");
+			         SendMessageW(hwndWinamp, WM_COMMAND, 40154, 0);
+			         hexchat_print(ph, "Winamp: playlist start");
 			    }
 
 		    else
