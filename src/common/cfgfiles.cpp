@@ -343,7 +343,8 @@ get_xdir (void)
 		}
 		else
 		{
-            std::unique_ptr<wchar_t, decltype((CoTaskMemFree))> wide_roaming_path(roaming_path_wide, CoTaskMemFree);
+            std::function<void __stdcall(void*)> com_dltr(CoTaskMemFree);
+            std::unique_ptr<wchar_t, decltype(com_dltr)> wide_roaming_path(roaming_path_wide, com_dltr);
 
             fs::path roaming_path(roaming_path_wide);
             roaming_path /= L"HexChat";

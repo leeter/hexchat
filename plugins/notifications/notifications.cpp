@@ -134,7 +134,7 @@ namespace
         HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &roaming_path_wide);
         if (FAILED(hr))
             return hr;
-        std::function<void (void*)> deleter(CoTaskMemFree);
+        std::function<void __stdcall (void*)> deleter(CoTaskMemFree);
         std::unique_ptr<wchar_t, decltype(deleter)> roaming_path(roaming_path_wide, deleter);
         boost::filesystem::path path(roaming_path_wide);
 
