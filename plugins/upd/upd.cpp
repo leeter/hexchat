@@ -53,7 +53,7 @@ namespace{
 			return handle;
 		}
 	};
-	static char*
+	static std::string
 		check_version()
 	{
 		inet_handle hOpen = InternetOpenW(L"Update Checker",
@@ -129,7 +129,6 @@ namespace{
 	static int
 		print_version(const char * const word[], const char * const word_eol[], void *userdata)
 	{
-		char *version;
 		int prevbuf;
 		int convbuf;
 
@@ -185,22 +184,22 @@ namespace{
 		}
 		else if (!g_ascii_strcasecmp("", word[2]))
 		{
-			version = check_version();
+			auto version = check_version();
 
-			if (strcmp(version, hexchat_get_info(ph, "version")) == 0)
+			if (version == hexchat_get_info(ph, "version"))
 			{
 				hexchat_printf(ph, "%s\tYou have the latest version of HexChat installed!\n", name);
 			}
-			else if (strcmp(version, "Unknown") == 0)
+			else if (version == "Unknown")
 			{
 				hexchat_printf(ph, "%s\tUnable to check for HexChat updates!\n", name);
 			}
 			else
 			{
 #ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for some reason */
-				hexchat_printf(ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version);
+				hexchat_printf(ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version.c_str());
 #else
-				hexchat_printf (ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version);
+				hexchat_printf (ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version.c_str());
 #endif
 			}
 			return HEXCHAT_EAT_HEXCHAT;
@@ -215,15 +214,15 @@ namespace{
 	static int
 		print_version_quiet(void *userdata)
 	{
-		char *version = check_version();
+		auto version = check_version();
 
 		/* if it's not the current version AND not network error */
-		if (!(strcmp(version, hexchat_get_info(ph, "version")) == 0) && !(strcmp(version, "Unknown") == 0))
+		if (version != hexchat_get_info(ph, "version") && version != "Unknown")
 		{
 #ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for plugins for some reason */
-			hexchat_printf(ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version);
+			hexchat_printf(ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version.c_str());
 #else
-			hexchat_printf (ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version);
+			hexchat_printf (ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version.c_str());
 #endif
 			/* print update url once, then stop the timer */
 			return 0;
