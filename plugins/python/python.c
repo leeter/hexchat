@@ -57,6 +57,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+#define strtok_r strtok_s
+#endif
 #ifdef WIN32
 #include <direct.h>
 #else
@@ -1935,7 +1938,7 @@ Module_hexchat_pluginpref_list(PyObject *self, PyObject *args)
 	PluginObject *plugin = (PluginObject*)Plugin_GetCurrent();
 	hexchat_plugin *prefph = Plugin_GetHandle(plugin);
 	char list[4096];
-	char* token;
+	char* token, *context = NULL;
 	int result;
 	PyObject *pylist;
 	pylist = PyList_New(0);
@@ -1943,10 +1946,10 @@ Module_hexchat_pluginpref_list(PyObject *self, PyObject *args)
 	result = hexchat_pluginpref_list(prefph, list);
 	END_XCHAT_CALLS();
 	if (result) {
-		token = strtok(list, ",");
+		token = strtok_r(list, ",", &context);
 		while (token != NULL) {
 			PyList_Append(pylist, PyUnicode_FromString(token));
-			token = strtok (NULL, ",");
+			token = strtok_r (NULL, ",", &context);
 		}
 	}
 	return pylist;

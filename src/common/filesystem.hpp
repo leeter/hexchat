@@ -43,6 +43,8 @@ namespace io
             open_stream(const std::string& file, std::ios::openmode flags, int mode, xof_flags xof_flags);
         boost::iostreams::file_descriptor
             open_stream(const boost::filesystem::path &file_path, std::ios::openmode flags);
+
+        bool exists(const std::string & path);
     }
 }
 

@@ -98,5 +98,10 @@ namespace io
             return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
 #endif
         }
+
+        bool exists(const std::string & path)
+        {
+            return bfs::exists(make_path(path));
+        }
     }
 }

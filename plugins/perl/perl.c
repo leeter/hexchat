@@ -22,10 +22,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#if defined(_WIN32) || defined(_WIN64)
+#define strtok_r strtok_s
+#endif
 #ifdef ENABLE_NLS
 #include <locale.h>
 #endif
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <process.h>
 #else
@@ -1321,7 +1325,7 @@ XS (XS_HexChat_plugin_pref_list)
 {
 	char list[4096];
 	char value[512];
-	char *token;
+	char *token, *context = NULL;
 
 	dSP;
 	dMARK;
@@ -1332,7 +1336,7 @@ XS (XS_HexChat_plugin_pref_list)
 
 	PUSHMARK (SP);
 
-	token = strtok (list, ",");
+	token = strtok_r (list, ",", &context);
 	while (token != NULL)
 	{
 		hexchat_pluginpref_get_str (ph, token, value);
@@ -1340,7 +1344,7 @@ XS (XS_HexChat_plugin_pref_list)
 		XPUSHs (sv_2mortal (newSVpv (token, 0)));
 		XPUSHs (sv_2mortal (newSVpv (value, 0)));
 
-		token = strtok (NULL, ",");
+		token = strtok_r (NULL, ",", &context);
 	}
 
 	PUTBACK;

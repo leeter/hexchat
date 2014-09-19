@@ -16,7 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <istream>
+#include <memory>
 #include <new>
+#include <string>
 #include <vector>
 #include <cstdlib>
 #include <cstring>
@@ -24,6 +27,9 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -48,6 +54,7 @@ typedef struct session hexchat_context;
 #include "hexchat-plugin.h"
 #include "plugin.h"
 #include "typedef.h"
+#include "filesystem.hpp"
 
 
 
@@ -1975,35 +1982,38 @@ hexchat_pluginpref_delete (hexchat_plugin *pl, const char *var)
 int
 hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 {
-	FILE *fpIn;
 	char confname[64];
-	char buffer[512];										/* the same as in cfg_put_str */
-	char *bufp = buffer;
-	char *token;
 
-	token = g_strdup (pl->name);
-	canonalize_key (token);
-	sprintf (confname, "addon_%s.conf", token);
-	g_free (token);
+    {
+        std::function<void(gpointer)> dltr(g_free);
+        std::unique_ptr<gchar, decltype(dltr)> token(g_strdup(pl->name), dltr);
+        canonalize_key(token.get());
+        snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
+    }
 
-	fpIn = hexchat_fopen_file (confname, "r", 0);
+    if (!io::fs::exists(confname)) /* no existing config file, no parsing */
+        return 0;
 
-	if (fpIn == NULL)										/* no existing config file, no parsing */
-	{
-		return 0;
-	}
-	else													/* existing config file, get list of settings */
-	{
-		strcpy (dest, "");									/* clean up garbage */
-		while (fscanf (fpIn, " %[^\n]", bufp) != EOF)	/* read whole lines including whitespaces */
-		{
-			token = strtok (buffer, "=");
-			g_strlcat (dest, g_strchomp (token), 4096); /* Dest must not be smaller than this */
-			g_strlcat (dest, ",", 4096);
-		}
-
-		fclose (fpIn);
-	}
+    /* clean up garbage */
+    strcpy(dest, "");
+    auto fd = io::fs::open_stream(confname, std::ios::in, 0, 0);
+    boost::iostreams::stream_buffer<boost::iostreams::file_descriptor> buff(fd);
+    std::istream stream(&buff);
+    for (std::string line; std::getline(stream, line, '\n');)
+    {
+        auto eq = line.find_first_of('=');
+        if (eq == std::string::npos)
+            continue;
+        auto part1 = line.substr(0, eq);
+        auto part2 = line.substr(eq);
+        boost::algorithm::trim(part1);
+        boost::algorithm::trim(part2);
+        // we have no idea how long dest is...
+        g_strlcat(dest, part1.c_str(), 4096);
+        g_strlcat(dest, ",", 4096);
+        g_strlcat(dest, part2.c_str(), 4096);
+        g_strlcat(dest, ",", 4096);
+    }
 
 	return 1;
 }
