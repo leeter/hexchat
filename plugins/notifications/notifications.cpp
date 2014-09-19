@@ -27,6 +27,7 @@
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <unordered_map>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -56,7 +57,7 @@ namespace
     const wchar_t AppId[] = L"Hexchat.Desktop.Notify";
 
     static int
-        cmd_cb(const char * const word[], const char * const word_eol[], void *user_data)
+        cmd_cb(const char * const word[], const char * const word_eol[], void *)
     {
         return HEXCHAT_EAT_ALL;
     }
@@ -155,6 +156,10 @@ namespace
     static int handle_incoming(const char *const word[], const char *const word_eol[], void*) {
         try
         {
+            const std::string nick(hexchat_get_info(ph, "nick"));
+            if (nick != word[3] && std::string(word_eol[4]).find(nick) == std::string::npos)
+                return HEXCHAT_EAT_NONE;
+
             auto toastTemplate =
                 Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
                     Windows::UI::Notifications::ToastTemplateType::ToastText04);
@@ -219,7 +224,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
     if (FAILED(hr))
         return FALSE;
     
-    hexchat_hook_command(ph, "RTNOTIFIY", HEXCHAT_PRI_NORM, cmd_cb, helptext, nullptr);
+   // hexchat_hook_command(ph, "RTNOTIFIY", HEXCHAT_PRI_NORM, cmd_cb, helptext, nullptr);
     hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
     hexchat_command(ph, "MENU -ishare\\system.png ADD \"Window/Set up WinRT Notifications\" \"RTNOTIFY\"");
     
