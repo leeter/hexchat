@@ -58,8 +58,21 @@ static int perl_load_file (const char *script_name);
 static DWORD
 child (char *str)
 {
-	MessageBoxA (0, str, "Perl DLL Error",
+    wchar_t* buffer = NULL;
+    size_t utf8_len = strlen(str);
+    int len = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, str, (int) utf8_len, NULL, 0);
+    if (len == 0 && utf8_len != 0)
+        return 0;
+    buffer = calloc(len + 1,  sizeof(*buffer));
+
+    if (!buffer)
+        return 0;
+
+    len = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, str, (int)utf8_len, buffer, len + 1);
+
+	MessageBoxW (0, buffer, L"Perl DLL Error",
 					 MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
+    free(buffer);
 	return 0;
 }
 
