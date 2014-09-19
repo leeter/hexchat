@@ -18,6 +18,8 @@
 
 #include <fcntl.h>
 #include <iosfwd>
+#include <string>
+#include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
