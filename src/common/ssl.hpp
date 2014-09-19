@@ -38,7 +38,7 @@ struct cert_info {
 };
 
 struct chiper_info {
-    int chiper_bits = 0;
+    int chiper_bits;
     std::string version;
     std::string chiper;
 };
