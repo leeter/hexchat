@@ -870,7 +870,7 @@ ssl_do_connect (server * serv)
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
-					 chiper_info->version, chiper_info->chiper,
+					 chiper_info->version.c_str(), chiper_info->chiper.c_str(),
 					 chiper_info->chiper_bits);
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);

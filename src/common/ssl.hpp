@@ -17,8 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_SSL_H
-#define HEXCHAT_SSL_H
+#ifndef HEXCHAT_SSL_HPP
+#define HEXCHAT_SSL_HPP
+
+#include <string>
 
 struct cert_info {
     char subject[256];
@@ -36,9 +38,9 @@ struct cert_info {
 };
 
 struct chiper_info {
-    char version[16];
-    char chiper[24];
-    int chiper_bits;
+    int chiper_bits = 0;
+    std::string version;
+    std::string chiper;
 };
 
 SSL_CTX *_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server);

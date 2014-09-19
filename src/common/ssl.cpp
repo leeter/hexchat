@@ -204,14 +204,9 @@ _SSL_get_cert_info (cert_info &cert_info, const SSL * ssl)
 struct chiper_info *
 _SSL_get_cipher_info (const SSL * ssl)
 {
-	const SSL_CIPHER *c;
-
-
-	c = SSL_get_current_cipher (ssl);
-	strncpy (chiper_info.version, SSL_CIPHER_get_version (c),
-				sizeof (chiper_info.version));
-	strncpy (chiper_info.chiper, SSL_CIPHER_get_name (c),
-				sizeof (chiper_info.chiper));
+    const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
+    chiper_info.version = SSL_CIPHER_get_version(c);
+    chiper_info.chiper = SSL_CIPHER_get_name(c);
 	SSL_CIPHER_get_bits (c, &chiper_info.chiper_bits);
 
 	return &chiper_info;
