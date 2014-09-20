@@ -64,9 +64,31 @@
 #endif
 #endif
 
-/* is delimiter */
-//#define is_del(c) \
-//	(c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0)
+char *nocasestrstr(const char *text, const char *tofind);	/* util.c */
+int xtext_get_stamp_str(time_t, char **);
+
+struct textentry
+{
+    struct textentry *next;
+    struct textentry *prev;
+    unsigned char *str;
+    time_t stamp;
+    gint16 str_width;
+    gint16 str_len;
+    gint16 mark_start;
+    gint16 mark_end;
+    gint16 indent;
+    gint16 left_len;
+    GSList *slp;
+    GSList *sublines;
+    guchar tag;
+    guchar pad1;
+    guchar pad2;	/* 32-bit align : 44 bytes total */
+    GList *marks;	/* List of found strings */
+};
+
+namespace
+{
 
 template<class T>
 inline bool is_del(T c)
@@ -74,30 +96,13 @@ inline bool is_del(T c)
 	return (c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0);
 }
 
+
 /* force scrolling off */
 #define dontscroll(buf) (buf)->last_pixel_pos = 0x7fffffff
 
 static GtkWidgetClass *parent_class = NULL;
 
-struct textentry
-{
-	struct textentry *next;
-	struct textentry *prev;
-	unsigned char *str;
-	time_t stamp;
-	gint16 str_width;
-	gint16 str_len;
-	gint16 mark_start;
-	gint16 mark_end;
-	gint16 indent;
-	gint16 left_len;
-	GSList *slp;
-	GSList *sublines;
-	guchar tag;
-	guchar pad1;
-	guchar pad2;	/* 32-bit align : 44 bytes total */
-	GList *marks;	/* List of found strings */
-};
+
 
 enum
 {
@@ -117,8 +122,7 @@ enum
 
 static guint xtext_signals[LAST_SIGNAL];
 
-char *nocasestrstr (const char *text, const char *tofind);	/* util.c */
-int xtext_get_stamp_str (time_t, char **);
+
 static void gtk_xtext_render_page (GtkXText * xtext);
 static void gtk_xtext_calc_lines (xtext_buffer *buf, int);
 static char *gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret);
@@ -179,9 +183,12 @@ gtk_xtext_text_width_8bit (GtkXText *xtext, unsigned char *str, int len)
 /* ============ PANGO BACKEND ============ */
 /* ======================================= */
 
-#define EMPH_ITAL 1
-#define EMPH_BOLD 2
-#define EMPH_HIDDEN 4
+enum emph{
+    EMPH_ITAL = 1,
+    EMPH_BOLD = 2,
+    EMPH_HIDDEN = 4
+};
+
 static PangoAttrList *attr_lists[4];
 static int fontwidths[4][128];
 
@@ -268,7 +275,7 @@ backend_deinit (GtkXText *xtext)
 }
 
 static PangoFontDescription *
-backend_font_open_real (char *name)
+backend_font_open_real (const char *name)
 {
 	PangoFontDescription *font;
 
@@ -285,7 +292,7 @@ backend_font_open_real (char *name)
 }
 
 static void
-backend_font_open (GtkXText *xtext, char *name)
+backend_font_open (GtkXText *xtext, const char *name)
 {
 	PangoLanguage *lang;
 	PangoContext *context;
@@ -312,7 +319,7 @@ backend_font_open (GtkXText *xtext, char *name)
 	pango_font_metrics_unref (metrics);
 }
 static int
-backend_get_text_width_emph (GtkXText *xtext, guchar *str, int len, int emphasis)
+backend_get_text_width_emph (GtkXText *xtext, const guchar *str, int len, int emphasis)
 {
 	int width;
 	int deltaw;
@@ -346,7 +353,7 @@ backend_get_text_width_emph (GtkXText *xtext, guchar *str, int len, int emphasis
 }
 
 static int
-backend_get_text_width_slp (GtkXText *xtext, guchar *str, GSList *slp)
+backend_get_text_width_slp (GtkXText *xtext, const guchar *str, GSList *slp)
 {
 	int width = 0;
 
@@ -392,8 +399,8 @@ xtext_draw_layout_line (GdkDrawable      *drawable,
 }
 
 static void
-backend_draw_text_emph (GtkXText *xtext, int dofill, GdkGC *gc, int x, int y,
-						 char *str, int len, int str_width, int emphasis)
+backend_draw_text_emph (GtkXText *xtext, bool dofill, GdkGC *gc, int x, int y,
+						 const char *str, int len, int str_width, int emphasis)
 {
 	GdkGCValues val;
 	GdkColor col;
@@ -548,6 +555,7 @@ gtk_xtext_adjustment_changed (GtkAdjustment * adj, GtkXText * xtext)
 	}
 	xtext->buffer->old_value = adj->value;
 }
+} // end anonymous namespace
 
 GtkWidget *
 gtk_xtext_new (GdkColor palette[], int separator)
@@ -566,6 +574,7 @@ gtk_xtext_new (GdkColor palette[], int separator)
 	return GTK_WIDGET (xtext);
 }
 
+namespace {
 static void
 gtk_xtext_destroy (GtkObject * object)
 {
@@ -1869,13 +1878,14 @@ gtk_xtext_set_clip_owner (GtkWidget * xtext, GdkEventButton * event)
 		free (str);
 	}
 }
-
+} // end anonymous namespace
 void
 gtk_xtext_copy_selection (GtkXText *xtext)
 {
 	gtk_xtext_set_clip_owner (GTK_WIDGET (xtext), NULL);
 }
 
+namespace {
 static void
 gtk_xtext_unselect (GtkXText *xtext)
 {
@@ -2329,7 +2339,7 @@ gtk_xtext_class_init (GtkXTextClass * text_class)
 	xtext_class->word_click = NULL;
 	xtext_class->set_scroll_adjustments = gtk_xtext_scroll_adjustments;
 }
-
+} // end anonymous namespace
 GType
 gtk_xtext_get_type (void)
 {
@@ -2360,6 +2370,8 @@ gtk_xtext_get_type (void)
 /* strip MIRC colors and other attribs. */
 
 /* CL: needs to strip hidden when called by gtk_xtext_text_width, but not when copying text */
+
+namespace{
 
 typedef struct chunk_s {
 	GSList *slp;
@@ -2533,7 +2545,7 @@ static int
 gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 								int len, GdkGC *gc, int *emphasis)
 {
-	int str_width, dofill;
+	int str_width;
 	GdkDrawable *pix = NULL;
 	int dest_x = 0, dest_y = 0;
 
@@ -2572,7 +2584,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		xtext->draw_buf = pix;
 	}
 
-	dofill = TRUE;
+	bool dofill(true);
 
 	/* backcolor is always handled by XDrawImageString */
 	if (!xtext->backcolor && xtext->pixmap)
@@ -2580,7 +2592,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 	/* draw the background pixmap behind the text - CAUSES FLICKER HERE!! */
 		xtext_draw_bg (xtext, x, y - xtext->font->ascent, str_width,
 							xtext->fontsize);
-		dofill = FALSE;	/* already drawn the background */
+		dofill = false;	/* already drawn the background */
 	}
 
 	backend_draw_text_emph (xtext, dofill, gc, x, y, (char*)str, len, str_width, *emphasis);
@@ -3394,6 +3406,7 @@ gtk_xtext_render_line (GtkXText * xtext, textentry * ent, int line,
 
 	return taken;
 }
+} // end anonymous namespace
 
 void
 gtk_xtext_set_palette (GtkXText * xtext, GdkColor palette[])
@@ -3416,6 +3429,8 @@ gtk_xtext_set_palette (GtkXText * xtext, GdkColor palette[])
 	xtext->col_fore = XTEXT_FG;
 	xtext->col_back = XTEXT_BG;
 }
+
+namespace {
 
 static void
 gtk_xtext_fix_indent (xtext_buffer *buf)
@@ -3463,7 +3478,7 @@ gtk_xtext_recalc_widths (xtext_buffer *buf, int do_str_width)
 
 	gtk_xtext_calc_lines (buf, FALSE);
 }
-
+} // end anonymous namespace
 int
 gtk_xtext_set_font (GtkXText *xtext, char *name)
 {
@@ -3549,7 +3564,7 @@ gtk_xtext_save (GtkXText * xtext, int fh)
 		ent = ent->next;
 	}
 }
-
+namespace{
 /* count how many lines 'ent' will take (with wraps) */
 
 static int
@@ -3863,6 +3878,7 @@ gtk_xtext_render_page (GtkXText * xtext)
 	/* draw the separator line */
 	gtk_xtext_draw_sep (xtext, -1);
 }
+} // end anonymous namespace
 
 void
 gtk_xtext_refresh (GtkXText * xtext)
@@ -3872,6 +3888,8 @@ gtk_xtext_refresh (GtkXText * xtext)
 		gtk_xtext_render_page (xtext);
 	}
 }
+
+namespace{
 
 static int
 gtk_xtext_kill_ent (xtext_buffer *buffer, textentry *ent)
@@ -3996,6 +4014,8 @@ gtk_xtext_remove_bottom (xtext_buffer *buffer)
 	}
 }
 
+} // end anonymous namespace
+
 /* If lines=0 => clear all */
 
 void
@@ -4067,6 +4087,7 @@ gtk_xtext_clear (xtext_buffer *buf, int lines)
 		buf->marker_state = MARKER_RESET_BY_CLEAR;
 }
 
+namespace{
 static gboolean
 gtk_xtext_check_ent_visibility (GtkXText * xtext, textentry *find_ent, int add)
 {
@@ -4106,6 +4127,7 @@ gtk_xtext_check_ent_visibility (GtkXText * xtext, textentry *find_ent, int add)
 
 	return FALSE;
 }
+} // end anonymous namespace
 
 void
 gtk_xtext_check_marker_visibility (GtkXText * xtext)
@@ -4113,6 +4135,8 @@ gtk_xtext_check_marker_visibility (GtkXText * xtext)
 	if (gtk_xtext_check_ent_visibility (xtext, xtext->buffer->marker_pos, 1))
 		xtext->buffer->marker_seen = TRUE;
 }
+
+namespace{
 
 static void
 gtk_xtext_unstrip_color (gint start, gint end, GSList *slp, GList **gl, gint maxo)
@@ -4342,6 +4366,8 @@ gtk_xtext_search_init (xtext_buffer *buf, const gchar *text, gtk_xtext_search_fl
 	return false;
 }
 
+} // end anonymous namespace
+
 #define BACKWARD (flags & backward)
 #define FIRSTLAST(lp)  (BACKWARD? g_list_last(lp): g_list_first(lp))
 #define NEXTPREVIOUS(lp) (BACKWARD? g_list_previous(lp): g_list_next(lp))
@@ -4505,6 +4531,8 @@ gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fl
 #undef FIRSTLAST
 #undef NEXTPREVIOUS
 
+namespace {
+
 static int
 gtk_xtext_render_page_timeout (GtkXText * xtext)
 {
@@ -4627,6 +4655,8 @@ gtk_xtext_append_entry (xtext_buffer *buf, textentry * ent, time_t stamp)
 		gtk_xtext_search_textentry_add (buf, ent, gl, FALSE);
 	}
 }
+
+} // end anonymous namespace
 
 /* the main two public functions */
 

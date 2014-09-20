@@ -53,7 +53,7 @@
 
 typedef struct _GtkXText GtkXText;
 typedef struct _GtkXTextClass GtkXTextClass;
-typedef struct textentry textentry;
+struct textentry;
 
 /*
  * offsets_t is used for retaining search information.
