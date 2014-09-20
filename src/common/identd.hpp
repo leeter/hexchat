@@ -21,6 +21,24 @@
 #define HEXCHAT_IDENTD_HPP
 
 #include <string>
+#include <memory>
+
+namespace io
+{
+    namespace services
+    {
+        class identd_server_impl;
+
+        class identd_server{
+            std::shared_ptr<identd_server_impl> p_impl;
+        public:
+            identd_server();
+            void register_username(short server_port, short client_port, const std::string & username);
+            void poll();
+        };
+    }
+}
+
 
 void identd_start (const std::string& username);
 

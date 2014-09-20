@@ -18,15 +18,108 @@
  */
 
 /* simple identd server for HexChat under Win32 */
-#include <thread>
+
+#include <algorithm>
 #include <atomic>
+#include <memory>
 #include <string>
+#include <sstream>
+#include <thread>
+#include <unordered_map>
+#include <boost/asio.hpp>
+
+#include "identd.hpp"
 #include "inet.hpp"
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "text.hpp"
 
+using boost::asio::ip::tcp;
+
 namespace{
+
+    class session
+        : public std::enable_shared_from_this<session>
+    {
+    public:
+        session(tcp::socket socket)
+            : socket_(std::move(socket))
+        {
+        }
+
+        void start()
+        {
+            do_read();
+        }
+
+    private:
+        void do_read()
+        {
+            auto self(shared_from_this());
+            boost::asio::async_read_until(this->socket_, this->buffer_, "\r\n",
+                [this, self](boost::system::error_code ec, std::size_t length)
+            {
+                if (!ec)
+                {
+                    std::istream stream(&this->buffer_);
+                    size_t to_read = std::min(static_cast<size_t>(max_length), length);
+                    stream.read(data_, to_read);
+                    do_write(length);
+                }
+            });
+        }
+
+        void do_write(std::size_t length)
+        {
+            auto self(shared_from_this());
+            boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+                [this, self](boost::system::error_code ec, std::size_t /*length*/)
+            {
+                if (!ec)
+                {
+                    do_read();
+                }
+            });
+        }
+
+        tcp::socket socket_;
+        enum: std::size_t { max_length = 1024 };
+        boost::asio::streambuf buffer_;
+        char data_[max_length];
+    };
+
+    class server
+    {
+    public:
+        server(boost::asio::io_service& io_service, short port)
+            : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
+            socket_(io_service)
+        {
+            do_accept();
+        }
+
+    private:
+        void do_accept()
+        {
+            acceptor_.async_accept(socket_,
+                [this](boost::system::error_code ec)
+            {
+                if (!ec)
+                {
+                    std::ostringstream accept_announce("*\tServicing ident request from ", std::ios::ate);
+                    accept_announce << socket_.remote_endpoint().address().to_string() << "\n";
+                    PrintText(current_sess, accept_announce.str());
+                    std::make_shared<session>(std::move(socket_))->start();
+                }
+
+                do_accept();
+            });
+        }
+
+        tcp::acceptor acceptor_;
+        tcp::socket socket_;
+    };
+
 	static ::std::atomic_bool identd_is_running = { false };
 #ifdef USE_IPV6
 	static ::std::atomic_bool identd_ipv6_is_running = { false };
@@ -196,4 +289,41 @@ identd_start(const ::std::string& username)
 		::std::thread ipv4(identd, username);
 		ipv4.detach();
 	}
+}
+
+namespace io
+{
+    namespace services
+    {
+        class identd_server_impl
+        {
+            std::unordered_map<std::string, std::string> serv_to_nick;
+            boost::asio::io_service io_service;
+        public:
+            void register_username(short server_port, short client_port, const std::string & username)
+            {
+                std::ostringstream buff;
+                buff << server_port << ", " << client_port;
+                this->serv_to_nick.emplace(buff.str(), username);
+            }
+
+            void poll()
+            {
+                io_service.poll();
+            }
+        };
+
+        identd_server::identd_server()
+            :p_impl(std::make_shared<io::services::identd_server_impl>()){}
+
+        void identd_server::register_username(short server_port, short client_port, const std::string & username)
+        {
+            this->p_impl->register_username(server_port, client_port, username);
+        }
+
+        void identd_server::poll()
+        {
+            this->p_impl->poll();
+        }
+    }
 }
