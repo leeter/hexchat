@@ -1867,6 +1867,22 @@ void server_error(server * serv, const boost::system::error_code & error)
 {
     PrintText(serv->front_session, error.message());
     PrintText(serv->front_session, std::to_string(error.value()));
+    if (!serv->end_of_motd)
+    {
+        serv->disconnect(serv->server_session, false, error.value());
+        if (!servlist_cycle(serv))
+        {
+            if (prefs.hex_net_auto_reconnect)
+                serv->auto_reconnect(false, error.value());
+        }
+    }
+    else
+    {
+        if (prefs.hex_net_auto_reconnect)
+            serv->auto_reconnect(false, error.value());
+        else
+            serv->disconnect(serv->server_session, false, error.value());
+    }
 }
 
 
