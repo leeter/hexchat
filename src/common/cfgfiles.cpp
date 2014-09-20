@@ -659,8 +659,6 @@ static int
 get_default_language (void)
 {
 	const char *locale;
-	char *lang;
-	char *p;
 	int lang_no;
 
 	/* LC_ALL overrides LANG, so we must check it first */
@@ -672,27 +670,24 @@ get_default_language (void)
 	/* we might end up with something like "en_US.UTF-8".  We will try to 
 	 * search for "en_US"; if it fails we search for "en".
 	 */
-	lang = g_strdup (locale);
+    std::string lang(locale);
 
-    p = strchr(lang, '.');
-	if (p)
-		*p='\0';
+    auto dot_loc = lang.find_first_of('.');
+    if (dot_loc != std::string::npos)
+        lang.erase(dot_loc);
 
-	lang_no = find_language_number (lang);
+	lang_no = find_language_number (lang.c_str());
 
 	if (lang_no >= 0)
 	{
-		free (lang);
 		return lang_no;
 	}
 
-    p = strchr(lang, '_');
-	if (p)
-		*p='\0';
+    auto underscore_loc = lang.find_first_of('_');
+    if (underscore_loc != std::string::npos)
+        lang.erase(underscore_loc);
 
-	lang_no = find_language_number (lang);
-
-	free (lang);
+	lang_no = find_language_number (lang.c_str());
 
 	return lang_no >= 0 ? lang_no : find_language_number ("en");
 }
@@ -751,7 +746,6 @@ load_default_config(void)
 	char *sp;
 #ifdef WIN32
 	wchar_t* roaming_path_wide;
-	gchar* roaming_path;
 #endif
 
 	username = g_get_user_name ();
@@ -876,18 +870,17 @@ load_default_config(void)
 	strcpy (prefs.hex_away_reason, _("I'm busy"));
 	strcpy (prefs.hex_completion_suffix, ",");
 #ifdef WIN32
+    std::function<void __stdcall(void*)> dltr(CoTaskMemFree);
 	if (portable_mode () || SHGetKnownFolderPath (FOLDERID_Downloads, 0, NULL, &roaming_path_wide) != S_OK)
 	{
 		snprintf (prefs.hex_dcc_dir, sizeof (prefs.hex_dcc_dir), "%s\\downloads", get_xdir ());
 	}
 	else
 	{
-		roaming_path = g_utf16_to_utf8 ((const gunichar2*)roaming_path_wide, -1, NULL, NULL, NULL);
-		CoTaskMemFree (roaming_path_wide);
+        std::unique_ptr<wchar_t, decltype(dltr)> wide_path(roaming_path_wide, dltr);
+		auto roaming_path = charset::narrow(roaming_path_wide);
 
-		g_strlcpy (prefs.hex_dcc_dir, roaming_path, sizeof (prefs.hex_dcc_dir));
-
-		g_free (roaming_path);
+		g_strlcpy (prefs.hex_dcc_dir, roaming_path.c_str(), sizeof (prefs.hex_dcc_dir));
 	}
 #else
 	if (g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD))
