@@ -2548,6 +2548,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 	int str_width;
 	GdkDrawable *pix = NULL;
 	int dest_x = 0, dest_y = 0;
+    bool dofill;
 
 	if (xtext->dont_render || len < 1 || xtext->hidden)
 		return 0;
@@ -2584,7 +2585,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		xtext->draw_buf = pix;
 	}
 
-	bool dofill(true);
+    dofill = true;
 
 	/* backcolor is always handled by XDrawImageString */
 	if (!xtext->backcolor && xtext->pixmap)
