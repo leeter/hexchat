@@ -66,9 +66,52 @@ __SSL_critical_error (const std::string & funcname)
 
 	std::exit (1);
 }
+
+
+auto bio_deleter = [](BIO* d){ BIO_free(d); };
+static std::string
+ASN1_TIME_to_string(ASN1_TIME * tm)
+{
+    char *expires = nullptr;
+    std::unique_ptr<BIO, decltype(bio_deleter)> inMem(BIO_new(BIO_s_mem()), bio_deleter);
+
+    ASN1_TIME_print(inMem.get(), tm);
+    BIO_get_mem_data(inMem.get(), &expires);
+    std::string buf;
+    if (expires)
+    {
+        buf.append(expires, 24);
+    }
+    return buf;
 }
 
+
+static void
+broke_oneline(char *oneline, char *parray[])
+{
+    char *pt, *ppt;
+    int i;
+
+
+    i = 0;
+    ppt = pt = oneline + 1;
+    while ((pt = strchr(pt, '/')))
+    {
+        *pt = 0;
+        parray[i++] = ppt;
+        ppt = ++pt;
+    }
+    parray[i++] = ppt;
+    parray[i] = NULL;
+}
+
+}
+
+
 /* +++++ SSL functions +++++ */
+
+namespace io{
+    namespace ssl{
 
 SSL_CTX *
 _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
@@ -96,52 +139,12 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 
 	return(ctx);
 }
-namespace {
-
-auto bio_deleter = [](BIO* d){ BIO_free(d); };
-static std::string
-ASN1_TIME_to_string (ASN1_TIME * tm)
-{
-	char *expires = nullptr;
-	std::unique_ptr<BIO, decltype(bio_deleter)> inMem(BIO_new (BIO_s_mem ()), bio_deleter);
-
-	ASN1_TIME_print (inMem.get(), tm);
-	BIO_get_mem_data (inMem.get(), &expires);
-	std::string buf;
-	if (expires)
-	{
-		buf.append(expires, 24);
-	}
-	return buf;
-}
-
-
-static void
-broke_oneline (char *oneline, char *parray[])
-{
-	char *pt, *ppt;
-	int i;
-
-
-	i = 0;
-	ppt = pt = oneline + 1;
-	while ((pt = strchr (pt, '/')))
-	{
-		*pt = 0;
-		parray[i++] = ppt;
-		ppt = ++pt;
-	}
-	parray[i++] = ppt;
-	parray[i] = NULL;
-}
-}
-
 /*
     FIXME: Master-Key, Extensions, CA bits
 	    (openssl x509 -text -in servcert.pem)
 */
 int
-_SSL_get_cert_info (cert_info &cert_info, const SSL * ssl)
+get_cert_info (cert_info &cert_info, const SSL * ssl)
 {
 	X509 *peer_cert;
 	EVP_PKEY *peer_pkey;
@@ -200,14 +203,14 @@ _SSL_get_cert_info (cert_info &cert_info, const SSL * ssl)
 }
 
 
-chiper_info
-_SSL_get_cipher_info (const SSL * ssl)
+::io::ssl::cipher_info
+get_cipher_info (const SSL * ssl)
 {
     const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
-    struct chiper_info info;
+    ::io::ssl::cipher_info info;
     info.version = SSL_CIPHER_get_version(c);
-    info.chiper = SSL_CIPHER_get_name(c);
-	SSL_CIPHER_get_bits (c, &info.chiper_bits);
+    info.cipher = SSL_CIPHER_get_name(c);
+	SSL_CIPHER_get_bits (c, &info.cipher_bits);
 
 	return info;
 }
@@ -318,4 +321,8 @@ _SSL_close (SSL * ssl)
 	SSL_set_shutdown (ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
 	SSL_free (ssl);
 	ERR_remove_state (0);		  /* free state buffer */
+}
+
+    }
+
 }

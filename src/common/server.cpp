@@ -444,7 +444,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 			len = recv (sok, lbuf, sizeof (lbuf) - 2, 0);
 #ifdef USE_OPENSSL
 		else
-			len = _SSL_recv (serv->ssl, lbuf, sizeof (lbuf) - 2);
+			len = io::ssl::_SSL_recv (serv->ssl, lbuf, sizeof (lbuf) - 2);
 #endif
 		if (len < 1)
 		{
@@ -664,10 +664,10 @@ static void
 ssl_print_cert_info(server *serv, const SSL* ctx)
 {
     char buf[512];
-    cert_info cert_info = { 0 };
+    io::ssl::cert_info cert_info = { 0 };
     int verify_error;
 
-    if (!_SSL_get_cert_info(cert_info, ctx))
+    if (!io::ssl::get_cert_info(cert_info, ctx))
     {
         snprintf(buf, sizeof(buf), "* Certification info:");
         EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
@@ -712,13 +712,13 @@ ssl_print_cert_info(server *serv, const SSL* ctx)
             nullptr, 0);
     }
 
-    auto info = _SSL_get_cipher_info(ctx);	/* static buffer */
+    auto info = io::ssl::get_cipher_info(ctx);	/* static buffer */
     snprintf(buf, sizeof(buf), "* Cipher info:");
     EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
         0);
     snprintf(buf, sizeof(buf), "  Version: %s, cipher %s (%u bits)",
-        info.version.c_str(), info.chiper.c_str(),
-        info.chiper_bits);
+        info.version.c_str(), info.cipher.c_str(),
+        info.cipher_bits);
     EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
         0);
 
@@ -810,10 +810,10 @@ ssl_do_connect (server * serv)
 
 	if (SSL_is_init_finished (serv->ssl))
 	{
-		cert_info cert_info = { 0 };
+		io::ssl::cert_info cert_info = { 0 };
 		int verify_error;
 
-		if (!_SSL_get_cert_info (cert_info, serv->ssl))
+		if (!io::ssl::get_cert_info (cert_info, serv->ssl))
 		{
 			snprintf (buf, sizeof (buf), "* Certification info:");
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
@@ -863,13 +863,13 @@ ssl_do_connect (server * serv)
 							 nullptr, 0);
 		}
 
-		auto info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
+		auto info = io::ssl::get_cipher_info (serv->ssl);	/* static buffer */
 		snprintf (buf, sizeof (buf), "* Cipher info:");
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
-					 info.version.c_str(), info.chiper.c_str(),
-					 info.chiper_bits);
+					 info.version.c_str(), info.cipher.c_str(),
+					 info.cipher_bits);
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 
@@ -1033,8 +1033,8 @@ server_connect_success (server *serv)
 
 		/* it'll be a memory leak, if connection isn't terminated by
 		   server_cleanup() */
-		serv->ssl = _SSL_socket (ctx, serv->sok);
-		if ((err = _SSL_set_verify (ctx, ssl_cb_verify, nullptr)))
+		serv->ssl = io::ssl::_SSL_socket (ctx, serv->sok);
+		if ((err = io::ssl::_SSL_set_verify (ctx, ssl_cb_verify, nullptr)))
 		{
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, nullptr,
 							 nullptr, nullptr, 0);

@@ -21,6 +21,9 @@
 #define HEXCHAT_SSL_HPP
 
 #include <string>
+namespace io{
+    namespace ssl{
+
 
 struct cert_info {
     char subject[256];
@@ -37,10 +40,10 @@ struct cert_info {
     int rsa_tmp_bits;
 };
 
-struct chiper_info {
-    int chiper_bits;
+struct cipher_info {
+    int cipher_bits;
     std::string version;
-    std::string chiper;
+    std::string cipher;
 };
 
 SSL_CTX *_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server);
@@ -55,8 +58,8 @@ char *_SSL_set_verify(SSL_CTX *ctx, int(*verify_callback)(int, X509_STORE_CTX*),
 */
 void _SSL_close (SSL * ssl);
 
-int _SSL_get_cert_info (cert_info &cert_info, const SSL * ssl);
-struct chiper_info _SSL_get_cipher_info(const SSL * ssl);
+int get_cert_info (cert_info &cert_info, const SSL * ssl);
+::io::ssl::cipher_info get_cipher_info(const SSL * ssl);
 
 /*char *_SSL_add_keypair (SSL_CTX *ctx, char *privkey, char *cert);*/
 /*void _SSL_add_random_keypair(SSL_CTX *ctx, int bits);*/
@@ -83,5 +86,9 @@ int _SSL_recv (SSL * ssl, char *buf, int len);
 #define	_SSL_get_ctx_x509_base64(a)	_SSL_get_ctx_obj_base64(a, 2)
 
 /*int _SSL_verify_x509(X509 *x509);*/
+
+    }
+
+}
 
 #endif
