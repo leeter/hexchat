@@ -665,7 +665,6 @@ ssl_print_cert_info(server *serv, const SSL* ctx)
 {
     char buf[512];
     cert_info cert_info = { 0 };
-    struct chiper_info *chiper_info;
     int verify_error;
 
     if (!_SSL_get_cert_info(cert_info, ctx))
@@ -713,13 +712,13 @@ ssl_print_cert_info(server *serv, const SSL* ctx)
             nullptr, 0);
     }
 
-    chiper_info = _SSL_get_cipher_info(ctx);	/* static buffer */
+    auto info = _SSL_get_cipher_info(ctx);	/* static buffer */
     snprintf(buf, sizeof(buf), "* Cipher info:");
     EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
         0);
     snprintf(buf, sizeof(buf), "  Version: %s, cipher %s (%u bits)",
-        chiper_info->version.c_str(), chiper_info->chiper.c_str(),
-        chiper_info->chiper_bits);
+        info.version.c_str(), info.chiper.c_str(),
+        info.chiper_bits);
     EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
         0);
 
@@ -812,7 +811,6 @@ ssl_do_connect (server * serv)
 	if (SSL_is_init_finished (serv->ssl))
 	{
 		cert_info cert_info = { 0 };
-		struct chiper_info *chiper_info;
 		int verify_error;
 
 		if (!_SSL_get_cert_info (cert_info, serv->ssl))
@@ -865,13 +863,13 @@ ssl_do_connect (server * serv)
 							 nullptr, 0);
 		}
 
-		chiper_info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
+		auto info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
 		snprintf (buf, sizeof (buf), "* Cipher info:");
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
-					 chiper_info->version.c_str(), chiper_info->chiper.c_str(),
-					 chiper_info->chiper_bits);
+					 info.version.c_str(), info.chiper.c_str(),
+					 info.chiper_bits);
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
 						 0);
 

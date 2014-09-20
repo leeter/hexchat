@@ -40,7 +40,6 @@
 #include "ssl.hpp"				  /* struct cert_info */
 
 /* globals */
-static struct chiper_info chiper_info;		/* static buffer for _SSL_get_cipher_info() */
 static char err_buf[256];			/* generic error buffer */
 
 
@@ -201,15 +200,16 @@ _SSL_get_cert_info (cert_info &cert_info, const SSL * ssl)
 }
 
 
-struct chiper_info *
+chiper_info
 _SSL_get_cipher_info (const SSL * ssl)
 {
     const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
-    chiper_info.version = SSL_CIPHER_get_version(c);
-    chiper_info.chiper = SSL_CIPHER_get_name(c);
-	SSL_CIPHER_get_bits (c, &chiper_info.chiper_bits);
+    struct chiper_info info;
+    info.version = SSL_CIPHER_get_version(c);
+    info.chiper = SSL_CIPHER_get_name(c);
+	SSL_CIPHER_get_bits (c, &info.chiper_bits);
 
-	return &chiper_info;
+	return info;
 }
 
 
