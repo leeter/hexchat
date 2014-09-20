@@ -45,50 +45,50 @@
 
 int main()
 {	
-    std::vector<std::string> defines;
-    int i = 0, max;
-    std::cout.sync_with_stdio(false);
-    std::cout << "/* this file is auto generated, edit textevents.in instead! */\nextern const struct text_event te[] = {\n";
-    for (std::string name; std::getline(std::cin, name);)
-    {
-        std::string num, help, def, args;
-        std::getline(std::cin, num);
-        std::getline(std::cin, help);
-        std::getline(std::cin, def);
-        std::getline(std::cin, args);
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::vector<std::string> defines;
+	int i = 0, max;
+	std::cout.sync_with_stdio(false);
+	std::cout << "/* this file is auto generated, edit textevents.in instead! */\nextern const struct text_event te[] = {\n";
+	for (std::string name; std::getline(std::cin, name);)
+	{
+		std::string num, help, def, args;
+		std::getline(std::cin, num);
+		std::getline(std::cin, help);
+		std::getline(std::cin, def);
+		std::getline(std::cin, args);
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-        std::cout << "\n{\"" << name << "\", " << help << ", ";
-        if (args[0] == 'n')
-        {
-            args.erase(args.begin());
-            std::cout << (std::stoi(args) | 128) << ", \n\"" << def << "\"},\n";
-        }
-        else
-            std::cout << std::stoi(args) << ", \nN_(\"" << def << "\")},\n";
-        defines.push_back(num);
-        i++;
-    }
-    
-    std::cout << "};\n";
-    std::cout.flush();
+		std::cout << "\n{\"" << name << "\", " << help << ", ";
+		if (args[0] == 'n')
+		{
+			args.erase(args.begin());
+			std::cout << (std::stoi(args) | 128) << ", \n\"" << def << "\"},\n";
+		}
+		else
+			std::cout << std::stoi(args) << ", \nN_(\"" << def << "\")},\n";
+		defines.push_back(num);
+		i++;
+	}
+	
+	std::cout << "};\n";
+	std::cout.flush();
 
-    std::clog.sync_with_stdio(false);    
-    std::clog << "/* this file is auto generated, edit textevents.in instead! */\n\nenum\n{\n";
-    max = i;
-    i = 0;
-    while (i < max)
-    {
-        if (i + 1 < max)
-        {
-            std::clog << "\t" << defines[i] << ",\t\t" << defines[i + 1] << ",\n";
-            i++;
-        }
-        else
-            std::clog << '\t' << defines[i] << ",\n";
-        i++;
-    }
-    std::clog << "\tNUM_XP\n};\n";
-    std::clog.flush();
-    return 0;
+	std::clog.sync_with_stdio(false);    
+	std::clog << "/* this file is auto generated, edit textevents.in instead! */\n\nenum\n{\n";
+	max = i;
+	i = 0;
+	while (i < max)
+	{
+		if (i + 1 < max)
+		{
+			std::clog << "\t" << defines[i] << ",\t\t" << defines[i + 1] << ",\n";
+			i++;
+		}
+		else
+			std::clog << '\t' << defines[i] << ",\n";
+		i++;
+	}
+	std::clog << "\tNUM_XP\n};\n";
+	std::clog.flush();
+	return 0;
 }

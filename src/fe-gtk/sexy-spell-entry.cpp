@@ -57,10 +57,10 @@ struct EnchantDict;
 struct EnchantBroker;
 
 typedef void (*EnchantDictDescribeFn) (const char * const lang_tag,
-                                       const char * const provider_name,
-                                       const char * const provider_desc,
-                                       const char * const provider_file,
-                                       void * user_data);
+									   const char * const provider_name,
+									   const char * const provider_desc,
+									   const char * const provider_file,
+									   void * user_data);
 
 static struct EnchantBroker * (*enchant_broker_init) (void);
 static void (*enchant_broker_free) (struct EnchantBroker * broker);
@@ -107,21 +107,21 @@ static gboolean sexy_spell_entry_popup_menu(GtkWidget *widget, SexySpellEntry *e
 
 /* Internal utility functions */
 static gint       gtk_entry_find_position                     (GtkEntry             *entry,
-                                                               gint                  x);
+															   gint                  x);
 static gboolean   word_misspelled                             (SexySpellEntry       *entry,
-                                                               int                   start,
-                                                               int                   end);
+															   int                   start,
+															   int                   end);
 static gboolean   default_word_check                          (SexySpellEntry       *entry,
-                                                               const gchar          *word);
+															   const gchar          *word);
 static bool   sexy_spell_entry_activate_language_internal (SexySpellEntry       *entry,
-                                                               const std::string     &lang,
-                                                               GError              **error);
+															   const std::string     &lang,
+															   GError              **error);
 static gchar     *get_lang_from_dict                          (struct EnchantDict   *dict);
 static void       sexy_spell_entry_recheck_all                (SexySpellEntry       *entry);
 static void       entry_strsplit_utf8                         (GtkEntry             *entry,
-                                                               gchar              ***set,
-                                                               gint                **starts,
-                                                               gint                **ends);
+															   gchar              ***set,
+															   gint                **starts,
+															   gint                **ends);
 
 static GtkEntryClass *parent_class = NULL;
 
@@ -427,7 +427,7 @@ get_word_extents_from_position(SexySpellEntry *entry, gint *start, gint *end, gu
 
 	for (i = 0; entry->priv->words[i]; i++) {
 		if (bytes_pos >= entry->priv->word_starts[i] &&
-		    bytes_pos <= entry->priv->word_ends[i]) {
+			bytes_pos <= entry->priv->word_ends[i]) {
 			*start = entry->priv->word_starts[i];
 			*end   = entry->priv->word_ends[i];
 			return;
@@ -523,10 +523,10 @@ replace_word(GtkWidget *menuitem, SexySpellEntry *entry)
 
 	dict = (struct EnchantDict *) g_object_get_data(G_OBJECT(menuitem), "enchant-dict");
 
-        if (dict)
+		if (dict)
 		enchant_dict_store_replacement(dict,
-					       oldword, -1,
-					       newword, -1);
+						   oldword, -1,
+						   newword, -1);
 
 	g_free(oldword);
 }
@@ -1239,10 +1239,10 @@ sexy_spell_entry_activate_default_languages(SexySpellEntry *entry)
 
 static void
 get_lang_from_dict_cb(const char * const lang_tag,
-		      const char * const provider_name,
-		      const char * const provider_desc,
-		      const char * const provider_file,
-		      void * user_data) {
+			  const char * const provider_name,
+			  const char * const provider_desc,
+			  const char * const provider_file,
+			  void * user_data) {
 	gchar **lang = (gchar **)user_data;
 	*lang = g_strdup(lang_tag);
 }
@@ -1502,7 +1502,7 @@ sexy_spell_entry_set_active_languages(SexySpellEntry *entry, GSList *langs, GErr
 
 	for (li = langs; li; li = g_slist_next(li)) {
 		if (sexy_spell_entry_activate_language_internal(entry,
-		    (const gchar *) li->data, error) == FALSE)
+			(const gchar *) li->data, error) == FALSE)
 			return FALSE;
 	}
 	if (entry->priv->words) {

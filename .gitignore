@@ -93,3 +93,4 @@ po/.intltool-merge-cache
 *.dmg
 boost*/
 gtk/
+*.diff

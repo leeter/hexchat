@@ -25,18 +25,18 @@
 
 namespace io
 {
-    namespace services
-    {
-        class identd_server_impl;
+	namespace services
+	{
+		class identd_server_impl;
 
-        class identd_server{
-            std::shared_ptr<identd_server_impl> p_impl;
-        public:
-            identd_server();
-            void register_username(short server_port, short client_port, const std::string & username);
-            void poll();
-        };
-    }
+		class identd_server{
+			std::shared_ptr<identd_server_impl> p_impl;
+		public:
+			identd_server();
+			void register_username(short server_port, short client_port, const std::string & username);
+			void poll();
+		};
+	}
 }
 
 

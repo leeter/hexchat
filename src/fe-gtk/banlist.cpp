@@ -164,7 +164,7 @@ supports_invite (banlist_info *banl, int i)
 	if (serv->have_invite)
 		goto yes;
 
-    for (char cm : serv->chanmodes)
+	for (char cm : serv->chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -184,7 +184,7 @@ supports_quiet (banlist_info *banl, int i)
 	server *serv = banl->sess->server;
 	int bit = 1<<i;
 
-    for (char cm : serv->chanmodes)
+	for (char cm : serv->chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -599,7 +599,7 @@ banlist_crop (GtkWidget *, banlist_info *banl)
 	select = gtk_tree_view_get_selection (get_view (sess));
 	/* gtk_tree_selected_get_selected_rows() isn't present in gtk 2.0.x */
 	gtk_tree_selection_selected_foreach (select, banlist_add_selected_cb,
-	                                     &list);
+										 &list);
 
 	num_sel = g_slist_length (list);
 	/* select all, then unselect those that we remembered */
@@ -689,7 +689,7 @@ static time_t
 get_time(const std::string& timestr)
 {
 	const char DATE_FORMAT[] = "%a %b %d %T %Y";
-    std::tm t{};
+	std::tm t{};
 #if defined(__GNUC__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 10)
 	strptime(timestr.c_str(), DATE_FORMAT, &t);
 #else
@@ -792,7 +792,7 @@ banlist_opengui (struct session *sess)
 	GtkWidget *table, *vbox, *bbox;
 	char tbuf[256];
 
-    if (sess->type != session::SESS_CHANNEL || sess->channel[0] == 0)
+	if (sess->type != session::SESS_CHANNEL || sess->channel[0] == 0)
 	{
 		fe_message (_("You can only open the Ban List window while in a channel tab."), FE_MSG_ERROR);
 		return;
@@ -857,11 +857,11 @@ banlist_opengui (struct session *sess)
 	gtk_widget_show (bbox);
 
 	banl->but_remove = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, G_CALLBACK(banlist_unban), banl,
-	                _("Remove"));
+					_("Remove"));
 	banl->but_crop = gtkutil_button(bbox, GTK_STOCK_REMOVE, 0, G_CALLBACK(banlist_crop), banl,
-	                _("Crop"));
+					_("Crop"));
 	banl->but_clear = gtkutil_button(bbox, GTK_STOCK_CLEAR, 0, G_CALLBACK(banlist_clear), banl,
-	                _("Clear"));
+					_("Clear"));
 
 	banl->but_refresh = gtkutil_button(bbox, GTK_STOCK_REFRESH, 0, G_CALLBACK(banlist_refresh), banl, _("Refresh"));
 

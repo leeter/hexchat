@@ -114,7 +114,7 @@ static int key_action_history_down (GtkWidget * wid, GdkEventKey * evt,
 static int key_action_tab_comp (GtkWidget * wid, GdkEventKey * evt, char *d1,
 										  char *d2, struct session *sess);
 static int key_action_comp_chng (GtkWidget * wid, GdkEventKey * evt, char *d1,
-                                                                                        char *d2, struct session *sess);
+																						char *d2, struct session *sess);
 static int key_action_replace (GtkWidget * wid, GdkEventKey * evt, char *d1,
 										 char *d2, struct session *sess);
 static int key_action_move_tab_left (GtkWidget * wid, GdkEventKey * evt,
@@ -1357,7 +1357,7 @@ static struct gcomp_data old_gcomp;
 static int
 double_chan_cb (session *lsess, GList **list)
 {
-    if (lsess->type == session::SESS_CHANNEL)
+	if (lsess->type == session::SESS_CHANNEL)
 		*list = g_list_prepend(*list, lsess->channel);
 	return TRUE;
 }
@@ -1427,7 +1427,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 							struct session *sess)
 {
 	int len = 0, elen = 0, i = 0, cursor_pos, ent_start = 0, comp = 0, found = 0,
-	    prefix_len, skip_len = 0, is_nick, is_cmd = 0;
+		prefix_len, skip_len = 0, is_nick, is_cmd = 0;
 	char buf[COMP_BUF], ent[CHANLEN], *postfix = NULL, *result, *ch;
 	GList *list = NULL, *tmp_list = NULL;
 	const char *text;
@@ -1495,7 +1495,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 
 	is_nick = (ent[0] == '#' || ent[0] == '&' || is_cmd) ? 0 : 1;
 	
-    if (sess->type == session::SESS_DIALOG && is_nick)
+	if (sess->type == session::SESS_DIALOG && is_nick)
 	{
 		/* tab in a dialog completes the other person's name */
 		if (rfc_ncasecmp (sess->channel, ent, elen) == 0)

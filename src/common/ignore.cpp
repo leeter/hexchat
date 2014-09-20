@@ -134,27 +134,27 @@ ignore_showlist (session *sess)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_NOTI)
+		if (ig->type & ignore::IG_NOTI)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_CHAN)
+		if (ig->type & ignore::IG_CHAN)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_CTCP)
+		if (ig->type & ignore::IG_CTCP)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_DCC)
+		if (ig->type & ignore::IG_DCC)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_INVI)
+		if (ig->type & ignore::IG_INVI)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-        if (ig->type & ignore::IG_UNIG)
+		if (ig->type & ignore::IG_UNIG)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
@@ -215,7 +215,7 @@ ignore_check(const std::string& mask, ignore::ignore_type type)
 	while (list)
 	{
 		ig = static_cast<struct ignore *>(list->data);
-        if (ig->type & ignore::IG_UNIG)
+		if (ig->type & ignore::IG_UNIG)
 		{
 			if (ig->type & type)
 			{
@@ -236,15 +236,15 @@ ignore_check(const std::string& mask, ignore::ignore_type type)
 			if (match (ig->mask.c_str(), mask.c_str()))
 			{
 				ignored_total++;
-                if (type & ignore::IG_PRIV)
+				if (type & ignore::IG_PRIV)
 					ignored_priv++;
-                if (type & ignore::IG_NOTI)
+				if (type & ignore::IG_NOTI)
 					ignored_noti++;
-                if (type & ignore::IG_CHAN)
+				if (type & ignore::IG_CHAN)
 					ignored_chan++;
-                if (type & ignore::IG_CTCP)
+				if (type & ignore::IG_CTCP)
 					ignored_ctcp++;
-                if (type & ignore::IG_INVI)
+				if (type & ignore::IG_INVI)
 					ignored_invi++;
 				fe_ignore_update (2);
 				return true;
@@ -325,7 +325,7 @@ ignore_save ()
 		while (temp)
 		{
 			ig = static_cast<struct ignore *>(temp->data);
-            if (!(ig->type & ignore::IG_NOSAVE))
+			if (!(ig->type & ignore::IG_NOSAVE))
 			{
 				snprintf (buf, sizeof (buf), "mask = %s\ntype = %u\n\n",
 							 ig->mask.c_str(), ig->type);
@@ -388,7 +388,7 @@ flood_check (const char *nick, const char *ip, server *serv, session *sess, floo
 					PrintText (sess, buf);
 
 					/* ignore CTCP */
-                    ignore_add(real_ip, ignore::IG_CTCP, FALSE);
+					ignore_add(real_ip, ignore::IG_CTCP, FALSE);
 					return false;
 				}
 			}

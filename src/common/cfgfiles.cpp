@@ -323,33 +323,33 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
-        
+		
 		wchar_t* roaming_path_wide = nullptr;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
 		{
-            std::wstring exe_path(2048, L'\0');
-            DWORD size = GetModuleFileNameW(nullptr, &exe_path[0], exe_path.size());
+			std::wstring exe_path(2048, L'\0');
+			DWORD size = GetModuleFileNameW(nullptr, &exe_path[0], exe_path.size());
 			if (size)
 			{
-                exe_path.resize(size);
-                auto path = fs::path(exe_path);
-                path = path.remove_filename();
-                path /= L"config";
-                xdir = g_strdup(charset::narrow(path.wstring()).c_str());
+				exe_path.resize(size);
+				auto path = fs::path(exe_path);
+				path = path.remove_filename();
+				path /= L"config";
+				xdir = g_strdup(charset::narrow(path.wstring()).c_str());
 			}
 			else
 				xdir = g_strdup (".\\config");
 		}
 		else
 		{
-            std::function<void __stdcall(void*)> com_dltr(CoTaskMemFree);
-            std::unique_ptr<wchar_t, decltype(com_dltr)> wide_roaming_path(roaming_path_wide, com_dltr);
+			std::function<void __stdcall(void*)> com_dltr(CoTaskMemFree);
+			std::unique_ptr<wchar_t, decltype(com_dltr)> wide_roaming_path(roaming_path_wide, com_dltr);
 
-            fs::path roaming_path(roaming_path_wide);
-            roaming_path /= L"HexChat";
+			fs::path roaming_path(roaming_path_wide);
+			roaming_path /= L"HexChat";
 
-            xdir = g_strdup(charset::narrow(roaming_path.wstring()).c_str());
+			xdir = g_strdup(charset::narrow(roaming_path.wstring()).c_str());
 		}
 #endif
 	}
@@ -359,11 +359,11 @@ get_xdir (void)
 
 namespace config
 {
-    const ::std::string& config_dir()
-    {
-        static const std::string config_dir(get_xdir());
-        return config_dir;
-    }
+	const ::std::string& config_dir()
+	{
+		static const std::string config_dir(get_xdir());
+		return config_dir;
+	}
 }
 
 int
@@ -633,7 +633,7 @@ convert_with_fallback (const char *str, const char *fallback)
 	if (!utf)
 		utf = g_strdup (fallback);
 #else
-    UNREFERENCED_PARAMETER(fallback);
+	UNREFERENCED_PARAMETER(fallback);
 	/* On Windows, they return a string in utf-8, so don't do anything to it. The fallback isn't needed. */
 	utf = g_strdup(str);
 #endif
@@ -670,11 +670,11 @@ get_default_language (void)
 	/* we might end up with something like "en_US.UTF-8".  We will try to 
 	 * search for "en_US"; if it fails we search for "en".
 	 */
-    std::string lang(locale);
+	std::string lang(locale);
 
-    auto dot_loc = lang.find_first_of('.');
-    if (dot_loc != std::string::npos)
-        lang.erase(dot_loc);
+	auto dot_loc = lang.find_first_of('.');
+	if (dot_loc != std::string::npos)
+		lang.erase(dot_loc);
 
 	lang_no = find_language_number (lang.c_str());
 
@@ -683,9 +683,9 @@ get_default_language (void)
 		return lang_no;
 	}
 
-    auto underscore_loc = lang.find_first_of('_');
-    if (underscore_loc != std::string::npos)
-        lang.erase(underscore_loc);
+	auto underscore_loc = lang.find_first_of('_');
+	if (underscore_loc != std::string::npos)
+		lang.erase(underscore_loc);
 
 	lang_no = find_language_number (lang.c_str());
 
@@ -870,14 +870,14 @@ load_default_config(void)
 	strcpy (prefs.hex_away_reason, _("I'm busy"));
 	strcpy (prefs.hex_completion_suffix, ",");
 #ifdef WIN32
-    std::function<void __stdcall(void*)> dltr(CoTaskMemFree);
+	std::function<void __stdcall(void*)> dltr(CoTaskMemFree);
 	if (portable_mode () || SHGetKnownFolderPath (FOLDERID_Downloads, 0, NULL, &roaming_path_wide) != S_OK)
 	{
 		snprintf (prefs.hex_dcc_dir, sizeof (prefs.hex_dcc_dir), "%s\\downloads", get_xdir ());
 	}
 	else
 	{
-        std::unique_ptr<wchar_t, decltype(dltr)> wide_path(roaming_path_wide, dltr);
+		std::unique_ptr<wchar_t, decltype(dltr)> wide_path(roaming_path_wide, dltr);
 		auto roaming_path = charset::narrow(roaming_path_wide);
 
 		g_strlcpy (prefs.hex_dcc_dir, roaming_path.c_str(), sizeof (prefs.hex_dcc_dir));
@@ -997,7 +997,7 @@ load_config (void)
 		{
 		case TYPE_STR:
 			cfg_get_str (cfg, vars[i].name, (char *) &prefs + vars[i].offset,
-				     vars[i].len);
+					 vars[i].len);
 			break;
 		case TYPE_BOOL:
 		case TYPE_INT:
@@ -1252,11 +1252,11 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				if (erase || *val)
 				{
 					/* save the previous value until we print it out */
-                    std::string prev_string(vars[i].len, '\0');
-                    std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, prev_string.begin());
+					std::string prev_string(vars[i].len, '\0');
+					std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, prev_string.begin());
 
 					/* update the variable */
-                    std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, val);
+					std::copy_n((const char *)&prefs + vars[i].offset, vars[i].len, val);
 					((char *) &prefs)[vars[i].offset + vars[i].len - 1] = 0;
 
 					if (!quiet)
@@ -1344,7 +1344,7 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
-        if (xof_flags & io::fs::XOF_DOMODE)
+		if (xof_flags & io::fs::XOF_DOMODE)
 			return g_open (file, flags | OFLAGS, mode);
 		else
 			return g_open (file, flags | OFLAGS, 0);
@@ -1352,7 +1352,7 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 
 	buf = g_build_filename (get_xdir (), file, NULL);
 
-    if (xof_flags & io::fs::XOF_DOMODE)
+	if (xof_flags & io::fs::XOF_DOMODE)
 	{
 		fd = g_open (buf, flags | OFLAGS, mode);
 	}
@@ -1372,7 +1372,7 @@ hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 	char *buf;
 	FILE *fh;
 
-    if (xof_flags & io::fs::XOF_FULLPATH)
+	if (xof_flags & io::fs::XOF_FULLPATH)
 		return fopen (file, mode);
 
 	buf = g_build_filename (get_xdir (), file, NULL);

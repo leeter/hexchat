@@ -32,7 +32,7 @@ namespace hexchat{
 #define STAT_CONNECTING 4
 #define STAT_ABORTED 5
 
-    
+	
 
 #define CPS_AVG_WINDOW 10
 namespace dcc{
@@ -50,13 +50,13 @@ struct proxy_state;
 
 struct DCC
 {
-    enum class dcc_type {
-        TYPE_ERROR = -1,
-        TYPE_SEND = 0,
-        TYPE_RECV,
-        TYPE_CHATRECV,
-        TYPE_CHATSEND
-    };
+	enum class dcc_type {
+		TYPE_ERROR = -1,
+		TYPE_SEND = 0,
+		TYPE_RECV,
+		TYPE_CHATRECV,
+		TYPE_CHATSEND
+	};
 	struct ::server *serv;
 	struct dcc_chat *dccchat;
 	struct proxy_state *proxy;

@@ -47,12 +47,12 @@ static void
 {
 	char tbuf[4096];	/* can receive 2048 from IRC, so this is enough */
 
-    std::string confs(conf);
-    confs.push_back(0);
+	std::string confs(conf);
+	confs.push_back(0);
 	/* process %C %B etc */
 	check_special_chars(&confs[0], TRUE);
-    auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
-        sess->server->get_network(TRUE), "", "", nick, "");
+	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
+		sess->server->get_network(TRUE), "", "", nick, "");
 	handle_command(sess, tbuf, FALSE);
 }
 
@@ -107,25 +107,25 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 		/* but still let CTCP replies override it */
 		if (!ctcp_check (sess, nick, word, word_eol, word[4] + ctcp_offset))
 		{
-            if (!ignore_check(word[1], ignore::IG_DCC))
+			if (!ignore_check(word[1], ignore::IG_DCC))
 				dcc::handle_dcc (sess, nick, word, word_eol, tags_data);
 		}
 		return;
 	}
 
 	/* consider ACTION to be different from other CTCPs. Check
-      ignore as if it was a PRIV/CHAN. */
+	  ignore as if it was a PRIV/CHAN. */
 	if (!g_ascii_strncasecmp (msg, "ACTION ", 7))
 	{
 		if (serv->is_channel_name (to))
 		{
 			/* treat a channel action as a CHAN */
-            if (ignore_check(word[1], ignore::IG_CHAN))
+			if (ignore_check(word[1], ignore::IG_CHAN))
 				return;
 		} else
 		{
 			/* treat a private action as a PRIV */
-            if (ignore_check(word[1], ignore::IG_PRIV))
+			if (ignore_check(word[1], ignore::IG_PRIV))
 				return;
 		}
 
@@ -137,7 +137,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 		return;
 	}
 
-    if (ignore_check(word[1], ignore::IG_CTCP))
+	if (ignore_check(word[1], ignore::IG_CTCP))
 		return;
 
 	if (!g_ascii_strcasecmp (msg, "VERSION") && !prefs.hex_irc_hide_version)
@@ -160,7 +160,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 			if (po)
 				po[0] = 0;
 
-            if (sess->server->is_channel_name(to))
+			if (sess->server->is_channel_name(to))
 			{
 				chansess = find_channel (sess->server, to);
 				if (!chansess)

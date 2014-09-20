@@ -141,8 +141,8 @@ traverse_msproxy (int sok, char *serverAddr, int port, struct msproxy_state_t *s
 
 	gethostname (hostname, NT_MAXNAMELEN);
 	p = strchr (hostname, '.');
-        if (p)
-        	*p = '\0';
+		if (p)
+			*p = '\0';
 
 	bzero (&req, sizeof(req));
 	req.clientid		= htonl(0x0a000000);	/* Initial client ID is always 0x0a		*/
@@ -382,7 +382,7 @@ traverse_msproxy (int sok, char *serverAddr, int port, struct msproxy_state_t *s
 		perror ("bind() result");
 #endif
 	}
- 	clientport = net_getsockport(csok4, csok6);
+	clientport = net_getsockport(csok4, csok6);
 	if (clientport == -1) {
 #ifdef DEBUG_MSPROXY
 		printf ("Unable to obtain source port\n");

@@ -35,19 +35,19 @@ extern int ignored_invi;
 
 struct ignore
 {
-    typedef unsigned int ignore_type;
-    enum type : ignore_type{
-        IG_PRIV = 1,
-        IG_NOTI = 2,
-        IG_CHAN = 4,
-        IG_CTCP = 8,
-        IG_INVI = 16,
-        IG_UNIG = 32,
-        IG_NOSAVE = 64,
-        IG_DCC = 128,
-        IG_DEFAULTS = IG_CHAN | IG_PRIV | IG_NOTI | IG_CTCP | IG_DCC | IG_INVI
-    };
-    
+	typedef unsigned int ignore_type;
+	enum type : ignore_type{
+		IG_PRIV = 1,
+		IG_NOTI = 2,
+		IG_CHAN = 4,
+		IG_CTCP = 8,
+		IG_INVI = 16,
+		IG_UNIG = 32,
+		IG_NOSAVE = 64,
+		IG_DCC = 128,
+		IG_DEFAULTS = IG_CHAN | IG_PRIV | IG_NOTI | IG_CTCP | IG_DCC | IG_INVI
+	};
+	
 	ignore();
 	std::string mask;
 	ignore_type type;	/* one of more of IG_* ORed together */

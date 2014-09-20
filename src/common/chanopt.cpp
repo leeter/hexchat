@@ -92,7 +92,7 @@ int
 chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 {
 	int dots, j, p = 0;
-    std::uint8_t val;
+	std::uint8_t val;
 	int offset = 2;
 	char *find;
 	bool quiet = false;
@@ -147,7 +147,7 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 					tbuf[p++] = '.';
 				tbuf[p++] = 0;
 
-                val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
+				val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
 				PrintTextf (sess, "%s\0033:\017 %s", tbuf, chanopt_value (val));
 			}
 		}
@@ -325,7 +325,7 @@ chanopt_load (session *sess)
 	if (sess->name.empty())
 		return;
 
-    network = sess->server->get_network(FALSE);
+	network = sess->server->get_network(FALSE);
 	if (!network)
 		return;
 
@@ -358,7 +358,7 @@ chanopt_save (session *sess)
 	if (sess->name.empty())
 		return;
 
-    network = sess->server->get_network(FALSE);
+	network = sess->server->get_network(FALSE);
 	if (!network)
 		return;
 

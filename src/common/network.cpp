@@ -65,8 +65,8 @@ net_ip (guint32 addr)
 netstore::~netstore()
 {
 #ifdef USE_IPV6
-    if (this->ip6_hostent)
-        freeaddrinfo(this->ip6_hostent);
+	if (this->ip6_hostent)
+		freeaddrinfo(this->ip6_hostent);
 #endif
 }
 

@@ -375,7 +375,7 @@ dcc_append (dcc::DCC *dcc, GtkListStore *store, bool prepend)
 	else
 		gtk_list_store_append (store, &iter);
 
-    if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+	if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 		dcc_prepare_row_recv (dcc, store, &iter, FALSE);
 	else
 		dcc_prepare_row_send (dcc, store, &iter, FALSE);
@@ -441,7 +441,7 @@ dcc_fill_window (int flags)
 		while (list)
 		{
 			dcc = static_cast<dcc::DCC*>(list->data);
-            if (dcc->type == dcc::DCC::dcc_type::TYPE_SEND)
+			if (dcc->type == dcc::DCC::dcc_type::TYPE_SEND)
 			{
 				dcc_append (dcc, dccfwin.store, false);
 				i++;
@@ -456,7 +456,7 @@ dcc_fill_window (int flags)
 		while (list)
 		{
 			dcc = static_cast<dcc::DCC*>(list->data);
-            if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+			if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 			{
 				dcc_append (dcc, dccfwin.store, false);
 				i++;
@@ -520,7 +520,7 @@ resume_clicked (GtkWidget * wid, gpointer none)
 	dcc = static_cast<dcc::DCC*>(list->data);
 	g_slist_free (list);
 
-    if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV && !dcc_resume(dcc))
+	if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV && !dcc_resume(dcc))
 	{
 		switch (dcc->resume_error)
 		{
@@ -573,7 +573,7 @@ accept_clicked (GtkWidget * wid, gpointer none)
 	for (; list; list = list->next)
 	{
 		dcc = static_cast<dcc::DCC*>(list->data);
-        if (dcc->type != dcc::DCC::dcc_type::TYPE_SEND)
+		if (dcc->type != dcc::DCC::dcc_type::TYPE_SEND)
 			dcc_get (dcc);
 	}
 	g_slist_free (start);
@@ -636,7 +636,7 @@ dcc_details_populate (dcc::DCC *dcc)
 	}
 
 	/* full path */
-    if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+	if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 		gtk_label_set_text (GTK_LABEL (dccfwin.file_label), dcc->destfile);
 	else
 		gtk_label_set_text (GTK_LABEL (dccfwin.file_label), dcc->file);
@@ -674,7 +674,7 @@ dcc_row_cb (GtkTreeSelection *sel, gpointer user_data)
 	{
 		/* turn OFF/ON appropriate buttons */
 		dcc = static_cast<dcc::DCC*>(list->data);
-        if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+		if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 		{
 			gtk_widget_set_sensitive (dccfwin.accept_button, TRUE);
 			gtk_widget_set_sensitive (dccfwin.resume_button, TRUE);
@@ -704,7 +704,7 @@ dcc_dclick_cb (GtkTreeView *view, GtkTreePath *path,
 	dcc = static_cast<dcc::DCC*>(list->data);
 	g_slist_free (list);
 
-    if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+	if (dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 	{
 		accept_clicked (0, 0);
 		return;
@@ -976,7 +976,7 @@ dcc_chat_fill_win (void)
 	while (list)
 	{
 		dcc = static_cast<dcc::DCC*>(list->data);
-        if (dcc->type == dcc::DCC::dcc_type::TYPE_CHATSEND || dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
+		if (dcc->type == dcc::DCC::dcc_type::TYPE_CHATSEND || dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
 		{
 			dcc_chat_append (dcc, dcccwin.store, FALSE);
 			i++;
@@ -1014,7 +1014,7 @@ dcc_chat_row_cb (GtkTreeSelection *sel, gpointer user_data)
 	{
 		/* turn OFF/ON appropriate buttons */
 		dcc = static_cast<dcc::DCC*>(list->data);
-        if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
+		if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
 			gtk_widget_set_sensitive (dcccwin.accept_button, TRUE);
 		else
 			gtk_widget_set_sensitive (dcccwin.accept_button, FALSE);
@@ -1098,12 +1098,12 @@ fe_dcc_add (::dcc::DCC *dcc)
 {
 	switch (dcc->type)
 	{
-    case ::dcc::DCC::dcc_type::TYPE_RECV:
+	case ::dcc::DCC::dcc_type::TYPE_RECV:
 		if (dccfwin.window && (view_mode & VIEW_DOWNLOAD))
 			dcc_append (dcc, dccfwin.store, true);
 		break;
 
-    case ::dcc::DCC::dcc_type::TYPE_SEND:
+	case ::dcc::DCC::dcc_type::TYPE_SEND:
 		if (dccfwin.window && (view_mode & VIEW_UPLOAD))
 			dcc_append (dcc, dccfwin.store, true);
 		break;
@@ -1119,11 +1119,11 @@ fe_dcc_update (::dcc::DCC *dcc)
 {
 	switch (dcc->type)
 	{
-    case ::dcc::DCC::dcc_type::TYPE_SEND:
+	case ::dcc::DCC::dcc_type::TYPE_SEND:
 		dcc_update_send (dcc);
 		break;
 
-    case ::dcc::DCC::dcc_type::TYPE_RECV:
+	case ::dcc::DCC::dcc_type::TYPE_RECV:
 		dcc_update_recv (dcc);
 		break;
 
@@ -1142,8 +1142,8 @@ fe_dcc_remove (::dcc::DCC *dcc)
 
 	switch (dcc->type)
 	{
-    case ::dcc::DCC::dcc_type::TYPE_SEND:
-    case ::dcc::DCC::dcc_type::TYPE_RECV:
+	case ::dcc::DCC::dcc_type::TYPE_SEND:
+	case ::dcc::DCC::dcc_type::TYPE_RECV:
 		if (dccfwin.window)
 		{
 			if (dcc_find_row (dcc, GTK_TREE_MODEL (dccfwin.store), &iter, COL_DCC))

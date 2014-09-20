@@ -361,9 +361,9 @@ fe_timeout_remove (int tag)
 
 static void
 log_handler (const gchar   *log_domain,
-		       GLogLevelFlags log_level,
-		       const gchar   *message,
-		       gpointer	      unused_data)
+			   GLogLevelFlags log_level,
+			   const gchar   *message,
+			   gpointer	      unused_data)
 {
 	session *sess;
 
@@ -372,7 +372,7 @@ log_handler (const gchar   *log_domain,
 
 	sess = find_dialog (static_cast<server*>(serv_list->data), "(warnings)");
 	if (!sess)
-        sess = new_ircwindow(static_cast<server*>(serv_list->data), "(warnings)", session::SESS_DIALOG, 0);
+		sess = new_ircwindow(static_cast<server*>(serv_list->data), "(warnings)", session::SESS_DIALOG, 0);
 
 	PrintTextf (sess, "%s\t%s\n", log_domain, message);
 	if (getenv ("HEXCHAT_WARNING_ABORT"))
@@ -403,7 +403,7 @@ fe_new_window (session *sess, int focus)
 {
 	int tab = FALSE;
 
-    if (sess->type == session::SESS_DIALOG)
+	if (sess->type == session::SESS_DIALOG)
 	{
 		if (prefs.hex_gui_tab_dialogs)
 			tab = TRUE;
@@ -994,53 +994,53 @@ fe_set_inputbox_contents (session *sess, char *text)
 static char *
 url_escape_hostname (const char *url)
 {
-    char *host_start, *host_end, *ret, *hostname;
+	char *host_start, *host_end, *ret, *hostname;
 
-    host_start = strstr (url, "://");
-    if (host_start != NULL)
-    {
-        *host_start = '\0';
-        host_start += 3;
-        host_end = strchr (host_start, '/');
+	host_start = strstr (url, "://");
+	if (host_start != NULL)
+	{
+		*host_start = '\0';
+		host_start += 3;
+		host_end = strchr (host_start, '/');
 
-        if (host_end != NULL)
-        {
-            *host_end = '\0';
-            host_end++;
-        }
+		if (host_end != NULL)
+		{
+			*host_end = '\0';
+			host_end++;
+		}
 
-        hostname = g_hostname_to_ascii (host_start);
-        if (host_end != NULL)
-            ret = g_strdup_printf ("%s://%s/%s", url, hostname, host_end);
-        else
-            ret = g_strdup_printf ("%s://%s", url, hostname);
+		hostname = g_hostname_to_ascii (host_start);
+		if (host_end != NULL)
+			ret = g_strdup_printf ("%s://%s/%s", url, hostname, host_end);
+		else
+			ret = g_strdup_printf ("%s://%s", url, hostname);
 
-        g_free (hostname);
-        return ret;
-    }
+		g_free (hostname);
+		return ret;
+	}
 
-    return g_strdup (url);
+	return g_strdup (url);
 }
 
 static void
 osx_show_uri (const char *url)
 {
-    char *escaped_url, *encoded_url, *open, *cmd;
+	char *escaped_url, *encoded_url, *open, *cmd;
 
-    escaped_url = url_escape_hostname (url);
-    encoded_url = g_filename_from_utf8 (escaped_url, -1, NULL, NULL, NULL);
-    if (encoded_url)
-    {
-        open = g_find_program_in_path ("open");
-        cmd = g_strjoin (" ", open, encoded_url, NULL);
+	escaped_url = url_escape_hostname (url);
+	encoded_url = g_filename_from_utf8 (escaped_url, -1, NULL, NULL, NULL);
+	if (encoded_url)
+	{
+		open = g_find_program_in_path ("open");
+		cmd = g_strjoin (" ", open, encoded_url, NULL);
 
-        hexchat_exec (cmd);
+		hexchat_exec (cmd);
 
-        g_free (encoded_url);
-        g_free (cmd);
-    }
+		g_free (encoded_url);
+		g_free (cmd);
+	}
 
-    g_free (escaped_url);
+	g_free (escaped_url);
 }
 
 #endif
@@ -1051,7 +1051,7 @@ fe_open_url_inner (const char *url)
 #ifdef WIN32
 	ShellExecuteW (0, L"open", charset::widen(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
 #elif defined(__APPLE__)
-    osx_show_uri (url);
+	osx_show_uri (url);
 #else
 	gtk_show_uri (NULL, url, GDK_CURRENT_TIME, NULL);
 #endif

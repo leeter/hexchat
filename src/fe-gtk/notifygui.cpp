@@ -68,16 +68,16 @@ notify_closegui (void)
  */
 static void
 notify_treecell_property_mapper (GtkTreeViewColumn *col, GtkCellRenderer *cell,
-                                 GtkTreeModel *model, GtkTreeIter *iter,
-                                 gpointer data)
+								 GtkTreeModel *model, GtkTreeIter *iter,
+								 gpointer data)
 {
 	gchar *text;
 	GdkColor *colour;
 	int model_column = GPOINTER_TO_INT (data);
 
 	gtk_tree_model_get (GTK_TREE_MODEL (model), iter, 
-	                    COLOUR_COLUMN, &colour,
-	                    model_column, &text, -1);
+						COLOUR_COLUMN, &colour,
+						model_column, &text, -1);
 	g_object_set (G_OBJECT (cell), "text", text, NULL);
 	g_object_set (G_OBJECT (cell), "foreground-gdk", colour, NULL);
 	g_free (text);
@@ -109,25 +109,25 @@ notify_treeview_new (GtkWidget *box)
 	int col_id;
 
 	store = gtk_list_store_new (N_COLUMNS,
-	                            G_TYPE_STRING,
-	                            G_TYPE_STRING,
-	                            G_TYPE_STRING,
-	                            G_TYPE_STRING,
-	                            G_TYPE_POINTER,	/* can't specify colour! */
+								G_TYPE_STRING,
+								G_TYPE_STRING,
+								G_TYPE_STRING,
+								G_TYPE_STRING,
+								G_TYPE_POINTER,	/* can't specify colour! */
 										 G_TYPE_POINTER
-	                           );
+							   );
 	g_return_val_if_fail (store != NULL, NULL);
 
 	view = gtkutil_treeview_new (box, GTK_TREE_MODEL (store),
-	                             notify_treecell_property_mapper,
-	                             USER_COLUMN, _("Name"),
-	                             STATUS_COLUMN, _("Status"),
-	                             SERVER_COLUMN, _("Network"),
-	                             SEEN_COLUMN, _("Last Seen"), -1);
+								 notify_treecell_property_mapper,
+								 USER_COLUMN, _("Name"),
+								 STATUS_COLUMN, _("Status"),
+								 SERVER_COLUMN, _("Network"),
+								 SEEN_COLUMN, _("Last Seen"), -1);
 	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 0), TRUE);
 
 	for (col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
-	     col_id++)
+		 col_id++)
 			gtk_tree_view_column_set_alignment (col, 0.5);
 
 	g_signal_connect (G_OBJECT (gtk_tree_view_get_selection (GTK_TREE_VIEW (view))),
@@ -353,7 +353,7 @@ notify_gui_update (void)
 			if (!valid)	/* create new tree row if required */
 				gtk_list_store_append (store, &iter);
 			gtk_list_store_set (store, &iter, 0, name, 1, status,
-			                    2, server, 3, seen, 4, &colors[4], 5, NULL, -1);
+								2, server, 3, seen, 4, &colors[4], 5, NULL, -1);
 			if (valid)
 				valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
@@ -370,7 +370,7 @@ notify_gui_update (void)
 				{
 					if (servcount > 0)
 						name = "";
-                    server = servnot->server->get_network(true);
+					server = servnot->server->get_network(true);
 
 					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (0) - lastseen) / 60);
 					seen = agobuf;
@@ -378,7 +378,7 @@ notify_gui_update (void)
 					if (!valid)	/* create new tree row if required */
 						gtk_list_store_append (store, &iter);
 					gtk_list_store_set (store, &iter, 0, name, 1, status,
-					                    2, server, 3, seen, 4, &colors[3], 5, servnot, -1);
+										2, server, 3, seen, 4, &colors[3], 5, servnot, -1);
 					if (valid)
 						valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
@@ -396,7 +396,7 @@ notify_gui_update (void)
 		GtkTreeIter old = iter;
 		/* get next iter now because removing invalidates old one */
 		valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store),
-                                      &iter);
+									  &iter);
 		gtk_list_store_remove (store, &old);
 	}
 
@@ -417,7 +417,7 @@ notify_opengui (void)
 
 	notify_window =
 		mg_create_generic_tab ("Notify", _(DISPLAY_NAME": Friends List"), FALSE, TRUE,
-		                       notify_closegui, NULL, 400, 250, &vbox, 0);
+							   notify_closegui, NULL, 400, 250, &vbox, 0);
 	gtkutil_destroy_on_esc (notify_window);
 
 	view = notify_treeview_new (vbox);
@@ -430,15 +430,15 @@ notify_opengui (void)
 	gtk_widget_show (bbox);
 
 	gtkutil_button(bbox, GTK_STOCK_NEW, 0, G_CALLBACK(notify_add_clicked), 0,
-	                _("Add..."));
+					_("Add..."));
 
 	notify_button_remove =
 		gtkutil_button(bbox, GTK_STOCK_DELETE, 0, G_CALLBACK(notify_remove_clicked), 0,
-	                _("Remove"));
+					_("Remove"));
 
 	notify_button_opendialog =
 		gtkutil_button(bbox, NULL, 0, G_CALLBACK(notify_opendialog_clicked), 0,
-	                _("Open Dialog"));
+					_("Open Dialog"));
 
 	gtk_widget_set_sensitive (notify_button_opendialog, FALSE);
 	gtk_widget_set_sensitive (notify_button_remove, FALSE);

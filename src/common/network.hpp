@@ -22,7 +22,7 @@
 
 struct netstore
 {
-    ~netstore();
+	~netstore();
 #ifdef NETWORK_PRIVATE
 #ifdef USE_IPV6
 	struct addrinfo *ip6_hostent;

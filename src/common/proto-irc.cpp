@@ -61,7 +61,7 @@ server::p_login(const std::string& user, const std::string& realname)
 	tcp_sendf (this,
 				  "NICK %s\r\n"
 				  "USER %s %s %s :%s\r\n",
-                  this->nick, user.c_str(), user.c_str(), this->servername, realname.c_str());
+				  this->nick, user.c_str(), user.c_str(), this->servername, realname.c_str());
 }
 
 static void
@@ -71,24 +71,24 @@ irc_nickserv(server *serv, const std::string& cmd, const std::string& arg1, cons
 	switch (serv->loginmethod)
 	{
 		case LOGIN_MSG_NICKSERV:
-            tcp_sendf(serv, "PRIVMSG NICKSERV :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
+			tcp_sendf(serv, "PRIVMSG NICKSERV :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_NICKSERV:
-            tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
+			tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		default: /* This may not work but at least it tries something when using /id or /ghost cmd */
-            tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
+			tcp_sendf(serv, "NICKSERV %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 #if 0
 		case LOGIN_MSG_NS:
-            tcp_sendf (serv, "PRIVMSG NS :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
+			tcp_sendf (serv, "PRIVMSG NS :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_NS:
-            tcp_sendf (serv, "NS %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
+			tcp_sendf (serv, "NS %s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
 			break;
 		case LOGIN_AUTH:
 			/* why couldn't QuakeNet implement one of the existing ones? */
-            tcp_sendf (serv, "AUTH %s %s\r\n", arg1.c_str(), arg2.c_str());
+			tcp_sendf (serv, "AUTH %s %s\r\n", arg1.c_str(), arg2.c_str());
 			break;
 #endif
 	}
@@ -139,7 +139,7 @@ irc_join_list_flush (server *serv, const std::string & channels, const std::stri
 	}
 	else
 	{
-        tcp_sendf(serv, "JOIN %s\r\n", channels.c_str());	/* send the actual command */
+		tcp_sendf(serv, "JOIN %s\r\n", channels.c_str());	/* send the actual command */
 	}
 }
 
@@ -154,8 +154,8 @@ server::p_join_list (GSList *favorites)
 	bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
 	int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
 	favchannel *fav;
-    std::string chanlist;
-    std::string keylist;
+	std::string chanlist;
+	std::string keylist;
 	GSList *favlist;
 
 	favlist = favorites;
@@ -167,15 +167,15 @@ server::p_join_list (GSList *favorites)
 		len += fav->name.size();
 		if (fav->key)
 		{
-            len += fav->key->size();
+			len += fav->key->size();
 		}
 
 		if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
 		{
 			irc_join_list_flush (this, chanlist, keylist, send_keys);
 
-            chanlist.clear();
-            keylist.clear();
+			chanlist.clear();
+			keylist.clear();
 			len = 9;
 			first_item = true;									/* list dumped, omit commas once again */
 			send_keys = false;									/* also omit keys until we actually find one */
@@ -194,11 +194,11 @@ server::p_join_list (GSList *favorites)
 			keylist.push_back(',');
 		}
 
-        chanlist += fav->name;
+		chanlist += fav->name;
 
 		if (fav->key)
 		{
-            keylist += *(fav->key);
+			keylist += *(fav->key);
 			send_keys = true;
 		}
 		else
@@ -217,60 +217,60 @@ server::p_join_list (GSList *favorites)
 void
 server::p_join_list(const std::vector<favchannel> &favorites)
 {
-    bool first_item = true;										/* determine whether we add commas or not */
-    bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
-    int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
-    std::string chanlist;
-    std::string keylist;
+	bool first_item = true;										/* determine whether we add commas or not */
+	bool send_keys = false;										/* if none of our channels have keys, we can omit the 'x' fillers altogether */
+	int len = 9;											/* JOIN<space>channels<space>keys\r\n\0 */
+	std::string chanlist;
+	std::string keylist;
 
-    for (const auto & fav : favorites)
-    {
-        len += fav.name.size();
-        if (fav.key)
-        {
-            len += fav.key->size();
-        }
+	for (const auto & fav : favorites)
+	{
+		len += fav.name.size();
+		if (fav.key)
+		{
+			len += fav.key->size();
+		}
 
-        if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
-        {
-            irc_join_list_flush(this, chanlist, keylist, send_keys);
+		if (len >= 512)										/* command length exceeds the IRC hard limit, flush it and start from scratch */
+		{
+			irc_join_list_flush(this, chanlist, keylist, send_keys);
 
-            chanlist.clear();
-            keylist.clear();
-            len = 9;
-            first_item = true;									/* list dumped, omit commas once again */
-            send_keys = false;									/* also omit keys until we actually find one */
-        }
+			chanlist.clear();
+			keylist.clear();
+			len = 9;
+			first_item = true;									/* list dumped, omit commas once again */
+			send_keys = false;									/* also omit keys until we actually find one */
+		}
 
-        if (!first_item)
-        {
-            /* This should be done before the length check, but channel names
-            * are already at least 2 characters long so it would trigger the
-            * flush anyway.
-            */
-            len += 2;
+		if (!first_item)
+		{
+			/* This should be done before the length check, but channel names
+			* are already at least 2 characters long so it would trigger the
+			* flush anyway.
+			*/
+			len += 2;
 
-            /* add separators but only if it's not the 1st element */
-            chanlist.push_back(',');
-            keylist.push_back(',');
-        }
+			/* add separators but only if it's not the 1st element */
+			chanlist.push_back(',');
+			keylist.push_back(',');
+		}
 
-        chanlist += fav.name;
+		chanlist += fav.name;
 
-        if (fav.key)
-        {
-            keylist += *(fav.key);
-            send_keys = true;
-        }
-        else
-        {
-            keylist.push_back('x');				/* 'x' filler for keyless channels so that our JOIN command is always well-formatted */
-        }
+		if (fav.key)
+		{
+			keylist += *(fav.key);
+			send_keys = true;
+		}
+		else
+		{
+			keylist.push_back('x');				/* 'x' filler for keyless channels so that our JOIN command is always well-formatted */
+		}
 
-        first_item = false;
-    }
+		first_item = false;
+	}
 
-    irc_join_list_flush(this, chanlist, keylist, send_keys);
+	irc_join_list_flush(this, chanlist, keylist, send_keys);
 }
 
 void
@@ -319,7 +319,7 @@ server::p_nctcp(const std::string & to, const std::string & msg)
 void
 server::p_cycle(const std::string& channel, const std::string& key)
 {
-    tcp_sendf(this, "PART %s\r\nJOIN %s %s\r\n", channel.c_str(), channel.c_str(), key.c_str());
+	tcp_sendf(this, "PART %s\r\nJOIN %s %s\r\n", channel.c_str(), channel.c_str(), key.c_str());
 }
 
 void
@@ -356,10 +356,10 @@ server::p_join_info (const std::string& channel)
 void
 server::p_user_list(const std::string & channel)
 {
-    if (this->have_whox)
-        tcp_sendf(this, "WHO %s %%chtsunfra,152\r\n", channel.c_str());
-    else
-        tcp_sendf(this, "WHO %s\r\n", channel.c_str());
+	if (this->have_whox)
+		tcp_sendf(this, "WHO %s %%chtsunfra,152\r\n", channel.c_str());
+	else
+		tcp_sendf(this, "WHO %s\r\n", channel.c_str());
 }
 
 /* userhost */
@@ -419,8 +419,8 @@ server::p_notice(const std::string & channel, const std::string & text)
 void
 server::p_topic(const std::string & channel, const char *topic)
 {
-    if (topic)
-        tcp_sendf(this, "TOPIC %s :\r\n", channel.c_str());
+	if (topic)
+		tcp_sendf(this, "TOPIC %s :\r\n", channel.c_str());
 	else if (topic[0])
 		tcp_sendf (this, "TOPIC %s :%s\r\n", channel.c_str(), topic);
 	else
@@ -471,7 +471,7 @@ server::p_raw(const std::string &raw)
 	{
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
-            auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
+			auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
 			tcp_send_len (this, tbuf, len);
 		} else
 		{
@@ -930,7 +930,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 437:
-        if (serv->end_of_motd || sess->server->is_channel_name(word[4]))
+		if (serv->end_of_motd || sess->server->is_channel_name(word[4]))
 			goto def;
 		inbound_next_nick (sess, word[4], 0, tags_data);
 		break;
@@ -1109,7 +1109,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					if (*reason == ':')
 						reason++;
 					if (!strcmp (kicked, serv->nick))
-	 					inbound_ukick (serv, word[3], nick, reason, tags_data);
+						inbound_ukick (serv, word[3], nick, reason, tags_data);
 					else
 						inbound_kick (serv, word[3], kicked, nick, reason, tags_data);
 				}
@@ -1189,7 +1189,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			return;
 			
 		case WORDL('I','N','V','I'):
-            if (ignore_check(word[1], ignore::IG_INVI))
+			if (ignore_check(word[1], ignore::IG_INVI))
 				return;
 			
 			if (word[4][0] == ':')
@@ -1239,7 +1239,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 						text++;
 				}
 
-                if (!ignore_check(word[1], ignore::IG_NOTI))
+				if (!ignore_check(word[1], ignore::IG_NOTI))
 					inbound_notice (serv, word[3], nick, text, ip, id, tags_data);
 			}
 			return;
@@ -1284,13 +1284,13 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					{
 						if (serv->is_channel_name (to))
 						{
-                            if (ignore_check(word[1], ignore::IG_CHAN))
+							if (ignore_check(word[1], ignore::IG_CHAN))
 								return;
 							inbound_chanmsg (serv, NULL, to, nick, text, FALSE, id,
 												  tags_data);
 						} else
 						{
-                            if (ignore_check(word[1], ignore::IG_PRIV))
+							if (ignore_check(word[1], ignore::IG_PRIV))
 								return;
 							inbound_privmsg (serv, nick, ip, text, id, tags_data);
 						}

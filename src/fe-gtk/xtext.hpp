@@ -30,16 +30,16 @@
 #define GTK_XTEXT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_XTEXT, GtkXTextClass))
 
 enum text_attr{
-    ATTR_BOLD		=	'\002',
-    ATTR_COLOR		='\003',
-    ATTR_BLINK		='\006',
-    ATTR_BEEP		=	'\007',
-    ATTR_HIDDEN		='\010',
-    ATTR_ITALICS2	='\011',
-    ATTR_RESET		='\017',
-    ATTR_REVERSE	=	'\026',
-    ATTR_ITALICS	=	'\035',
-    ATTR_UNDERLINE	='\037'
+	ATTR_BOLD		=	'\002',
+	ATTR_COLOR		='\003',
+	ATTR_BLINK		='\006',
+	ATTR_BEEP		=	'\007',
+	ATTR_HIDDEN		='\010',
+	ATTR_ITALICS2	='\011',
+	ATTR_RESET		='\017',
+	ATTR_REVERSE	=	'\026',
+	ATTR_ITALICS	=	'\035',
+	ATTR_UNDERLINE	='\037'
 };
 
 /* these match palette.h */

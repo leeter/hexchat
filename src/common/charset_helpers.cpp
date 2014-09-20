@@ -28,15 +28,15 @@
 
 namespace charset
 {
-    std::string narrow(const std::wstring & to_narrow)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-        return converter.to_bytes(to_narrow);
-    }
+	std::string narrow(const std::wstring & to_narrow)
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+		return converter.to_bytes(to_narrow);
+	}
 
-    std::wstring widen(const std::string & to_widen)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-        return converter.from_bytes(to_widen);
-    }
+	std::wstring widen(const std::string & to_widen)
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+		return converter.from_bytes(to_widen);
+	}
 }

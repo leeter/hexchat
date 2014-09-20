@@ -68,10 +68,10 @@ editlist_save (GtkWidget *igad, gchar *file)
 	int fh;
 
 	fh = hexchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-    if (fh == -1)
-    {
-        return;
-    }
+	if (fh == -1)
+	{
+		return;
+	}
 
 	if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
 	{

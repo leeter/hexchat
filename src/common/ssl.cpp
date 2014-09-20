@@ -72,37 +72,37 @@ auto bio_deleter = [](BIO* d){ BIO_free(d); };
 static std::string
 ASN1_TIME_to_string(ASN1_TIME * tm)
 {
-    char *expires = nullptr;
-    std::unique_ptr<BIO, decltype(bio_deleter)> inMem(BIO_new(BIO_s_mem()), bio_deleter);
+	char *expires = nullptr;
+	std::unique_ptr<BIO, decltype(bio_deleter)> inMem(BIO_new(BIO_s_mem()), bio_deleter);
 
-    ASN1_TIME_print(inMem.get(), tm);
-    BIO_get_mem_data(inMem.get(), &expires);
-    std::string buf;
-    if (expires)
-    {
-        buf.append(expires, 24);
-    }
-    return buf;
+	ASN1_TIME_print(inMem.get(), tm);
+	BIO_get_mem_data(inMem.get(), &expires);
+	std::string buf;
+	if (expires)
+	{
+		buf.append(expires, 24);
+	}
+	return buf;
 }
 
 
 static void
 broke_oneline(char *oneline, char *parray[])
 {
-    char *pt, *ppt;
-    int i;
+	char *pt, *ppt;
+	int i;
 
 
-    i = 0;
-    ppt = pt = oneline + 1;
-    while ((pt = strchr(pt, '/')))
-    {
-        *pt = 0;
-        parray[i++] = ppt;
-        ppt = ++pt;
-    }
-    parray[i++] = ppt;
-    parray[i] = NULL;
+	i = 0;
+	ppt = pt = oneline + 1;
+	while ((pt = strchr(pt, '/')))
+	{
+		*pt = 0;
+		parray[i++] = ppt;
+		ppt = ++pt;
+	}
+	parray[i++] = ppt;
+	parray[i] = NULL;
 }
 
 }
@@ -111,7 +111,7 @@ broke_oneline(char *oneline, char *parray[])
 /* +++++ SSL functions +++++ */
 
 namespace io{
-    namespace ssl{
+	namespace ssl{
 
 SSL_CTX *
 _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
@@ -140,8 +140,8 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 	return(ctx);
 }
 /*
-    FIXME: Master-Key, Extensions, CA bits
-	    (openssl x509 -text -in servcert.pem)
+	FIXME: Master-Key, Extensions, CA bits
+		(openssl x509 -text -in servcert.pem)
 */
 int
 get_cert_info (cert_info &cert_info, const SSL * ssl)
@@ -206,10 +206,10 @@ get_cert_info (cert_info &cert_info, const SSL * ssl)
 ::io::ssl::cipher_info
 get_cipher_info (const SSL * ssl)
 {
-    const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
-    ::io::ssl::cipher_info info;
-    info.version = SSL_CIPHER_get_version(c);
-    info.cipher = SSL_CIPHER_get_name(c);
+	const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
+	::io::ssl::cipher_info info;
+	info.version = SSL_CIPHER_get_version(c);
+	info.cipher = SSL_CIPHER_get_name(c);
 	SSL_CIPHER_get_bits (c, &info.cipher_bits);
 
 	return info;
@@ -285,7 +285,7 @@ _SSL_socket (SSL_CTX *ctx, int sd)
 	if (ctx->method == SSLv23_client_method())
 		SSL_set_connect_state (ssl);
 	else
-	        SSL_set_accept_state(ssl);
+			SSL_set_accept_state(ssl);
 
 	return (ssl);
 }
@@ -323,6 +323,6 @@ _SSL_close (SSL * ssl)
 	ERR_remove_state (0);		  /* free state buffer */
 }
 
-    }
+	}
 
 }

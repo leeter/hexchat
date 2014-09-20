@@ -109,20 +109,20 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 	int ret = 0;
 	char *locale;
 	gsize loc_len;
-    if (!serv->server_connection)
-        return 1; // throw?
+	if (!serv->server_connection)
+		return 1; // throw?
 
 	if (encoding == nullptr)	/* system */
 	{
 		locale = nullptr;
-        if (!prefs.utf8_locale)
-        {
-            const gchar *charset;
+		if (!prefs.utf8_locale)
+		{
+			const gchar *charset;
 
-            g_get_charset(&charset);
-            locale = g_convert_with_fallback(buf, len, charset, "UTF-8",
-                "?", 0, &loc_len, 0);
-        }
+			g_get_charset(&charset);
+			locale = g_convert_with_fallback(buf, len, charset, "UTF-8",
+				"?", 0, &loc_len, 0);
+		}
 	} else
 	{
 		if (using_irc)	/* using "IRC" encoding (CP1252/UTF-8 hybrid) */
@@ -136,7 +136,7 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 
 	if (locale)
 	{
-        serv->server_connection->enqueue_message(locale);
+		serv->server_connection->enqueue_message(locale);
 #if 0
 		len = loc_len;
 #ifdef USE_OPENSSL
@@ -151,7 +151,7 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 		g_free (locale);
 	} else
 	{
-        serv->server_connection->enqueue_message(buf);
+		serv->server_connection->enqueue_message(buf);
 #if 0
 #ifdef USE_OPENSSL
 		if (!ssl)
@@ -173,7 +173,7 @@ server_send_real (server *serv, const char *buf, int len)
 	fe_add_rawlog (serv, buf, len, TRUE);
 
 	url_check_line (buf, len);
-    
+	
 	return tcp_send_real (serv->ssl, serv->sok, serv->encoding ? serv->encoding->c_str() : nullptr, serv->using_irc,
 								 buf, len, serv);
 }
@@ -196,7 +196,7 @@ tcp_send_queue (server *serv)
 	/* try priority 2,1,0 */
 	while (!serv->outbound_queue.empty())
 	{
-        auto & top = serv->outbound_queue.top();
+		auto & top = serv->outbound_queue.top();
 
 		if (serv->next_send < now)
 			serv->next_send = now;
@@ -215,9 +215,9 @@ tcp_send_queue (server *serv)
 		serv->prev_now = now;
 		fe_set_throttle (serv);
 
-        server_send_real(serv, top.second.c_str(), top.second.size());
+		server_send_real(serv, top.second.c_str(), top.second.size());
 
-        serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
+		serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
 	}
 	return 0;						  /* remove the timeout handler */
 }
@@ -229,7 +229,7 @@ tcp_send_len (server *serv, const char *buf, int len)
 
 	if (!prefs.hex_net_throttle)
 		return server_send_real (serv, buf, len);
-    std::string dbuf(buf, len);
+	std::string dbuf(buf, len);
 	int priority = 2;	/* pri 2 for most things */
 
 	/* privmsg and notice get a lower priority */
@@ -241,15 +241,15 @@ tcp_send_len (server *serv, const char *buf, int len)
 	else
 	{
 		/* WHO/MODE get the lowest priority */
-        if (g_ascii_strncasecmp(dbuf.c_str() + 1, "WHO ", 4) == 0 ||
+		if (g_ascii_strncasecmp(dbuf.c_str() + 1, "WHO ", 4) == 0 ||
 		/* but only MODE queries, not changes */
-        (g_ascii_strncasecmp(dbuf.c_str() + 1, "MODE", 4) == 0 &&
+		(g_ascii_strncasecmp(dbuf.c_str() + 1, "MODE", 4) == 0 &&
 			 dbuf.find_first_of('-') == std::string::npos &&
-             dbuf.find_first_of('+') == std::string::npos))
+			 dbuf.find_first_of('+') == std::string::npos))
 			priority = 0;
 	}
 
-    serv->outbound_queue.emplace(std::make_pair(priority, dbuf));
+	serv->outbound_queue.emplace(std::make_pair(priority, dbuf));
 	serv->sendq_len += len; /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (serv) && noqueue)
@@ -269,7 +269,7 @@ tcp_sendf (server *serv, const char *fmt, ...)
 {
 	va_list args;
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
-      string shorter, so allow alot more than 512 for now. */
+	  string shorter, so allow alot more than 512 for now. */
 	static char send_buf[1540];	/* good code hey (no it's not overflowable) */
 	int len;
 
@@ -308,7 +308,7 @@ server_inline (server *serv, char *line, int len)
 	/* Checks whether we're set to use UTF-8 charset */
 	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
 		(serv->encoding && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
-	    (!serv->encoding &&				/* OR 3. explicitly set to UTF-8 */
+		(!serv->encoding &&				/* OR 3. explicitly set to UTF-8 */
 		 (g_ascii_strcasecmp (serv->encoding->c_str(), "UTF8") == 0 ||
 		  g_ascii_strcasecmp (serv->encoding->c_str(), "UTF-8") == 0)))
 	{
@@ -404,29 +404,29 @@ server_inline (server *serv, char *line, int len)
 static void 
 server_read_cb(server * serv, const std::string & message, size_t length)
 {
-    for (int i = 0; i < length; ++i)
-    {
-        switch (message[i])
-        {
-        case '\0':
-        case '\r':
-            break;
+	for (int i = 0; i < length; ++i)
+	{
+		switch (message[i])
+		{
+		case '\0':
+		case '\r':
+			break;
 
-        case '\n':
-            serv->linebuf[serv->pos] = 0;
-            server_inline(serv, serv->linebuf, serv->pos);
-            serv->pos = 0;
-            break;
+		case '\n':
+			serv->linebuf[serv->pos] = 0;
+			server_inline(serv, serv->linebuf, serv->pos);
+			serv->pos = 0;
+			break;
 
-        default:
-            serv->linebuf[serv->pos] = message[i];
-            if (serv->pos >= (sizeof(serv->linebuf) - 1))
-                fprintf(stderr,
-                "*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
-            else
-                serv->pos++;
-        }
-    }
+		default:
+			serv->linebuf[serv->pos] = message[i];
+			if (serv->pos >= (sizeof(serv->linebuf) - 1))
+				fprintf(stderr,
+				"*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
+			else
+				serv->pos++;
+		}
+	}
 }
 
 static gboolean
@@ -506,40 +506,40 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 static void
 server_connected1(server * serv, const boost::system::error_code & error)
 {
-    prefs.wait_on_exit = TRUE;
-    serv->ping_recv = time(0);
-    serv->lag_sent = 0;
-    serv->connected = true;
-    serv->connecting = false;
-    if (!serv->no_login)
-    {
-        EMIT_SIGNAL(XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
-            nullptr, 0);
-        if (serv->network)
-        {
-            ircnet* net = serv->network;
-            serv->p_login((!(net->flags & FLAG_USE_GLOBAL) &&
-                (net->user)) ?
-                (net->user) :
-                prefs.hex_irc_user_name,
-                (!(net->flags & FLAG_USE_GLOBAL) &&
-                (net->real)) ?
-                (net->real) :
-                prefs.hex_irc_real_name);
-        }
-        else
-        {
-            serv->p_login(prefs.hex_irc_user_name, prefs.hex_irc_real_name);
-        }
-    }
-    else
-    {
-        EMIT_SIGNAL(XP_TE_SERVERCONNECTED, serv->server_session, nullptr, nullptr,
-            nullptr, nullptr, 0);
-    }
+	prefs.wait_on_exit = TRUE;
+	serv->ping_recv = time(0);
+	serv->lag_sent = 0;
+	serv->connected = true;
+	serv->connecting = false;
+	if (!serv->no_login)
+	{
+		EMIT_SIGNAL(XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
+			nullptr, 0);
+		if (serv->network)
+		{
+			ircnet* net = serv->network;
+			serv->p_login((!(net->flags & FLAG_USE_GLOBAL) &&
+				(net->user)) ?
+				(net->user) :
+				prefs.hex_irc_user_name,
+				(!(net->flags & FLAG_USE_GLOBAL) &&
+				(net->real)) ?
+				(net->real) :
+				prefs.hex_irc_real_name);
+		}
+		else
+		{
+			serv->p_login(prefs.hex_irc_user_name, prefs.hex_irc_real_name);
+		}
+	}
+	else
+	{
+		EMIT_SIGNAL(XP_TE_SERVERCONNECTED, serv->server_session, nullptr, nullptr,
+			nullptr, nullptr, 0);
+	}
 
-    serv->set_name(serv->servername);
-    fe_server_event(serv, FE_SE_CONNECT, 0);   
+	serv->set_name(serv->servername);
+	fe_server_event(serv, FE_SE_CONNECT, 0);   
 }
 
 static void
@@ -557,7 +557,7 @@ server_connected (server * serv)
 						 nullptr, 0);
 		if (serv->network)
 		{
-            ircnet* net = serv->network;
+			ircnet* net = serv->network;
 			serv->p_login (	(!(net->flags & FLAG_USE_GLOBAL) &&
 								 (net->user)) ?
 								(net->user) :
@@ -663,96 +663,96 @@ ssl_cb_info (const SSL * s, int where, int ret)
 static void
 ssl_print_cert_info(server *serv, const SSL* ctx)
 {
-    char buf[512];
-    io::ssl::cert_info cert_info = { 0 };
-    int verify_error;
+	char buf[512];
+	io::ssl::cert_info cert_info = { 0 };
+	int verify_error;
 
-    if (!io::ssl::get_cert_info(cert_info, ctx))
-    {
-        snprintf(buf, sizeof(buf), "* Certification info:");
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-        snprintf(buf, sizeof(buf), "  Subject:");
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-        for (int i = 0; cert_info.subject_word[i]; i++)
-        {
-            snprintf(buf, sizeof(buf), "    %s", cert_info.subject_word[i]);
-            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-                nullptr, 0);
-        }
-        snprintf(buf, sizeof(buf), "  Issuer:");
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-        for (int i = 0; cert_info.issuer_word[i]; i++)
-        {
-            snprintf(buf, sizeof(buf), "    %s", cert_info.issuer_word[i]);
-            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-                nullptr, 0);
-        }
-        snprintf(buf, sizeof(buf), "  Public key algorithm: %s (%d bits)",
-            cert_info.algorithm, cert_info.algorithm_bits);
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-        /*if (cert_info.rsa_tmp_bits)
-        {
-        snprintf (buf, sizeof (buf),
-        "  Public key algorithm uses ephemeral key with %d bits",
-        cert_info.rsa_tmp_bits);
-        EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-        NULL, 0);
-        }*/
-        snprintf(buf, sizeof(buf), "  Sign algorithm %s",
-            cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-        snprintf(buf, sizeof(buf), "  Valid since %s to %s",
-            cert_info.notbefore, cert_info.notafter);
-        EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
-    }
+	if (!io::ssl::get_cert_info(cert_info, ctx))
+	{
+		snprintf(buf, sizeof(buf), "* Certification info:");
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+		snprintf(buf, sizeof(buf), "  Subject:");
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+		for (int i = 0; cert_info.subject_word[i]; i++)
+		{
+			snprintf(buf, sizeof(buf), "    %s", cert_info.subject_word[i]);
+			EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+				nullptr, 0);
+		}
+		snprintf(buf, sizeof(buf), "  Issuer:");
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+		for (int i = 0; cert_info.issuer_word[i]; i++)
+		{
+			snprintf(buf, sizeof(buf), "    %s", cert_info.issuer_word[i]);
+			EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+				nullptr, 0);
+		}
+		snprintf(buf, sizeof(buf), "  Public key algorithm: %s (%d bits)",
+			cert_info.algorithm, cert_info.algorithm_bits);
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+		/*if (cert_info.rsa_tmp_bits)
+		{
+		snprintf (buf, sizeof (buf),
+		"  Public key algorithm uses ephemeral key with %d bits",
+		cert_info.rsa_tmp_bits);
+		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
+		NULL, 0);
+		}*/
+		snprintf(buf, sizeof(buf), "  Sign algorithm %s",
+			cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+		snprintf(buf, sizeof(buf), "  Valid since %s to %s",
+			cert_info.notbefore, cert_info.notafter);
+		EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
+	}
 
-    auto info = io::ssl::get_cipher_info(ctx);	/* static buffer */
-    snprintf(buf, sizeof(buf), "* Cipher info:");
-    EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
-        0);
-    snprintf(buf, sizeof(buf), "  Version: %s, cipher %s (%u bits)",
-        info.version.c_str(), info.cipher.c_str(),
-        info.cipher_bits);
-    EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
-        0);
+	auto info = io::ssl::get_cipher_info(ctx);	/* static buffer */
+	snprintf(buf, sizeof(buf), "* Cipher info:");
+	EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+		0);
+	snprintf(buf, sizeof(buf), "  Version: %s, cipher %s (%u bits)",
+		info.version.c_str(), info.cipher.c_str(),
+		info.cipher_bits);
+	EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+		0);
 
-    verify_error = SSL_get_verify_result(ctx);
-    switch (verify_error)
-    {
-    case X509_V_OK:
-        /* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
-        /* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
-        break;
-    case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
-    case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
-    case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
-    case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
-    case X509_V_ERR_CERT_HAS_EXPIRED:
-        if (serv->accept_invalid_cert)
-        {
-            snprintf(buf, sizeof(buf), "* Verify E: %s.? (%d) -- Ignored",
-                X509_verify_cert_error_string(verify_error),
-                verify_error);
-            EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-                nullptr, 0);
-            break;
-        }
-    default:
-        break;
-        /*snprintf(buf, sizeof(buf), "%s.? (%d)",
-            X509_verify_cert_error_string(verify_error),
-            verify_error);
-        EMIT_SIGNAL(XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
-            nullptr, 0);
+	verify_error = SSL_get_verify_result(ctx);
+	switch (verify_error)
+	{
+	case X509_V_OK:
+		/* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
+		/* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
+		break;
+	case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
+	case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
+	case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+	case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
+	case X509_V_ERR_CERT_HAS_EXPIRED:
+		if (serv->accept_invalid_cert)
+		{
+			snprintf(buf, sizeof(buf), "* Verify E: %s.? (%d) -- Ignored",
+				X509_verify_cert_error_string(verify_error),
+				verify_error);
+			EMIT_SIGNAL(XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+				nullptr, 0);
+			break;
+		}
+	default:
+		break;
+		/*snprintf(buf, sizeof(buf), "%s.? (%d)",
+			X509_verify_cert_error_string(verify_error),
+			verify_error);
+		EMIT_SIGNAL(XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
+			nullptr, 0);
 
-        serv->cleanup();*/
-    }
+		serv->cleanup();*/
+	}
 }
 
 static int
@@ -960,7 +960,7 @@ server::auto_reconnect (bool send_quit, int err)
 	while (list)				  /* make sure auto rejoin can work */
 	{
 		s = static_cast<session*>(list->data);
-        if (s->type == session::SESS_CHANNEL && s->channel[0])
+		if (s->type == session::SESS_CHANNEL && s->channel[0])
 		{
 			strcpy (s->waitchannel, s->channel);
 			strcpy (s->willjoinchannel, s->channel);
@@ -996,8 +996,8 @@ server::auto_reconnect (bool send_quit, int err)
 void
 server::flush_queue ()
 {
-    decltype(this->outbound_queue) empty;
-    std::swap(this->outbound_queue, empty);
+	decltype(this->outbound_queue) empty;
+	std::swap(this->outbound_queue, empty);
 	this->sendq_len = 0;
 	fe_set_throttle (this);
 }
@@ -1005,19 +1005,19 @@ server::flush_queue ()
 boost::optional<session&> 
 server::find_channel(const std::string &chan)
 {
-    session *sess;
-    GSList *list = sess_list;
-    while (list)
-    {
-        sess = static_cast<session*>(list->data);
-        if ((this == sess->server) && sess->type == session::SESS_CHANNEL)
-        {
-            if (!this->p_cmp(chan.c_str(), sess->channel))
-                return *sess;
-        }
-        list = list->next;
-    }
-    return boost::none;
+	session *sess;
+	GSList *list = sess_list;
+	while (list)
+	{
+		sess = static_cast<session*>(list->data);
+		if ((this == sess->server) && sess->type == session::SESS_CHANNEL)
+		{
+			if (!this->p_cmp(chan.c_str(), sess->channel))
+				return *sess;
+		}
+		list = list->next;
+	}
+	return boost::none;
 }
 
 /* connect() successed */
@@ -1206,15 +1206,15 @@ server::cleanup ()
 {
 	fe_set_lag (this, 0);
 
-    if (this->death_timer)
-    {
-        fe_timeout_remove(this->death_timer);
-        this->death_timer = 0;
-    }
+	if (this->death_timer)
+	{
+		fe_timeout_remove(this->death_timer);
+		this->death_timer = 0;
+	}
 
 	if (this->iotag)
 	{
-        fe_timeout_remove(this->iotag);
+		fe_timeout_remove(this->iotag);
 		//fe_input_remove (this->iotag);
 		this->iotag = 0;
 	}
@@ -1244,7 +1244,7 @@ server::cleanup ()
 			closesocket (this->sok6);
 		if (this->proxy_sok6 != -1)
 			closesocket (this->proxy_sok6);*/
-        return cleanup_result::still_connecting;
+		return cleanup_result::still_connecting;
 	}
 
 	if (this->connected)
@@ -1254,7 +1254,7 @@ server::cleanup ()
 			close_socket (this->proxy_sok);*/
 		this->connected = false;
 		this->end_of_motd = false;
-        return cleanup_result::connected;
+		return cleanup_result::connected;
 	}
 
 	/* is this server in a reconnect delay? remove it! */
@@ -1262,22 +1262,22 @@ server::cleanup ()
 	{
 		fe_timeout_remove (this->recondelay_tag);
 		this->recondelay_tag = 0;
-        return cleanup_result::reconnecting;
+		return cleanup_result::reconnecting;
 	}
-    if (this->server_connection)
-    {
-        this->server_connection.reset();
-    }
+	if (this->server_connection)
+	{
+		this->server_connection.reset();
+	}
 
-    return cleanup_result::not_connected;
+	return cleanup_result::not_connected;
 }
 
 // if the server isn't dead yet, kill it
 static gboolean
 server_kill(session *sess)
 {
-    sess->server->disconnect(sess, false, -1);
-    return false;
+	sess->server->disconnect(sess, false, -1);
+	return false;
 }
 
 void
@@ -1292,26 +1292,26 @@ server::disconnect (session * sess, bool sendquit, int err)
 	if (sendquit && serv->connected)
 	{
 		server_sendquit (sess);
-        serv->death_timer = fe_timeout_add(500, (GSourceFunc)server_kill, sess);
-        return;
+		serv->death_timer = fe_timeout_add(500, (GSourceFunc)server_kill, sess);
+		return;
 	}
-    
+	
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
 
-    // flush any outgoing messages
-    this->server_connection->poll();
+	// flush any outgoing messages
+	this->server_connection->poll();
 
 	/* close all sockets & io tags */
 	switch (serv->cleanup ())
 	{
-    case cleanup_result::not_connected:							  /* it wasn't even connected! */
+	case cleanup_result::not_connected:							  /* it wasn't even connected! */
 		notc_msg (sess);
 		return;
-    case cleanup_result::still_connecting:							  /* it was in the process of connecting */
+	case cleanup_result::still_connecting:							  /* it was in the process of connecting */
 		sprintf (tbuf, "%d", sess->server->childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, nullptr, nullptr, nullptr, 0);
 		return;
-    case cleanup_result::reconnecting:
+	case cleanup_result::reconnecting:
 		shutup = true;	/* won't print "disconnected" in channels */
 	}
 
@@ -1323,11 +1323,11 @@ server::disconnect (session * sess, bool sendquit, int err)
 		sess = (struct session *) list->data;
 		if (sess->server == serv)
 		{
-            if (!shutup || sess->type == session::SESS_SERVER)
+			if (!shutup || sess->type == session::SESS_SERVER)
 				/* print "Disconnected" to each window using this server */
 				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), nullptr, nullptr, nullptr, 0);
 
-            if (!sess->channel[0] || sess->type == session::SESS_CHANNEL)
+			if (!sess->channel[0] || sess->type == session::SESS_CHANNEL)
 				clear_channel (sess);
 		}
 		list = list->next;
@@ -1859,30 +1859,30 @@ xit:
 
 static gboolean
 io_poll(io::tcp::connection * connection){
-    connection->poll();
-    return TRUE;
+	connection->poll();
+	return TRUE;
 }
 
 void server_error(server * serv, const boost::system::error_code & error)
 {
-    PrintText(serv->front_session, error.message());
-    PrintText(serv->front_session, std::to_string(error.value()));
-    if (!serv->end_of_motd)
-    {
-        serv->disconnect(serv->server_session, false, error.value());
-        if (!servlist_cycle(serv))
-        {
-            if (prefs.hex_net_auto_reconnect)
-                serv->auto_reconnect(false, error.value());
-        }
-    }
-    else
-    {
-        if (prefs.hex_net_auto_reconnect)
-            serv->auto_reconnect(false, error.value());
-        else
-            serv->disconnect(serv->server_session, false, error.value());
-    }
+	PrintText(serv->front_session, error.message());
+	PrintText(serv->front_session, std::to_string(error.value()));
+	if (!serv->end_of_motd)
+	{
+		serv->disconnect(serv->server_session, false, error.value());
+		if (!servlist_cycle(serv))
+		{
+			if (prefs.hex_net_auto_reconnect)
+				serv->auto_reconnect(false, error.value());
+		}
+	}
+	else
+	{
+		if (prefs.hex_net_auto_reconnect)
+			serv->auto_reconnect(false, error.value());
+		else
+			serv->disconnect(serv->server_session, false, error.value());
+	}
 }
 
 
@@ -1892,25 +1892,25 @@ server::connect (char *hostname, int port, bool no_login)
 	int read_des[2] = { 0 };
 	unsigned int pid;
 	session *sess = this->server_session;
-    boost::asio::io_service io_service;
-    auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
-    this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
-    this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
-    this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str(), sizeof(this->servername)); });
-    this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
-    this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
-    this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
-    this->server_connection->connect(resolved);
-    
-    this->reset_to_defaults();
-    this->connecting = true;
-    this->port = port;
-    this->no_login = no_login;
+	boost::asio::io_service io_service;
+	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
+	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
+	this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
+	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str(), sizeof(this->servername)); });
+	this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
+	this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
+	this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
+	this->server_connection->connect(resolved);
+	
+	this->reset_to_defaults();
+	this->connecting = true;
+	this->port = port;
+	this->no_login = no_login;
 
-    fe_server_event (this, FE_SE_CONNECTING, 0);
-    fe_set_away (this);
-    this->flush_queue ();
-    this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
+	fe_server_event (this, FE_SE_CONNECTING, 0);
+	fe_set_away (this);
+	this->flush_queue ();
+	this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
 #if 0
 #ifdef USE_OPENSSL
 	if (!ctx && this->use_ssl)
@@ -1977,7 +1977,7 @@ server::connect (char *hostname, int port, bool no_login)
 	}
 #endif
 
-    this->reset_to_defaults();
+	this->reset_to_defaults();
 	this->connecting = true;
 	this->port = port;
 	this->no_login = no_login;
@@ -2049,7 +2049,7 @@ server::connect (char *hostname, int port, bool no_login)
 void
 server_fill_her_up (server *serv)
 {
-    serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
+	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
 }
 
 void
@@ -2058,7 +2058,7 @@ server::set_encoding (const char *new_encoding)
 	if (this->encoding)
 	{
 		/* can be left as uninitialized to indicate system encoding */
-        this->encoding = boost::optional<std::string>();
+		this->encoding = boost::optional<std::string>();
 		this->using_cp1255 = false;
 		this->using_irc = false;
 	}
@@ -2069,108 +2069,108 @@ server::set_encoding (const char *new_encoding)
 		/* the serverlist GUI might have added a space 
 			and short description - remove it. */
 		auto space = this->encoding->find_first_of(' ');
-        if (space != std::string::npos)
-            this->encoding->erase(space);
+		if (space != std::string::npos)
+			this->encoding->erase(space);
 
 		/* server_inline() uses these flags */
 		if (!g_ascii_strcasecmp (this->encoding->c_str(), "CP1255") ||
-            !g_ascii_strcasecmp(this->encoding->c_str(), "WINDOWS-1255"))
+			!g_ascii_strcasecmp(this->encoding->c_str(), "WINDOWS-1255"))
 			this->using_cp1255 = true;
-        else if (!g_ascii_strcasecmp(this->encoding->c_str(), "IRC"))
+		else if (!g_ascii_strcasecmp(this->encoding->c_str(), "IRC"))
 			this->using_irc = true;
 	}
 }
 
 server::server()
-    :death_timer(0),
-    p_cmp(),
-    port(),
-    sok(),					/* is equal to sok4 or sok6 (the one we are using) */
-    sok4(),					/* tcp4 socket */
-    sok6(),					/* tcp6 socket */
-    proxy_type(),
-    proxy_sok(),				/* Additional information for MS Proxy beast */
-    proxy_sok4(),
-    proxy_sok6(),
-    msp_state(),
-    id(),				/* unique ID number (for plugin API) */
-    ssl(),
+	:death_timer(0),
+	p_cmp(),
+	port(),
+	sok(),					/* is equal to sok4 or sok6 (the one we are using) */
+	sok4(),					/* tcp4 socket */
+	sok6(),					/* tcp6 socket */
+	proxy_type(),
+	proxy_sok(),				/* Additional information for MS Proxy beast */
+	proxy_sok4(),
+	proxy_sok6(),
+	msp_state(),
+	id(),				/* unique ID number (for plugin API) */
+	ssl(),
 #ifdef USE_OPENSSL
-    ssl_do_connect_tag(),
+	ssl_do_connect_tag(),
 #endif
-    childread(),
-    childwrite(),
-    childpid(),
-    iotag(),
-    recondelay_tag(),				/* reconnect delay timeout */
-    joindelay_tag(),				/* waiting before we send JOIN */
-    hostname(),				/* real ip number */
-    servername(),			/* what the server says is its name */
-    password(),
-    nick(),
-    linebuf(),
-    pos(),								/* current position in linebuf */
-    nickcount(),
-    loginmethod(),
-    modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
-    network(),						/* points to entry in servlist.c or NULL! */
-    next_send(),						/* cptr->since in ircu */
-    prev_now(),					/* previous now-time */
-    sendq_len(),						/* queue size */
-    lag(),								/* milliseconds */
-    front_session(),	/* front-most window/tab */
-    server_session(),	/* server window/tab */
-    gui(),		  /* initialized by fe_new_server */
-    ctcp_counter(),	  /*flood */
-    ctcp_last_time(),
-    msg_counter(),	  /*counts the msg tab opened in a certain time */
-    msg_last_time(),
+	childread(),
+	childwrite(),
+	childpid(),
+	iotag(),
+	recondelay_tag(),				/* reconnect delay timeout */
+	joindelay_tag(),				/* waiting before we send JOIN */
+	hostname(),				/* real ip number */
+	servername(),			/* what the server says is its name */
+	password(),
+	nick(),
+	linebuf(),
+	pos(),								/* current position in linebuf */
+	nickcount(),
+	loginmethod(),
+	modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
+	network(),						/* points to entry in servlist.c or NULL! */
+	next_send(),						/* cptr->since in ircu */
+	prev_now(),					/* previous now-time */
+	sendq_len(),						/* queue size */
+	lag(),								/* milliseconds */
+	front_session(),	/* front-most window/tab */
+	server_session(),	/* server window/tab */
+	gui(),		  /* initialized by fe_new_server */
+	ctcp_counter(),	  /*flood */
+	ctcp_last_time(),
+	msg_counter(),	  /*counts the msg tab opened in a certain time */
+	msg_last_time(),
 
-    /*time_t connect_time;*/				/* when did it connect? */
-    lag_sent(),   /* we are still waiting for this ping response*/
-    ping_recv(),					/* when we last got a ping reply */
-    away_time(),					/* when we were marked away */
-    favlist(),			/* list of channels & keys to join */
+	/*time_t connect_time;*/				/* when did it connect? */
+	lag_sent(),   /* we are still waiting for this ping response*/
+	ping_recv(),					/* when we last got a ping reply */
+	away_time(),					/* when we were marked away */
+	favlist(),			/* list of channels & keys to join */
 
-    motd_skipped(),
-    connected(),
-    connecting(),
-    no_login(),
-    skip_next_userhost(),/* used for "get my ip from server" */
-    skip_next_whois(),	/* hide whois output */
-    inside_whois(),
-    doing_dns(),			/* /dns has been done */
-    retry_sasl(),   	/* retrying another sasl mech */
-    end_of_motd(),		/* end of motd reached (logged in) */
-    sent_quit(),			/* sent a QUIT already? */
-    use_listargs(),		/* undernet and dalnet need /list >0,<10000 */
-    is_away(),
-    reconnect_away(),	/* whether to reconnect in is_away state */
-    dont_use_proxy(),	/* to proxy or not to proxy */
-    supports_watch(),	/* supports the WATCH command */
-    supports_monitor(),	/* supports the MONITOR command */
-    bad_prefix(),			/* gave us a bad PREFIX= 005 number */
-    have_namesx(),		/* 005 tokens NAMESX and UHNAMES */
-    have_awaynotify(),
-    have_uhnames(),
-    have_whox(),		/* have undernet's WHOX features */
-    have_idmsg(),		/* freenode's IDENTIFY-MSG */
-    have_accnotify(), /* cap account-notify */
-    have_extjoin(),	/* cap extended-join */
-    have_server_time(),	/* cap server-time */
-    have_sasl(),		/* SASL capability */
-    have_except(),	/* ban exemptions +e */
-    have_invite(),	/* invite exemptions +I */
-    have_cert(),	/* have loaded a cert */
-    using_cp1255(), 	/* encoding is CP1255/WINDOWS-1255? */
-    using_irc(),		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
-    use_who(),			/* whether to use WHO command to get dcc_ip */
-    sasl_mech(),			/* mechanism for sasl auth */
-    sent_saslauth(),	/* have sent AUTHENICATE yet */
-    sent_capend()	/* have sent CAP END yet */
+	motd_skipped(),
+	connected(),
+	connecting(),
+	no_login(),
+	skip_next_userhost(),/* used for "get my ip from server" */
+	skip_next_whois(),	/* hide whois output */
+	inside_whois(),
+	doing_dns(),			/* /dns has been done */
+	retry_sasl(),   	/* retrying another sasl mech */
+	end_of_motd(),		/* end of motd reached (logged in) */
+	sent_quit(),			/* sent a QUIT already? */
+	use_listargs(),		/* undernet and dalnet need /list >0,<10000 */
+	is_away(),
+	reconnect_away(),	/* whether to reconnect in is_away state */
+	dont_use_proxy(),	/* to proxy or not to proxy */
+	supports_watch(),	/* supports the WATCH command */
+	supports_monitor(),	/* supports the MONITOR command */
+	bad_prefix(),			/* gave us a bad PREFIX= 005 number */
+	have_namesx(),		/* 005 tokens NAMESX and UHNAMES */
+	have_awaynotify(),
+	have_uhnames(),
+	have_whox(),		/* have undernet's WHOX features */
+	have_idmsg(),		/* freenode's IDENTIFY-MSG */
+	have_accnotify(), /* cap account-notify */
+	have_extjoin(),	/* cap extended-join */
+	have_server_time(),	/* cap server-time */
+	have_sasl(),		/* SASL capability */
+	have_except(),	/* ban exemptions +e */
+	have_invite(),	/* invite exemptions +I */
+	have_cert(),	/* have loaded a cert */
+	using_cp1255(), 	/* encoding is CP1255/WINDOWS-1255? */
+	using_irc(),		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
+	use_who(),			/* whether to use WHO command to get dcc_ip */
+	sasl_mech(),			/* mechanism for sasl auth */
+	sent_saslauth(),	/* have sent AUTHENICATE yet */
+	sent_capend()	/* have sent CAP END yet */
 #ifdef USE_OPENSSL
-    ,use_ssl(),
-    accept_invalid_cert()
+	,use_ssl(),
+	accept_invalid_cert()
 #endif
 {}
 
@@ -2183,11 +2183,11 @@ server_new (void)
 	serv = new server;// calloc(1, sizeof(*serv))
 
 	/* use server.c and proto-irc.c functions */
-    server_fill_her_up(serv);
+	server_fill_her_up(serv);
 	serv->id = id++;
 	serv->sok = -1;
 	strcpy (serv->nick, prefs.hex_irc_nick1);
-    serv->reset_to_defaults();
+	serv->reset_to_defaults();
 
 	serv_list = g_slist_prepend (serv_list, serv);
 
@@ -2205,10 +2205,10 @@ is_server (server *serv)
 void
 server::reset_to_defaults()
 {
-    this->chantypes.clear();
-    this->chanmodes.clear();
-    this->nick_prefixes.clear();
-    this->nick_modes.clear();
+	this->chantypes.clear();
+	this->chanmodes.clear();
+	this->nick_prefixes.clear();
+	this->nick_modes.clear();
 
 	this->chantypes = "#&!+";
 	this->chanmodes = "beI,k,l";
@@ -2257,7 +2257,7 @@ server::set_name (const std::string& name)
 {
 	GSList *list = sess_list;
 	session *sess;
-    std::string name_to_set = name;
+	std::string name_to_set = name;
 
 	if (name.empty())
 		name_to_set = this->hostname;
@@ -2276,7 +2276,7 @@ server::set_name (const std::string& name)
 		list = list->next;
 	}
 
-    if (this->server_session->type == session::SESS_SERVER)
+	if (this->server_session->type == session::SESS_SERVER)
 	{
 		if (this->network)
 		{
@@ -2292,16 +2292,16 @@ server::set_name (const std::string& name)
 boost::optional<const std::pair<bool, std::string>& >
 server::get_away_message(const std::string & nick) const NOEXCEPT
 {
-    auto res = this->away_map.find(nick);
-    if (res == this->away_map.cend())
-        return boost::none;
-    return boost::make_optional<const std::pair<bool, std::string>&>(res->second);
+	auto res = this->away_map.find(nick);
+	if (res == this->away_map.cend())
+		return boost::none;
+	return boost::make_optional<const std::pair<bool, std::string>&>(res->second);
 }
 
 void 
 server::save_away_message(const std::string& nick, const boost::optional<std::string>& message)
 {
-    this->away_map.insert({ nick, std::make_pair(static_cast<bool>(message), message ? message.get() : "") });
+	this->away_map.insert({ nick, std::make_pair(static_cast<bool>(message), message ? message.get() : "") });
 }
 
 void

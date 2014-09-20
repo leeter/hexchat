@@ -45,7 +45,7 @@ static GtkWidget *urlgrabberwindow = 0;
 
 static gboolean
 url_treeview_url_clicked_cb (GtkWidget *view, GdkEventButton *event,
-                             gpointer data)
+							 gpointer data)
 {
 	GtkTreeIter iter;
 	gchar *url;
@@ -63,7 +63,7 @@ url_treeview_url_clicked_cb (GtkWidget *view, GdkEventButton *event,
 	gtk_tree_path_free (path); 
 
 	if (!gtkutil_treeview_get_selected (GTK_TREE_VIEW (view), &iter,
-	                                    URL_COLUMN, &url, -1))
+										URL_COLUMN, &url, -1))
 		return FALSE;
 	
 	switch (event->button)
@@ -93,9 +93,9 @@ url_treeview_new (GtkWidget *box)
 	g_return_val_if_fail (store != NULL, NULL);
 
 	view = gtkutil_treeview_new (box, GTK_TREE_MODEL (store), NULL,
-	                             URL_COLUMN, _("URL"), -1);
+								 URL_COLUMN, _("URL"), -1);
 	g_signal_connect (G_OBJECT (view), "button_press_event",
-	                  G_CALLBACK (url_treeview_url_clicked_cb), NULL);
+					  G_CALLBACK (url_treeview_url_clicked_cb), NULL);
 	/* don't want column headers */
 	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
 	gtk_widget_show (view);
@@ -115,7 +115,7 @@ url_button_clear (void)
 	
 	url_clear ();
 	store = GTK_LIST_STORE (g_object_get_data (G_OBJECT (urlgrabberwindow),
-	                                           "model"));
+											   "model"));
 	gtk_list_store_clear (store);
 }
 
@@ -167,11 +167,11 @@ fe_url_add (const char *urltext)
 	if (urlgrabberwindow)
 	{
 		store = GTK_LIST_STORE (g_object_get_data (G_OBJECT (urlgrabberwindow),
-		                                           "model"));
+												   "model"));
 		gtk_list_store_prepend (store, &iter);
 		gtk_list_store_set (store, &iter,
-		                    URL_COLUMN, urltext,
-		                    -1);
+							URL_COLUMN, urltext,
+							-1);
 
 		/* remove any overflow */
 		if (prefs.hex_url_grabber_limit > 0)
@@ -204,7 +204,7 @@ url_opengui ()
 	gtkutil_destroy_on_esc (urlgrabberwindow);
 	view = url_treeview_new (vbox);
 	g_object_set_data (G_OBJECT (urlgrabberwindow), "model",
-	                   gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
+					   gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
 
 	hbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbox), GTK_BUTTONBOX_SPREAD);

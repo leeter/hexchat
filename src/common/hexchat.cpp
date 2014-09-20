@@ -135,10 +135,10 @@ pxProxyFactory *libproxy_factory;
 
 int RAND_INT(int n)
 {
-    static std::random_device rd;
-    static std::mt19937 twstr(rd());
-    std::uniform_int_distribution<int> dist(0, n);
-    return dist(twstr);
+	static std::random_device rd;
+	static std::mt19937 twstr(rd());
+	std::uniform_int_distribution<int> dist(0, n);
+	return dist(twstr);
 }
 
 /*
@@ -229,7 +229,7 @@ find_dialog (server *serv, const char *nick)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-        if (sess->server == serv && sess->type == session::SESS_DIALOG)
+		if (sess->server == serv && sess->type == session::SESS_DIALOG)
 		{
 			if (!serv->p_cmp (nick, sess->channel))
 				return (sess);
@@ -247,7 +247,7 @@ find_channel (server *serv, const std::string &chan)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-        if ((serv && serv == sess->server) && sess->type == session::SESS_CHANNEL)
+		if ((serv && serv == sess->server) && sess->type == session::SESS_CHANNEL)
 		{
 			if (!serv->p_cmp(chan.c_str(), sess->channel))
 				return sess;
@@ -337,7 +337,7 @@ doover:
 		sess = static_cast<session*>(list->data);
 
 		if (sess->server->connected &&
-            sess->type == session::SESS_CHANNEL &&
+			sess->type == session::SESS_CHANNEL &&
 			 sess->channel[0] &&
 			 (sess->total <= prefs.hex_away_size_max || !prefs.hex_away_size_max))
 		{
@@ -494,7 +494,7 @@ session::session(struct server *serv, char *from, ::session::session_type type, 
 	me(nullptr),
 	channel(),
 	waitchannel(),
-    willjoinchannel(),
+	willjoinchannel(),
 
 	quitreason(nullptr),
 	topic(nullptr),
@@ -550,14 +550,14 @@ new_ircwindow (server *serv, char *name, ::session::session_type type, int focus
 
 	switch (type)
 	{
-    case session::SESS_SERVER:
+	case session::SESS_SERVER:
 		serv = server_new ();
 		if (!serv)
 			return nullptr;
 		if (prefs.hex_gui_tab_server)
-            sess = session_new(serv, name, session::SESS_SERVER, focus);
+			sess = session_new(serv, name, session::SESS_SERVER, focus);
 		else
-            sess = session_new(serv, name, session::SESS_CHANNEL, focus);
+			sess = session_new(serv, name, session::SESS_CHANNEL, focus);
 		if (!sess)
 		{
 			server_free(serv);
@@ -566,7 +566,7 @@ new_ircwindow (server *serv, char *name, ::session::session_type type, int focus
 		serv->server_session = sess;
 		serv->front_session = sess;
 		break;
-    case session::SESS_DIALOG:
+	case session::SESS_DIALOG:
 		sess = session_new (serv, name, type, focus);
 		if (!sess)
 			return nullptr;
@@ -647,7 +647,7 @@ send_quit_or_part (session * killsess)
 			}
 		} else
 		{
-            if (killsess->type == session::SESS_CHANNEL && killsess->channel[0] &&
+			if (killsess->type == session::SESS_CHANNEL && killsess->channel[0] &&
 				 !killserv->sent_quit)
 			{
 				server_sendpart (*killserv, killsess->channel, boost::none);
@@ -696,7 +696,7 @@ session_free (session *killsess)
 
 	sess_list = g_slist_remove (sess_list, killsess);
 
-    if (killsess->type == session::SESS_CHANNEL)
+	if (killsess->type == session::SESS_CHANNEL)
 		userlist_free (killsess);
 
 	oldidx = killsess->lastact_idx;
@@ -791,7 +791,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -1009,7 +1009,7 @@ xchat_init (void)
 			/* and no serverlist gui ... */
 			if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
 				/* we'll have to open one. */
-                new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+				new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
 		} else
 		{
 			fe_idle_add (xchat_auto_connect, nullptr);
@@ -1017,7 +1017,7 @@ xchat_init (void)
 	} else
 	{
 		if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
-            new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+			new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
 	}
 }
 
@@ -1158,7 +1158,7 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
 

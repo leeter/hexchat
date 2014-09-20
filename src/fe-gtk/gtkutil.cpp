@@ -358,7 +358,7 @@ fe_get_str(char *msg, char *def, GSourceFunc callback, void *userdata)
 
 	entry = gtk_entry_new ();
 	g_signal_connect (G_OBJECT (entry), "activate",
-						 	G_CALLBACK (gtkutil_str_enter), dialog);
+							G_CALLBACK (gtkutil_str_enter), dialog);
 	gtk_entry_set_text (GTK_ENTRY (entry), def);
 	gtk_box_pack_end (GTK_BOX (hbox), entry, 0, 0, 0);
 
@@ -598,7 +598,7 @@ gtkutil_window_new (const char *title, const char *role, int width, int height, 
 /* pass NULL as selection to paste to both clipboard & X11 text */
 void
 gtkutil_copy_to_clipboard (GtkWidget *widget, GdkAtom selection,
-                           const gchar *str)
+						   const gchar *str)
 {
 	GtkWidget *win;
 	GtkClipboard *clip, *clip2;
@@ -627,7 +627,7 @@ gtkutil_copy_to_clipboard (GtkWidget *widget, GdkAtom selection,
 
 GtkWidget *
 gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
-                      GtkTreeCellDataFunc mapper, ...)
+					  GtkTreeCellDataFunc mapper, ...)
 {
 	GtkWidget *win, *view;
 	GtkCellRenderer *renderer = NULL;
@@ -670,12 +670,12 @@ gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
 		{
 			col = gtk_tree_view_column_new_with_attributes (title, renderer, NULL);
 			gtk_tree_view_column_set_cell_data_func (col, renderer, mapper,
-			                                         GINT_TO_POINTER (col_id), NULL);
+													 GINT_TO_POINTER (col_id), NULL);
 		} else
 		{
 			/* just set the typical attribute for this type of renderer */
 			col = gtk_tree_view_column_new_with_attributes (title, renderer,
-			                                                attr, col_id, NULL);
+															attr, col_id, NULL);
 		}
 		gtk_tree_view_append_column (GTK_TREE_VIEW (view), col);
 	}

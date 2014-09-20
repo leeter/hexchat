@@ -62,24 +62,24 @@ static ignore::ignore_type
 ignore_get_flags (GtkTreeModel *model, GtkTreeIter *iter)
 {
 	gboolean chan, priv, noti, ctcp, dcc, invi, unig;
-    ignore::ignore_type flags = 0;
+	ignore::ignore_type flags = 0;
 
 	gtk_tree_model_get (model, iter, 1, &chan, 2, &priv, 3, &noti,
-	                    4, &ctcp, 5, &dcc, 6, &invi, 7, &unig, -1);
+						4, &ctcp, 5, &dcc, 6, &invi, 7, &unig, -1);
 	if (chan)
-        flags |= ignore::IG_CHAN;
+		flags |= ignore::IG_CHAN;
 	if (priv)
-        flags |= ignore::IG_PRIV;
+		flags |= ignore::IG_PRIV;
 	if (noti)
-        flags |= ignore::IG_NOTI;
+		flags |= ignore::IG_NOTI;
 	if (ctcp)
-        flags |= ignore::IG_CTCP;
+		flags |= ignore::IG_CTCP;
 	if (dcc)
-        flags |= ignore::IG_DCC;
+		flags |= ignore::IG_DCC;
 	if (invi)
-        flags |= ignore::IG_INVI;
+		flags |= ignore::IG_INVI;
 	if (unig)
-        flags |= ignore::IG_UNIG;
+		flags |= ignore::IG_UNIG;
 	return flags;
 }
 
@@ -147,30 +147,30 @@ ignore_treeview_new (GtkWidget *box)
 	int col_id;
 
 	store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING,
-	                            G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
-	                            G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
-	                            G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
-	                            G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+								G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+								G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+								G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+								G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
 	g_return_val_if_fail (store != NULL, NULL);
 
 	view = gtkutil_treeview_new (box, GTK_TREE_MODEL (store),
-	                             NULL,
-	                             MASK_COLUMN, _("Mask"),
-	                             CHAN_COLUMN, _("Channel"),
-	                             PRIV_COLUMN, _("Private"),
-	                             NOTICE_COLUMN, _("Notice"),
-	                             CTCP_COLUMN, _("CTCP"),
-	                             DCC_COLUMN, _("DCC"),
-	                             INVITE_COLUMN, _("Invite"),
-	                             UNIGNORE_COLUMN, _("Unignore"),
-	                             -1);
+								 NULL,
+								 MASK_COLUMN, _("Mask"),
+								 CHAN_COLUMN, _("Channel"),
+								 PRIV_COLUMN, _("Private"),
+								 NOTICE_COLUMN, _("Notice"),
+								 CTCP_COLUMN, _("CTCP"),
+								 DCC_COLUMN, _("DCC"),
+								 INVITE_COLUMN, _("Invite"),
+								 UNIGNORE_COLUMN, _("Unignore"),
+								 -1);
 
 	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
 	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 0), TRUE);
 
 	/* attach to signals and customise columns */
 	for (col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
-	     col_id++)
+		 col_id++)
 	{
 		GList *list = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (col));
 		GList *tmp;
@@ -181,7 +181,7 @@ ignore_treeview_new (GtkWidget *box)
 			if (col_id > 0)	/* it's a toggle button column */
 			{
 				g_signal_connect (render, "toggled", G_CALLBACK (option_toggled),
-				                  GINT_TO_POINTER (col_id));
+								  GINT_TO_POINTER (col_id));
 			} else	/* mask column */
 			{
 				g_object_set (G_OBJECT (render), "editable", TRUE, NULL);
@@ -233,7 +233,7 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
 	GtkTreePath *path;
-    ignore::ignore_type flags = ignore::IG_DEFAULTS;
+	ignore::ignore_type flags = ignore::IG_DEFAULTS;
 
 	if (cancel)
 		return;
@@ -249,7 +249,7 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	gtk_list_store_append (store, &iter);
 	/* ignore everything by default */
 	gtk_list_store_set (store, &iter, 0, mask, 1, TRUE, 2, TRUE, 3, TRUE,
-	                    4, TRUE, 5, TRUE, 6, TRUE, 7, FALSE, -1);
+						4, TRUE, 5, TRUE, 6, TRUE, 7, FALSE, -1);
 	/* make sure the new row is visible and selected */
 	path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
 	gtk_tree_view_scroll_to_cell (view, path, NULL, TRUE, 1.0, 0.0);
@@ -391,25 +391,25 @@ ignore_gui_open ()
 		struct ignore *ignore = static_cast<struct ignore *>(temp->data);
 
 		mask = ignore->mask.c_str();
-        chan = (ignore->type & ignore::IG_CHAN);
-        priv = (ignore->type & ignore::IG_PRIV);
-        notice = (ignore->type & ignore::IG_NOTI);
-        ctcp = (ignore->type & ignore::IG_CTCP);
-        dcc = (ignore->type & ignore::IG_DCC);
-        invite = (ignore->type & ignore::IG_INVI);
-        unignore = (ignore->type & ignore::IG_UNIG);
+		chan = (ignore->type & ignore::IG_CHAN);
+		priv = (ignore->type & ignore::IG_PRIV);
+		notice = (ignore->type & ignore::IG_NOTI);
+		ctcp = (ignore->type & ignore::IG_CTCP);
+		dcc = (ignore->type & ignore::IG_DCC);
+		invite = (ignore->type & ignore::IG_INVI);
+		unignore = (ignore->type & ignore::IG_UNIG);
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,
-		                    MASK_COLUMN, mask,
-		                    CHAN_COLUMN, chan,
-		                    PRIV_COLUMN, priv,
-		                    NOTICE_COLUMN, notice,
-		                    CTCP_COLUMN, ctcp,
-		                    DCC_COLUMN, dcc,
-		                    INVITE_COLUMN, invite,
-		                    UNIGNORE_COLUMN, unignore,
-		                    -1);
+							MASK_COLUMN, mask,
+							CHAN_COLUMN, chan,
+							PRIV_COLUMN, priv,
+							NOTICE_COLUMN, notice,
+							CTCP_COLUMN, ctcp,
+							DCC_COLUMN, dcc,
+							INVITE_COLUMN, invite,
+							UNIGNORE_COLUMN, unignore,
+							-1);
 		
 		temp = temp->next;
 	}

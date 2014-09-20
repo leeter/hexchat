@@ -142,13 +142,13 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 
 	/* this can't overflow, since popup->cmd is only 256 */
 	len = cmd.length() + nick.length() + allnick.length() + 512;
-    std::string buf(len, '\0');
+	std::string buf(len, '\0');
 
 	auto_insert (&buf[0], len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
-        sess->server->get_network(true), host,
+		sess->server->get_network(true), host,
 					 sess->server->nick, nick.c_str(), account);
 
-    nick_command(sess, &buf[0]);
+	nick_command(sess, &buf[0]);
 }
 
 /* userlist button has been clicked */
@@ -167,7 +167,7 @@ userlist_button_cb (GtkWidget * button, const char *cmd)
 	if (strstr (cmd, "%a"))
 		using_allnicks = true;
 
-    if (sess->type == session::SESS_DIALOG)
+	if (sess->type == session::SESS_DIALOG)
 	{
 		/* fake a selection */
 		nicks.emplace_back(sess->channel);
@@ -655,7 +655,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 
 	if (user->away)
 	{
-        auto away = current_sess->server->get_away_message(user->nick);// server_away_find_message(current_sess->server, user->nick);
+		auto away = current_sess->server->get_away_message(user->nick);// server_away_find_message(current_sess->server, user->nick);
 		if (away)
 		{
 			char *msg = strip_color (away->first ? away->second.c_str() : unknown, -1, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
@@ -793,7 +793,7 @@ menu_cmbuttons_showhide_cb (session *sess)
 {
 	switch (sess->type)
 	{
-    case session::SESS_CHANNEL:
+	case session::SESS_CHANNEL:
 		if (prefs.hex_gui_mode_buttons)
 			gtk_widget_show (sess->gui->topicbutton_box);
 		else
@@ -950,7 +950,7 @@ menu_urlmenu (GdkEventButton *event, const std::string & url)
 
 	/* Two hardcoded entries */
 	if (strncmp (str_copy, "irc://", 6) == 0 ||
-	    strncmp (str_copy, "ircs://",7) == 0)
+		strncmp (str_copy, "ircs://",7) == 0)
 		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Connect"), menu, str_copy);
 	else
 		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Open Link in Browser"), menu, str_copy);
@@ -1181,7 +1181,7 @@ menu_newserver_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-    new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
+	new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1191,7 +1191,7 @@ menu_newchannel_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-    new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
+	new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1205,7 +1205,7 @@ menu_newserver_tab (GtkWidget * wid, gpointer none)
 	/* force focus if setting is "only requested tabs" */
 	if (prefs.hex_gui_tab_newtofront == 2)
 		prefs.hex_gui_tab_newtofront = 1;
-    new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
+	new_ircwindow(NULL, NULL, session::SESS_SERVER, 0);
 	prefs.hex_gui_tab_chans = old;
 	prefs.hex_gui_tab_newtofront = oldf;
 }
@@ -1216,7 +1216,7 @@ menu_newchannel_tab (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 1;
-    new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
+	new_ircwindow(current_sess->server, NULL, session::SESS_CHANNEL, 0);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1390,7 +1390,7 @@ menu_join (GtkWidget * wid, gpointer none)
 	GTK_ENTRY (entry)->editable = 0;	/* avoid auto-selection */
 	gtk_entry_set_text (GTK_ENTRY (entry), "#");
 	g_signal_connect (G_OBJECT (entry), "activate",
-						 	G_CALLBACK (menu_join_entry_cb), dialog);
+							G_CALLBACK (menu_join_entry_cb), dialog);
 	gtk_box_pack_end (GTK_BOX (hbox), entry, 0, 0, 0);
 
 	label = gtk_label_new (_("Enter Channel to Join:"));
@@ -1455,20 +1455,20 @@ menu_noplugin_info (void)
 #endif
 
 #define usercommands_help  _("User Commands - Special codes:\n\n"\
-                           "%c  =  current channel\n"\
+						   "%c  =  current channel\n"\
 									"%e  =  current network name\n"\
 									"%m  =  machine info\n"\
-                           "%n  =  your nick\n"\
+						   "%n  =  your nick\n"\
 									"%t  =  time/date\n"\
-                           "%v  =  HexChat version\n"\
-                           "%2  =  word 2\n"\
-                           "%3  =  word 3\n"\
-                           "&2  =  word 2 to the end of line\n"\
-                           "&3  =  word 3 to the end of line\n\n"\
-                           "eg:\n"\
-                           "/cmd john hello\n\n"\
-                           "%2 would be \042john\042\n"\
-                           "&2 would be \042john hello\042.")
+						   "%v  =  HexChat version\n"\
+						   "%2  =  word 2\n"\
+						   "%3  =  word 3\n"\
+						   "&2  =  word 2 to the end of line\n"\
+						   "&3  =  word 3 to the end of line\n\n"\
+						   "eg:\n"\
+						   "/cmd john hello\n\n"\
+						   "%2 would be \042john\042\n"\
+						   "&2 would be \042john hello\042.")
 
 #define ulbutton_help       _("Userlist Buttons - Special codes:\n\n"\
 							"%a  =  all selected nicks\n"\
@@ -1493,21 +1493,21 @@ menu_noplugin_info (void)
 							"%u  =  selected users account")
 
 #define ctcp_help          _("CTCP Replies - Special codes:\n\n"\
-                           "%d  =  data (the whole ctcp)\n"\
+						   "%d  =  data (the whole ctcp)\n"\
 									"%e  =  current network name\n"\
 									"%m  =  machine info\n"\
-                           "%s  =  nick who sent the ctcp\n"\
-                           "%t  =  time/date\n"\
-                           "%2  =  word 2\n"\
-                           "%3  =  word 3\n"\
-                           "&2  =  word 2 to the end of line\n"\
-                           "&3  =  word 3 to the end of line\n\n")
+						   "%s  =  nick who sent the ctcp\n"\
+						   "%t  =  time/date\n"\
+						   "%2  =  word 2\n"\
+						   "%3  =  word 3\n"\
+						   "&2  =  word 2 to the end of line\n"\
+						   "&3  =  word 3 to the end of line\n\n")
 
 #define url_help           _("URL Handlers - Special codes:\n\n"\
-                           "%s  =  the URL string\n\n"\
-                           "Putting a ! in front of the command\n"\
-                           "indicates it should be sent to a\n"\
-                           "shell instead of HexChat")
+						   "%s  =  the URL string\n\n"\
+						   "Putting a ! in front of the command\n"\
+						   "indicates it should be sent to a\n"\
+						   "shell instead of HexChat")
 
 static void
 menu_usercommands (void)

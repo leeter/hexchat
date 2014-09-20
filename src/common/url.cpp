@@ -274,7 +274,7 @@ match_channel (const char *word, int *start, int *end)
 
 	/* Check for +#channel (for example whois output) */
 	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos
-        && chan_prefixes.find_first_of(word[*start + 1]) != std::string::npos)
+		&& chan_prefixes.find_first_of(word[*start + 1]) != std::string::npos)
 	{
 		(*start)++;
 		return TRUE;
@@ -420,7 +420,7 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 #define IPADDR "[0-9]{1,3}(\\.[0-9]{1,3}){3}"
 #define IPV6GROUP "([0-9a-f]{0,4})"
 #define IPV6ADDR "((" IPV6GROUP "(:" IPV6GROUP "){7})"	\
-	         "|(" IPV6GROUP "(:" IPV6GROUP ")*:(:" IPV6GROUP ")+))" /* with :: compression */
+			 "|(" IPV6GROUP "(:" IPV6GROUP ")*:(:" IPV6GROUP ")+))" /* with :: compression */
 #define HOST "(" URL_DOMAIN TLD "|" IPADDR "|" IPV6ADDR ")"
 /* In urls the IPv6 must be enclosed in square brackets */
 #define HOST_URL "(" URL_DOMAIN TLD "|" IPADDR "|" "\\[" IPV6ADDR "\\]" ")"
@@ -590,10 +590,10 @@ re_url (void)
 			char *sep_escaped;
 			
 			sep_escaped = g_regex_escape_string (uri[i].path_sep, 
-							     strlen(uri[i].path_sep));
+								 strlen(uri[i].path_sep));
 
 			g_string_append_printf(grist_gstr, "(" "%s" PATH ")?",
-					       sep_escaped);
+						   sep_escaped);
 
 			g_free(sep_escaped);
 		}

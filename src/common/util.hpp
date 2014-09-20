@@ -54,7 +54,7 @@ char *get_sys_str (bool with_cpu);
 void util_exec (const char *cmd);
 enum strip_flags{
 	STRIP_COLOR = 1,
-    STRIP_ATTRIB = 2,
+	STRIP_ATTRIB = 2,
 	STRIP_HIDDEN = 4,
 	STRIP_ESCMARKUP = 8,
 	STRIP_ALL = 7

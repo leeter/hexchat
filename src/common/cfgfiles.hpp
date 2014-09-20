@@ -35,7 +35,7 @@ extern char *xdir;
 extern const char * const languages[LANGUAGES_LENGTH];
 namespace config
 {
-    const ::std::string& config_dir();
+	const ::std::string& config_dir();
 }
 char *cfg_get_str (char *cfg, const char *var, char *dest, int dest_len);
 int cfg_get_bool (char *var);
@@ -60,8 +60,8 @@ int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);
 
 enum xof {
-    XOF_DOMODE = 1,
-    XOF_FULLPATH = 2
+	XOF_DOMODE = 1,
+	XOF_FULLPATH = 2
 };
 
 #define STRUCT_OFFSET_STR(type,field) \
@@ -76,9 +76,9 @@ enum xof {
 #define P_OFFINTNL(field) STRUCT_OFFSET_INT(struct hexchatprefs, field)
 
 enum pref_type : unsigned short{
-    TYPE_STR,
-    TYPE_INT,
-    TYPE_BOOL
+	TYPE_STR,
+	TYPE_INT,
+	TYPE_BOOL
 };
 
 struct prefs

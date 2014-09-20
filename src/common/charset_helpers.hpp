@@ -23,8 +23,8 @@
 #include <string>
 
 namespace charset{
-    std::string narrow(const std::wstring &);
-    std::wstring widen(const std::string &);
+	std::string narrow(const std::wstring &);
+	std::wstring widen(const std::string &);
 }
 #endif
 

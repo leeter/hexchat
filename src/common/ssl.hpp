@@ -22,28 +22,28 @@
 
 #include <string>
 namespace io{
-    namespace ssl{
+	namespace ssl{
 
 
 struct cert_info {
-    char subject[256];
-    char *subject_word[12];
-    char issuer[256];
-    char *issuer_word[12];
-    char algorithm[32];
-    int algorithm_bits;
-    char sign_algorithm[32];
-    int sign_algorithm_bits;
-    char notbefore[32];
-    char notafter[32];
+	char subject[256];
+	char *subject_word[12];
+	char issuer[256];
+	char *issuer_word[12];
+	char algorithm[32];
+	int algorithm_bits;
+	char sign_algorithm[32];
+	int sign_algorithm_bits;
+	char notbefore[32];
+	char notafter[32];
 
-    int rsa_tmp_bits;
+	int rsa_tmp_bits;
 };
 
 struct cipher_info {
-    int cipher_bits;
-    std::string version;
-    std::string cipher;
+	int cipher_bits;
+	std::string version;
+	std::string cipher;
 };
 
 SSL_CTX *_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server);
@@ -52,9 +52,9 @@ SSL_CTX *_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server
 SSL *_SSL_socket (SSL_CTX *ctx, int sd);
 char *_SSL_set_verify(SSL_CTX *ctx, int(*verify_callback)(int, X509_STORE_CTX*), char *cacert);
 /*
-    int SSL_connect(SSL *);
-    int SSL_accept(SSL *);
-    int SSL_get_fd(SSL *);
+	int SSL_connect(SSL *);
+	int SSL_accept(SSL *);
+	int SSL_get_fd(SSL *);
 */
 void _SSL_close (SSL * ssl);
 
@@ -87,7 +87,7 @@ int _SSL_recv (SSL * ssl, char *buf, int len);
 
 /*int _SSL_verify_x509(X509 *x509);*/
 
-    }
+	}
 
 }
 

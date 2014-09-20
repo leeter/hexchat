@@ -390,33 +390,33 @@ fe_set_title (session *sess)
 
 	type = sess->type;
 
-    if (sess->server->connected == FALSE && sess->type != session::SESS_DIALOG)
+	if (sess->server->connected == FALSE && sess->type != session::SESS_DIALOG)
 		goto def;
 
 	switch (type)
 	{
-    case session::SESS_DIALOG:
+	case session::SESS_DIALOG:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s %s @ %s",
-            _("Dialog with"), sess->channel, sess->server->get_network(true));
+			_("Dialog with"), sess->channel, sess->server->get_network(true));
 		break;
-    case session::SESS_SERVER:
+	case session::SESS_SERVER:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s",
-            sess->server->nick, sess->server->get_network(true));
+			sess->server->nick, sess->server->get_network(true));
 		break;
-    case session::SESS_CHANNEL:
+	case session::SESS_CHANNEL:
 		/* don't display keys in the titlebar */
 		if (prefs.hex_gui_win_modes)
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
-                         sess->server->nick, sess->server->get_network(true),
+						 sess->server->nick, sess->server->get_network(true),
 						 sess->channel, sess->current_modes ? sess->current_modes : "");
 		}
 		else
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s",
-                         sess->server->nick, sess->server->get_network(true),
+						 sess->server->nick, sess->server->get_network(true),
 						 sess->channel);
 		}
 		if (prefs.hex_gui_win_ucount)
@@ -424,10 +424,10 @@ fe_set_title (session *sess)
 			snprintf (tbuf + strlen (tbuf), 9, " (%d)", sess->total);
 		}
 		break;
-    case session::SESS_NOTICES:
-    case session::SESS_SNOTICES:
+	case session::SESS_NOTICES:
+	case session::SESS_SNOTICES:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s (notices)",
-            sess->server->nick, sess->server->get_network(true));
+			sess->server->nick, sess->server->get_network(true));
 		break;
 	default:
 	def:
@@ -483,7 +483,7 @@ mg_configure_cb (GtkWidget *wid, GdkEventConfigure *event, session *sess)
 
 	if (sess)
 	{
-        if (sess->type == session::SESS_DIALOG && prefs.hex_gui_win_save)
+		if (sess->type == session::SESS_DIALOG && prefs.hex_gui_win_save)
 		{
 			gtk_window_get_position (GTK_WINDOW (wid), &prefs.hex_gui_dialog_left,
 											 &prefs.hex_gui_dialog_top);
@@ -535,7 +535,7 @@ mg_focus (session *sess)
 
 	if (sess->server->server_session != NULL)
 	{
-        if (sess->server->server_session->type != session::SESS_SERVER)
+		if (sess->server->server_session->type != session::SESS_SERVER)
 			sess->server->server_session = sess;
 	} else
 	{
@@ -692,7 +692,7 @@ mg_set_topic_tip (session *sess)
 
 	switch (sess->type)
 	{
-    case session::SESS_CHANNEL:
+	case session::SESS_CHANNEL:
 		if (sess->topic)
 		{
 			text = g_strdup_printf (_("Topic for %s is: %s"), sess->channel,
@@ -793,7 +793,7 @@ mg_decide_userlist (session *sess, gboolean switch_to_current)
 
 	switch (sess->type)
 	{
-    case session::SESS_SERVER:
+	case session::SESS_SERVER:
 	case session::SESS_DIALOG:
 	case session::SESS_NOTICES:
 	case session::SESS_SNOTICES:
@@ -825,7 +825,7 @@ mg_populate_userlist (session *sess)
 
 	if (is_session (sess))
 	{
-        if (sess->type == session::SESS_DIALOG)
+		if (sess->type == session::SESS_DIALOG)
 			mg_set_access_icon (sess->gui, NULL, sess->server->is_away);
 		else
 			mg_set_access_icon (sess->gui, get_user_icon (sess->server, sess->me), sess->server->is_away);
@@ -850,7 +850,7 @@ mg_populate (session *sess)
 
 	switch (sess->type)
 	{
-    case session::SESS_DIALOG:
+	case session::SESS_DIALOG:
 		/* show the dialog buttons */
 		gtk_widget_show (gui->dialogbutton_box);
 		/* hide the chan-mode buttons */
@@ -863,7 +863,7 @@ mg_populate (session *sess)
 		if (prefs.hex_gui_topicbar)
 			gtk_widget_show (gui->topic_bar);
 		break;
-    case session::SESS_SERVER:
+	case session::SESS_SERVER:
 		if (prefs.hex_gui_mode_buttons)
 			gtk_widget_show (gui->topicbutton_box);
 		/* hide the dialog buttons */
@@ -891,7 +891,7 @@ mg_populate (session *sess)
 		gtk_notebook_set_current_page (GTK_NOTEBOOK (gui->note_book), 0);
 
 	/* xtext size change? Then don't render, wait for the expose caused
-      by showing/hidding the userlist */
+	  by showing/hidding the userlist */
 	gtk_widget_get_allocation (gui->user_box, &allocation);
 	if (vis != gui->ul_hidden && allocation.width > 1)
 		render = FALSE;
@@ -1163,7 +1163,7 @@ mg_count_dccs (void)
 	while (list)
 	{
 		dcc = static_cast<dcc::DCC*>(list->data);
-        if ((dcc->type == dcc::DCC::dcc_type::TYPE_SEND || dcc->type == dcc::DCC::dcc_type::TYPE_RECV) &&
+		if ((dcc->type == dcc::DCC::dcc_type::TYPE_SEND || dcc->type == dcc::DCC::dcc_type::TYPE_RECV) &&
 			 dcc->dccstat == STAT_ACTIVE)
 			dccs++;
 		list = list->next;
@@ -1538,7 +1538,7 @@ mg_create_perchannelmenu (session *sess, GtkWidget *menu)
 
 	mg_perchan_menu_item (_("_Log to Disk"), submenu, &sess->text_logging, prefs.hex_irc_logging);
 	mg_perchan_menu_item (_("_Reload Scrollback"), submenu, &sess->text_scrollback, prefs.hex_text_replay);
-    if (sess->type == session::SESS_CHANNEL)
+	if (sess->type == session::SESS_CHANNEL)
 	{
 		mg_perchan_menu_item (_("Strip _Colors"), submenu, &sess->text_strip, prefs.hex_text_stripcolor_msg);
 		mg_perchan_menu_item (_("_Hide Join/Part Messages"), submenu, &sess->text_hidejoinpart, prefs.hex_irc_conf_mode);
@@ -1590,9 +1590,9 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 		/* separator */
 		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 
-        if (sess->type == session::SESS_CHANNEL)
+		if (sess->type == session::SESS_CHANNEL)
 			menu_addfavoritemenu (sess->server, menu, sess->channel, TRUE);
-        else if (sess->type == session::SESS_SERVER)
+		else if (sess->type == session::SESS_SERVER)
 			menu_addconnectmenu (sess->server, menu);
 	}
 
@@ -1678,7 +1678,7 @@ mg_dialog_dnd_drop (GtkWidget * widget, GdkDragContext * context, gint x,
 						  gint y, GtkSelectionData * selection_data, guint info,
 						  guint32 time, gpointer ud)
 {
-    if (current_sess->type == session::SESS_DIALOG)
+	if (current_sess->type == session::SESS_DIALOG)
 		/* sess->channel is really the nickname of dialogs */
 		mg_dnd_drop_file (current_sess, current_sess->channel, (char *)gtk_selection_data_get_data (selection_data));
 }
@@ -1696,10 +1696,10 @@ mg_add_chan (session *sess)
 
 	switch (sess->type)
 	{
-    case session::SESS_CHANNEL:
+	case session::SESS_CHANNEL:
 		icon = pix_tree_channel;
 		break;
-    case session::SESS_SERVER:
+	case session::SESS_SERVER:
 		icon = pix_tree_server;
 		break;
 	default:
@@ -1707,7 +1707,7 @@ mg_add_chan (session *sess)
 	}
 
 	sess->res->tab = chanview_add(static_cast<chanview*>(sess->gui->chanview), name, sess->server, sess,
-        sess->type == session::SESS_SERVER ? FALSE : TRUE,
+		sess->type == session::SESS_SERVER ? FALSE : TRUE,
 											 TAG_IRC, icon);
 	if (plain_list == NULL)
 		mg_create_tab_colors ();
@@ -1769,7 +1769,7 @@ mg_topic_cb (GtkWidget *entry, gpointer userdata)
 	session *sess = current_sess;
 	char *text;
 
-    if (sess->channel[0] && sess->server->connected && sess->type == session::SESS_CHANNEL)
+	if (sess->channel[0] && sess->server->connected && sess->type == session::SESS_CHANNEL)
 	{
 		text = (char *)gtk_entry_get_text (GTK_ENTRY (entry));
 		if (text[0] == 0)
@@ -2127,7 +2127,7 @@ mg_dialog_button_cb (GtkWidget *wid, char *cmd)
 		host = topic + 1;
 
 	auto_insert (buf, sizeof (buf), (unsigned char*)cmd, 0, 0, "", "", "",
-        current_sess->server->get_network(true), host, "",
+		current_sess->server->get_network(true), host, "",
 					 current_sess->channel, "");
 
 	handle_command (current_sess, buf, TRUE);
@@ -2254,7 +2254,7 @@ mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 
 	if (even->button == 2)
 	{
-        if (sess->type == session::SESS_DIALOG)
+		if (sess->type == session::SESS_DIALOG)
 			menu_middlemenu (sess, even);
 		else if (even->type == GDK_2BUTTON_PRESS)
 			userlist_select (sess, word);
@@ -3040,13 +3040,13 @@ static int
 mg_tabs_compare (session *a, session *b)
 {
 	/* server tabs always go first */
-    if (a->type == session::SESS_SERVER)
+	if (a->type == session::SESS_SERVER)
 		return -1;
 
 	/* then channels */
-    if (a->type == session::SESS_CHANNEL && b->type != session::SESS_CHANNEL)
+	if (a->type == session::SESS_CHANNEL && b->type != session::SESS_CHANNEL)
 		return -1;
-    if (a->type != session::SESS_CHANNEL && b->type == session::SESS_CHANNEL)
+	if (a->type != session::SESS_CHANNEL && b->type == session::SESS_CHANNEL)
 		return 1;
 
 	return g_ascii_strcasecmp (a->channel, b->channel);
@@ -3131,7 +3131,7 @@ mg_create_topwindow (session *sess)
 	GtkWidget *win;
 	GtkWidget *table;
 
-    if (sess->type == session::SESS_DIALOG)
+	if (sess->type == session::SESS_DIALOG)
 		win = gtkutil_window_new ("HexChat", NULL,
 										  prefs.hex_gui_dialog_width, prefs.hex_gui_dialog_height, 0);
 	else
@@ -3190,7 +3190,7 @@ mg_create_topwindow (session *sess)
 
 	mg_decide_userlist (sess, FALSE);
 
-    if (sess->type == session::SESS_DIALOG)
+	if (sess->type == session::SESS_DIALOG)
 	{
 		/* hide the chan-mode buttons */
 		gtk_widget_hide (sess->gui->topicbutton_box);
@@ -3423,7 +3423,7 @@ fe_dlgbuttons_update (session *sess)
 
 	gtk_widget_show_all (box);
 
-    if (current_tab && current_tab->type != session::SESS_DIALOG)
+	if (current_tab && current_tab->type != session::SESS_DIALOG)
 		gtk_widget_hide (current_tab->gui->dialogbutton_box);
 }
 

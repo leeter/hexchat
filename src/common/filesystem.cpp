@@ -42,68 +42,68 @@ namespace bfs = boost::filesystem;
 
 namespace io
 {
-    namespace fs
-    {
-        bfs::path
-            make_path(const std::string & path)
-        {
+	namespace fs
+	{
+		bfs::path
+			make_path(const std::string & path)
+		{
 #ifdef WIN32
-            return charset::widen(path);
+			return charset::widen(path);
 #else
-            return path;
+			return path;
 #endif
-        }
+		}
 
-        boost::filesystem::path make_path(const std::vector<std::string>& segments)
-        {
-            if (segments.empty())
-                return "";
+		boost::filesystem::path make_path(const std::vector<std::string>& segments)
+		{
+			if (segments.empty())
+				return "";
 #ifdef WIN32
-            bfs::path path(charset::widen(segments.front()));
-            for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
-                path /= charset::widen(*it);
+			bfs::path path(charset::widen(segments.front()));
+			for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
+				path /= charset::widen(*it);
 #else
-            bfs::path path(segments.front());
-            for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
-                path /= *it;
+			bfs::path path(segments.front());
+			for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
+				path /= *it;
 #endif
-            return path;
-        }
+			return path;
+		}
 
-        bio::file_descriptor
-            open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
-        {
+		bio::file_descriptor
+			open_stream(const std::string& file, std::ios_base::openmode flags, int mode, int xof_flags)
+		{
 
-            bfs::path file_path = make_path(file);
-            if (!(xof_flags & XOF_FULLPATH))
-                file_path = make_path(config::config_dir()) / file_path;
-            if (xof_flags & XOF_DOMODE)
-            {
-                int tfd;
+			bfs::path file_path = make_path(file);
+			if (!(xof_flags & XOF_FULLPATH))
+				file_path = make_path(config::config_dir()) / file_path;
+			if (xof_flags & XOF_DOMODE)
+			{
+				int tfd;
 #ifdef WIN32
-                tfd = _wopen(file_path.c_str(), _O_CREAT, mode);
+				tfd = _wopen(file_path.c_str(), _O_CREAT, mode);
 #else
-                tfd = open(file_path.c_str(), O_CREAT, mode);
+				tfd = open(file_path.c_str(), O_CREAT, mode);
 #endif
-                close(tfd);
-            }
+				close(tfd);
+			}
 
-            return open_stream(file_path, flags);
-        }
+			return open_stream(file_path, flags);
+		}
 
-        boost::iostreams::file_descriptor
-            open_stream(const boost::filesystem::path &file_path, std::ios::openmode flags)
-        {
+		boost::iostreams::file_descriptor
+			open_stream(const boost::filesystem::path &file_path, std::ios::openmode flags)
+		{
 #ifdef WIN32
-            return bio::file_descriptor(file_path, flags | std::ios::binary);
+			return bio::file_descriptor(file_path, flags | std::ios::binary);
 #else
-            return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
+			return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
 #endif
-        }
+		}
 
-        bool exists(const std::string & path)
-        {
-            return bfs::exists(make_path(path));
-        }
-    }
+		bool exists(const std::string & path)
+		{
+			return bfs::exists(make_path(path));
+		}
+	}
 }

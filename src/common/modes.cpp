@@ -128,7 +128,7 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 bool
 server::is_channel_name(const std::string & chan) const
 {
-    return this->chantypes.find_first_of(chan[0]) != std::string::npos;
+	return this->chantypes.find_first_of(chan[0]) != std::string::npos;
 }
 
 /* is the given char a valid nick mode char? e.g. @ or + */
@@ -136,9 +136,9 @@ server::is_channel_name(const std::string & chan) const
 static int
 is_prefix_char (const server * serv, char c)
 {
-    auto pos = serv->nick_prefixes.find_first_of(c);
-    if (pos != std::string::npos)
-        return pos;
+	auto pos = serv->nick_prefixes.find_first_of(c);
+	if (pos != std::string::npos)
+		return pos;
 
 	if (serv->bad_prefix)
 	{
@@ -402,7 +402,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* Is q a chanmode on this server? */
-    for (char cm : serv->chanmodes)
+	for (char cm : serv->chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -536,8 +536,8 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	{
 		if (*arg)
 		{
-            std::string buf(strlen(chan) + strlen(arg) + 2, '\0');
-            sprintf(&buf[0], "%s %s", chan, arg);
+			std::string buf(strlen(chan) + strlen(arg) + 2, '\0');
+			sprintf(&buf[0], "%s %s", chan, arg);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, &buf[0], 0, tags_data->timestamp);
 		} else
@@ -590,7 +590,7 @@ mode_chanmode_type (server * serv, char mode)
 		} else if (cm == mode)
 		{
 			found = true;
-            break;
+			break;
 		}
 	}
 	if (found)
@@ -803,7 +803,7 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 				free (serv->networkname);
 			serv->networkname = strdup (word[w] + 8);*/
 
-            if (serv->server_session->type == session::SESS_SERVER)
+			if (serv->server_session->type == session::SESS_SERVER)
 			{
 				safe_strcpy (serv->server_session->channel, word[w] + 8, CHANLEN);
 				fe_set_channel (serv->server_session);

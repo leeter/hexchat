@@ -543,7 +543,7 @@ static const setting logging_settings[] =
 #ifdef WIN32
 	{ST_LABEL,	N_("See the strftime MSDN article for details."),0,0,0,0},
 #else
-    {ST_LABEL,	N_("See the strftime manpage for details."),0,0,0,0},
+	{ST_LABEL,	N_("See the strftime manpage for details."),0,0,0,0},
 #endif
 
 	{ST_HEADER,	N_("URLs"),0,0,0,0},
@@ -1188,7 +1188,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	/* only http and Socks5 can auth */
 	if ( (set->offset == P_OFFSETNL(hex_net_proxy_pass) ||
 			set->offset == P_OFFSETNL(hex_net_proxy_user)) &&
-	     (setup_prefs.hex_net_proxy_type != 4 && setup_prefs.hex_net_proxy_type != 3 && setup_prefs.hex_net_proxy_type != 5) )
+		 (setup_prefs.hex_net_proxy_type != 4 && setup_prefs.hex_net_proxy_type != 3 && setup_prefs.hex_net_proxy_type != 5) )
 		gtk_widget_set_sensitive (wid, FALSE);
 
 	if (set->type == ST_ENTRY)
@@ -1941,7 +1941,7 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (tree),
-							    -1, _("Categories"), renderer, "text", 0, NULL);
+								-1, _("Categories"), renderer, "text", 0, NULL);
 	gtk_tree_view_expand_all (GTK_TREE_VIEW (tree));
 
 	frame = gtk_frame_new (NULL);

@@ -107,39 +107,39 @@ notc_msg (struct session *sess)
 static std::string
 random_line (const std::string & file_name)
 {
-    if (!file_name.empty() || !boost::filesystem::native(file_name))
-        return file_name;
-    
-    boost::iostreams::file_descriptor fd;
-    try
-    {
-        fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
-    } 
-    catch (const boost::exception&)
-    {
-        return file_name;
-    }
-    bio::stream_buffer<bio::file_descriptor> buff(fd);
-    std::istream stream(&buff);
+	if (!file_name.empty() || !boost::filesystem::native(file_name))
+		return file_name;
+	
+	boost::iostreams::file_descriptor fd;
+	try
+	{
+		fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
+	} 
+	catch (const boost::exception&)
+	{
+		return file_name;
+	}
+	bio::stream_buffer<bio::file_descriptor> buff(fd);
+	std::istream stream(&buff);
 
 	/* count number of lines in file */
-    auto lines = std::count(std::istreambuf_iterator<char>(stream),
-        std::istreambuf_iterator<char>(), '\n');
+	auto lines = std::count(std::istreambuf_iterator<char>(stream),
+		std::istreambuf_iterator<char>(), '\n');
 
 	if (lines < 1)
 		return file_name;
 
 	/* go down a random number */
-    stream.clear();
-    stream.seekg(std::ios::beg);
+	stream.clear();
+	stream.seekg(std::ios::beg);
 	int lines_from_back_of_file = RAND_INT (lines);
-    std::string buf;
-    while (lines > lines_from_back_of_file)
+	std::string buf;
+	while (lines > lines_from_back_of_file)
 	{
-        stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		lines--;
 	}
-    std::getline(stream, buf, '\n');
+	std::getline(stream, buf, '\n');
 	return buf;
 }
 
@@ -148,7 +148,7 @@ server_sendpart(server & serv, const std::string& channel, const boost::optional
 {
 	if (!reason)
 	{
-        std::string temp = random_line(prefs.hex_irc_part_reason);
+		std::string temp = random_line(prefs.hex_irc_part_reason);
 		serv.p_part (channel, temp);
 	} else
 	{
@@ -164,7 +164,7 @@ server_sendquit (session * sess)
 	{
 		std::string colrea = prefs.hex_irc_quit_reason;
 		check_special_chars (&colrea[0], FALSE);
-        std::string rea = random_line(colrea);
+		std::string rea = random_line(colrea);
 		sess->server->p_quit (rea);
 	} else
 	{
@@ -264,7 +264,7 @@ cmd_addbutton (struct session *sess, char *tbuf, char *word[],
 {
 	if (*word[2] && *word_eol[3])
 	{
-        if (sess->type == session::SESS_DIALOG)
+		if (sess->type == session::SESS_DIALOG)
 		{
 			list_addentry (&dlgbutton_list, word_eol[3], word[2]);
 			fe_dlgbuttons_update (sess);
@@ -324,7 +324,7 @@ cmd_allchannels (session *sess, char *tbuf, char *word[], char *word_eol[])
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-        if (sess->type == session::SESS_CHANNEL && sess->channel[0] && sess->server->connected)
+		if (sess->type == session::SESS_CHANNEL && sess->channel[0] && sess->server->connected)
 		{
 			handle_command (sess, word_eol[2], FALSE);
 		}
@@ -346,7 +346,7 @@ cmd_allchannelslocal (session *sess, char *tbuf, char *word[], char *word_eol[])
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-        if (sess->type == session::SESS_CHANNEL && sess->channel[0] &&
+		if (sess->type == session::SESS_CHANNEL && sess->channel[0] &&
 			 sess->server->connected && sess->server == serv)
 		{
 			handle_command (sess, word_eol[2], FALSE);
@@ -382,7 +382,7 @@ cmd_allservers (struct session *sess, char *tbuf, char *word[],
 static int
 cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-    std::string reason = word_eol[2];
+	std::string reason = word_eol[2];
 
 	if (!(reason[0]))
 	{
@@ -395,16 +395,16 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 		if (sess->server->reconnect_away)
 			reason = sess->server->last_away_reason;
-        else
-        {
-            reason = random_line(prefs.hex_away_reason);
-        }
+		else
+		{
+			reason = random_line(prefs.hex_away_reason);
+		}
 	}
 	sess->server->p_set_away (reason);
 
 	if (sess->server->last_away_reason != reason)
 	{
-        sess->server->last_away_reason = reason;
+		sess->server->last_away_reason = reason;
 	}
 
 	if (!sess->server->connected)
@@ -454,7 +454,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		auto submask = mask.substr(0, at);
 		std::ostringstream username;
 		if (mask[0] == '~' || mask[0] == '+' ||
-		    mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
+			mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
 		{
 			/* the ident is prefixed with something, we replace that sign with an * */
 			submask.erase(0, 1);
@@ -557,7 +557,7 @@ ban (session * sess, char *tbuf, char *mask, char *bantypestr, int deop)
 {
 	std::string banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
 	server *serv = sess->server;
-    serv->p_mode(sess->channel, banmask);
+	serv->p_mode(sess->channel, banmask);
 }
 
 static int
@@ -681,7 +681,7 @@ cmd_close (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			sess = static_cast<session*>(list->data);
 			list = list->next;
-            if (sess->type == session::SESS_DIALOG)
+			if (sess->type == session::SESS_DIALOG)
 				fe_close_window (sess);
 		}
 	} else
@@ -768,7 +768,7 @@ cmd_cycle (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		chan_sess = find_channel (sess->server, chan);
 
-        if (chan_sess && chan_sess->type == session::SESS_CHANNEL)
+		if (chan_sess && chan_sess->type == session::SESS_CHANNEL)
 		{
 			key = chan_sess->channelkey;
 			sess->server->p_cycle (chan, key);
@@ -796,21 +796,21 @@ cmd_dcc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				goodtype = 0;
 				if (!g_ascii_strcasecmp (word[3], "SEND"))
 				{
-                    dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_SEND);
+					dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_SEND);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
 				if (!g_ascii_strcasecmp (word[3], "GET"))
 				{
-                    dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_RECV);
+					dcc = dcc::find_dcc(word[4], word[5], ::dcc::DCC::dcc_type::TYPE_RECV);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
 				if (!g_ascii_strcasecmp (word[3], "CHAT"))
 				{
-                    dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
+					dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
 					if (!dcc)
-                        dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
+						dcc = dcc::find_dcc(word[4], "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
 					dcc_abort (sess, dcc);
 					goodtype = TRUE;
 				}
@@ -849,7 +849,7 @@ cmd_dcc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 					dcc::dcc_get_nick (sess, nick);
 			} else
 			{
-                dcc = dcc::find_dcc(nick, file, ::dcc::DCC::dcc_type::TYPE_RECV);
+				dcc = dcc::find_dcc(nick, file, ::dcc::DCC::dcc_type::TYPE_RECV);
 				if (dcc)
 					dcc_get (dcc);
 				else
@@ -948,7 +948,7 @@ cmd_delbutton (struct session *sess, char *tbuf, char *word[],
 {
 	if (*word[2])
 	{
-        if (sess->type == session::SESS_DIALOG)
+		if (sess->type == session::SESS_DIALOG)
 		{
 			if (list_delentry (&dlgbutton_list, word[2]))
 				fe_dlgbuttons_update (sess);
@@ -1000,7 +1000,7 @@ cmd_deop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 struct multidata
 {
-    std::vector<char*> nicks;
+	std::vector<char*> nicks;
 	int i;
 	session *sess;
 	char *reason;
@@ -1012,7 +1012,7 @@ mdehop_cb (struct User *user, multidata *data)
 {
 	if (user->hop && !user->me)
 	{
-        data->nicks.push_back(user->nick);
+		data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -1033,7 +1033,7 @@ mdeop_cb (struct User *user, multidata *data)
 {
 	if (user->op && !user->me)
 	{
-        data->nicks.push_back(user->nick);
+		data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -1371,7 +1371,7 @@ static int
 mkickops_cb (struct User *user, multidata *data)
 {
 	if (user->op && !user->me)
-        data->sess->server->p_kick(data->sess->channel, user->nick, data->reason ? data->reason : "");
+		data->sess->server->p_kick(data->sess->channel, user->nick, data->reason ? data->reason : "");
 	return TRUE;
 }
 
@@ -2005,7 +2005,7 @@ get_file_cb (char *cmd, char *file)
 	char buf[1024 + 128];
 
 	/* execute the command once per file, then once more with
-      no args */
+	  no args */
 	if (file)
 	{
 		snprintf (buf, sizeof (buf), "%s %s", cmd, file);
@@ -2201,7 +2201,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	} else
 	{
 		struct popup *pop;
-        std::string buf(4096, '\0');
+		std::string buf(4096, '\0');
 		help_list hl;
 
 		hl.longfmt = longfmt;
@@ -2244,8 +2244,8 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		hl.t = 0;
 		hl.i = 0;
 		plugin_command_foreach (sess, &hl, (void (*)(session*, void*, char*, char*))show_help_line);
-        strcat(&buf[0], "\n");
-        PrintText(sess, buf);
+		strcat(&buf[0], "\n");
+		PrintText(sess, buf);
 		PrintTextf (sess, "\n%s\n\n", _("Type /HELP <command> for more information, or /HELP -l"));
 	}
 	return TRUE;
@@ -2289,7 +2289,7 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 			mask = word[2];
 			if (strchr (mask, '?') == NULL &&
-			    strchr (mask, '*') == NULL)
+				strchr (mask, '*') == NULL)
 			{
 				mask = tbuf;
 				snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
@@ -2309,25 +2309,25 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			return TRUE;
 		}
 		if (!g_ascii_strcasecmp (word[i], "UNIGNORE"))
-            type |= ignore::IG_UNIG;
+			type |= ignore::IG_UNIG;
 		else if (!g_ascii_strcasecmp (word[i], "ALL"))
-            type |= ignore::IG_PRIV | ignore::IG_NOTI | ignore::IG_CHAN | ignore::IG_CTCP | ignore::IG_INVI | ignore::IG_DCC;
+			type |= ignore::IG_PRIV | ignore::IG_NOTI | ignore::IG_CHAN | ignore::IG_CTCP | ignore::IG_INVI | ignore::IG_DCC;
 		else if (!g_ascii_strcasecmp (word[i], "PRIV"))
-            type |= ignore::IG_PRIV;
+			type |= ignore::IG_PRIV;
 		else if (!g_ascii_strcasecmp (word[i], "NOTI"))
-            type |= ignore::IG_NOTI;
+			type |= ignore::IG_NOTI;
 		else if (!g_ascii_strcasecmp (word[i], "CHAN"))
-            type |= ignore::IG_CHAN;
+			type |= ignore::IG_CHAN;
 		else if (!g_ascii_strcasecmp (word[i], "CTCP"))
-            type |= ignore::IG_CTCP;
+			type |= ignore::IG_CTCP;
 		else if (!g_ascii_strcasecmp (word[i], "INVI"))
-            type |= ignore::IG_INVI;
+			type |= ignore::IG_INVI;
 		else if (!g_ascii_strcasecmp (word[i], "QUIET"))
 			quiet = 1;
 		else if (!g_ascii_strcasecmp (word[i], "NOSAVE"))
-            type |= ignore::IG_NOSAVE;
+			type |= ignore::IG_NOSAVE;
 		else if (!g_ascii_strcasecmp (word[i], "DCC"))
-            type |= ignore::IG_DCC;
+			type |= ignore::IG_DCC;
 		else
 		{
 			sprintf (tbuf, _("Unknown arg '%s' ignored."), word[i]);
@@ -2442,7 +2442,7 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 
 	lastlog_sess = find_dialog (sess->server, "(lastlog)");
 	if (!lastlog_sess)
-        lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, 0);
+		lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, 0);
 
 	lastlog_sess->lastlog_sess = sess;
 	lastlog_sess->lastlog_flags = flags;
@@ -2644,7 +2644,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!(*act))
 		return FALSE;
 
-    if (sess->type == session::SESS_SERVER)
+	if (sess->type == session::SESS_SERVER)
 	{
 		notj_msg (sess);
 		return TRUE;
@@ -2694,7 +2694,7 @@ cmd_mode (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	/* +channel channels are dying, let those servers whine about modes.
 	 * return info about current channel if available and no info is given */
-    if ((*word[2] == '+') || (*word[2] == 0) || (!sess->server->is_channel_name(word[2]) &&
+	if ((*word[2] == '+') || (*word[2] == 0) || (!sess->server->is_channel_name(word[2]) &&
 				!(rfc_casecmp(sess->server->nick, word[2]) == 0)))
 	{
 		if(sess->channel[0] == 0)
@@ -2711,7 +2711,7 @@ mop_cb (struct User *user, multidata *data)
 {
 	if (!user->op)
 	{
-        data->nicks.push_back(user->nick);
+		data->nicks.push_back(user->nick);
 	}
 	return TRUE;
 }
@@ -2819,7 +2819,7 @@ static int
 cmd_names (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	if (*word[2])
-	  	sess->server->p_names (word[2]);
+		sess->server->p_names (word[2]);
 	else
 		sess->server->p_names (sess->channel);
 	return TRUE;
@@ -2842,11 +2842,11 @@ cmd_newserver (struct session *sess, char *tbuf, char *word[],
 {
 	if (strcmp (word[2], "-noconnect") == 0)
 	{
-        new_ircwindow(NULL, word[3], session::SESS_SERVER, 0);
+		new_ircwindow(NULL, word[3], session::SESS_SERVER, 0);
 		return TRUE;
 	}
 	
-    sess = new_ircwindow(NULL, NULL, session::SESS_SERVER, 1);
+	sess = new_ircwindow(NULL, NULL, session::SESS_SERVER, 1);
 	cmd_server (sess, tbuf, word, word_eol);
 	return TRUE;
 }
@@ -2965,7 +2965,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	char *reason = word_eol[3];
 	if (!*chan)
 		chan = sess->channel;
-    if ((*chan) && sess->server->is_channel_name(chan))
+	if ((*chan) && sess->server->is_channel_name(chan))
 	{
 		if (reason[0] == 0)
 			reason = NULL;
@@ -2997,7 +2997,7 @@ open_query (server *serv, char *nick, gboolean focus_existing)
 
 	sess = find_dialog (serv, nick);
 	if (!sess)
-        sess = new_ircwindow(serv, nick, session::SESS_DIALOG, focus_existing);
+		sess = new_ircwindow(serv, nick, session::SESS_DIALOG, focus_existing);
 	else if (focus_existing)
 		fe_ctrl_gui(sess, FE_GUI_FOCUS, 0);	/* bring-to-front */
 
@@ -3021,7 +3021,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		focus = FALSE;
 	}
 
-    if (*nick && !sess->server->is_channel_name(nick))
+	if (*nick && !sess->server->is_channel_name(nick))
 	{
 		struct session *nick_sess;
 
@@ -3074,7 +3074,7 @@ cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (*word[2])
 	{
 		std::string quietmask = create_mask (sess, word[2], "+q", word[3], 0);
-        serv->p_mode(sess->channel, quietmask);
+		serv->p_mode(sess->channel, quietmask);
 	}
 	else
 	{
@@ -3460,7 +3460,7 @@ cmd_servchan (struct session *sess, char *tbuf, char *word[],
 static int
 cmd_topic (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-    if (word[2][0] && sess->server->is_channel_name(word[2]))
+	if (word[2][0] && sess->server->is_channel_name(word[2]))
 		sess->server->p_topic (word[2], word_eol[3]);
 	else
 		sess->server->p_topic (sess->channel, word_eol[2]);
@@ -3764,7 +3764,7 @@ cmd_wallchop (struct session *sess, char *tbuf, char *word[],
 	if (!(*word_eol[2]))
 		return FALSE;
    
-    multidata data;
+	multidata data;
 
 	strcpy (tbuf, "NOTICE ");
 
@@ -3796,7 +3796,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 		while (list)
 		{
 			sess = static_cast<session*>(list->data);
-            if (sess->type == session::SESS_CHANNEL)
+			if (sess->type == session::SESS_CHANNEL)
 			{
 				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
 
@@ -4449,7 +4449,7 @@ user_command (session * sess, char *tbuf, char *cmd, char *word[],
 				  char *word_eol[])
 {
 	if (!auto_insert (tbuf, 2048, (const unsigned char*)cmd, word, word_eol, "", sess->channel, "",
-        sess->server->get_network(true), "",
+		sess->server->get_network(true), "",
 							sess->server->nick, "", ""))
 	{
 		PrintText (sess, _("Bad arguments for user command.\n"));
@@ -4506,7 +4506,7 @@ handle_say (session *sess, char *text, int check_spch)
 	if (!is_session (sess))
 		goto xit;
 
-    if (!sess->channel[0] || sess->type == session::SESS_SERVER || sess->type == session::SESS_NOTICES || sess->type == session::SESS_SNOTICES)
+	if (!sess->channel[0] || sess->type == session::SESS_SERVER || sess->type == session::SESS_NOTICES || sess->type == session::SESS_SNOTICES)
 	{
 		notj_msg (sess);
 		goto xit;
@@ -4519,7 +4519,7 @@ handle_say (session *sess, char *text, int check_spch)
 
 	text = newcmd;
 
-    if (sess->type == session::SESS_DIALOG)
+	if (sess->type == session::SESS_DIALOG)
 	{
 		/* try it via dcc, if possible */
 		dcc = dcc::dcc_write_chat (sess->channel, text);

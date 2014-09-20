@@ -69,22 +69,22 @@ int xtext_get_stamp_str(time_t, char **);
 
 struct textentry
 {
-    struct textentry *next;
-    struct textentry *prev;
-    unsigned char *str;
-    time_t stamp;
-    gint16 str_width;
-    gint16 str_len;
-    gint16 mark_start;
-    gint16 mark_end;
-    gint16 indent;
-    gint16 left_len;
-    GSList *slp;
-    GSList *sublines;
-    guchar tag;
-    guchar pad1;
-    guchar pad2;	/* 32-bit align : 44 bytes total */
-    GList *marks;	/* List of found strings */
+	struct textentry *next;
+	struct textentry *prev;
+	unsigned char *str;
+	time_t stamp;
+	gint16 str_width;
+	gint16 str_len;
+	gint16 mark_start;
+	gint16 mark_end;
+	gint16 indent;
+	gint16 left_len;
+	GSList *slp;
+	GSList *sublines;
+	guchar tag;
+	guchar pad1;
+	guchar pad2;	/* 32-bit align : 44 bytes total */
+	GList *marks;	/* List of found strings */
 };
 
 namespace
@@ -184,9 +184,9 @@ gtk_xtext_text_width_8bit (GtkXText *xtext, unsigned char *str, int len)
 /* ======================================= */
 
 enum emph{
-    EMPH_ITAL = 1,
-    EMPH_BOLD = 2,
-    EMPH_HIDDEN = 4
+	EMPH_ITAL = 1,
+	EMPH_BOLD = 2,
+	EMPH_HIDDEN = 4
 };
 
 static PangoAttrList *attr_lists[4];
@@ -1355,7 +1355,7 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 		(ent_start == ent_end && subline_start > subline_end) || /* different lines */
 		(ent_start == ent_end && subline_start == subline_end && xtext->select_start_x > xtext->select_end_x)) /* marking to the left */
 		{
-		    marking_up = true;
+			marking_up = true;
 		}
 
 	/* word selection */
@@ -1386,7 +1386,7 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 
 		/* ensure ent_start is above ent_end */
 		if (ent_start != ent_end)
-	    {
+		{
 			ent = ent_start;
 			ent_start = ent_end;
 			ent_end = ent;
@@ -1799,7 +1799,7 @@ gtk_xtext_motion_notify (GtkWidget * widget, GdkEventMotion * event)
 			if (!xtext->cursor_resize)
 			{
 				gdk_window_set_cursor (GTK_WIDGET (xtext)->window,
-										  		xtext->resize_cursor);
+												xtext->resize_cursor);
 				xtext->cursor_hand = FALSE;
 				xtext->cursor_resize = TRUE;
 			}
@@ -1821,7 +1821,7 @@ gtk_xtext_motion_notify (GtkWidget * widget, GdkEventMotion * event)
 			if (!xtext->cursor_hand)
 			{
 				gdk_window_set_cursor (GTK_WIDGET (xtext)->window,
-										  		xtext->hand_cursor);
+												xtext->hand_cursor);
 				xtext->cursor_hand = TRUE;
 				xtext->cursor_resize = FALSE;
 			}
@@ -2548,7 +2548,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 	int str_width;
 	GdkDrawable *pix = NULL;
 	int dest_x = 0, dest_y = 0;
-    bool dofill;
+	bool dofill;
 
 	if (xtext->dont_render || len < 1 || xtext->hidden)
 		return 0;
@@ -2585,7 +2585,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		xtext->draw_buf = pix;
 	}
 
-    dofill = true;
+	dofill = true;
 
 	/* backcolor is always handled by XDrawImageString */
 	if (!xtext->backcolor && xtext->pixmap)
@@ -2998,7 +2998,7 @@ gtk_xtext_render_str (GtkXText * xtext, int y, textentry * ent,
 		/* Separate the left part, the space and the right part
 		   into separate runs, and reset bidi state inbetween.
 		   Perform this only on the first line of the message.
-                */
+				*/
 		if (offset == 0)
 		{
 			/* we've reached the end of the left part? */

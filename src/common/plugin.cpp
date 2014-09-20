@@ -464,7 +464,7 @@ plugin_auto_load (session *sess)
 	for_files (lib_dir, "hcchecksum.dll", plugin_auto_load_cb);
 	for_files (lib_dir, "hcdoat.dll", plugin_auto_load_cb);
 	for_files (lib_dir, "hcexec.dll", plugin_auto_load_cb);
-    for_files (lib_dir, "hcnotifications.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "hcnotifications.dll", plugin_auto_load_cb);
 	for_files (lib_dir, "hcfishlim.dll", plugin_auto_load_cb);
 	for_files (lib_dir, "hcmpcinfo.dll", plugin_auto_load_cb);
 	for_files (lib_dir, "hcperl.dll", plugin_auto_load_cb);
@@ -1163,7 +1163,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 			return sess->server->last_away_reason.c_str();
 		return NULL;
 
-  	case 0x2c0b7d03: /* channel */
+	case 0x2c0b7d03: /* channel */
 		return sess->channel;
 
 	case 0x2c0d614c: /* charset */
@@ -1188,7 +1188,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return sess->current_modes;
 
 	case 0x6de15a2e:	/* network */
-        return sess->server->get_network(false);
+		return sess->server->get_network(false);
 
 	case 0x339763: /* nick */
 		return sess->server->nick;
@@ -1465,7 +1465,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x38b735af: /* context */
 			return static_cast<const char*>(data);	/* this is a session * */
 		case 0x6de15a2e: /* network */
-            return ((session *)data)->server->get_network(false);
+			return ((session *)data)->server->get_network(false);
 		case 0x8455e723: /* nickprefixes */
 			return ((session *)data)->server->nick_prefixes.c_str();
 		case 0x829689ad: /* nickmodes */
@@ -1984,36 +1984,36 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 {
 	char confname[64];
 
-    {
-        std::function<void(gpointer)> dltr(g_free);
-        std::unique_ptr<gchar, decltype(dltr)> token(g_strdup(pl->name), dltr);
-        canonalize_key(token.get());
-        snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
-    }
+	{
+		std::function<void(gpointer)> dltr(g_free);
+		std::unique_ptr<gchar, decltype(dltr)> token(g_strdup(pl->name), dltr);
+		canonalize_key(token.get());
+		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
+	}
 
-    if (!io::fs::exists(confname)) /* no existing config file, no parsing */
-        return 0;
+	if (!io::fs::exists(confname)) /* no existing config file, no parsing */
+		return 0;
 
-    /* clean up garbage */
-    strcpy(dest, "");
-    auto fd = io::fs::open_stream(confname, std::ios::in, 0, 0);
-    boost::iostreams::stream_buffer<boost::iostreams::file_descriptor> buff(fd);
-    std::istream stream(&buff);
-    for (std::string line; std::getline(stream, line, '\n');)
-    {
-        auto eq = line.find_first_of('=');
-        if (eq == std::string::npos)
-            continue;
-        auto part1 = line.substr(0, eq);
-        auto part2 = line.substr(eq);
-        boost::algorithm::trim(part1);
-        boost::algorithm::trim(part2);
-        // we have no idea how long dest is...
-        g_strlcat(dest, part1.c_str(), 4096);
-        g_strlcat(dest, ",", 4096);
-        g_strlcat(dest, part2.c_str(), 4096);
-        g_strlcat(dest, ",", 4096);
-    }
+	/* clean up garbage */
+	strcpy(dest, "");
+	auto fd = io::fs::open_stream(confname, std::ios::in, 0, 0);
+	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor> buff(fd);
+	std::istream stream(&buff);
+	for (std::string line; std::getline(stream, line, '\n');)
+	{
+		auto eq = line.find_first_of('=');
+		if (eq == std::string::npos)
+			continue;
+		auto part1 = line.substr(0, eq);
+		auto part2 = line.substr(eq);
+		boost::algorithm::trim(part1);
+		boost::algorithm::trim(part2);
+		// we have no idea how long dest is...
+		g_strlcat(dest, part1.c_str(), 4096);
+		g_strlcat(dest, ",", 4096);
+		g_strlcat(dest, part2.c_str(), 4096);
+		g_strlcat(dest, ",", 4096);
+	}
 
 	return 1;
 }

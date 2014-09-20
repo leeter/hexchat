@@ -27,29 +27,29 @@
 
 namespace io
 {
-    namespace tcp{
-        enum class connection_security{
-            none,
-            enforced,
-            no_verify
-        };
+	namespace tcp{
+		enum class connection_security{
+			none,
+			enforced,
+			no_verify
+		};
 
-        class connection{
-        public:
-            static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
-            virtual void enqueue_message(const std::string & message) = 0;
-            virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
-            virtual bool connected() const = 0;
-            virtual void poll() = 0;
-            virtual ~connection(){}
-            boost::signals2::signal<void(const boost::system::error_code&)> on_connect;
-            boost::signals2::signal<void(const std::string& hostname)> on_valid_connection;
-            boost::signals2::signal<void(const boost::system::error_code&)> on_error;
-            boost::signals2::signal<void(const std::string & message, size_t length)> on_message;
-            boost::signals2::signal<void(const SSL*)> on_ssl_handshakecomplete;
-        };
+		class connection{
+		public:
+			static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
+			virtual void enqueue_message(const std::string & message) = 0;
+			virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
+			virtual bool connected() const = 0;
+			virtual void poll() = 0;
+			virtual ~connection(){}
+			boost::signals2::signal<void(const boost::system::error_code&)> on_connect;
+			boost::signals2::signal<void(const std::string& hostname)> on_valid_connection;
+			boost::signals2::signal<void(const boost::system::error_code&)> on_error;
+			boost::signals2::signal<void(const std::string & message, size_t length)> on_message;
+			boost::signals2::signal<void(const SSL*)> on_ssl_handshakecomplete;
+		};
 
-        boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
-    }
+		boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
+	}
 }
 #endif
