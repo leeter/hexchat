@@ -29,16 +29,18 @@
 #define GTK_IS_XTEXT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_TYPE_XTEXT))
 #define GTK_XTEXT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_XTEXT, GtkXTextClass))
 
-#define ATTR_BOLD			'\002'
-#define ATTR_COLOR		'\003'
-#define ATTR_BLINK		'\006'
-#define ATTR_BEEP			'\007'
-#define ATTR_HIDDEN		'\010'
-#define ATTR_ITALICS2	'\011'
-#define ATTR_RESET		'\017'
-#define ATTR_REVERSE		'\026'
-#define ATTR_ITALICS		'\035'
-#define ATTR_UNDERLINE	'\037'
+enum text_attr{
+    ATTR_BOLD		=	'\002',
+    ATTR_COLOR		='\003',
+    ATTR_BLINK		='\006',
+    ATTR_BEEP		=	'\007',
+    ATTR_HIDDEN		='\010',
+    ATTR_ITALICS2	='\011',
+    ATTR_RESET		='\017',
+    ATTR_REVERSE	=	'\026',
+    ATTR_ITALICS	=	'\035',
+    ATTR_UNDERLINE	='\037'
+};
 
 /* these match palette.h */
 #define XTEXT_MIRC_COLS 32
@@ -51,8 +53,8 @@
 #define XTEXT_MAX_COLOR 41
 
 
-typedef struct _GtkXText GtkXText;
-typedef struct _GtkXTextClass GtkXTextClass;
+struct GtkXText;
+struct GtkXTextClass;
 struct textentry;
 
 /*
@@ -69,15 +71,15 @@ typedef union offsets_u {
 	guint32 u;
 } offsets_t;
 
-typedef enum marker_reset_reason_e {
+enum marker_reset_reason {
 	MARKER_WAS_NEVER_SET,
 	MARKER_IS_SET,
 	MARKER_RESET_MANUALLY,
 	MARKER_RESET_BY_KILL,
 	MARKER_RESET_BY_CLEAR
-} marker_reset_reason;
+};
 
-typedef struct {
+struct xtext_buffer {
 	GtkXText *xtext;					/* attached to this widget */
 
 	gfloat old_value;					/* last known adj->value */
@@ -119,9 +121,9 @@ typedef struct {
 	offsets_t curdata;		/* current offset info, from *curmark */
 	GRegex *search_re;		/* Compiled regular expression */
 	textentry *hintsearch;	/* textentry found for last search */
-} xtext_buffer;
+};
 
-struct _GtkXText
+struct GtkXText
 {
 	GtkWidget widget;
 
@@ -245,7 +247,7 @@ struct _GtkXText
 	unsigned int ignore_hidden:1;	/* rawlog uses this */
 };
 
-struct _GtkXTextClass
+struct GtkXTextClass
 {
 	GtkWidgetClass parent_class;
 	void (*word_click) (GtkXText * xtext, char *word, GdkEventButton * event);
