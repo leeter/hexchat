@@ -333,7 +333,7 @@ get_xdir (void)
 			if (size)
 			{
 				exe_path.resize(size);
-				auto path = fs::path(exe_path);
+				auto path = fs::canonical(exe_path);
 				path = path.remove_filename();
 				path /= L"config";
 				xdir = g_strdup(charset::narrow(path.wstring()).c_str());

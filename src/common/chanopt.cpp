@@ -32,6 +32,8 @@
 #include <utility>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/exception/diagnostic_information.hpp> 
+#include <boost/exception_ptr.hpp>  
 
 #include "hexchat.hpp"
 #include "chanopt.hpp"
@@ -302,10 +304,18 @@ chanopt_find (const std::string & network, const std::string& channel)
 static void
 chanopt_load_all (void)
 {
-	chanopt_in_memory current;
 
+	chanopt_in_memory current;
+	bio::file_descriptor fd;
 	/* 1. load the old file into our vector */
-	auto fd = io::fs::open_stream("chanopt.conf", std::ios::in, 0, 0);
+	try
+	{
+		fd = io::fs::open_stream("chanopt.conf", std::ios::in, 0, 0);
+	}
+	catch (const boost::exception&)
+	{
+		return; // nothing to load
+	}
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::istream stream(&fbuf);
 	while (stream >> current)
@@ -397,7 +407,15 @@ chanopt_save_all (void)
 		return;
 	}
 
-	auto fd = io::fs::open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, io::fs::XOF_DOMODE);
+	bio::file_descriptor fd;
+	try
+	{
+		fd = io::fs::open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, io::fs::XOF_DOMODE);
+	}
+	catch (const boost::exception& ex)
+	{
+		return;
+	} 
 	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
 	std::ostream stream(&fbuf);
 	for (const auto& co : chanopts)
