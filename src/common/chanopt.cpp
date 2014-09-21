@@ -31,9 +31,7 @@
 #include <vector>
 #include <utility>
 #include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/exception/diagnostic_information.hpp> 
-#include <boost/exception_ptr.hpp>  
+#include <boost/iostreams/stream.hpp>  
 
 #include "hexchat.hpp"
 #include "chanopt.hpp"
@@ -412,7 +410,7 @@ chanopt_save_all (void)
 	{
 		fd = io::fs::open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, io::fs::XOF_DOMODE);
 	}
-	catch (const boost::exception& ex)
+	catch (const boost::exception&)
 	{
 		return;
 	} 
