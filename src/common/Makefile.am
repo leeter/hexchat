@@ -76,7 +76,7 @@ libhexchatcommon_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOO
 textenums.h: textevents.h
 
 textevents.h: $(srcdir)/textevents.in make-te
-	$(AM_V_GEN) $(srcdir)/make-te < $< > $@ 2> textenums.h
+	$(AM_V_GEN) ./make-te < $< > $@ 2> textenums.h
 
 marshal.h: $(srcdir)/marshalers.list
 	$(AM_V_GEN) $(GLIB_GENMARSHAL) --prefix=_hexchat_marshal --header $< > $@
