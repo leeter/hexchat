@@ -71,7 +71,7 @@ typedef GdkPixbuf* TrayIcon;
 #define ICON_MSG pix_tray_message
 #define ICON_HILIGHT pix_tray_highlight
 #define ICON_FILE pix_tray_fileoffer
-#define TIMEOUT 500
+const int timeout = 500;
 
 static GtkStatusIcon *sticon;
 static gint flash_tag;
@@ -262,10 +262,10 @@ tray_stop_flash (void)
 		nets = tray_count_networks ();
 		chans = tray_count_channels ();
 		if (nets)
-			tray_set_tipf (_(DISPLAY_NAME": Connected to %u networks and %u channels"),
+			tray_set_tipf (_(DISPLAY_NAME ": Connected to %u networks and %u channels"),
 								nets, chans);
 		else
-			tray_set_tipf (DISPLAY_NAME": %s", _("Not connected."));
+			tray_set_tipf (DISPLAY_NAME ": %s", _("Not connected."));
 	}
 
 	if (custom_icon1)
@@ -337,7 +337,7 @@ tray_set_flash (TrayIcon icon)
 
 	gtk_status_icon_set_from_pixbuf (sticon, icon);
 	if (prefs.hex_gui_tray_blink)
-		flash_tag = g_timeout_add (TIMEOUT, (GSourceFunc) tray_timeout_cb, icon);
+		flash_tag = g_timeout_add (timeout, (GSourceFunc) tray_timeout_cb, icon);
 }
 
 void
@@ -350,7 +350,7 @@ fe_tray_set_flash (const char *filename1, const char *filename2, int tout)
 	tray_stop_flash ();
 
 	if (tout == -1)
-		tout = TIMEOUT;
+		tout = timeout;
 
 	custom_icon1 = tray_icon_from_file (filename1);
 	if (filename2)
