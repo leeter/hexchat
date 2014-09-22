@@ -20,6 +20,8 @@
 * THE SOFTWARE.
 */
 
+#include <SDKDDKVer.h>
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT_TYPED_ITEMIDS
@@ -32,8 +34,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <Windows.h>
-#include <SDKDDKVer.h>
-#include <Psapi.h>
 #include <ShlObj.h>
 #include <Shobjidl.h>
 #include <Propvarutil.h>
@@ -56,10 +56,28 @@ namespace
 	const char helptext[] = "Notifies the user using Toast notifications";
 	const wchar_t AppId[] = L"Hexchat.Desktop.Notify";
 
-	static int
-		cmd_cb(const char * const word[], const char * const word_eol[], void *)
+	enum class WinStatus
 	{
-		return HEXCHAT_EAT_ALL;
+		WS_FOCUSED,
+		WS_NORMAL,
+		WS_HIDDEN
+	};
+
+	WinStatus
+	get_window_status()
+	{
+		const char * st = hexchat_get_info(ph, "win_status");
+
+		if (!st)
+			return WinStatus::WS_HIDDEN;
+
+		if (!strcmp(st, "active"))
+			return WinStatus::WS_FOCUSED;
+
+		if (!strcmp(st, "hidden"))
+			return WinStatus::WS_HIDDEN;
+
+		return WinStatus::WS_NORMAL;
 	}
 
 	std::wstring widen(const std::string & to_widen)
@@ -79,13 +97,13 @@ namespace
 	{
 		wchar_t exePath[MAX_PATH];
 
-		DWORD charWritten = GetModuleFileNameExW(GetCurrentProcess(), nullptr, exePath, ARRAYSIZE(exePath));
+		DWORD charWritten = GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
 
 		HRESULT hr = charWritten > 0 ? S_OK : E_FAIL;
 
 		if (SUCCEEDED(hr))
 		{
-			Microsoft::WRL::ComPtr<IShellLink> shellLink;
+			Microsoft::WRL::ComPtr<IShellLinkW> shellLink;
 			hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&shellLink));
 
 			if (SUCCEEDED(hr))
@@ -154,21 +172,35 @@ namespace
 	}
 	
 	static int handle_incoming(const char *const word[], const char *const word_eol[], void*) {
+
+		// is this the active channel or is the window focused?
+		if (hexchat_get_context(ph) == hexchat_find_context(ph, nullptr, nullptr) &&
+			get_window_status() == WinStatus::WS_FOCUSED)
+		{
+			return HEXCHAT_EAT_NONE;
+		}
+
+		const std::string nick(hexchat_get_info(ph, "nick"));
+
+
+		if (nick != word[3] && std::string(word_eol[4]).find(nick) == std::string::npos)
+			return HEXCHAT_EAT_NONE;
+
+		const std::string channel(hexchat_get_info(ph, "channel"));
+		const std::string server_name(hexchat_get_info(ph, "server"));
+
 		try
 		{
-			const std::string nick(hexchat_get_info(ph, "nick"));
-			if (nick != word[3] && std::string(word_eol[4]).find(nick) == std::string::npos)
-				return HEXCHAT_EAT_NONE;
-
 			auto toastTemplate =
 				Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
 					Windows::UI::Notifications::ToastTemplateType::ToastText04);
 			auto node_list = toastTemplate->GetElementsByTagName(L"text");
 			UINT node_count = node_list->Length;
+
 			// put the channel name first
 			node_list->GetAt(0)->AppendChild(
 				toastTemplate->CreateTextNode(
-					ref new Platform::String(widen(word[3]).c_str())));
+					ref new Platform::String(widen(server_name + " - " + channel).c_str())));
 
 			// this should be the nick
 			auto wide_nick = widen(word[1]);
@@ -209,7 +241,7 @@ namespace
 int
 hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
-	if (!IsWindows8OrGreater())
+	if (!IsWindows8Point1OrGreater())
 		return FALSE;
 	HRESULT hr = Windows::Foundation::Initialize(RO_INIT_SINGLETHREADED);
 	if (FAILED(hr))
@@ -226,7 +258,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 	
    // hexchat_hook_command(ph, "RTNOTIFIY", HEXCHAT_PRI_NORM, cmd_cb, helptext, nullptr);
 	hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
-	hexchat_command(ph, "MENU -ishare\\system.png ADD \"Window/Set up WinRT Notifications\" \"RTNOTIFY\"");
+	//hexchat_command(ph, "MENU -ishare\\system.png ADD \"Window/Set up WinRT Notifications\" \"RTNOTIFY\"");
 	
 	hexchat_printf(ph, "%s plugin loaded\n", name);
 
