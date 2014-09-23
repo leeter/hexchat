@@ -3522,7 +3522,7 @@ cmd_unignore (struct session *sess, char *tbuf, char *word[],
 			snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
 		}
 		
-		if (ignore_del (mask, NULL))
+		if (ignore_del (mask))
 		{
 			if (g_ascii_strcasecmp (arg, "QUIET"))
 				EMIT_SIGNAL (XP_TE_IGNOREREMOVE, sess, mask, NULL, NULL, NULL, 0);

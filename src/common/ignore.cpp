@@ -48,28 +48,20 @@ int ignored_priv = 0;
 int ignored_chan = 0;
 int ignored_noti = 0;
 int ignored_invi = 0;
+
+static std::vector<ignore> ignores;
 static int ignored_total = 0;
-static GSList *ignore_list = nullptr;
 /* ignore_exists ():
  * returns: struct ig, if this mask is in the ignore list already
  *          NULL, otherwise
  */
-struct ignore *
+boost::optional<ignore &>
 ignore_exists (const std::string& mask)
 {
-	struct ignore *ig = nullptr;
-	GSList *list;
-
-	list = ignore_list;
-	while (list)
-	{
-		ig = static_cast<struct ignore *>(list->data);
-		if (!rfc_casecmp (ig->mask.c_str(), mask.c_str()))
-			return ig;
-		list = list->next;
-	}
-	return nullptr;
-
+	auto res = std::find_if(ignores.begin(), ignores.end(), [&mask](const ignore & ig){
+		return !rfc_casecmp(ig.mask.c_str(), mask.c_str());
+	});
+	return res != ignores.end() ? boost::make_optional<ignore&>(*res) : boost::none;
 }
 
 /* ignore_add(...)
@@ -83,16 +75,16 @@ ignore_exists (const std::string& mask)
 int
 ignore_add(const std::string& mask, int type, bool overwrite)
 {
-	struct ignore *ig = NULL;
 	bool change_only = false;
 
 	/* first check if it's already ignored */
-	ig = ignore_exists (mask);
+	auto ig = ignore_exists (mask);
 	if (ig)
 		change_only = true;
 
+	ignore new_ig;
 	if (!change_only)
-		ig = new struct ignore();
+		ig = new_ig;
 
 	if (!ig)
 		return 0;
@@ -105,7 +97,7 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 		ig->type = type;
 
 	if (!change_only)
-		ignore_list = g_slist_prepend (ignore_list, ig);
+		ignores.push_back(ig.get());
 	fe_ignore_update (1);
 
 	if (change_only)
@@ -117,44 +109,38 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 void
 ignore_showlist (session *sess)
 {
-	struct ignore *ig;
-	GSList *list = ignore_list;
 	char tbuf[256];
-	int i = 0;
 
 	EMIT_SIGNAL (XP_TE_IGNOREHEADER, sess, 0, 0, 0, 0, 0);
 
-	while (list)
+	for (const auto & ig : ignores)
 	{
-		ig = static_cast<ignore*>(list->data);
-		i++;
-
-		snprintf (tbuf, sizeof (tbuf), " %-25s ", ig->mask.c_str());
-		if (ig->type & ignore::IG_PRIV)
+		snprintf (tbuf, sizeof (tbuf), " %-25s ", ig.mask.c_str());
+		if (ig.type & ignore::IG_PRIV)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_NOTI)
+		if (ig.type & ignore::IG_NOTI)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_CHAN)
+		if (ig.type & ignore::IG_CHAN)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_CTCP)
+		if (ig.type & ignore::IG_CTCP)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_DCC)
+		if (ig.type & ignore::IG_DCC)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_INVI)
+		if (ig.type & ignore::IG_INVI)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
-		if (ig->type & ignore::IG_UNIG)
+		if (ig.type & ignore::IG_UNIG)
 			strcat (tbuf, _("YES  "));
 		else
 			strcat (tbuf, _("NO   "));
@@ -162,10 +148,9 @@ ignore_showlist (session *sess)
 		PrintText (sess, tbuf);
 		/*EMIT_SIGNAL (XP_TE_IGNORELIST, sess, ig->mask, 0, 0, 0, 0); */
 		/* use this later, when TE's support 7 args */
-		list = list->next;
 	}
 
-	if (!i)
+	if (ignores.empty())
 		EMIT_SIGNAL (XP_TE_IGNOREEMPTY, sess, 0, 0, 0, 0, 0);
 
 	EMIT_SIGNAL (XP_TE_IGNOREFOOTER, sess, 0, 0, 0, 0, 0);
@@ -178,29 +163,15 @@ ignore_showlist (session *sess)
  */
 
 bool
-ignore_del(const std::string& mask, struct ignore *ig)
+ignore_del(const std::string& mask)
 {
-	if (!ig)
-	{
-		GSList *list = ignore_list;
-
-		while (list)
-		{
-			ig = (struct ignore *) list->data;
-			if (!rfc_casecmp (ig->mask.c_str(), mask.c_str()))
-				break;
-			list = list->next;
-			ig = 0;
-		}
-	}
-	if (ig)
-	{
-		ignore_list = g_slist_remove (ignore_list, ig);
-		delete ig;
-		fe_ignore_update (1);
-		return true;
-	}
-	return false;
+	auto old_size = ignores.size();
+	auto res = ignores.erase(
+		std::remove_if(ignores.begin(), ignores.end(), [&mask](const ignore & ig){
+			return !rfc_casecmp(ig.mask.c_str(), mask.c_str());
+		}));
+	fe_ignore_update(1);
+	return ignores.size() != old_size;
 }
 
 /* check if a msg should be ignored by browsing our ignore list */
@@ -208,32 +179,24 @@ ignore_del(const std::string& mask, struct ignore *ig)
 bool
 ignore_check(const std::string& mask, ignore::ignore_type type)
 {
-	struct ignore *ig;
-	GSList *list = ignore_list;
-
 	/* check if there's an UNIGNORE first, they take precendance. */
-	while (list)
+	for(const auto & ig : ignores)
 	{
-		ig = static_cast<struct ignore *>(list->data);
-		if (ig->type & ignore::IG_UNIG)
+		if (ig.type & ignore::IG_UNIG)
 		{
-			if (ig->type & type)
+			if (ig.type & type)
 			{
-				if (match (ig->mask.c_str(), mask.c_str()))
+				if (match (ig.mask.c_str(), mask.c_str()))
 					return false;
 			}
 		}
-		list = list->next;
 	}
 
-	list = ignore_list;
-	while (list)
+	for(const auto & ig : ignores)
 	{
-		ig = static_cast<struct ignore *>(list->data);
-
-		if (ig->type & type)
+		if (ig.type & type)
 		{
-			if (match (ig->mask.c_str(), mask.c_str()))
+			if (match (ig.mask.c_str(), mask.c_str()))
 			{
 				ignored_total++;
 				if (type & ignore::IG_PRIV)
@@ -250,14 +213,13 @@ ignore_check(const std::string& mask, ignore::ignore_type type)
 				return true;
 			}
 		}
-		list = list->next;
 	}
 
 	return false;
 }
 
 static char *
-ignore_read_next_entry (char *my_cfg, struct ignore *ignore)
+ignore_read_next_entry (char *my_cfg, ignore &ig)
 {
 	char tbuf[1024];
 
@@ -268,12 +230,12 @@ ignore_read_next_entry (char *my_cfg, struct ignore *ignore)
 		my_cfg = cfg_get_str (my_cfg, "mask", tbuf, sizeof (tbuf));
 		if (!my_cfg)
 			return NULL;
-		ignore->mask = tbuf;
+		ig.mask = tbuf;
 	}
 	if (my_cfg)
 	{
 		my_cfg = cfg_get_str (my_cfg, "type", tbuf, sizeof (tbuf));
-		ignore->type = atoi (tbuf);
+		ig.type = atoi (tbuf);
 	}
 	return my_cfg;
 }
@@ -281,7 +243,6 @@ ignore_read_next_entry (char *my_cfg, struct ignore *ignore)
 void
 ignore_load ()
 {
-	struct ignore *ignore;
 	struct stat st;
 	char *my_cfg;
 	int fh, i;
@@ -300,11 +261,9 @@ ignore_load ()
 			my_cfg = &cfg[0];
 			while (my_cfg)
 			{
-				ignore = new struct ignore();
-				if ((my_cfg = ignore_read_next_entry(my_cfg, ignore)))
-					ignore_list = g_slist_prepend(ignore_list, ignore);
-				else
-					delete ignore;
+				ignore ig;
+				if ((my_cfg = ignore_read_next_entry(my_cfg, ig)))
+					ignores.push_back(ig);
 			}
 		}
 		close (fh);
@@ -316,26 +275,21 @@ ignore_save ()
 {
 	char buf[1024];
 	int fh;
-	GSList *temp = ignore_list;
-	struct ignore *ig;
 
 	fh = hexchat_open_file ("ignore.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
-		while (temp)
+		for(const auto & ig : ignores) //while (temp)
 		{
-			ig = static_cast<struct ignore *>(temp->data);
-			if (!(ig->type & ignore::IG_NOSAVE))
+			if (!(ig.type & ignore::IG_NOSAVE))
 			{
 				snprintf (buf, sizeof (buf), "mask = %s\ntype = %u\n\n",
-							 ig->mask.c_str(), ig->type);
+							 ig.mask.c_str(), ig.type);
 				write (fh, buf, strlen (buf));
 			}
-			temp = temp->next;
 		}
 		close (fh);
 	}
-
 }
 
 static gboolean
@@ -428,9 +382,9 @@ flood_check (const char *nick, const char *ip, server *serv, session *sess, floo
 	return true;
 }
 
-GSList * 
+const std::vector<ignore>&
 get_ignore_list()
 {
-	return ignore_list;
+	return ignores;
 }
 

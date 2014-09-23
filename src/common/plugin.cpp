@@ -90,6 +90,8 @@ struct t_hexchat_list
 	GSList *head;		/* for LIST_USERS only */
 	struct notify_per_server *notifyps;	/* notify_per_server * */
 	bool is_vector;
+	size_t loc;
+	size_t length;
 };
 
 typedef int (hexchat_cmd_cb)(const char * const word[], const char * const word_eol[], void *user_data);
@@ -200,7 +202,7 @@ plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 {
 	hexchat_plugin *pl;
 
-	pl = new(std::nothrow) hexchat_plugin();// static_cast<hexchat_plugin*>(calloc(1, sizeof(hexchat_plugin)));
+	pl = new hexchat_plugin();// static_cast<hexchat_plugin*>(calloc(1, sizeof(hexchat_plugin)));
 	pl->handle = handle;
 	pl->filename = filename;
 	pl->context = ctx;
@@ -1297,7 +1299,9 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 
 	case 0xb90bfdd2:	/* ignore */
 		list->type = LIST_IGNORE;
-		list->next = get_ignore_list();
+		list->is_vector = true;
+		list->loc = 0;
+		list->length = get_ignore_list().size();
 		break;
 
 	case 0xc2079749:	/* notify */
@@ -1334,6 +1338,18 @@ hexchat_list_free (hexchat_plugin *ph, hexchat_list *xlist)
 int
 hexchat_list_next (hexchat_plugin *ph, hexchat_list *xlist)
 {
+	if (xlist->is_vector)
+	{
+		if (xlist->loc < xlist->length)
+		{
+			xlist->loc++;
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
 	if (xlist->next == NULL)
 		return 0;
 
@@ -1491,7 +1507,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x3306ec:	/* mask */
-			return ((struct ignore *)data)->mask.c_str();
+			return get_ignore_list()[xlist->loc].mask.c_str();
 		}
 		break;
 
@@ -1574,7 +1590,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x5cfee87:	/* flags */
-			return ((struct ignore *)data)->type;
+			return get_ignore_list()[xlist->loc].type;
 		}
 		break;
 

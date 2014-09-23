@@ -22,8 +22,7 @@
 
 #include <string>
 #include <vector>
-
-//extern GSList *ignore_list;
+#include <boost/optional.hpp>
 
 extern int ignored_ctcp;
 extern int ignored_priv;
@@ -59,11 +58,11 @@ enum class flood_check_type
 	PRIV
 };
 
-GSList * get_ignore_list();
-struct ignore *ignore_exists (const std::string& mask);
+const std::vector<ignore>& get_ignore_list();
+boost::optional<ignore &> ignore_exists (const std::string& mask);
 int ignore_add(const std::string& mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
-bool ignore_del(const std::string& mask, struct ignore *ig);
+bool ignore_del(const std::string& mask);
 bool ignore_check(const std::string& mask, ignore::ignore_type type);
 void ignore_load (void);
 void ignore_save (void);

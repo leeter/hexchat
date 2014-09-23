@@ -101,7 +101,7 @@ mask_edited (GtkCellRendererText *render, gchar *path, gchar *newStr, gpointer d
 	else
 	{
 		/* delete old mask, and add new one with original flags */
-		ignore_del (old, NULL);
+		ignore_del (old);
 		flags = ignore_get_flags (GTK_TREE_MODEL (store), &iter);
 		ignore_add (newStr, flags, TRUE);
 
@@ -221,7 +221,7 @@ ignore_delete_entry_clicked (GtkWidget * wid, struct session *sess)
 			gtk_tree_path_free (path);
 		}
 
-		ignore_del (mask, NULL);
+		ignore_del (mask);
 		g_free (mask);
 	}
 }
@@ -273,7 +273,7 @@ ignore_clear_cb (GtkDialog *dialog, gint response)
 		{
 			mask = NULL;
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, MASK_COLUMN, &mask, -1);
-			ignore_del (mask, NULL);
+			ignore_del (mask);
 			g_free (mask);
 		}
 		while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
@@ -336,7 +336,7 @@ ignore_gui_open ()
 	GtkWidget *view;
 	GtkListStore *store;
 	GtkTreeIter iter;
-	GSList *temp = get_ignore_list();
+	
 	const char *mask;
 	gboolean priv, chan, notice, ctcp, dcc, invite, unignore;
 
@@ -385,19 +385,17 @@ ignore_gui_open ()
 						 0, _("Clear"));
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
-
-	while (temp)
+	auto ignores = get_ignore_list();
+	for(const auto & ig : ignores)
 	{
-		struct ignore *ignore = static_cast<struct ignore *>(temp->data);
-
-		mask = ignore->mask.c_str();
-		chan = (ignore->type & ignore::IG_CHAN);
-		priv = (ignore->type & ignore::IG_PRIV);
-		notice = (ignore->type & ignore::IG_NOTI);
-		ctcp = (ignore->type & ignore::IG_CTCP);
-		dcc = (ignore->type & ignore::IG_DCC);
-		invite = (ignore->type & ignore::IG_INVI);
-		unignore = (ignore->type & ignore::IG_UNIG);
+		mask = ig.mask.c_str();
+		chan = (ig.type & ignore::IG_CHAN);
+		priv = (ig.type & ignore::IG_PRIV);
+		notice = (ig.type & ignore::IG_NOTI);
+		ctcp = (ig.type & ignore::IG_CTCP);
+		dcc = (ig.type & ignore::IG_DCC);
+		invite = (ig.type & ignore::IG_INVI);
+		unignore = (ig.type & ignore::IG_UNIG);
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,
@@ -410,8 +408,6 @@ ignore_gui_open ()
 							INVITE_COLUMN, invite,
 							UNIGNORE_COLUMN, unignore,
 							-1);
-		
-		temp = temp->next;
 	}
 	gtk_widget_show (ignorewin);
 }
