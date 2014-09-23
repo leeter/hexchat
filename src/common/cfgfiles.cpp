@@ -870,14 +870,13 @@ load_default_config(void)
 	strcpy (prefs.hex_away_reason, _("I'm busy"));
 	strcpy (prefs.hex_completion_suffix, ",");
 #ifdef WIN32
-	std::function<void __stdcall(void*)> dltr(CoTaskMemFree);
 	if (portable_mode () || SHGetKnownFolderPath (FOLDERID_Downloads, 0, NULL, &roaming_path_wide) != S_OK)
 	{
 		snprintf (prefs.hex_dcc_dir, sizeof (prefs.hex_dcc_dir), "%s\\downloads", get_xdir ());
 	}
 	else
 	{
-		std::unique_ptr<wchar_t, decltype(dltr)> wide_path(roaming_path_wide, dltr);
+		std::unique_ptr<wchar_t, decltype(&::CoTaskMemFree)> wide_path(roaming_path_wide, &::CoTaskMemFree);
 		auto roaming_path = charset::narrow(roaming_path_wide);
 
 		g_strlcpy (prefs.hex_dcc_dir, roaming_path.c_str(), sizeof (prefs.hex_dcc_dir));

@@ -2001,8 +2001,7 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 	char confname[64];
 
 	{
-		std::function<void(gpointer)> dltr(g_free);
-		std::unique_ptr<gchar, decltype(dltr)> token(g_strdup(pl->name), dltr);
+		std::unique_ptr<gchar, decltype(&::g_free)> token(g_strdup(pl->name), &::g_free);
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
 	}
