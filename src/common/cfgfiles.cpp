@@ -198,7 +198,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 {
 	char buffer[128];	/* should be plenty for a variable name */
 
-	sprintf (buffer, "%s ", var);	/* add one space, this way it works against var - var2 checks too */
+	snprintf (buffer, sizeof(buffer), "%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
 	while (1)
 	{
