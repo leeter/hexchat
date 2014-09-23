@@ -3538,7 +3538,7 @@ cmd_unload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 #ifdef USE_PLUGIN
 	gboolean by_file = FALSE;
 
-	if (g_str_has_suffix (word[2], "."G_MODULE_SUFFIX))
+	if (g_str_has_suffix (word[2], "." G_MODULE_SUFFIX))
 		by_file = TRUE;
 
 	switch (plugin_kill (word[2], by_file))
@@ -3563,7 +3563,7 @@ cmd_reload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 #ifdef USE_PLUGIN
 	gboolean by_file = FALSE;
 
-	if (g_str_has_suffix (word[2], "."G_MODULE_SUFFIX))
+	if (g_str_has_suffix (word[2], "." G_MODULE_SUFFIX))
 		by_file = TRUE;
 
 	switch (plugin_reload (sess, word[2], by_file))
