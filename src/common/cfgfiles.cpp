@@ -202,10 +202,11 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 
 	while (1)
 	{
-		if (!g_ascii_strncasecmp (buffer, cfg, strlen (var) + 1))
+		auto var_len = strlen(var);
+		if (!g_ascii_strncasecmp (buffer, cfg, var_len + 1))
 		{
 			char *value, t;
-			cfg += strlen (var);
+			cfg += var_len;
 			while (*cfg == ' ')
 				cfg++;
 			if (*cfg == '=')
