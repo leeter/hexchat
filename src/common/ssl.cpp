@@ -67,13 +67,11 @@ __SSL_critical_error (const std::string & funcname)
 	std::exit (1);
 }
 
-
-auto bio_deleter = [](BIO* d){ BIO_free(d); };
 static std::string
 ASN1_TIME_to_string(ASN1_TIME * tm)
 {
 	char *expires = nullptr;
-	std::unique_ptr<BIO, decltype(bio_deleter)> inMem(BIO_new(BIO_s_mem()), bio_deleter);
+	std::unique_ptr<BIO, decltype(&::BIO_free)> inMem(BIO_new(BIO_s_mem()), &BIO_free);
 
 	ASN1_TIME_print(inMem.get(), tm);
 	BIO_get_mem_data(inMem.get(), &expires);
