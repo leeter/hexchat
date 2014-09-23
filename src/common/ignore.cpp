@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <sstream>
 #include <vector>
 #include <cstdlib>
 #include <cstdio>
@@ -23,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <boost/format.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -109,43 +111,47 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 void
 ignore_showlist (session *sess)
 {
-	char tbuf[256];
+	//char tbuf[256];
 
 	EMIT_SIGNAL (XP_TE_IGNOREHEADER, sess, 0, 0, 0, 0, 0);
 
+	const std::string yes_str(_("YES  "));
+	const std::string no_str(_("NO   "));
+
 	for (const auto & ig : ignores)
 	{
-		snprintf (tbuf, sizeof (tbuf), " %-25s ", ig.mask.c_str());
+		std::ostringstream buf;
+		buf << boost::format(" %-25s ") % ig.mask;
 		if (ig.type & ignore::IG_PRIV)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_NOTI)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_CHAN)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_CTCP)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_DCC)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_INVI)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
+			buf << no_str;
 		if (ig.type & ignore::IG_UNIG)
-			strcat (tbuf, _("YES  "));
+			buf << yes_str;
 		else
-			strcat (tbuf, _("NO   "));
-		strcat (tbuf, "\n");
-		PrintText (sess, tbuf);
+			buf << no_str;
+		buf << "\n";
+		PrintText (sess, buf.str());
 		/*EMIT_SIGNAL (XP_TE_IGNORELIST, sess, ig->mask, 0, 0, 0, 0); */
 		/* use this later, when TE's support 7 args */
 	}
@@ -263,7 +269,7 @@ ignore_load ()
 			{
 				ignore ig;
 				if ((my_cfg = ignore_read_next_entry(my_cfg, ig)))
-					ignores.push_back(ig);
+					ignores.emplace_back(std::move(ig));
 			}
 		}
 		close (fh);
@@ -279,7 +285,7 @@ ignore_save ()
 	fh = hexchat_open_file ("ignore.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
-		for(const auto & ig : ignores) //while (temp)
+		for(const auto & ig : ignores)
 		{
 			if (!(ig.type & ignore::IG_NOSAVE))
 			{
