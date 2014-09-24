@@ -33,6 +33,6 @@ bool is_server (server *serv);
 void server_fill_her_up (server *serv);
 void server_free (server *serv);
 
-void base64_encode (char *to, char *from, unsigned int len);
+void base64_encode (char *to, const char *from, unsigned int len);
 
 #endif
