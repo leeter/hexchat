@@ -1530,7 +1530,7 @@ traverse_wingate (int print_fd, int sok, char *serverAddr, int port)
 /* stuff for HTTP auth is here */
 
 static void
-three_to_four (char *from, char *to)
+three_to_four (const char *from, char *to)
 {
 	static const char tab64[64]=
 	{
@@ -1544,10 +1544,10 @@ three_to_four (char *from, char *to)
 	to[1] = tab64 [ ((from[0] << 4) | (from[1] >> 4)) & 63 ];
 	to[2] = tab64 [ ((from[1] << 2) | (from[2] >> 6)) & 63 ];
 	to[3] = tab64 [ from[2] & 63 ];
-};
+}
 
 void
-base64_encode (char *to, char *from, unsigned int len)
+base64_encode (char *to, const char *from, unsigned int len)
 {
 	while (len >= 3)
 	{
