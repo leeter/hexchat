@@ -750,7 +750,11 @@ sysinfo_cb (const char* const word[], const char * const word_eol[], void *userd
 
 	if (!g_ascii_strcasecmp ("HELP", word[2+offset]))
 	{
+<<<<<<< HEAD:plugins/sysinfo/xsys.cpp
 		hexchat_print (ph, sysinfo_help);
+=======
+		hexchat_printf (ph, "%s", sysinfo_help);
+>>>>>>> e8fb2dde56e93c1c2641ae99f8b1988352270f55:plugins/sysinfo/xsys.c
 		return HEXCHAT_EAT_ALL;
 	}
 	else if (!g_ascii_strcasecmp ("LIST", word[2+offset]))
@@ -870,7 +874,11 @@ sysinfo_cb (const char* const word[], const char * const word_eol[], void *userd
 	}
 	else
 	{
+<<<<<<< HEAD:plugins/sysinfo/xsys.cpp
 		hexchat_print (ph, sysinfo_help);
+=======
+		hexchat_printf (ph, "%s", sysinfo_help);
+>>>>>>> e8fb2dde56e93c1c2641ae99f8b1988352270f55:plugins/sysinfo/xsys.c
 		return HEXCHAT_EAT_ALL;
 	}
 }
