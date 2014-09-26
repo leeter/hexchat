@@ -692,17 +692,17 @@ list_settings ()
 {
 	char list[512];
 	char buffer[512];
-	char* token;
+	char* token, *context;
 
 	hexchat_pluginpref_list (ph, list);
 	hexchat_printf (ph, "%s\tCurrent Settings:", name);
-	token = strtok (list, ",");
+	token = strtok_r (list, ",", &context);
 
 	while (token != NULL)
 	{
 		hexchat_pluginpref_get_str (ph, token, buffer);
 		hexchat_printf (ph, "%s\t%s: %s\n", name, token, buffer);
-		token = strtok (NULL, ",");
+		token = strtok_r (NULL, ",", &context);
 	}
 }
 
@@ -750,11 +750,7 @@ sysinfo_cb (const char* const word[], const char * const word_eol[], void *userd
 
 	if (!g_ascii_strcasecmp ("HELP", word[2+offset]))
 	{
-<<<<<<< HEAD:plugins/sysinfo/xsys.cpp
 		hexchat_print (ph, sysinfo_help);
-=======
-		hexchat_printf (ph, "%s", sysinfo_help);
->>>>>>> e8fb2dde56e93c1c2641ae99f8b1988352270f55:plugins/sysinfo/xsys.c
 		return HEXCHAT_EAT_ALL;
 	}
 	else if (!g_ascii_strcasecmp ("LIST", word[2+offset]))
@@ -874,11 +870,7 @@ sysinfo_cb (const char* const word[], const char * const word_eol[], void *userd
 	}
 	else
 	{
-<<<<<<< HEAD:plugins/sysinfo/xsys.cpp
 		hexchat_print (ph, sysinfo_help);
-=======
-		hexchat_printf (ph, "%s", sysinfo_help);
->>>>>>> e8fb2dde56e93c1c2641ae99f8b1988352270f55:plugins/sysinfo/xsys.c
 		return HEXCHAT_EAT_ALL;
 	}
 }

@@ -31,6 +31,7 @@
 #include "../../config.h"
 #include <string>
 #include <iterator>
+#include <random>
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -127,10 +128,12 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 	SSL_CTX_set_info_callback(ctx, info_cb_func);
 
 #ifdef WIN32
+	std::random_device rd;
+	std::mt19937_64 mtrand(rd());
 	/* under win32, OpenSSL needs to be seeded with some randomness */
 	for (int i = 0; i < 128; i++)
 	{
-		int r = rand ();
+		auto r = mtrand();
 		RAND_seed ((unsigned char *)&r, sizeof (r));
 	}
 #endif

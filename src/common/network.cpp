@@ -19,6 +19,7 @@
 /* ipv4 and ipv6 networking functions with a common interface */
 
 #include <new>
+#include <random>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -37,7 +38,15 @@
 #define NETWORK_PRIVATE
 #include "network.hpp"
 
-#define RAND_INT(n) ((int)(rand() / (RAND_MAX + 1.0) * (n)))
+static int RAND_INT(int n)
+{
+	static std::random_device rd;
+	static std::mt19937 mt(rd());
+	std::uniform_int_distribution<int> dist(0, n);
+	return dist(mt);
+}
+
+//#define RAND_INT(n) ((int)(rand() / (RAND_MAX + 1.0) * (n)))
 
 
 /* ================== COMMON ================= */
