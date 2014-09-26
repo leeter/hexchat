@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <algorithm>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -68,21 +69,6 @@ despacify_dup (const char *str)
 		}
 		str++;
 	}
-}
-
-static int
-notify_netcmp (const char *str, void *serv)
-{
-	char *net = despacify_dup(static_cast<server*>(serv)->get_network(true));
-
-	if (rfc_casecmp (str, net) == 0)
-	{
-		free (net);
-		return 0;	/* finish & return FALSE from token_foreach() */
-	}
-
-	free (net);
-	return 1;	/* keep going... */
 }
 
 /* monitor this nick on this particular network? */
@@ -364,7 +350,7 @@ notify_set_online_list (server * serv, const char *users,
 }
 
 static void
-notify_watch (server * serv, const char *nick, int add)
+notify_watch (server * serv, const char *nick, bool add)
 {
 	char tbuf[256];
 	char addchar = '+';
@@ -383,7 +369,7 @@ notify_watch (server * serv, const char *nick, int add)
 }
 
 static void
-notify_watch_all (struct notify *notify, int add)
+notify_watch_all (struct notify *notify, bool add)
 {
 	server *serv;
 	GSList *list = serv_list;
@@ -596,8 +582,8 @@ notify_showlist (struct session *sess, const message_tags_data *tags_data)
 									  tags_data->timestamp);
 }
 
-int
-notify_deluser (char *name)
+bool
+notify_deluser (const char *name)
 {
 	struct notify *notify;
 	struct notify_per_server *servnot;
@@ -618,21 +604,21 @@ notify_deluser (char *name)
 				free (servnot);
 			}
 			notify_list = g_slist_remove (notify_list, notify);
-			notify_watch_all (notify, FALSE);
+			notify_watch_all (notify, false);
 			if (notify->networks)
 				free (notify->networks);
 			free (notify->name);
 			free (notify);
 			fe_notify_update (0);
-			return 1;
+			return true;
 		}
 		list = list->next;
 	}
-	return 0;
+	return false;
 }
 
 void
-notify_adduser (char *name, char *networks)
+notify_adduser (const char *name, const char *networks)
 {
 	struct notify *notify = static_cast<struct notify*>(calloc(1, sizeof(struct notify)));
 	if (notify)

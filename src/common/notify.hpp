@@ -55,8 +55,8 @@ void notify_set_offline_list (server * serv, const char *users, int quiet,
 void notify_send_watches (server * serv);
 
 /* the general stuff */
-void notify_adduser (char *name, char *networks);
-int notify_deluser (char *name);
+void notify_adduser (const char *name, const char *networks);
+bool notify_deluser (const char *name);
 void notify_cleanup (void);
 void notify_load (void);
 void notify_save (void);
