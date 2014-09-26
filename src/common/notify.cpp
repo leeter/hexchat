@@ -227,7 +227,7 @@ notify_announce_offline (server * serv, struct notify_per_server *servnot,
 
 	sess = serv->front_session;
 
-	servnot->ison = FALSE;
+	servnot->ison = false;
 	servnot->lastoff = time (0);
 	if (!quiet)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, nick, serv->servername,
@@ -249,7 +249,7 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	if (servnot->ison)
 		return;
 
-	servnot->ison = TRUE;
+	servnot->ison = true;
 	servnot->laston = time (0);
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, nick, serv->servername,
 					 serv->get_network (true), NULL, 0,
