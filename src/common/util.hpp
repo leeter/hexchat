@@ -33,6 +33,7 @@
 #ifndef HEXCHAT_UTIL_HPP
 #define HEXCHAT_UTIL_HPP
 
+#include <cstddef>
 #include <string>
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
@@ -80,7 +81,7 @@ void move_file (char *src_dir, char *dst_dir, char *fname, int dccpermissions);
 int token_foreach (char *str, char sep, int (*callback) (char *str, void *ud), void *ud);
 guint32 str_hash (const char *key);
 guint32 str_ihash (const unsigned char *key);
-void safe_strcpy (char *dest, const char *src, int bytes_left);
+void safe_strcpy (char *dest, const char *src, std::size_t bytes_left);
 void canonalize_key (char *key);
 bool portable_mode ();
 int unity_mode ();

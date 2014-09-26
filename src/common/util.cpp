@@ -1468,7 +1468,7 @@ str_ihash (const unsigned char *key)
 /*           2. "dest" will be left with valid UTF-8 - no partial chars! */
 
 void
-safe_strcpy (char *dest, const char *src, int bytes_left)
+safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 {
 	int mbl;
 

@@ -97,14 +97,14 @@
 #define OFLAGS 0
 #endif
 
-#define FONTNAMELEN	127
-#define PATHLEN		255
-#define DOMAINLEN	100
-#define NICKLEN		64				/* including the NULL, so 63 really */
-#define CHANLEN		300
-#define PDIWORDS		32
-#define USERNAMELEN 10
-#define HIDDEN_CHAR	8			/* invisible character for xtext */
+const std::size_t FONTNAMELEN = 127;
+const std::size_t PATHLEN = 255;
+const std::size_t DOMAINLEN = 100;
+const std::size_t NICKLEN = 64;				/* including the NULL, so 63 really */
+const std::size_t CHANLEN = 300;
+const std::size_t PDIWORDS = 32;
+const std::size_t USERNAMELEN = 10;
+const char HIDDEN_CHAR = 8;			/* invisible character for xtext */
 
 struct nbexec
 {
