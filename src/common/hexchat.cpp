@@ -474,7 +474,7 @@ irc_init (session *sess)
 	load_perform_file (sess, "startup.txt");
 }
 
-session::session(struct server *serv, char *from, ::session::session_type type, int focus)
+session::session(struct server *serv, const char *from, ::session::session_type type, int focus)
 	:server(serv),
 	logfd(-1),
 	scrollfd(-1),
@@ -530,7 +530,7 @@ session::session(struct server *serv, char *from, ::session::session_type type, 
 }
 
 static session *
-session_new (server *serv, char *from, int type, int focus)
+session_new (server *serv, const char *from, int type, int focus)
 {
 	session *sess;
 
@@ -544,7 +544,7 @@ session_new (server *serv, char *from, int type, int focus)
 }
 
 session *
-new_ircwindow (server *serv, char *name, ::session::session_type type, int focus)
+new_ircwindow (server *serv, const char *name, ::session::session_type type, int focus)
 {
 	session *sess;
 

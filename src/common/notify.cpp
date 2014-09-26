@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <locale>
+#include <vector>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -30,6 +31,7 @@
 #include <ctime>
 #include <functional>
 #include <algorithm>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -76,9 +78,22 @@ despacify_dup (const char *str)
 static bool
 notify_do_network (struct notify *notify, server *serv)
 {
-	if (!notify->networks)	/* ALL networks for this nick */
+	if (notify->networks.empty())	/* ALL networks for this nick */
 		return true;
-	std::istringstream buffer(notify->networks);
+	std::string serv_str(serv->get_network(true));
+	serv_str.erase(
+		std::remove_if(
+		serv_str.begin(),
+		serv_str.end(),
+		std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+		serv_str.end());
+	return std::find_if(
+		notify->networks.cbegin(),
+		notify->networks.cend(),
+		[&serv_str](const std::string & net){
+			return rfc_casecmp(net.c_str(), serv_str.c_str()) == 0;
+		}) == notify->networks.cend();
+	/*std::istringstream buffer(notify->networks);
 	for (std::string token; std::getline(buffer, token, ',');)
 	{
 		std::string serv_str(serv->get_network(true));
@@ -89,7 +104,7 @@ notify_do_network (struct notify *notify, server *serv)
 				std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
 				serv_str.end());
 		if (rfc_casecmp(token.c_str(), serv_str.c_str()) == 0)
-			return false;
+			return false;*/
 
 		/*char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
 
@@ -101,11 +116,11 @@ notify_do_network (struct notify *notify, server *serv)
 
 	free(net);
 	return 1;	/* keep going... */
-	}
+	//}
 	//if (token_foreach (notify->networks, ',', notify_netcmp, serv))
 	//	return false;	/* network list doesn't contain this one */
 
-	return true;
+	//return true;
 }
 
 struct notify_per_server *
@@ -150,11 +165,12 @@ notify_save (void)
 		while (list)
 		{
 			notify = (struct notify *) list->data;
-			write (fh, notify->name, strlen (notify->name));
-			if (notify->networks)
+			write (fh, notify->name.c_str(), notify->name.size());
+			if (!notify->networks.empty())
 			{
 				write (fh, " ", 1);
-				write (fh, notify->networks, strlen (notify->networks));
+				auto result = boost::join(notify->networks, ",");
+				write (fh, result.c_str(), result.size());
 			}
 			write (fh, "\n", 1);
 			list = list->next;
@@ -209,7 +225,7 @@ notify_find (server *serv, char *nick)
 			continue;
 		}
 
-		if (!serv->p_cmp (notify->name, nick))
+		if (!serv->p_cmp (notify->name.c_str(), nick))
 			return servnot;
 
 		list = list->next;
@@ -220,7 +236,7 @@ notify_find (server *serv, char *nick)
 
 static void
 notify_announce_offline (server * serv, struct notify_per_server *servnot,
-								 char *nick, int quiet, 
+								 const std::string &nick, bool quiet, 
 								 const message_tags_data *tags_data)
 {
 	session *sess;
@@ -229,17 +245,18 @@ notify_announce_offline (server * serv, struct notify_per_server *servnot,
 
 	servnot->ison = false;
 	servnot->lastoff = time (0);
+	std::string mutable_nick(nick);
 	if (!quiet)
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, nick, serv->servername,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv->servername,
 									  serv->get_network (true), NULL, 0,
 									  tags_data->timestamp);
-	fe_notify_update (nick);
+	fe_notify_update(&mutable_nick[0]);
 	fe_notify_update (0);
 }
 
 static void
 notify_announce_online (server * serv, struct notify_per_server *servnot,
-								char *nick, const message_tags_data *tags_data)
+								const std::string& nick, const message_tags_data *tags_data)
 {
 	session *sess;
 
@@ -251,18 +268,20 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 
 	servnot->ison = true;
 	servnot->laston = time (0);
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, nick, serv->servername,
+	std::string mutable_nick = nick;
+	mutable_nick.push_back(0);
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv->servername,
 					 serv->get_network (true), NULL, 0,
 					 tags_data->timestamp);
-	fe_notify_update (nick);
+	fe_notify_update (&mutable_nick[0]);
 	fe_notify_update (0);
 
 	if (prefs.hex_notify_whois_online)
 	{
 
 		/* Let's do whois with idle time (like in /quote WHOIS %s %s) */
-		std::string wii_str(strlen(nick) * 2 + 2, '\0');
-		sprintf (&wii_str[0], "%s %s", nick, nick);
+		std::string wii_str(nick.size() * 2 + 2, '\0');
+		sprintf(&wii_str[0], "%s %s", nick.c_str(), nick.c_str());
 		serv->p_whois (wii_str);
 	}
 }
@@ -350,7 +369,7 @@ notify_set_online_list (server * serv, const char *users,
 }
 
 static void
-notify_watch (server * serv, const char *nick, bool add)
+notify_watch (server * serv, const std::string& nick, bool add)
 {
 	char tbuf[256];
 	char addchar = '+';
@@ -359,9 +378,9 @@ notify_watch (server * serv, const char *nick, bool add)
 		addchar = '-';
 
 	if (serv->supports_monitor)
-		snprintf (tbuf, sizeof (tbuf), "MONITOR %c %s", addchar, nick);
+		snprintf (tbuf, sizeof (tbuf), "MONITOR %c %s", addchar, nick.c_str());
 	else if (serv->supports_watch)
-		snprintf (tbuf, sizeof (tbuf), "WATCH %c%s", addchar, nick);
+		snprintf (tbuf, sizeof (tbuf), "WATCH %c%s", addchar, nick.c_str());
 	else
 		return;
 
@@ -433,12 +452,12 @@ notify_send_watches (server * serv)
 	{
 		notify = *it;
 
-		len += strlen (notify->name) + format_len;
+		len += notify->name.size() + format_len;
 		if (len > 500)
 		{
 			/* Too long send existing list */
 			notify_flush_watches (serv, send_list.begin(), it);
-			len = strlen (notify->name) + format_len;
+			len = notify->name.size() + format_len;
 			point = it; /* We left off here */
 		}
 	}
@@ -472,7 +491,7 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 		bool seen = false;
 		while (*word[i])
 		{
-			if (!serv->p_cmp (notify->name, word[i]))
+			if (!serv->p_cmp (notify->name.c_str(), word[i]))
 			{
 				seen = true;
 				notify_announce_online (serv, servnot, notify->name, tags_data);
@@ -513,7 +532,7 @@ notify_checklist_for_server (server *serv)
 		if (notify_do_network (notify, serv))
 		{
 			i++;
-			strcat (outbuf, notify->name);
+			strcat (outbuf, notify->name.c_str());
 			strcat (outbuf, " ");
 			if (strlen (outbuf) > 460)
 			{
@@ -566,9 +585,9 @@ notify_showlist (struct session *sess, const message_tags_data *tags_data)
 		notify = (struct notify *) list->data;
 		servnot = notify_find_server_entry (notify, sess->server);
 		if (servnot && servnot->ison)
-			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), notify->name);
+			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), notify->name.c_str());
 		else
-			snprintf (outbuf, sizeof (outbuf), _("  %-20s offline\n"), notify->name);
+			snprintf (outbuf, sizeof (outbuf), _("  %-20s offline\n"), notify->name.c_str());
 		PrintTextTimeStamp (sess, outbuf, tags_data->timestamp);
 		list = list->next;
 	}
@@ -592,9 +611,9 @@ notify_deluser (const char *name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!rfc_casecmp (notify->name, name))
+		if (!rfc_casecmp (notify->name.c_str(), name))
 		{
-			fe_notify_update (notify->name);
+			fe_notify_update (&notify->name[0]);
 			/* Remove the records for each server */
 			while (notify->server_list)
 			{
@@ -605,10 +624,10 @@ notify_deluser (const char *name)
 			}
 			notify_list = g_slist_remove (notify_list, notify);
 			notify_watch_all (notify, false);
-			if (notify->networks)
+			/*if (notify->networks)
 				free (notify->networks);
-			free (notify->name);
-			free (notify);
+			free (notify->name);*/
+			delete notify;
 			fe_notify_update (0);
 			return true;
 		}
@@ -620,23 +639,33 @@ notify_deluser (const char *name)
 void
 notify_adduser (const char *name, const char *networks)
 {
-	struct notify *notify = static_cast<struct notify*>(calloc(1, sizeof(struct notify)));
+	struct notify *notify = new struct notify;
 	if (notify)
 	{
-		if (strlen (name) >= NICKLEN)
-		{
-			notify->name = static_cast<char*>(malloc (NICKLEN));
-			safe_strcpy (notify->name, name, NICKLEN);
-		} else
-		{
-			notify->name = strdup (name);
-		}
+		notify->name = name;
+		//if (strlen (name) >= NICKLEN)
+		//{
+		//	// static_cast<char*>(malloc(NICKLEN));
+		//	//safe_strcpy (notify->name., name, NICKLEN);
+		//} else
+		//{
+		//	notify->name = strdup (name);
+		//}
 		if (networks)
-			notify->networks = despacify_dup (networks);
+		{
+			std::string netwks_str(networks);
+			netwks_str.erase(
+				std::remove_if(
+				netwks_str.begin(),
+				netwks_str.end(),
+				std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+				netwks_str.end());
+			boost::split(notify->networks, netwks_str, boost::is_any_of(","));
+		}
 		notify->server_list = 0;
 		notify_list = g_slist_prepend (notify_list, notify);
 		notify_checklist ();
-		fe_notify_update (notify->name);
+		fe_notify_update (&notify->name[0]);
 		fe_notify_update (0);
 		notify_watch_all (notify, TRUE);
 	}
@@ -651,7 +680,7 @@ notify_is_in_list (server *serv, char *name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!serv->p_cmp (notify->name, name))
+		if (!serv->p_cmp (notify->name.c_str(), name))
 			return TRUE;
 		list = list->next;
 	}
@@ -659,8 +688,8 @@ notify_is_in_list (server *serv, char *name)
 	return FALSE;
 }
 
-int
-notify_isnotify (struct session *sess, char *name)
+bool
+notify_isnotify (struct session *sess, const char *name)
 {
 	struct notify *notify;
 	struct notify_per_server *servnot;
@@ -669,16 +698,16 @@ notify_isnotify (struct session *sess, char *name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!sess->server->p_cmp (notify->name, name))
+		if (!sess->server->p_cmp (notify->name.c_str(), name))
 		{
 			servnot = notify_find_server_entry (notify, sess->server);
 			if (servnot && servnot->ison)
-				return TRUE;
+				return true;
 		}
 		list = list->next;
 	}
 
-	return FALSE;
+	return false;
 }
 
 void

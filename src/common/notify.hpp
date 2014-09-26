@@ -17,15 +17,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "proto-irc.hpp"
-
 #ifndef HEXCHAT_NOTIFY_HPP
 #define HEXCHAT_NOTIFY_HPP
 
+#include <string>
+#include <vector>
+#include "proto-irc.hpp"
+
 struct notify
 {
-	char *name;
-	char *networks;	/* network names, comma sep */
+	std::string name;
+	std::vector<std::string> networks;
+	//char *name;
+	//char *networks;	/* network names, comma sep */
 	GSList *server_list;
 };
 
@@ -62,7 +66,7 @@ void notify_load (void);
 void notify_save (void);
 void notify_showlist (session *sess, const message_tags_data *tags_data);
 gboolean notify_is_in_list (server *serv, char *name);
-int notify_isnotify (session *sess, char *name);
+bool notify_isnotify (session *sess, const char *name);
 struct notify_per_server *notify_find_server_entry (struct notify *notify, struct server *serv);
 
 /* the old ISON stuff - remove me? */

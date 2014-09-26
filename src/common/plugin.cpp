@@ -1515,9 +1515,9 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x4e49ec05:	/* networks */
-			return ((struct notify *)data)->networks;
+			return boost::join(((struct notify *)data)->networks, ",").c_str();
 		case 0x339763: /* nick */
-			return ((struct notify *)data)->name;
+			return ((struct notify *)data)->name.c_str();
 		}
 		break;
 

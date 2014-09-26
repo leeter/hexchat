@@ -50,7 +50,7 @@ extern GList *sess_list_by_lastact[];
 
 session * find_channel (server *serv, const std::string &chan);
 session * find_dialog (server *serv, const char *nick);
-session * new_ircwindow(server *serv, char *name, session::session_type type, int focus);
+session * new_ircwindow(server *serv, const char *name, session::session_type type, int focus);
 void lastact_update (session * sess);
 session * lastact_getfirst (int (*filter) (session *sess));
 bool is_session (session * sess);

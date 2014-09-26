@@ -154,7 +154,7 @@ notify_opendialog_clicked(GtkWidget * igad)
 	if (gtkutil_treeview_get_selected(view, &iter, NPS_COLUMN, &servnot, -1))
 	{
 		if (servnot)
-			open_query(servnot->server, servnot->notify->name, TRUE);
+			open_query(servnot->server, servnot->notify->name.c_str(), TRUE);
 	}
 }
 
@@ -317,7 +317,7 @@ notify_gui_update (void)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		name = notify->name;
+		name = notify->name.c_str();
 		status = _("Offline");
 		server = "";
 

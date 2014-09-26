@@ -2991,7 +2991,7 @@ cmd_ping (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 session *
-open_query (server *serv, char *nick, gboolean focus_existing)
+open_query (server *serv, const char *nick, gboolean focus_existing)
 {
 	session *sess;
 
