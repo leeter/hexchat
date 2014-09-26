@@ -93,34 +93,6 @@ notify_do_network (struct notify *notify, server *serv)
 		[&serv_str](const std::string & net){
 			return rfc_casecmp(net.c_str(), serv_str.c_str()) == 0;
 		}) == notify->networks.cend();
-	/*std::istringstream buffer(notify->networks);
-	for (std::string token; std::getline(buffer, token, ',');)
-	{
-		std::string serv_str(serv->get_network(true));
-		serv_str.erase(
-			std::remove_if(
-				serv_str.begin(),
-				serv_str.end(),
-				std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
-				serv_str.end());
-		if (rfc_casecmp(token.c_str(), serv_str.c_str()) == 0)
-			return false;*/
-
-		/*char *net = despacify_dup (server_get_network (static_cast<server*>(serv), TRUE));
-
-	if (rfc_casecmp (str, net) == 0)
-	{
-		free (net);
-		return 0;	/* finish & return FALSE from token_foreach() *//*
-	}
-
-	free(net);
-	return 1;	/* keep going... */
-	//}
-	//if (token_foreach (notify->networks, ',', notify_netcmp, serv))
-	//	return false;	/* network list doesn't contain this one */
-
-	//return true;
 }
 
 struct notify_per_server *
@@ -208,7 +180,7 @@ notify_load (void)
 }
 
 static struct notify_per_server *
-notify_find (server *serv, char *nick)
+notify_find (server *serv, const std::string& nick)
 {
 	GSList *list = notify_list;
 	struct notify_per_server *servnot;
@@ -225,7 +197,7 @@ notify_find (server *serv, char *nick)
 			continue;
 		}
 
-		if (!serv->p_cmp (notify->name.c_str(), nick))
+		if (!serv->p_cmp (notify->name.c_str(), nick.c_str()))
 			return servnot;
 
 		list = list->next;
@@ -289,7 +261,7 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 /* handles numeric 601 */
 
 void
-notify_set_offline (server * serv, char *nick, int quiet,
+notify_set_offline(server * serv, const std::string & nick, bool quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -304,7 +276,7 @@ notify_set_offline (server * serv, char *nick, int quiet,
 /* handles numeric 604 and 600 */
 
 void
-notify_set_online (server * serv, char *nick,
+notify_set_online (server * serv, const std::string& nick,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -319,7 +291,7 @@ notify_set_online (server * serv, char *nick,
 /* monitor can send lists for numeric 730/731 */
 
 void
-notify_set_offline_list (server * serv, const char *users, int quiet,
+notify_set_offline_list (server * serv, const std::string & users, bool quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -344,7 +316,7 @@ notify_set_offline_list (server * serv, const char *users, int quiet,
 }
 
 void
-notify_set_online_list (server * serv, const char *users,
+notify_set_online_list (server * serv, const std::string& users,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -671,8 +643,8 @@ notify_adduser (const char *name, const char *networks)
 	}
 }
 
-gboolean
-notify_is_in_list (server *serv, char *name)
+bool
+notify_is_in_list (const server *serv, const std::string & name)
 {
 	struct notify *notify;
 	GSList *list = notify_list;
@@ -680,7 +652,7 @@ notify_is_in_list (server *serv, char *name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!serv->p_cmp (notify->name.c_str(), name))
+		if (!serv->p_cmp (notify->name.c_str(), name.c_str()))
 			return TRUE;
 		list = list->next;
 	}

@@ -956,11 +956,11 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 601:
-		notify_set_offline (serv, word[4], FALSE, tags_data);
+		notify_set_offline (serv, word[4], false, tags_data);
 		break;
 
 	case 605:
-		notify_set_offline (serv, word[4], TRUE, tags_data);
+		notify_set_offline (serv, word[4], true, tags_data);
 		break;
 
 	case 600:

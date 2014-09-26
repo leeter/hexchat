@@ -47,14 +47,14 @@ extern GSList *notify_list;
 extern int notify_tag;
 
 /* the WATCH stuff */
-void notify_set_online (server * serv, char *nick,
+void notify_set_online(server * serv, const std::string &nick,
 								const message_tags_data *tags_data);
-void notify_set_offline (server * serv, char *nick, int quiet,
+void notify_set_offline (server * serv, const std::string & nick, bool quiet,
 								 const message_tags_data *tags_data);
 /* the MONITOR stuff */
-void notify_set_online_list (server * serv, const char *users,
+void notify_set_online_list (server * serv, const std::string& users,
 								const message_tags_data *tags_data);
-void notify_set_offline_list (server * serv, const char *users, int quiet,
+void notify_set_offline_list (server * serv, const std::string& users, bool quiet,
 								 const message_tags_data *tags_data);
 void notify_send_watches (server * serv);
 
@@ -65,7 +65,7 @@ void notify_cleanup (void);
 void notify_load (void);
 void notify_save (void);
 void notify_showlist (session *sess, const message_tags_data *tags_data);
-gboolean notify_is_in_list (server *serv, char *name);
+bool notify_is_in_list (const server *serv, const std::string & name);
 bool notify_isnotify (session *sess, const char *name);
 struct notify_per_server *notify_find_server_entry (struct notify *notify, struct server *serv);
 
