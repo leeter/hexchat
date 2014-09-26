@@ -136,9 +136,6 @@ namespace{
 		ssl_connection(ssl_context * ctx)
 			:basic_connection(ctx, ctx->ssl_ctx)
 		{
-#ifdef WIN32
-			w32::crypto::seed_openssl_random();
-#endif
 		}
 
 		void handle_connect(const boost::system::error_code& error,
@@ -313,6 +310,9 @@ namespace io{
 		{
 			if (security == connection_security::enforced || security == connection_security::no_verify)
 			{
+#ifdef WIN32
+				w32::crypto::seed_openssl_random();
+#endif
 				return std::make_shared<ssl_connection>(new ssl_context(0));
 			}
 			return std::make_shared<tcp_connection>(new context());
