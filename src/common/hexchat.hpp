@@ -359,12 +359,14 @@ enum chanopt_val{
 
 /* Priorities in the "interesting sessions" priority queue
  * (see xchat.c:sess_list_by_lastact) */
-#define LACT_NONE		-1		/* no queues */
-#define LACT_QUERY_HI	0		/* query with hilight */
-#define LACT_QUERY		1		/* query with messages */
-#define LACT_CHAN_HI	2		/* channel with hilight */
-#define LACT_CHAN		3		/* channel with messages */
-#define LACT_CHAN_DATA	4		/* channel with other data */
+enum lact{
+	LACT_NONE		= -1,		/* no queues */
+	LACT_QUERY_HI	= 0,	/* query with hilight */
+	LACT_QUERY		= 1,	/* query with messages */
+	LACT_CHAN_HI	= 2,	/* channel with hilight */
+	LACT_CHAN		= 3,	/* channel with messages */
+	LACT_CHAN_DATA	= 4	/* channel with other data */
+};
 
 /* Moved from fe-gtk for use in outbound.c as well -- */
 enum gtk_xtext_search_flags {
