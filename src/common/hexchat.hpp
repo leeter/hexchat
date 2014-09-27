@@ -477,12 +477,6 @@ struct msproxy_state_t
 struct ircnet;
 struct favchannel;
 
-namespace io{
-	namespace tcp{
-		class connection;
-	}
-}
-
 typedef int (*cmd_callback) (struct session * sess, char *tbuf, char *word[],
 									  char *word_eol[]);
 

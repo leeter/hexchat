@@ -35,7 +35,7 @@
 #include <cstdarg>
 #include <cerrno>
 #include <fcntl.h>
-#include <boost/asio.hpp>
+#include <tcp_connection.hpp>
 
 #define WANTSOCKET
 #define WANTARPA
@@ -65,7 +65,7 @@
 #include "servlist.hpp"
 #include "server.hpp"
 #include "dcc.hpp"
-#include "tcp_connection.hpp"
+
 
 namespace dcc = ::hexchat::dcc;
 

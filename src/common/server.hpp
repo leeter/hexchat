@@ -24,6 +24,7 @@ extern GSList *serv_list;
 #include <string>
 #include <utility>
 #include <unordered_map>
+#include <tcpfwd.hpp>
 
 struct server
 {

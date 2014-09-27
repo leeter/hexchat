@@ -831,6 +831,7 @@ data/man/hexchat.1
 data/pkgconfig/Makefile
 data/pkgconfig/hexchat-plugin.pc
 src/Makefile
+src/libirc/Makefile
 src/common/Makefile
 src/common/dbus/Makefile
 src/fe-text/Makefile

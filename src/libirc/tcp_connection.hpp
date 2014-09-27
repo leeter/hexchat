@@ -24,16 +24,12 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
+#include <openssl/ssl.h>
+#include "tcpfwd.hpp"
 
 namespace io
 {
 	namespace tcp{
-		enum class connection_security{
-			none,
-			enforced,
-			no_verify
-		};
-
 		class connection{
 		public:
 			static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);

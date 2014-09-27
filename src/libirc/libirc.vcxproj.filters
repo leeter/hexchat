@@ -21,6 +21,9 @@
     <ClInclude Include="w32crypt_seed.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tcpfwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tcp_connection.cpp">
