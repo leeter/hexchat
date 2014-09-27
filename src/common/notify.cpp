@@ -110,7 +110,7 @@ notify_find_server_entry (struct notify *notify, struct server *serv)
 	}
 
 	/* not found, should we add it, or is this not a network where
-	  we're monitoring this nick? */
+      we're monitoring this nick? */
 	if (!notify_do_network (notify, serv))
 		return NULL;
 
@@ -251,7 +251,7 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	if (prefs.hex_notify_whois_online)
 	{
 
-		/* Let's do whois with idle time (like in /quote WHOIS %s %s) */
+	    /* Let's do whois with idle time (like in /quote WHOIS %s %s) */
 		std::string wii_str(nick.size() * 2 + 2, '\0');
 		sprintf(&wii_str[0], "%s %s", nick.c_str(), nick.c_str());
 		serv->p_whois (wii_str);
