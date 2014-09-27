@@ -4,7 +4,7 @@ bin_PROGRAMS = hexchat
 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\"
 
-hexchat_LDADD = ../common/libhexchatcommon.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS)
+hexchat_LDADD = ../common/libhexchatcommon.a ../libirc/libirc.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS)
 
 EXTRA_DIST = \
 	ascii.hpp banlist.hpp chanlist.hpp chanview.hpp \
