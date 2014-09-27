@@ -3143,15 +3143,15 @@ cmd_reconnect (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		int offset = 0;
 #ifdef USE_OPENSSL
-		int use_ssl = FALSE;
+		bool use_ssl = false;
 
 		if (strcmp (word[2], "-ssl") == 0)
 		{
-			use_ssl = TRUE;
+			use_ssl = true;
 			offset++;	/* args move up by 1 word */
 		}
 		serv->use_ssl = use_ssl;
-		serv->accept_invalid_cert = TRUE;
+		serv->accept_invalid_cert = true;
 #endif
 
 		if (*word[4+offset])
@@ -3275,14 +3275,14 @@ cmd_splay (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return FALSE;
 }
 
-static int
-parse_irc_url (char *url, char *server_name[], char *port[], char *channel[], char *key[], int *use_ssl)
+static bool
+parse_irc_url (char *url, char *server_name[], char *port[], char *channel[], char *key[], bool &use_ssl)
 {
 	char *co;
 #ifdef USE_OPENSSL
 	if (g_ascii_strncasecmp ("ircs://", url, 7) == 0)
 	{
-		*use_ssl = TRUE;
+		use_ssl = true;
 		*server_name = url + 7;
 		goto urlserv;
 	}
@@ -3323,9 +3323,9 @@ urlserv:
 			}	
 		}
 			
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 static int
@@ -3337,8 +3337,8 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	char *pass = NULL;
 	char *channel = NULL;
 	char *key = NULL;
-	int use_ssl = FALSE;
-	int is_url = TRUE;
+	bool use_ssl = false;
+	bool is_url = true;
 	server *serv = sess->server;
 	ircnet *net = NULL;
 
@@ -3346,14 +3346,14 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	/* BitchX uses -ssl, mIRC uses -e, let's support both */
 	if (strcmp (word[2], "-ssl") == 0 || strcmp (word[2], "-e") == 0)
 	{
-		use_ssl = TRUE;
+		use_ssl = true;
 		offset++;	/* args move up by 1 word */
 	}
 #endif
 
-	if (!parse_irc_url (word[2 + offset], &server_name, &port, &channel, &key, &use_ssl))
+	if (!parse_irc_url (word[2 + offset], &server_name, &port, &channel, &key, use_ssl))
 	{
-		is_url = FALSE;
+		is_url = false;
 		server_name = word[2 + offset];
 	}
 	if (port)
@@ -3386,7 +3386,7 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		port++;
 #ifdef USE_OPENSSL
-		use_ssl = TRUE;
+		use_ssl = true;
 #endif
 	}
 
@@ -3412,7 +3412,7 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 #ifdef USE_OPENSSL
 	serv->use_ssl = use_ssl;
-	serv->accept_invalid_cert = TRUE;
+	serv->accept_invalid_cert = true;
 #endif
 
 	/* try to connect by Network name */
@@ -3640,11 +3640,11 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		char *channel = NULL;
 		char *key = NULL;
 		char *url = g_strdup (word[2]);
-		int use_ssl = FALSE;
+		bool use_ssl = false;
 		void *net;
 		server *serv;
 
-		if (parse_irc_url (url, &server_name, &port, &channel, &key, &use_ssl))
+		if (parse_irc_url (url, &server_name, &port, &channel, &key, use_ssl))
 		{
 			/* maybe we're already connected to this net */
 

@@ -656,8 +656,8 @@ public:
 	bool sent_saslauth;	/* have sent AUTHENICATE yet */
 	bool sent_capend;	/* have sent CAP END yet */
 #ifdef USE_OPENSSL
-	unsigned int use_ssl:1;				  /* is server SSL capable? */
-	unsigned int accept_invalid_cert:1;/* ignore result of server's cert. verify */
+	bool use_ssl;				  /* is server SSL capable? */
+	bool accept_invalid_cert;/* ignore result of server's cert. verify */
 #endif
 };
 
