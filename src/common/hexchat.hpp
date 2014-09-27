@@ -351,9 +351,11 @@ struct hexchatprefs
 };
 
 /* Per-Channel Settings */
-#define SET_OFF 0
-#define SET_ON 1
-#define SET_DEFAULT 2 /* use global setting */
+enum chanopt_val{
+	SET_OFF = 0,
+	SET_ON = 1,
+	SET_DEFAULT = 2 /* use global setting */
+};
 
 /* Priorities in the "interesting sessions" priority queue
  * (see xchat.c:sess_list_by_lastact) */
