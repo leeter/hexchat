@@ -41,8 +41,7 @@
 #include "typedef.h"
 
 ignore::ignore()
-	:mask(),
-	type()
+	:type()
 {}
 
 int ignored_ctcp = 0;			  /* keep a count of all we ignore */
