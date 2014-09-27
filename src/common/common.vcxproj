@@ -91,6 +91,11 @@
     <None Include="..\..\win32\config.h.tt" />
     <ClInclude Include="..\..\config.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libirc\libirc.vcxproj">
+      <Project>{a8117bc0-5baa-4750-a261-bbe6d5dc9c29}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{87554B59-006C-4D94-9714-897B27067BA3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
