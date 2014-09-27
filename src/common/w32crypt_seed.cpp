@@ -20,8 +20,7 @@
 #define NOMINMAX
 
 #include <memory>
-#include <windows.h>
-#include <ntstatus.h>
+#include <minwindef.h>
 #include <bcrypt.h>
 #include <openssl/rand.h>
 
@@ -47,13 +46,13 @@ namespace w32
 		{
 			BCRYPT_ALG_HANDLE hdnl;
 			NTSTATUS res = BCryptOpenAlgorithmProvider(&hdnl, BCRYPT_RNG_ALGORITHM, nullptr, 0);
-			if (res != STATUS_SUCCESS)
+			if (!BCRYPT_SUCCESS(res))
 				return; // TODO throw error?
 
 			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg(hdnl);
 
 			UCHAR buffer[256];
-			for (int i = 0; i < 256 && res == STATUS_SUCCESS; ++i)
+			for (int i = 0; i < 256 && BCRYPT_SUCCESS(res); ++i)
 			{
 				res = BCryptGenRandom(alg.get(), buffer, sizeof(buffer), 0);
 				RAND_seed(buffer, sizeof(buffer));
