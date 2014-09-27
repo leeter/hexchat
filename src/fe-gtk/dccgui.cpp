@@ -33,6 +33,7 @@
 #include "../common/hexchatc.hpp"
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
+#include "../common/server.hpp"
 #include "../common/network.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"

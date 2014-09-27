@@ -23,6 +23,7 @@
 #define HEXCHAT_MODES_HPP
 
 #include "proto-irc.hpp"
+struct server;
 
 char get_nick_prefix (const server *serv, unsigned int access);
 unsigned int nick_access (const server *serv, const char *nick, int *modechars);

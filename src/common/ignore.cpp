@@ -38,6 +38,7 @@
 #include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"
+#include "server.hpp"
 #include "typedef.h"
 
 ignore::ignore()

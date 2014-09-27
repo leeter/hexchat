@@ -24,6 +24,9 @@
 
 #include <ctime>						/* for time_t */
 #include "proto-irc.hpp"
+
+struct server;
+
 namespace hexchat{
 #define STAT_QUEUED 0
 #define STAT_ACTIVE 1
@@ -47,6 +50,7 @@ typedef unsigned int DCC_SIZE;
 #define DCC_SFMT "u"
 #endif
 struct proxy_state;
+
 
 struct DCC
 {

@@ -31,6 +31,7 @@
 #include "../common/text.hpp"
 #include "../common/notify.hpp"
 #include "../common/hexchatc.hpp"
+#include "../common/server.hpp"
 #include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "palette.hpp"

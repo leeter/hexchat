@@ -48,6 +48,8 @@ extern GSList *urlhandler_list;
 extern GSList *tabmenu_list;
 extern GList *sess_list_by_lastact[];
 
+struct server;
+
 session * find_channel (server *serv, const std::string &chan);
 session * find_dialog (server *serv, const char *nick);
 session * new_ircwindow(server *serv, const char *name, session::session_type type, int focus);

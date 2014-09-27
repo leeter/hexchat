@@ -26,6 +26,7 @@
 #include "notify.hpp"
 #include "tree.hpp"
 #include "hexchatc.hpp"
+#include "server.hpp"
 #include "util.hpp"
 
 static int

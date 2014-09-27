@@ -28,6 +28,7 @@
 #include "../common/servlist.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/fe.hpp"
+#include "../common/server.hpp"
 #include "../common/util.hpp"
 
 #include "fe-gtk.hpp"

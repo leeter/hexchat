@@ -58,6 +58,9 @@ enum class flood_check_type
 	PRIV
 };
 
+// TODO: move to server fwd header
+struct server;
+
 const std::vector<ignore>& get_ignore_list();
 boost::optional<ignore &> ignore_exists (const std::string& mask);
 int ignore_add(const std::string& mask, int type, bool overwrite);

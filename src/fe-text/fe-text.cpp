@@ -41,6 +41,7 @@
 #include "../common/outbound.hpp"
 #include "../common/util.hpp"
 #include "../common/fe.hpp"
+#include "../common/server.hpp"
 #include "../common/dcc.hpp"
 #include "fe-text.h"
 
