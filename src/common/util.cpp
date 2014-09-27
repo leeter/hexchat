@@ -1357,7 +1357,7 @@ copy_file (char *dl_src, char *dl_dest, int permissions)
 
 /* Takes care of moving a file from a temporary download location to a completed location. */
 void
-move_file (char *src_dir, char *dst_dir, char *fname, int dccpermissions)
+move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccpermissions)
 {
 	char *src;
 	char *dst;

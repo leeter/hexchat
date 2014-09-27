@@ -42,6 +42,7 @@
 #ifdef WIN32
 #include <windows.h>
 #include <io.h>
+#include "w32dcc_security.hpp"
 #else
 #include <unistd.h>
 #endif
@@ -58,6 +59,7 @@
 #include "text.hpp"
 #include "url.hpp"
 #include "hexchatc.hpp"
+#include "filesystem.hpp"
 
 #ifdef USE_DCC64
 #define BIG_STR_TO_INT(x) strtoull(x,NULL,10)
@@ -326,6 +328,13 @@ dcc_close (::dcc::DCC *dcc, int dccstat, int destroy)
 				/* mgl: change this to handle the case where dccwithnick is set */
 				move_file (prefs.hex_dcc_dir, prefs.hex_dcc_completed_dir, 
 									 file_part (dcc->destfile), prefs.hex_dcc_permissions);
+#ifdef WIN32
+				auto path = io::fs::make_path(prefs.hex_dcc_completed_dir);
+				auto file = io::fs::make_path(dcc->destfile).filename();
+				path /= file;
+				path = boost::filesystem::canonical(path);
+				w32::file::mark_file_as_downloaded(path.wstring());
+#endif
 			}
 
 		}

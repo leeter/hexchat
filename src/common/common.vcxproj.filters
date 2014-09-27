@@ -122,6 +122,15 @@
     <ClInclude Include="filesystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="w32crypt_seed.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="w32dcc_security.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="w32coinitialize.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">
@@ -209,6 +218,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filesystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="w32crypt_seed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="w32dcc_security.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

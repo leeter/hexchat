@@ -50,7 +50,9 @@
     <ClInclude Include="hexchat-plugin.h" />
     <ClInclude Include="hexchat.hpp" />
     <ClInclude Include="hexchatc.hpp" />
+    <ClInclude Include="w32coinitialize.hpp" />
     <ClInclude Include="w32crypt_seed.hpp" />
+    <ClInclude Include="w32dcc_security.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cfgfiles.cpp" />
@@ -83,6 +85,7 @@
     <ClCompile Include="util.cpp" />
     <ClCompile Include="hexchat.cpp" />
     <ClCompile Include="w32crypt_seed.cpp" />
+    <ClCompile Include="w32dcc_security.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\win32\config.h.tt" />

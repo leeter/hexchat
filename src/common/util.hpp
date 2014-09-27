@@ -77,7 +77,7 @@ int get_cpu_arch (void);
 #define waitline2(source,buf,size) waitline(serv->childread,buf,size,0)
 #endif
 unsigned long make_ping_time (void);
-void move_file (char *src_dir, char *dst_dir, char *fname, int dccpermissions);
+void move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccpermissions);
 int token_foreach (char *str, char sep, int (*callback) (char *str, void *ud), void *ud);
 guint32 str_hash (const char *key);
 guint32 str_ihash (const unsigned char *key);
