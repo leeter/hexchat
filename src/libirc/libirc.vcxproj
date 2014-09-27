@@ -11,11 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="irc_client.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
     <ClInclude Include="w32crypt_seed.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="irc_client.cpp" />
     <ClCompile Include="tcp_connection.cpp" />
     <ClCompile Include="w32crypt_seed.cpp" />
   </ItemGroup>
