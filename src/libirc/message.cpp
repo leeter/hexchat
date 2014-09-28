@@ -51,9 +51,9 @@ namespace
 			using ascii::char_;
 			command_s %= lexeme[+char_("a-zA-Z")];
 			command_n %= int_;
-			params %= space >> lexeme[+(char_ - eol)];
-			prefix %= lit(':') >> lexeme[+(char_ - space)];
-			irc_message %= -(prefix) >> -(space) >> (command_n | command_s) >> -(params) >> eol;
+			params %= space > lexeme[+(char_ - eol)];
+			prefix %= lit(':') > lexeme[+(char_ - space)];
+			irc_message %= -(prefix) >> -(space) >> (command_s | command_n) >> -(params) >> eol;
 		}
 
 		/*servername =  hostname
