@@ -26,6 +26,9 @@
     <ClInclude Include="throttled_connection.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="message.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tcp_connection.cpp">
@@ -35,6 +38,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="irc_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="throttled_connection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
