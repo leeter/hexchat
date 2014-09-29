@@ -6,10 +6,11 @@ AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(
 
 EXTRA_DIST = \
     irc_client.hpp \
+    message.hpp \
     tcp_connection.hpp \
     tcpfwd.hpp
 
-libirc_a_SOURCES = irc_client.cpp tcp_connection.cpp throttled_connection.cpp
+libirc_a_SOURCES = irc_client.cpp message.cpp tcp_connection.cpp throttled_connection.cpp
 libirc_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
 libirc_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
 

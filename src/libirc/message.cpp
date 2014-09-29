@@ -16,78 +16,68 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#include <cstdlib>
 #include <string>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/fusion/include/adapt_struct.hpp>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 #include "message.hpp"
 
-namespace qi = boost::spirit::qi;
-namespace ascii = boost::spirit::ascii;
-
-BOOST_FUSION_ADAPT_STRUCT(
-	irc::message,
-	(boost::optional<std::string>, prefix)
-	(boost::optional<irc::message::numeric_reply>, command_n)
-	(boost::optional<std::string>, command_s)
-	(boost::optional<std::string>, params)
-	)
-
-namespace 
+namespace
 {
-	template<typename Iterator>
-	struct message_parser : qi::grammar < Iterator, irc::message(), ascii::space_type >
+	namespace rfc2812
 	{
-		message_parser()
-			:message_parser::base_type(irc_message)
-		{
-			using qi::int_;
-			using qi::lit;
-			using qi::lexeme;
-			using qi::digit;
-			using qi::hex;
-			using qi::space;
-			using qi::eol;
-			using qi::repeat;
-			using ascii::char_;
-			command_s %= lexeme[+char_("a-zA-Z")];
-			command_n %= int_;
-			params %= space > lexeme[+(char_ - eol)];
-			prefix %= lit(':') > lexeme[+(char_ - space)];
-			irc_message %= -(prefix) >> -(space) >> (command_s | command_n) >> -(params) >> eol;
-		}
-
-		/*servername =  hostname
-  host       =  hostname / hostaddr
-  hostname   =  shortname *( "." shortname )
-  shortname  =  ( letter / digit ) *( letter / digit / "-" )
-                *( letter / digit )
-		*/
-		/*qi::rule<Iterator, std::string(), ascii::space_type> hexdigit;
-		qi::rule<Iterator, std::string(), ascii::space_type> octet;
-		qi::rule<Iterator, std::string(), ascii::space_type> ip6addr;
-		qi::rule<Iterator, std::string(), ascii::space_type> ip4addr;*/
-		qi::rule<Iterator, irc::message::numeric_reply(), ascii::space_type> command_n;
-		qi::rule<Iterator, std::string(), ascii::space_type> command_s;
-		qi::rule<Iterator, std::string(), ascii::space_type> prefix;
-		qi::rule<Iterator, std::string(), ascii::space_type> params;
-		qi::rule<Iterator, irc::message(), ascii::space_type> irc_message;
-	};
+		const std::string::size_type max_prefix_len = 64;
+		const std::string::size_type max_message_len = 512;
+	}
 }
 
 namespace irc
 {
-	message parse(std::string inbound)
+	boost::optional<message> parse(const std::string & inbound)
 	{
-		using boost::spirit::ascii::space;
-		typedef std::string::const_iterator iterator_type;
-		typedef message_parser<iterator_type> m_parser;
-
-		m_parser parser;
-
-		std::string::const_iterator iter = inbound.begin();
-		std::string::const_iterator end = inbound.end();
 		message m;
-		bool r = phrase_parse(iter, end, parser, space, m);
+		// if we're getting garbage, just ignore it
+		if (inbound.size() > rfc2812::max_message_len)
+		{
+			return boost::none;
+		}
+		// a message must end with a crlf
+		if (!boost::ends_with(inbound, "\r\n"))
+			return boost::none;
+		auto prefix_start_loc = inbound.find_first_of(':');
+		auto prefix_end_loc = inbound.find_first_of(' ');
+		// if there  is a prefix the first character will be :
+		if (prefix_start_loc == 0 &&
+			prefix_end_loc != 0 &&
+			prefix_end_loc != std::string::npos)
+		{
+			//malformed message
+			if (prefix_end_loc > rfc2812::max_prefix_len)
+				return boost::none;
+			m.prefix = inbound.substr(0, prefix_end_loc);
+			// increment by one so we can get the command
+			++prefix_end_loc;
+		}
+		else
+		{
+			prefix_end_loc = 0;
+		}
+
+		// get the command
+		auto command_end = inbound.find_first_of(' ', prefix_end_loc);
+		// a command is required if we can't parse one bug out
+		if (command_end == std::string::npos || command_end == prefix_end_loc)
+			return boost::none;
+		m.command_s = inbound.substr(prefix_end_loc, command_end - prefix_end_loc);
+		char*end;
+		auto numeric_rep = std::strtol(m.command_s.c_str(), &end, 10);
+		if (numeric_rep)
+			m.command_n = static_cast<message::numeric_reply>(numeric_rep);
+
+		// there are parameters
+		if (command_end < inbound.size() - 2)
+			m.params = inbound.substr(command_end + 1, inbound.size() - 2);
+
 		return m;
 	}
 }

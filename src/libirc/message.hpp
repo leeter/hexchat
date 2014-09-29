@@ -38,15 +38,12 @@ namespace irc
 			RPL_TRACECONNECTING
 		};
 		boost::optional<numeric_reply> command_n;
-		boost::optional<std::string> command_s;
+		std::string command_s;
 		boost::optional<std::string> prefix;
-		std::string nick;
-		std::string user;
-		std::string host;
 		boost::optional<std::string> params;
 	};
 
-	message parse(std::string inbound);
+	boost::optional<message> parse(const std::string & inbound);
 }
 
 #endif
