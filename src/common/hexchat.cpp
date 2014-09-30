@@ -650,7 +650,7 @@ send_quit_or_part (session * killsess)
 			if (killsess->type == session::SESS_CHANNEL && killsess->channel[0] &&
 				 !killserv->sent_quit)
 			{
-				server_sendpart (*killserv, killsess->channel, boost::none);
+				server_sendpart (*killserv, killsess->channel, nullptr);
 			}
 		}
 	}

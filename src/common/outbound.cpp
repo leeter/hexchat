@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <istream>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -144,7 +145,7 @@ random_line (const std::string & file_name)
 }
 
 void
-server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason)
+server_sendpart(server & serv, const std::string& channel, const std::string* reason)
 {
 	if (!reason)
 	{
@@ -153,7 +154,7 @@ server_sendpart(server & serv, const std::string& channel, const boost::optional
 	} else
 	{
 		/* reason set by /quit, /close argument */
-		serv.p_part (channel, reason.get());
+		serv.p_part (channel, *reason);
 	}
 }
 
@@ -662,7 +663,7 @@ cmd_clear (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return TRUE;
 	}
 
-	if (reason[0] != '-' && !isdigit (reason[0]) && reason[0] != 0)
+	if (reason[0] != '-' && !std::isdigit<char> (reason[0], std::locale()) && reason[0] != 0)
 		return FALSE;
 
 	fe_text_clear (sess, atoi (reason));
@@ -1639,7 +1640,7 @@ cont:				esc = false;
 					k = 0;
 				} else
 				{
-					if (isdigit ((unsigned char) buf[i]) && k < (sizeof (numb) - 1))
+					if (std::isdigit<unsigned char> (buf[i], std::locale()) && k < (sizeof (numb) - 1))
 					{
 						numb[k] = buf[i];
 						k++;
@@ -2404,7 +2405,7 @@ cmd_kickban (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 		user = userlist_find (sess, nick);
 
-		if (isdigit ((unsigned char) reason[0]) && reason[1] == 0)
+		if (std::isdigit<unsigned char> (reason[0], std::locale()) && reason[1] == 0)
 		{
 			ban (sess, tbuf, nick, reason, (user && user->op));
 			reason[0] = 0;
@@ -2969,7 +2970,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		if (reason[0] == 0)
 			reason = NULL;
-		server_sendpart (*(sess->server), chan, reason ? boost::make_optional<const std::string&>(std::string(reason)) : boost::none);
+		server_sendpart (*(sess->server), chan, reason ? &std::string(reason) : nullptr);
 		return TRUE;
 	}
 	return FALSE;
@@ -4149,9 +4150,10 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 	{
 		if (src[0] == '%' || src[0] == '&')
 		{
-			if (isdigit ((unsigned char) src[1]))
+			std::locale locale;
+			if (std::isdigit<unsigned char>(src[1], locale))
 			{
-				if (isdigit ((unsigned char) src[2]) && isdigit ((unsigned char) src[3]))
+				if (std::isdigit<unsigned char>(src[2], locale) && std::isdigit<unsigned char>(src[3], locale))
 				{
 					buf[0] = src[1];
 					buf[1] = src[2];
@@ -4298,7 +4300,7 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 		return;
 
 	std::string buf(len + 1, '\0');
-
+	std::locale locale;
 	while (cmd[j])
 	{
 		switch (cmd[j])
@@ -4307,8 +4309,8 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 			occur++;
 			if (	do_ascii &&
 					j + 3 < len &&
-					(isdigit ((unsigned char) cmd[j + 1]) && isdigit ((unsigned char) cmd[j + 2]) &&
-					isdigit ((unsigned char) cmd[j + 3])))
+					(std::isdigit<unsigned char> (cmd[j + 1], locale) && std::isdigit<unsigned char> (cmd[j + 2], locale) &&
+					std::isdigit<unsigned char> ( cmd[j + 3], locale)))
 			{
 				tbuf[0] = cmd[j + 1];
 				tbuf[1] = cmd[j + 2];
