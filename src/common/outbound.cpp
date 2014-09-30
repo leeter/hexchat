@@ -145,7 +145,7 @@ random_line (const std::string & file_name)
 }
 
 void
-server_sendpart(server & serv, const std::string& channel, const std::string* reason)
+server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason)
 {
 	if (!reason)
 	{
@@ -154,7 +154,7 @@ server_sendpart(server & serv, const std::string& channel, const std::string* re
 	} else
 	{
 		/* reason set by /quit, /close argument */
-		serv.p_part (channel, *reason);
+		serv.p_part (channel, reason.get());
 	}
 }
 
@@ -2970,7 +2970,7 @@ cmd_part (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		if (reason[0] == 0)
 			reason = NULL;
-		server_sendpart (*(sess->server), chan, reason ? &std::string(reason) : nullptr);
+		server_sendpart (*(sess->server), chan, reason ? boost::make_optional<const std::string&>(std::string(reason)) : boost::none);
 		return TRUE;
 	}
 	return FALSE;

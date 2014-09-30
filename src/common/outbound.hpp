@@ -35,7 +35,7 @@ void process_data_init (char *buf, char *cmd, char *word[], char *word_eol[], gb
 void handle_multiline (session *sess, char *cmd, int history, int nocommand);
 void check_special_chars (char *cmd, int do_ascii);
 void notc_msg (session *sess);
-void server_sendpart(server & serv, const std::string& channel, const std::string* reason);
+void server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason);
 void server_sendquit (session * sess);
 int menu_streq (const char *s1, const char *s2, int def);
 session *open_query (server *serv, const char *nick, gboolean focus_existing);
