@@ -32,7 +32,7 @@ namespace io
 	namespace tcp{
 		class connection{
 		public:
-			static std::shared_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
+			static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
 			virtual void enqueue_message(const std::string & message) = 0;
 			virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
 			virtual bool connected() const = 0;

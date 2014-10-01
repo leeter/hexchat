@@ -43,6 +43,8 @@ public:
 	};
 public:
 	server();
+	// explict due to use of unique_ptr
+	~server();
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void disconnect(struct session *, bool sendquit, int err);
@@ -105,7 +107,7 @@ public:
 	int proxy_sok6;
 	struct msproxy_state_t msp_state;
 	int id;					/* unique ID number (for plugin API) */
-	std::shared_ptr<io::tcp::connection> server_connection;
+	std::unique_ptr<io::tcp::connection> server_connection;
 #ifdef USE_OPENSSL
 	SSL *ssl;
 	int ssl_do_connect_tag;

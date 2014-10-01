@@ -293,6 +293,16 @@ namespace{
 		}*/
 		this->on_error(error);
 	}
+	// temporary until gcc gets make_unique
+	namespace sutter
+	{
+		template<class T, class... Types> 
+		inline typename std::enable_if<!std::is_array<T>::value,
+		std::unique_ptr<T> >::type make_unique(Types&&... Args)
+		{
+			return (std::unique_ptr<T>(new T(std::forward<Types>(Args)...)));
+		}
+	}
 }
 
 namespace io{
@@ -305,7 +315,7 @@ namespace io{
 			return res.resolve(query);
 		}
 
-		std::shared_ptr<connection>
+		std::unique_ptr<connection>
 			connection::create_connection(connection_security security, boost::asio::io_service& io_service)
 		{
 			if (security == connection_security::enforced || security == connection_security::no_verify)
@@ -313,9 +323,9 @@ namespace io{
 #ifdef WIN32
 				w32::crypto::seed_openssl_random();
 #endif
-				return std::make_shared<ssl_connection>(new ssl_context(0));
+				return sutter::make_unique<ssl_connection>(new ssl_context(0));
 			}
-			return std::make_shared<tcp_connection>(new context());
+			return sutter::make_unique<tcp_connection>(new context());
 		}
 	}
 }
