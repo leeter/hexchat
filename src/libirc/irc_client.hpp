@@ -30,7 +30,7 @@ namespace irc
 		class client_impl;
 		std::unique_ptr<client_impl> p_impl;
 	public:
-		explicit client(std::shared_ptr<io::tcp::connection> && connection);
+		explicit client(std::unique_ptr<io::tcp::connection> connection);
 		~client();
 	};
 }
