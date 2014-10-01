@@ -62,7 +62,42 @@ namespace irc
 	{
 		char irc_ctype::do_tolower(char c) const
 		{
+			if (c == '[')
+				return '{';
+			if (c == ']')
+				return '}';
+			if (c == '\\')
+				return '|';
+			if (c == '~')
+				return '^';
+			return ctype::do_tolower(c);
+		}
 
+		const char* irc_ctype::do_tolower(char* beg, const char* end) const
+		{
+			for (; beg != end; ++beg)
+				*beg = do_tolower(*beg);
+			return end;
+		}
+		
+		char irc_ctype::do_toupper(char c) const
+		{
+			if (c == '{')
+				return '[';
+			if (c == '}')
+				return ']';
+			if (c == '|')
+				return '\\';
+			if (c == '^')
+				return '~';
+			return ctype::do_toupper(c);
+		}
+
+		const char * irc_ctype::do_toupper(char* beg, const char* end) const
+		{
+			for (; beg != end; ++beg)
+				*beg = do_toupper(*beg);
+			return end;
 		}
 	}
 }

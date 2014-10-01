@@ -29,6 +29,9 @@ namespace irc
 		{
 		protected:
 			char do_tolower(char c) const;
+			const char* do_tolower(char* beg, const char* end) const;
+			char do_toupper(char c) const;
+			const char * do_toupper(char* beg, const char* end) const;
 		};
 
 	}

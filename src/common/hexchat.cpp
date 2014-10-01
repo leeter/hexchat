@@ -32,6 +32,8 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <boost/locale.hpp>
+#include <boost/filesystem/path.hpp>
 #include <windows.h>
 #else
 #include <sys/wait.h>
@@ -1065,6 +1067,12 @@ set_locale (void)
 		strcat (hexchat_lang, "en");
 
 	putenv (hexchat_lang);
+
+	// Create and install global locale
+	std::locale::global(boost::locale::generator().generate(""));
+	// Make boost.filesystem use it
+	boost::filesystem::path::imbue(std::locale());
+
 #endif
 }
 
