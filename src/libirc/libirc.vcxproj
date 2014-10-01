@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="irc_client.hpp" />
+    <ClInclude Include="irc_ctype.hpp" />
     <ClInclude Include="message.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
@@ -20,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="irc_client.cpp" />
+    <ClCompile Include="irc_ctype.cpp" />
     <ClCompile Include="message.cpp" />
     <ClCompile Include="tcp_connection.cpp" />
     <ClCompile Include="throttled_connection.cpp" />

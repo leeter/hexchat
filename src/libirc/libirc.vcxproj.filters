@@ -29,6 +29,9 @@
     <ClInclude Include="message.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="irc_ctype.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tcp_connection.cpp">
@@ -44,6 +47,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="message.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="irc_ctype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
