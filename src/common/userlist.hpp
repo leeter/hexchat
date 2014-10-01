@@ -17,11 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <ctime>
-#include "proto-irc.hpp"
-
 #ifndef HEXCHAT_USERLIST_HPP
 #define HEXCHAT_USERLIST_HPP
+
+#include <ctime>
+#include "proto-irc.hpp"
 
 struct User
 {
@@ -41,7 +41,7 @@ struct User
 	unsigned int selected:1;
 };
 
-#define USERACCESS_SIZE 12
+const int USERACCESS_SIZE = 12;
 
 int userlist_add_hostname (session *sess, char *nick,
 									char *hostname, char *realname,
