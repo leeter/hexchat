@@ -2173,6 +2173,8 @@ server::server()
 #endif
 {}
 
+server::~server(){}
+
 server *
 server_new (void)
 {
