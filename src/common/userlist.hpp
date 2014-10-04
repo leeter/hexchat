@@ -40,6 +40,8 @@ struct User
 	unsigned int away:1;
 	unsigned int selected:1;
 };
+struct server;
+struct session;
 
 const int USERACCESS_SIZE = 12;
 
