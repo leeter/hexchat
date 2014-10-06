@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <locale>
 #include "tcp_connection.hpp"
 #include "irc_client.hpp"
 

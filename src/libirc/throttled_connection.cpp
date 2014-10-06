@@ -17,3 +17,14 @@
 */
 
 #include "throttled_connection.hpp"
+#include "tcp_connection.hpp"
+
+namespace io
+{
+	namespace irc
+	{
+		throttled_connection::throttled_connection(io::tcp::connection & connection)
+			:connection(connection)
+		{}
+	}
+}

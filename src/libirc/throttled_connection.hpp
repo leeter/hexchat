@@ -19,7 +19,6 @@
 #ifndef HEXCHAT_THROTTLED_CONNECTION_HPP
 #define HEXCHAT_THROTTLED_CONNECTION_HPP
 
-#include <memory>
 #include "tcpfwd.hpp"
 
 namespace io
@@ -28,9 +27,9 @@ namespace io
 	{
 		class throttled_connection
 		{
-			std::unique_ptr<io::tcp::connection> connection;
+			io::tcp::connection& connection;
 		public:
-			throttled_connection(std::unique_ptr<io::tcp::connection> && connection);
+			throttled_connection(io::tcp::connection& connection);
 
 		};
 	}
