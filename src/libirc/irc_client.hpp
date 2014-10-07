@@ -20,17 +20,28 @@
 #ifndef HEXCHAT_IRC_CLIENT_HPP
 #define HEXCHAT_IRC_CLIENT_HPP
 
+#include <locale>
 #include <memory>
+#include <boost/optional.hpp>
 #include "tcpfwd.hpp"
 
 namespace irc
 {
+	namespace detail
+	{
+		struct filter
+		{
+			virtual void input(const std::string & inbound) = 0;
+			virtual boost::optional<std::string> next() = 0;
+		};
+	}
+
 	class client
 	{
 		class client_impl;
 		std::unique_ptr<client_impl> p_impl;
 	public:
-		explicit client(std::unique_ptr<io::tcp::connection> connection);
+		explicit client(std::unique_ptr<io::tcp::connection> connection, std::locale loc = std::locale());
 		~client();
 	};
 }

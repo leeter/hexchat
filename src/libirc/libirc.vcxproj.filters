@@ -32,6 +32,9 @@
     <ClInclude Include="irc_ctype.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sutter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tcp_connection.cpp">

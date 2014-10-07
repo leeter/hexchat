@@ -28,6 +28,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
+#include "sutter.hpp"
 
 #ifdef WIN32
 #include "w32crypt_seed.hpp"
@@ -293,16 +294,7 @@ namespace{
 		}*/
 		this->on_error(error);
 	}
-	// temporary until gcc gets make_unique
-	namespace sutter
-	{
-		template<class T, class... Types> 
-		inline typename std::enable_if<!std::is_array<T>::value,
-		std::unique_ptr<T> >::type make_unique(Types&&... Args)
-		{
-			return (std::unique_ptr<T>(new T(std::forward<Types>(Args)...)));
-		}
-	}
+	
 }
 
 namespace io{

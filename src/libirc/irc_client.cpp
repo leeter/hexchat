@@ -20,6 +20,8 @@
 #include <string>
 #include <utility>
 #include <locale>
+#include <type_traits>
+#include <vector>
 #include "tcp_connection.hpp"
 #include "irc_client.hpp"
 
@@ -29,9 +31,12 @@ namespace irc
 	{
 		std::unique_ptr<io::tcp::connection> connection;
 		std::string nick;
+		std::locale loc;
+		std::vector <std::shared_ptr<detail::filter> > filters;
 	public:
-		explicit client_impl(std::unique_ptr<io::tcp::connection> connection)
-			:connection(std::forward<std::unique_ptr<io::tcp::connection> >(connection))
+		explicit client_impl(std::unique_ptr<io::tcp::connection> connection, const std::locale & loc)
+			:connection(std::forward<std::unique_ptr<io::tcp::connection> >(connection)),
+			loc(loc)
 		{
 		}
 
@@ -42,8 +47,8 @@ namespace irc
 
 	};
 
-	client::client(std::unique_ptr<io::tcp::connection> connection)
-		:p_impl(new client_impl(std::move(connection)))
+	client::client(std::unique_ptr<io::tcp::connection> connection, std::locale loc)
+		:p_impl(new client_impl(std::move(connection), loc))
 	{}
 
 	// require to be explicit for the p_impl unique_ptr

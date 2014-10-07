@@ -14,6 +14,7 @@
     <ClInclude Include="irc_client.hpp" />
     <ClInclude Include="irc_ctype.hpp" />
     <ClInclude Include="message.hpp" />
+    <ClInclude Include="sutter.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
     <ClInclude Include="throttled_connection.hpp" />
