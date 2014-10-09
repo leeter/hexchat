@@ -43,6 +43,8 @@ namespace irc
 	public:
 		explicit client(std::unique_ptr<io::tcp::connection> connection, std::locale loc = std::locale());
 		~client();
+		void add_filter(const std::string & name, std::shared_ptr<detail::filter> filter);
+		bool remove_filter(const std::string & name);
 	};
 }
 

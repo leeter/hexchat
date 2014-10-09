@@ -27,7 +27,6 @@ namespace io
 {
 	namespace irc
 	{
-
 		class throttled_connection::p_impl
 		{
 			std::priority_queue<std::pair<int, std::string> > outbound_queue;
@@ -38,7 +37,9 @@ namespace io
 			p_impl()
 				:queue_len_in_bytes(0)
 			{}
+
 			~p_impl(){}
+
 			void input(const std::string & inbound)
 			{
 				int priority = 2;	/* pri 2 for most things */
@@ -90,7 +91,8 @@ namespace io
 				this->next_send += std::chrono::seconds(2 + i / 120);
 				this->queue_len_in_bytes -= top.second.size();
 				this->prev_now = now;
-				
+				// do we want to move this later?
+				this->outbound_queue.pop();
 				return top.second;
 			}
 
