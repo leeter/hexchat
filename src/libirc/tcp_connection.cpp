@@ -15,7 +15,7 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
-
+#define OPENSSL_NO_SSL2
 #include <atomic>
 #include <algorithm>
 #include <istream>
@@ -44,8 +44,12 @@ namespace{
 
 	struct ssl_context : public context{
 		ssl_context(boost::asio::ssl::context::verify_mode mode)
-			:ssl_ctx(io_service, boost::asio::ssl::context::sslv23)
+			:ssl_ctx(io_service, boost::asio::ssl::context::tlsv1)
 		{
+			ssl_ctx.set_options(
+				boost::asio::ssl::context::no_sslv2 |
+				boost::asio::ssl::context::no_sslv3 |
+				boost::asio::ssl::context::no_compression);
 			ssl_ctx.set_verify_mode(mode);
 		}
 		boost::asio::ssl::context ssl_ctx;
