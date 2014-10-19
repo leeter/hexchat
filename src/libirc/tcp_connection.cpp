@@ -48,8 +48,7 @@ namespace{
 		{
 			ssl_ctx.set_options(
 				boost::asio::ssl::context::no_sslv2 |
-				boost::asio::ssl::context::no_sslv3 |
-				boost::asio::ssl::context::no_compression);
+				boost::asio::ssl::context::no_sslv3 );
 			ssl_ctx.set_verify_mode(mode);
 		}
 		boost::asio::ssl::context ssl_ctx;
