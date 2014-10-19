@@ -24,6 +24,7 @@
 #include <vector>
 #include "tcp_connection.hpp"
 #include "irc_client.hpp"
+#include "sutter.hpp"
 
 namespace
 {
@@ -45,7 +46,7 @@ namespace irc
 
 	public:
 		explicit client_impl(std::unique_ptr<io::tcp::connection> connection, const std::locale & loc)
-			:connection(std::forward<std::unique_ptr<io::tcp::connection> >(connection)),
+			:connection(std::move(connection)),
 			loc(loc)
 		{
 		}
@@ -88,7 +89,7 @@ namespace irc
 	};
 
 	client::client(std::unique_ptr<io::tcp::connection> connection, std::locale loc)
-		:p_impl(new client_impl(std::move(connection), loc))
+		:p_impl(sutter::make_unique<client_impl>(std::move(connection), loc))
 	{}
 
 	// require to be explicit for the p_impl unique_ptr
