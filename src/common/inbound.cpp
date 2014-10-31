@@ -905,7 +905,7 @@ inbound_ping_reply (session *sess, char *timestring, char *from,
 	nowtim = make_ping_time ();
 	dif = nowtim - tim;
 
-	sess->server->ping_recv = time (0);
+	sess->server->ping_recv = std::chrono::steady_clock::now();
 
 	if (lag)
 	{

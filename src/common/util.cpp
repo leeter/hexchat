@@ -28,6 +28,7 @@
 #include <functional>
 #include <unordered_map>
 #include <locale>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -1117,14 +1118,10 @@ util_exec (const char *cmd)
 unsigned long
 make_ping_time (void)
 {
-#ifndef WIN32
-	struct timeval timev;
-	gettimeofday (&timev, 0);
-#else
-	GTimeVal timev;
-	g_get_current_time (&timev);
-#endif
-	return (timev.tv_sec - 50000) * 1000 + timev.tv_usec/1000;
+	auto now = std::chrono::steady_clock::now();
+	auto seconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+	auto usec = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+	return static_cast<unsigned long>((seconds - 50000ll) * 1000ll + usec / 1000ll);
 }
 
 

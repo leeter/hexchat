@@ -22,6 +22,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 #include <new>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -281,12 +282,12 @@ lagcheck_update (void)
 void
 lag_check (void)
 {
+	using namespace std;
 	server *serv;
 	GSList *list = serv_list;
 	unsigned long tim;
 	char tbuf[128];
-	time_t now = time (0);
-	int lag;
+	auto now = chrono::steady_clock::now();
 
 	tim = make_ping_time ();
 
@@ -295,10 +296,10 @@ lag_check (void)
 		serv = static_cast<server*>(list->data);
 		if (serv->connected && serv->end_of_motd)
 		{
-			lag = now - serv->ping_recv;
-			if (prefs.hex_net_ping_timeout && lag > prefs.hex_net_ping_timeout && lag > 0)
+			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv->ping_recv).count();
+			if (prefs.hex_net_ping_timeout && seconds > prefs.hex_net_ping_timeout && seconds > 0)
 			{
-				sprintf (tbuf, "%d", lag);
+				snprintf (tbuf, sizeof(tbuf), "%d", seconds);
 				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv->server_session, tbuf, nullptr,
 								 nullptr, nullptr, 0);
 				if (prefs.hex_net_auto_reconnect)
