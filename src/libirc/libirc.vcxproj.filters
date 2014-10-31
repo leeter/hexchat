@@ -23,9 +23,6 @@
     <ClInclude Include="irc_client.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="throttled_connection.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="message.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,6 +30,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sutter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="throttled_queue.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -46,13 +46,13 @@
     <ClCompile Include="irc_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="throttled_connection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="irc_ctype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="throttled_queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

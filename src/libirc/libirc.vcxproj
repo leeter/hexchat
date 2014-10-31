@@ -17,7 +17,7 @@
     <ClInclude Include="sutter.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
-    <ClInclude Include="throttled_connection.hpp" />
+    <ClInclude Include="throttled_queue.hpp" />
     <ClInclude Include="w32crypt_seed.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -25,7 +25,7 @@
     <ClCompile Include="irc_ctype.cpp" />
     <ClCompile Include="message.cpp" />
     <ClCompile Include="tcp_connection.cpp" />
-    <ClCompile Include="throttled_connection.cpp" />
+    <ClCompile Include="throttled_queue.cpp" />
     <ClCompile Include="w32crypt_seed.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

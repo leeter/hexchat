@@ -16,8 +16,8 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#ifndef HEXCHAT_THROTTLED_CONNECTION_HPP
-#define HEXCHAT_THROTTLED_CONNECTION_HPP
+#ifndef HEXCHAT_THROTTLED_QUEUE_HPP
+#define HEXCHAT_THROTTLED_QUEUE_HPP
 
 #include <cstddef>
 #include <memory>
@@ -29,17 +29,19 @@ namespace io
 {
 	namespace irc
 	{
-		class throttled_connection : public ::irc::detail::filter
+		class throttled_queue
 		{
 			class p_impl;
 			std::unique_ptr<p_impl> impl;
 		public:
 			typedef std::size_t size_type;
-			throttled_connection();
-			~throttled_connection();
+			throttled_queue();
+			~throttled_queue();
 
-			void input(const std::string & inbound);
-			boost::optional<std::string> next();
+			void push(const std::string & inbound);
+			boost::optional<std::string> front();
+			void pop();
+			void clear();
 
 			size_type queue_length() const;
 		};

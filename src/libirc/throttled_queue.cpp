@@ -19,7 +19,7 @@
 #include <chrono>
 #include <queue>
 #include <boost/algorithm/string.hpp>
-#include "throttled_connection.hpp"
+#include "throttled_queue.hpp"
 #include "tcp_connection.hpp"
 #include "sutter.hpp"
 
@@ -27,7 +27,7 @@ namespace io
 {
 	namespace irc
 	{
-		class throttled_connection::p_impl
+		class throttled_queue::p_impl
 		{
 			std::priority_queue<std::pair<int, std::string> > outbound_queue;
 			size_type queue_len_in_bytes;
@@ -40,7 +40,7 @@ namespace io
 
 			~p_impl(){}
 
-			void input(const std::string & inbound)
+			void push(const std::string & inbound)
 			{
 				int priority = 2;	/* pri 2 for most things */
 				/* privmsg and notice get a lower priority */
@@ -64,7 +64,7 @@ namespace io
 				this->queue_len_in_bytes += inbound.size(); /* tcp_send_queue uses strlen */
 			}
 
-			boost::optional<std::string> next()
+			boost::optional<std::string> front()
 			{
 				/* try priority 2,1,0 */
 				auto now = std::chrono::system_clock::now();
@@ -91,27 +91,40 @@ namespace io
 				this->next_send += std::chrono::seconds(2 + i / 120);
 				this->queue_len_in_bytes -= top.second.size();
 				this->prev_now = now;
-				// do we want to move this later?
-				this->outbound_queue.pop();
+				
 				return top.second;
 			}
 
-			size_type queue_length() const;
+			size_type queue_length() const
+			{
+				return this->queue_len_in_bytes;
+			}
+
+			void clear()
+			{
+				decltype(this->outbound_queue) empty;
+				std::swap(this->outbound_queue, empty);
+			}
 		};
 
 
-		throttled_connection::throttled_connection()
-			:impl(sutter::make_unique<throttled_connection::p_impl>())
+		throttled_queue::throttled_queue()
+			:impl(sutter::make_unique<throttled_queue::p_impl>())
 		{}
 
-		throttled_connection::size_type throttled_connection::queue_length() const
+		throttled_queue::size_type throttled_queue::queue_length() const
 		{
 			return impl->queue_length();
 		}
 
-		void throttled_connection::input(const std::string & inbound)
+		void throttled_queue::push(const std::string & inbound)
 		{
-			impl->input(inbound);
+			impl->push(inbound);
+		}
+
+		void throttled_queue::clear()
+		{
+			impl->clear();
 		}
 	}
 }
