@@ -1118,7 +1118,7 @@ util_exec (const char *cmd)
 unsigned long
 make_ping_time (void)
 {
-	auto now = std::chrono::steady_clock::now();
+	auto now = std::chrono::monotonic_clock::now();
 	auto seconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 	auto usec = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
 	return static_cast<unsigned long>((seconds - 50000ll) * 1000ll + usec / 1000ll);
