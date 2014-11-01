@@ -2127,7 +2127,7 @@ server::server()
 
 	/*time_t connect_time;*/				/* when did it connect? */
 	lag_sent(),   /* we are still waiting for this ping response*/
-	ping_recv(),					/* when we last got a ping reply */
+	//ping_recv(),					/* when we last got a ping reply */
 	away_time(),					/* when we were marked away */
 	favlist(),			/* list of channels & keys to join */
 
