@@ -506,7 +506,7 @@ static void
 server_connected1(server * serv, const boost::system::error_code & error)
 {
 	prefs.wait_on_exit = TRUE;
-	serv->ping_recv = std::chrono::steady_clock::now();
+	serv->ping_recv = std::chrono::monotonic_clock::now();
 	serv->lag_sent = 0;
 	serv->connected = true;
 	serv->connecting = false;
@@ -545,7 +545,7 @@ static void
 server_connected (server * serv)
 {
 	prefs.wait_on_exit = TRUE;
-	serv->ping_recv = std::chrono::steady_clock::now();
+	serv->ping_recv = std::chrono::monotonic_clock::now();
 	serv->lag_sent = 0;
 	serv->connected = true;
 	set_nonblocking (serv->sok);

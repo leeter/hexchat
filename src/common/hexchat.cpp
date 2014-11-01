@@ -287,7 +287,7 @@ lag_check (void)
 	GSList *list = serv_list;
 	unsigned long tim;
 	char tbuf[128];
-	auto now = chrono::steady_clock::now();
+	auto now = chrono::monotonic_clock::now();
 
 	tim = make_ping_time ();
 
