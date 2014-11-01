@@ -10,7 +10,7 @@ EXTRA_DIST = \
     tcp_connection.hpp \
     tcpfwd.hpp
 
-libirc_a_SOURCES = irc_client.cpp message.cpp tcp_connection.cpp throttled_connection.cpp
+libirc_a_SOURCES = irc_client.cpp message.cpp tcp_connection.cpp throttled_queue.cpp
 libirc_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
 libirc_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
 
