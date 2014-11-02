@@ -1283,69 +1283,69 @@ unlink_utf8 (char *fname)
 	return res;
 }*/
 
-//static bool
-//copy_file (char *dl_src, char *dl_dest, int permissions)
-//{
-//	int tmp_src, tmp_dest;
-//	bool ok = false;
-//	char dl_tmp[4096];
-//	int return_tmp, return_tmp2;
-//
-//	if ((tmp_src = g_open (dl_src, O_RDONLY | OFLAGS, 0600)) == -1)
-//	{
-//		g_fprintf (stderr, "Unable to open() file '%s' (%s) !", dl_src,
-//				  strerror (errno));
-//		return false;
-//	}
-//
-//	if ((tmp_dest =
-//		 g_open (dl_dest, O_WRONLY | O_CREAT | O_TRUNC | OFLAGS, permissions)) < 0)
-//	{
-//		close (tmp_src);
-//		g_fprintf (stderr, "Unable to create file '%s' (%s) !", dl_src,
-//				  strerror (errno));
-//		return false;
-//	}
-//
-//	for (;;)
-//	{
-//		return_tmp = read (tmp_src, dl_tmp, sizeof (dl_tmp));
-//
-//		if (!return_tmp)
-//		{
-//			ok = true;
-//			break;
-//		}
-//
-//		if (return_tmp < 0)
-//		{
-//			fprintf (stderr, "download_move_to_completed_dir(): "
-//				"error reading while moving file to save directory (%s)",
-//				 strerror (errno));
-//			break;
-//		}
-//
-//		return_tmp2 = write (tmp_dest, dl_tmp, return_tmp);
-//
-//		if (return_tmp2 < 0)
-//		{
-//			fprintf (stderr, "download_move_to_completed_dir(): "
-//				"error writing while moving file to save directory (%s)",
-//				 strerror (errno));
-//			break;
-//		}
-//
-//		if (return_tmp < sizeof (dl_tmp))
-//		{
-//			ok = true;
-//			break;
-//		}
-//	}
-//
-//	close (tmp_dest);
-//	close (tmp_src);
-//	return ok;
-//}
+static bool
+copy_file (const char *dl_src, const char *dl_dest, int permissions)
+{
+	int tmp_src, tmp_dest;
+	bool ok = false;
+	char dl_tmp[4096];
+	int return_tmp, return_tmp2;
+
+	if ((tmp_src = g_open (dl_src, O_RDONLY | OFLAGS, 0600)) == -1)
+	{
+		g_fprintf (stderr, "Unable to open() file '%s' (%s) !", dl_src,
+				  strerror (errno));
+		return false;
+	}
+
+	if ((tmp_dest =
+		 g_open (dl_dest, O_WRONLY | O_CREAT | O_TRUNC | OFLAGS, permissions)) < 0)
+	{
+		close (tmp_src);
+		g_fprintf (stderr, "Unable to create file '%s' (%s) !", dl_src,
+				  strerror (errno));
+		return false;
+	}
+
+	for (;;)
+	{
+		return_tmp = read (tmp_src, dl_tmp, sizeof (dl_tmp));
+
+		if (!return_tmp)
+		{
+			ok = true;
+			break;
+		}
+
+		if (return_tmp < 0)
+		{
+			fprintf (stderr, "download_move_to_completed_dir(): "
+				"error reading while moving file to save directory (%s)",
+				 strerror (errno));
+			break;
+		}
+
+		return_tmp2 = write (tmp_dest, dl_tmp, return_tmp);
+
+		if (return_tmp2 < 0)
+		{
+			fprintf (stderr, "download_move_to_completed_dir(): "
+				"error writing while moving file to save directory (%s)",
+				 strerror (errno));
+			break;
+		}
+
+		if (return_tmp < sizeof (dl_tmp))
+		{
+			ok = true;
+			break;
+		}
+	}
+
+	close (tmp_dest);
+	close (tmp_src);
+	return ok;
+}
 
 /* Takes care of moving a file from a temporary download location to a completed location. */
 void
@@ -1388,9 +1388,8 @@ move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccp
 		/* link failed because either the two paths aren't on the */
 		/* same filesystem or the filesystem doesn't support hard */
 		/* links, so we have to do a copy. */
-		boost::filesystem::copy_file(src, dst, boost::filesystem::copy_option::none, ec);
-		if (!ec) //copy_file (src, dst, dccpermissions))
-			boost::filesystem::remove(src); //g_unlink (src);
+		if (copy_file (src.string().c_str(), dst.string().c_str(), dccpermissions))
+			g_unlink (src.string().c_str());
 		chmod(dst.string().c_str(), dccpermissions);
 	}
 }
