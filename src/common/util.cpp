@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -1282,82 +1283,76 @@ unlink_utf8 (char *fname)
 	return res;
 }*/
 
-static bool
-file_exists (char *fname)
-{
-	return (g_access (fname, F_OK) == 0);
-}
-
-static gboolean
-copy_file (char *dl_src, char *dl_dest, int permissions)
-{
-	int tmp_src, tmp_dest;
-	gboolean ok = FALSE;
-	char dl_tmp[4096];
-	int return_tmp, return_tmp2;
-
-	if ((tmp_src = g_open (dl_src, O_RDONLY | OFLAGS, 0600)) == -1)
-	{
-		g_fprintf (stderr, "Unable to open() file '%s' (%s) !", dl_src,
-				  strerror (errno));
-		return FALSE;
-	}
-
-	if ((tmp_dest =
-		 g_open (dl_dest, O_WRONLY | O_CREAT | O_TRUNC | OFLAGS, permissions)) < 0)
-	{
-		close (tmp_src);
-		g_fprintf (stderr, "Unable to create file '%s' (%s) !", dl_src,
-				  strerror (errno));
-		return FALSE;
-	}
-
-	for (;;)
-	{
-		return_tmp = read (tmp_src, dl_tmp, sizeof (dl_tmp));
-
-		if (!return_tmp)
-		{
-			ok = TRUE;
-			break;
-		}
-
-		if (return_tmp < 0)
-		{
-			fprintf (stderr, "download_move_to_completed_dir(): "
-				"error reading while moving file to save directory (%s)",
-				 strerror (errno));
-			break;
-		}
-
-		return_tmp2 = write (tmp_dest, dl_tmp, return_tmp);
-
-		if (return_tmp2 < 0)
-		{
-			fprintf (stderr, "download_move_to_completed_dir(): "
-				"error writing while moving file to save directory (%s)",
-				 strerror (errno));
-			break;
-		}
-
-		if (return_tmp < sizeof (dl_tmp))
-		{
-			ok = TRUE;
-			break;
-		}
-	}
-
-	close (tmp_dest);
-	close (tmp_src);
-	return ok;
-}
+//static bool
+//copy_file (char *dl_src, char *dl_dest, int permissions)
+//{
+//	int tmp_src, tmp_dest;
+//	bool ok = false;
+//	char dl_tmp[4096];
+//	int return_tmp, return_tmp2;
+//
+//	if ((tmp_src = g_open (dl_src, O_RDONLY | OFLAGS, 0600)) == -1)
+//	{
+//		g_fprintf (stderr, "Unable to open() file '%s' (%s) !", dl_src,
+//				  strerror (errno));
+//		return false;
+//	}
+//
+//	if ((tmp_dest =
+//		 g_open (dl_dest, O_WRONLY | O_CREAT | O_TRUNC | OFLAGS, permissions)) < 0)
+//	{
+//		close (tmp_src);
+//		g_fprintf (stderr, "Unable to create file '%s' (%s) !", dl_src,
+//				  strerror (errno));
+//		return false;
+//	}
+//
+//	for (;;)
+//	{
+//		return_tmp = read (tmp_src, dl_tmp, sizeof (dl_tmp));
+//
+//		if (!return_tmp)
+//		{
+//			ok = true;
+//			break;
+//		}
+//
+//		if (return_tmp < 0)
+//		{
+//			fprintf (stderr, "download_move_to_completed_dir(): "
+//				"error reading while moving file to save directory (%s)",
+//				 strerror (errno));
+//			break;
+//		}
+//
+//		return_tmp2 = write (tmp_dest, dl_tmp, return_tmp);
+//
+//		if (return_tmp2 < 0)
+//		{
+//			fprintf (stderr, "download_move_to_completed_dir(): "
+//				"error writing while moving file to save directory (%s)",
+//				 strerror (errno));
+//			break;
+//		}
+//
+//		if (return_tmp < sizeof (dl_tmp))
+//		{
+//			ok = true;
+//			break;
+//		}
+//	}
+//
+//	close (tmp_dest);
+//	close (tmp_src);
+//	return ok;
+//}
 
 /* Takes care of moving a file from a temporary download location to a completed location. */
 void
 move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccpermissions)
 {
-	char *src;
-	char *dst;
+	//char *src;
+	//char *dst;
 	int res, i;
 
 	/* if dcc_dir and dcc_completed_dir are the same then we are done */
@@ -1365,35 +1360,39 @@ move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccp
 		 0 == dst_dir[0])
 		return;			/* Already in "completed dir" */
 
-	src = g_build_filename (src_dir, fname, NULL);
-	dst = g_build_filename (dst_dir, fname, NULL);
+	auto file_name = boost::filesystem::path(fname);
+	auto src = boost::filesystem::path(src_dir) / file_name;
+	auto dst_dir_path = boost::filesystem::path(dst_dir);
+	auto dst = dst_dir_path / file_name;
+	//src = g_build_filename (src_dir, fname, NULL);
+	//dst = g_build_filename (dst_dir, fname, NULL);
 
 	/* already exists in completed dir? Append a number */
-	if (file_exists (dst))
+	if (boost::filesystem::exists(dst))
 	{
 		for (i = 0; ; i++)
 		{
-			g_free (dst);
-			dst = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.%d", dst_dir, fname, i);
-			if (!file_exists (dst))
+			dst = (dst_dir_path / file_name).replace_extension(std::to_string(i));// g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s.%d", dst_dir, fname, i);
+			if (!boost::filesystem::exists(dst))
 				break;
 		}
 	}
 
 	/* first try a simple rename move */
-	res = g_rename (src, dst);
+	boost::system::error_code ec;
+	boost::filesystem::rename(src, dst, ec);
+	//res = g_rename (src, dst);
 
-	if (res == -1 && (errno == EXDEV || errno == EPERM))
+	if (ec && (ec.value() == boost::system::errc::cross_device_link || ec.value() == boost::system::errc::operation_not_permitted))
 	{
 		/* link failed because either the two paths aren't on the */
 		/* same filesystem or the filesystem doesn't support hard */
 		/* links, so we have to do a copy. */
-		if (copy_file (src, dst, dccpermissions))
-			g_unlink (src);
+		boost::filesystem::copy_file(src, dst, ec);
+		if (!ec) //copy_file (src, dst, dccpermissions))
+			boost::filesystem::remove(src); //g_unlink (src);
+		chmod(dst.string().c_str(), dccpermissions);
 	}
-
-	g_free (dst);
-	g_free (src);
 }
 
 /* separates a string according to a 'sep' char, then calls the callback
@@ -1546,7 +1545,7 @@ unity_mode ()
 }
 
 char *
-encode_sasl_pass_plain (char *user, char *pass)
+encode_sasl_pass_plain (const char *user, const char *pass)
 {
 	int authlen;
 	char *buffer;
@@ -1806,7 +1805,7 @@ end:
 
 #ifdef USE_OPENSSL
 static char *
-str_sha256hash (char *string)
+str_sha256hash (const char *string)
 {
 	int i;
 	unsigned char hash[SHA256_DIGEST_LENGTH];

@@ -85,7 +85,7 @@ void safe_strcpy (char *dest, const char *src, std::size_t bytes_left);
 void canonalize_key (char *key);
 bool portable_mode ();
 int unity_mode ();
-char *encode_sasl_pass_plain (char *user, char *pass);
+char *encode_sasl_pass_plain (const char *user, const char *pass);
 char *encode_sasl_pass_blowfish (char *user, char *pass, char *data);
 char *encode_sasl_pass_aes (char *user, char *pass, char *data);
 char *challengeauth_response (char *username, char *password, char *challenge);
