@@ -1388,7 +1388,7 @@ move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccp
 		/* link failed because either the two paths aren't on the */
 		/* same filesystem or the filesystem doesn't support hard */
 		/* links, so we have to do a copy. */
-		boost::filesystem::copy_file(src, dst, ec);
+		boost::filesystem::copy_file(src, dst, boost::filesystem::copy_option::none, ec);
 		if (!ec) //copy_file (src, dst, dccpermissions))
 			boost::filesystem::remove(src); //g_unlink (src);
 		chmod(dst.string().c_str(), dccpermissions);
