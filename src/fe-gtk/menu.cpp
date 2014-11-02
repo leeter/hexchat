@@ -500,7 +500,7 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 			if (pop->cmd[0] == 'n' && !strcmp (pop->cmd, "notify -n ASK %s"))
 			{
 				/* don't create this item if already in notify list */
-				if (!target || notify_is_in_list (current_sess->server, target))
+				if (!target || notify_is_in_list (*(current_sess->server), target))
 				{
 					list = list->next;
 					continue;

@@ -52,27 +52,6 @@
 GSList *notify_list = 0;
 int notify_tag = 0;
 
-
-static char *
-despacify_dup (const char *str)
-{
-	char *p, *res = static_cast<char*>(malloc (strlen (str) + 1));
-	if (!res)
-		return nullptr;
-	p = res;
-	while (1)
-	{
-		if (*str != ' ')
-		{
-			*p = *str;
-			if (*p == 0)
-				return res;
-			p++;
-		}
-		str++;
-	}
-}
-
 /* monitor this nick on this particular network? */
 
 static bool
@@ -644,7 +623,7 @@ notify_adduser (const char *name, const char *networks)
 }
 
 bool
-notify_is_in_list (const server *serv, const std::string & name)
+notify_is_in_list (const server &serv, const std::string & name)
 {
 	struct notify *notify;
 	GSList *list = notify_list;
@@ -652,12 +631,12 @@ notify_is_in_list (const server *serv, const std::string & name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!serv->p_cmp (notify->name.c_str(), name.c_str()))
-			return TRUE;
+		if (!serv.p_cmp (notify->name.c_str(), name.c_str()))
+			return true;
 		list = list->next;
 	}
 
-	return FALSE;
+	return false;
 }
 
 bool
@@ -690,7 +669,7 @@ notify_cleanup ()
 	struct notify *notify;
 	struct notify_per_server *servnot;
 	struct server *serv;
-	int valid;
+	bool valid;
 
 	while (list)
 	{
@@ -703,7 +682,7 @@ notify_cleanup ()
 			servnot = (struct notify_per_server *) nslist->data;
 
 			/* Check the server is valid */
-			valid = FALSE;
+			valid = false;
 			srvlist = serv_list;
 			while (srvlist)
 			{
