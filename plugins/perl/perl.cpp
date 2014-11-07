@@ -20,9 +20,12 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 #if defined(_WIN32) || defined(_WIN64)
 #define strtok_r strtok_s
 #endif
@@ -32,15 +35,22 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <process.h>
 #include <thread>
 #include <locale>
 #include <codecvt>
+#include <memory>
+#include <boost/locale.hpp>
 
 static std::wstring widen(const std::string& to_widen)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;
 	return cvt.from_bytes(to_widen);
+}
+
+static std::string narrow(const std::wstring& to_narrow)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;
+	return cvt.to_bytes(to_narrow);
 }
 #else
 #include <dirent.h>
@@ -90,37 +100,33 @@ thread_mbox (char *str)
 static void
 perl_auto_load_from_path (const char *path)
 {
-	WIN32_FIND_DATA find_data;
-	HANDLE find_handle;
-	char *search_path;
-	int path_len = strlen (path);
+	WIN32_FIND_DATAW find_data;
+
+	fs::path base_path{ widen(path) };
+	fs::path search_path = base_path / L"*.pl";
 
 	/* +6 for \*.pl and \0 */
-	search_path = static_cast<char*>( malloc(path_len + 6));
-	sprintf (search_path, "%s\\*.pl", path);
+	/*search_path = static_cast<char*>( malloc(path_len + 6));
+	sprintf (search_path, "%s\\*.pl", path);*/
 
-	find_handle = FindFirstFile (search_path, &find_data);
+	std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&FindClose)> find_handle(
+		FindFirstFileW(search_path.wstring().c_str(), &find_data),
+		&FindClose);
 
-	if (find_handle != INVALID_HANDLE_VALUE)
+	if (find_handle.get() != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
 			if (!(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
 				||find_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
 			{
-				char *full_path = static_cast<char*>(
-					malloc (path_len + strlen (find_data.cFileName) + 2));
-				sprintf (full_path, "%s\\%s", path, find_data.cFileName);
+				fs::path full_path = base_path / find_data.cFileName;
 
-				perl_load_file (full_path);
-				free (full_path);
+				perl_load_file (narrow(full_path.wstring()).c_str());
 			}
 		}
-		while (FindNextFile (find_handle, &find_data) != 0);
-		FindClose (find_handle);
+		while (FindNextFileW (find_handle.get(), &find_data) != 0);
 	}
-
-	free (search_path);
 }
 #else
 static void
@@ -148,43 +154,15 @@ perl_auto_load_from_path (const char *path)
 static int
 perl_auto_load (void *unused)
 {
-	const char *xdir;
-	char *sub_dir;
-#ifdef WIN32
-	int copied = 0;
-	char *slash = NULL;
-#endif
-
 	/* get the dir in local filesystem encoding (what opendir() expects!) */
-	xdir = hexchat_get_info (ph, "configdir");
+	fs::path xdir{ hexchat_get_info(ph, "configdir") };
 
 	/* don't pollute the filesystem with script files, this only causes misuse of the folders
 	 * only use ~/.config/hexchat/addons/ and %APPDATA%\HexChat\addons */
-#if 0
-	/* autoload from ~/.config/hexchat/ or %APPDATA%\HexChat\ on win32 */
-	perl_auto_load_from_path (xdir);
-#endif
 
-	sub_dir = static_cast<char*>( malloc (strlen (xdir) + 8));
-	strcpy (sub_dir, xdir);
-	strcat (sub_dir, "/addons");
-	perl_auto_load_from_path (sub_dir);
-	free (sub_dir);
+	fs::path sub_dir = xdir / "/addons";
+	perl_auto_load_from_path (sub_dir.string().c_str());
 
-#if 0
-#ifdef WIN32
-	/* autoload from  C:\Program Files\HexChat\plugins\ */
-	sub_dir = malloc (1025 + 9);
-	copied = GetModuleFileName( 0, sub_dir, 1024 );
-	sub_dir[copied] = '\0';
-	slash = strrchr( sub_dir, '\\' );
-	if( slash != NULL ) {
-		*slash = '\0';
-	}
-	perl_auto_load_from_path ( strncat (sub_dir, "\\plugins", 9));
-	free (sub_dir);
-#endif
-#endif
 	return 0;
 }
 
@@ -734,7 +712,7 @@ static XSPROTO (XS_HexChat_send_modes)
 	char sign;
 	char mode;
 	int i = 0;
-	char **targets;
+	std::vector<const char*> targets;
 	int target_count = 0;
 	SV **elem;
 
@@ -747,7 +725,7 @@ static XSPROTO (XS_HexChat_send_modes)
 		if (SvROK (ST (0))) {
 			p_targets = (AV*) SvRV (ST (0));
 			target_count = av_len (p_targets) + 1;
-			targets = static_cast<char**>( malloc (target_count * sizeof (char *)));
+			targets.resize(target_count);
 			for (i = 0; i < target_count; i++ ) {
 				elem = av_fetch (p_targets, i, 0);
 
@@ -758,13 +736,11 @@ static XSPROTO (XS_HexChat_send_modes)
 				}
 			}
 		} else{
-			targets = static_cast<char**>( malloc (sizeof (char *)));
-			targets[0] = SvPV_nolen (ST (0));
+			targets.emplace_back(SvPV_nolen(ST(0)));
 			target_count = 1;
 		}
 		
 		if (target_count == 0) {
-			free (targets);
 			XSRETURN_EMPTY;
 		}
 
@@ -775,8 +751,7 @@ static XSPROTO (XS_HexChat_send_modes)
 			modes_per_line = (int) SvIV (ST (3)); 
 		}
 
-		hexchat_send_modes (ph, const_cast<const char**>(targets), target_count, modes_per_line, sign, mode);
-		free (targets);
+		hexchat_send_modes (ph, targets.data(), target_count, modes_per_line, sign, mode);
 	}
 }
 
@@ -1464,10 +1439,13 @@ static int
 perl_load_file (const char *filename)
 {
 #ifdef WIN32
-	static HMODULE lib = NULL;
+	// NOTE: DO NOT USE A STATIC SMART POINTER HERE
+	// YOU WILL DEADLOCK INSIDE OF THE LOADER LOCK WHEN THE PROCESS EXITS
+	// OR THE PLUGIN UNLOADS
+	static HMODULE lib = nullptr;
 
 	if (!lib) {
-		lib = LoadLibraryA (PERL_DLL);
+		lib = LoadLibraryW(widen(PERL_DLL).c_str());
 		if (!lib) {
 			if (GetLastError () == ERROR_BAD_EXE_FORMAT)
 				/* http://forum.xchat.org/viewtopic.php?t=3277 */
@@ -1479,10 +1457,9 @@ perl_load_file (const char *filename)
 #endif
 			else {
 				/* a lot of people install this old version */
-				lib = LoadLibraryA ("perl56.dll");
+				lib = LoadLibraryW(L"perl56.dll");
 				if (lib) {
-					FreeLibrary (lib);
-					lib = NULL;
+					FreeLibrary(lib);
 					thread_mbox ("Cannot open " PERL_DLL "!\n\n"
 									 "You must have a Visual C++ build of Perl "
 									 PERL_REQUIRED_VERSION " installed in order to\n"
@@ -1503,7 +1480,7 @@ perl_load_file (const char *filename)
 		}
 
 		/* success */
-		FreeLibrary (lib);
+		FreeLibrary(lib);
 	}
 #endif
 
@@ -1621,19 +1598,23 @@ hexchat_plugin_get_info (char **name, char **desc, char **version,
 
 /* Reinit safeguard */
 
-static int initialized = 0;
+static bool initialized = false;
 
 int
 hexchat_plugin_init (hexchat_plugin * plugin_handle, char **plugin_name,
 						 char **plugin_desc, char **plugin_version, char *arg)
 {
-	if (initialized != 0) {
+	if (initialized) {
 		hexchat_print (plugin_handle, "Perl interface already loaded\n");
 		return 0;
 	}
 
 	ph = plugin_handle;
-	initialized = 1;
+	initialized = true;
+
+#ifdef WIN32
+	std::locale::global(boost::locale::generator().generate(""));
+#endif
 
 	*plugin_name = "Perl";
 	*plugin_desc = "Perl scripting interface";
@@ -1667,7 +1648,7 @@ hexchat_plugin_deinit (hexchat_plugin * plugin_handle)
 {
 	perl_end ();
 
-	initialized = 0;
+	initialized = false;
 	hexchat_print (plugin_handle, "Perl interface unloaded\n");
 
 	return 1;
