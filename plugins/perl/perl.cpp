@@ -16,9 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -32,6 +33,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <process.h>
+#include <thread>
+#include <locale>
+#include <codecvt>
+
+static std::wstring widen(const std::string& to_widen)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;
+	return cvt.from_bytes(to_widen);
+}
 #else
 #include <dirent.h>
 #endif
@@ -58,31 +68,18 @@ static int perl_load_file (const char *script_name);
 static DWORD
 child (char *str)
 {
-    wchar_t* buffer = NULL;
-    size_t utf8_len = strlen(str);
-    int len = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, str, (int) utf8_len, NULL, 0);
-    if (len == 0 && utf8_len != 0)
-        return 0;
-    buffer = calloc(len + 1,  sizeof(*buffer));
-
-    if (!buffer)
-        return 0;
-
-    len = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, str, (int)utf8_len, buffer, len + 1);
-
-	MessageBoxW (0, buffer, L"Perl DLL Error",
+	std::wstring wide = widen(str);
+	MessageBoxW (0, wide.c_str(), L"Perl DLL Error",
 					 MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
-    free(buffer);
 	return 0;
 }
 
+// shouldn't I marshal this to the ui thread?
 static void
 thread_mbox (char *str)
 {
-	DWORD tid;
-
-	CloseHandle ((HANDLE)_beginthreadex (NULL, 0, (LPTHREAD_START_ROUTINE) child,
-										str, 0, &tid));
+	std::thread c_thread(child, str);
+	c_thread.detach();
 }
 
 #endif
@@ -99,7 +96,7 @@ perl_auto_load_from_path (const char *path)
 	int path_len = strlen (path);
 
 	/* +6 for \*.pl and \0 */
-	search_path = malloc(path_len + 6);
+	search_path = static_cast<char*>( malloc(path_len + 6));
 	sprintf (search_path, "%s\\*.pl", path);
 
 	find_handle = FindFirstFile (search_path, &find_data);
@@ -111,8 +108,8 @@ perl_auto_load_from_path (const char *path)
 			if (!(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
 				||find_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
 			{
-				char *full_path =
-					malloc (path_len + strlen (find_data.cFileName) + 2);
+				char *full_path = static_cast<char*>(
+					malloc (path_len + strlen (find_data.cFileName) + 2));
 				sprintf (full_path, "%s\\%s", path, find_data.cFileName);
 
 				perl_load_file (full_path);
@@ -137,7 +134,7 @@ perl_auto_load_from_path (const char *path)
 		while ((ent = readdir (dir))) {
 			int len = strlen (ent->d_name);
 			if (len > 3 && strcasecmp (".pl", ent->d_name + len - 3) == 0) {
-				char *file = malloc (len + strlen (path) + 2);
+				char *file = static_cast<char*>( malloc (len + strlen (path) + 2));
 				sprintf (file, "%s/%s", path, ent->d_name);
 				perl_load_file (file);
 				free (file);
@@ -168,7 +165,7 @@ perl_auto_load (void *unused)
 	perl_auto_load_from_path (xdir);
 #endif
 
-	sub_dir = malloc (strlen (xdir) + 8);
+	sub_dir = static_cast<char*>( malloc (strlen (xdir) + 8));
 	strcpy (sub_dir, xdir);
 	strcat (sub_dir, "/addons");
 	perl_auto_load_from_path (sub_dir);
@@ -209,7 +206,7 @@ typedef struct
 } HookData;
 
 static PerlInterpreter *my_perl = NULL;
-extern void boot_DynaLoader (pTHX_ CV * cv);
+extern "C" void boot_DynaLoader (pTHX_ CV * cv);
 
 /*
   this is used for autoload and shutdown callbacks
@@ -638,8 +635,7 @@ print_cb(const char *const word[], void *userdata)
  *
  */
 
-static
-XS (XS_HexChat_register)
+XS_INTERNAL (XS_HexChat_register)
 {
 	char *name, *version, *desc, *filename;
 	void *gui_entry;
@@ -663,8 +659,7 @@ XS (XS_HexChat_register)
 
 
 /* HexChat::print(output) */
-static
-XS (XS_HexChat_print)
+XS_INTERNAL (XS_HexChat_print)
 {
 
 	char *text = NULL;
@@ -679,8 +674,7 @@ XS (XS_HexChat_print)
 	XSRETURN_EMPTY;
 }
 
-static
-XS (XS_HexChat_emit_print)
+XS_INTERNAL (XS_HexChat_emit_print)
 {
 	char *event_name;
 	int RETVAL;
@@ -733,8 +727,7 @@ XS (XS_HexChat_emit_print)
 	}
 }
 
-static
-XS (XS_HexChat_send_modes)
+XS_INTERNAL (XS_HexChat_send_modes)
 {
 	AV *p_targets = NULL;
 	int modes_per_line = 0;
@@ -754,7 +747,7 @@ XS (XS_HexChat_send_modes)
 		if (SvROK (ST (0))) {
 			p_targets = (AV*) SvRV (ST (0));
 			target_count = av_len (p_targets) + 1;
-			targets = malloc (target_count * sizeof (char *));
+			targets = static_cast<char**>( malloc (target_count * sizeof (char *)));
 			for (i = 0; i < target_count; i++ ) {
 				elem = av_fetch (p_targets, i, 0);
 
@@ -765,7 +758,7 @@ XS (XS_HexChat_send_modes)
 				}
 			}
 		} else{
-			targets = malloc (sizeof (char *));
+			targets = static_cast<char**>( malloc (sizeof (char *)));
 			targets[0] = SvPV_nolen (ST (0));
 			target_count = 1;
 		}
@@ -782,12 +775,13 @@ XS (XS_HexChat_send_modes)
 			modes_per_line = (int) SvIV (ST (3)); 
 		}
 
-		hexchat_send_modes (ph, targets, target_count, modes_per_line, sign, mode);
+		hexchat_send_modes (ph, const_cast<const char**>(targets), target_count, modes_per_line, sign, mode);
 		free (targets);
 	}
 }
-static
-XS (XS_HexChat_get_info)
+
+
+XS_INTERNAL (XS_HexChat_get_info)
 {
 	SV *temp = NULL;
 	dXSARGS;
@@ -825,8 +819,7 @@ XS (XS_HexChat_get_info)
 	}
 }
 
-static
-XS (XS_HexChat_context_info)
+XS_INTERNAL (XS_HexChat_context_info)
 {
 	const char *const *fields;
 	dXSARGS;
@@ -839,8 +832,7 @@ XS (XS_HexChat_context_info)
 	XSRETURN (1);
 }
 
-static
-XS (XS_HexChat_get_prefs)
+XS_INTERNAL (XS_HexChat_get_prefs)
 {
 	const char *str;
 	int integer;
@@ -877,8 +869,7 @@ XS (XS_HexChat_get_prefs)
 }
 
 /* HexChat::Internal::hook_server(name, priority, callback, userdata) */
-static
-XS (XS_HexChat_hook_server)
+XS_INTERNAL (XS_HexChat_hook_server)
 {
 
 	char *name;
@@ -901,7 +892,7 @@ XS (XS_HexChat_hook_server)
 		userdata = ST (3);
 		package = ST (4);
 		data = NULL;
-		data = malloc (sizeof (HookData));
+		data = static_cast<HookData*>( malloc (sizeof (HookData)));
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -918,8 +909,7 @@ XS (XS_HexChat_hook_server)
 }
 
 /* HexChat::Internal::hook_command(name, priority, callback, help_text, userdata) */
-static
-XS (XS_HexChat_hook_command)
+XS_INTERNAL (XS_HexChat_hook_command)
 {
 	char *name;
 	int pri;
@@ -950,7 +940,7 @@ XS (XS_HexChat_hook_command)
 		package = ST (5);
 		data = NULL;
 
-		data = malloc (sizeof (HookData));
+		data = static_cast<HookData*>(malloc (sizeof (HookData)));
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -967,8 +957,7 @@ XS (XS_HexChat_hook_command)
 }
 
 /* HexChat::Internal::hook_print(name, priority, callback, [userdata]) */
-static
-XS (XS_HexChat_hook_print)
+XS_INTERNAL (XS_HexChat_hook_print)
 {
 
 	char *name;
@@ -990,7 +979,7 @@ XS (XS_HexChat_hook_print)
 		userdata = ST (3);
 		package = ST (4);
 
-		data = malloc (sizeof (HookData));
+		data = static_cast<HookData*>(malloc (sizeof (HookData)));
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -1006,8 +995,7 @@ XS (XS_HexChat_hook_print)
 }
 
 /* HexChat::Internal::hook_timer(timeout, callback, userdata) */
-static
-XS (XS_HexChat_hook_timer)
+XS_INTERNAL (XS_HexChat_hook_timer)
 {
 	int timeout;
 	SV *callback;
@@ -1028,7 +1016,7 @@ XS (XS_HexChat_hook_timer)
 		userdata = ST (2);
 		package = ST (3);
 
-		data = malloc (sizeof (HookData));
+		data = static_cast<HookData*>(malloc (sizeof (HookData)));
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -1045,8 +1033,7 @@ XS (XS_HexChat_hook_timer)
 }
 
 /* HexChat::Internal::hook_fd(fd, callback, flags, userdata) */
-static
-XS (XS_HexChat_hook_fd)
+XS_INTERNAL (XS_HexChat_hook_fd)
 {
 	int fd;
 	SV *callback;
@@ -1082,7 +1069,7 @@ XS (XS_HexChat_hook_fd)
 		}
 #endif
 
-		data = malloc (sizeof (HookData));
+		data = static_cast<HookData*>(malloc (sizeof (HookData)));
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -1098,8 +1085,7 @@ XS (XS_HexChat_hook_fd)
 	}
 }
 
-static
-XS (XS_HexChat_unhook)
+XS_INTERNAL (XS_HexChat_unhook)
 {
 	hexchat_hook *hook;
 	HookData *userdata;
@@ -1134,8 +1120,7 @@ XS (XS_HexChat_unhook)
 }
 
 /* HexChat::Internal::command(command) */
-static
-XS (XS_HexChat_command)
+XS_INTERNAL (XS_HexChat_command)
 {
 	char *cmd = NULL;
 
@@ -1150,8 +1135,7 @@ XS (XS_HexChat_command)
 	XSRETURN_EMPTY;
 }
 
-static
-XS (XS_HexChat_find_context)
+XS_INTERNAL (XS_HexChat_find_context)
 {
 	char *server = NULL;
 	char *chan = NULL;
@@ -1206,8 +1190,7 @@ XS (XS_HexChat_find_context)
 	}
 }
 
-static
-XS (XS_HexChat_get_context)
+XS_INTERNAL (XS_HexChat_get_context)
 {
 	dXSARGS;
 	if (items != 0) {
@@ -1217,8 +1200,7 @@ XS (XS_HexChat_get_context)
 	}
 }
 
-static
-XS (XS_HexChat_set_context)
+XS_INTERNAL (XS_HexChat_set_context)
 {
 	hexchat_context *ctx;
 	dXSARGS;
@@ -1230,8 +1212,7 @@ XS (XS_HexChat_set_context)
 	}
 }
 
-static
-XS (XS_HexChat_nickcmp)
+XS_INTERNAL (XS_HexChat_nickcmp)
 {
 	dXSARGS;
 	if (items != 2) {
@@ -1242,8 +1223,7 @@ XS (XS_HexChat_nickcmp)
 	}
 }
 
-static
-XS (XS_HexChat_get_list)
+XS_INTERNAL (XS_HexChat_get_list)
 {
 	SV *name;
 	hexchat_list *list;
@@ -1283,8 +1263,7 @@ XS (XS_HexChat_get_list)
 	}
 }
 
-static
-XS (XS_HexChat_Embed_plugingui_remove)
+XS_INTERNAL (XS_HexChat_Embed_plugingui_remove)
 {
 	void *gui_entry;
 	dXSARGS;
@@ -1297,8 +1276,7 @@ XS (XS_HexChat_Embed_plugingui_remove)
 	XSRETURN_EMPTY;
 }
 
-static
-XS (XS_HexChat_plugin_pref_set)
+XS_INTERNAL (XS_HexChat_plugin_pref_set)
 {
 	dMARK;
 	dAX;
@@ -1307,8 +1285,7 @@ XS (XS_HexChat_plugin_pref_set)
 													SvPV_nolen (ST (1))));
 }
 
-static
-XS (XS_HexChat_plugin_pref_get)
+XS_INTERNAL (XS_HexChat_plugin_pref_get)
 {
 	int result;
 	char value[512];
@@ -1324,8 +1301,7 @@ XS (XS_HexChat_plugin_pref_get)
 	XSRETURN_UNDEF;
 }
 
-static
-XS (XS_HexChat_plugin_pref_delete)
+XS_INTERNAL (XS_HexChat_plugin_pref_delete)
 {
 	dMARK;
 	dAX;
@@ -1333,8 +1309,7 @@ XS (XS_HexChat_plugin_pref_delete)
 	XSRETURN_IV ((IV) hexchat_pluginpref_delete (ph, SvPV_nolen (ST (0))));
 }
 
-static
-XS (XS_HexChat_plugin_pref_list)
+XS_INTERNAL (XS_HexChat_plugin_pref_list)
 {
 	char list[4096];
 	char value[512];

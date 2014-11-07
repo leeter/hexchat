@@ -16,7 +16,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="perl.c">
+    <ClCompile Include="perl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

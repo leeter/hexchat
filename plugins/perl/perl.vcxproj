@@ -117,7 +117,7 @@ move hexchat.pm.h "$(IntDir)"</Command>
     <None Include="perl.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="perl.c" />
+    <ClCompile Include="perl.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
