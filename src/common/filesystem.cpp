@@ -57,7 +57,7 @@ namespace io
 		boost::filesystem::path make_path(const std::vector<std::string>& segments)
 		{
 			if (segments.empty())
-				return "";
+				return {};
 #ifdef WIN32
 			bfs::path path(charset::widen(segments.front()));
 			for (auto it = segments.cbegin() + 1; it != segments.cend(); ++it)
