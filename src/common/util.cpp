@@ -183,7 +183,7 @@ errorstring (int err)
 
 				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
 				return fbuf;
-			}
+				}
 		}	/* ! if (osvi.dwMajorVersion >= 5) */
 
 		/* fallback to error number */
@@ -458,7 +458,7 @@ get_cpu_info (double *mhz, int *cpus)
 	sysctl(mib, 2, &ncpu, &len, NULL, 0);
 
 	len = sizeof(freq);
-		sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
+        sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
 
 	*cpus = ncpu;
 	*mhz = (freq / 1000000);
@@ -678,77 +678,77 @@ int match(const char *mask, const char *string)
 
   /* Process the "head" of the mask, if any */
   while ((ch = *m++) && (ch != '*'))
-	switch (ch)
-	{
-	  case '\\':
+    switch (ch)
+    {
+      case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-	  default:
+      default:
 	if (rfc_tolower(*s) != rfc_tolower(ch))
 	  return 0;
-	  case '?':
+      case '?':
 	if (!*s++)
 	  return 0;
-	};
+    };
   if (!ch)
-	return !(*s);
+    return !(*s);
 
   /* We got a star: quickly find if/where we match the next char */
 got_star:
   bm = m;			/* Next try rollback here */
   while ((ch = *m++))
-	switch (ch)
-	{
-	  case '?':
+    switch (ch)
+    {
+      case '?':
 	if (!*s++)
 	  return 0;
-	  case '*':
+      case '*':
 	bm = m;
 	continue;		/* while */
-	  case '\\':
+      case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-	  default:
+      default:
 	goto break_while;	/* C is structured ? */
-	};
+    };
 break_while:
   if (!ch)
-	return 1;			/* mask ends with '*', we got it */
+    return 1;			/* mask ends with '*', we got it */
   ch = rfc_tolower(ch);
   while (rfc_tolower(*s++) != ch)
-	if (!*s)
-	  return 0;
+    if (!*s)
+      return 0;
   bs = s;			/* Next try start from here */
 
   /* Check the rest of the "chunk" */
   while ((ch = *m++))
   {
-	switch (ch)
-	{
-	  case '*':
+    switch (ch)
+    {
+      case '*':
 	goto got_star;
-	  case '\\':
+      case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-	  default:
+      default:
 	if (rfc_tolower(*s) != rfc_tolower(ch))
 	{
 	  if (!*s)
-		return 0;
+	    return 0;
 	  m = bm;
 	  s = bs;
 	  goto got_star;
 	};
-	  case '?':
+      case '?':
 	if (!*s++)
 	  return 0;
-	};
+    };
   };
   if (*s)
   {
-	m = bm;
-	s = bs;
-	goto got_star;
+    m = bm;
+    s = bs;
+    goto got_star;
   };
   return 1;
 }
@@ -1532,7 +1532,7 @@ portable_mode ()
 }
 
 int
-unity_mode ()
+unity_mode (void)
 {
 #ifdef G_OS_UNIX
 	const char *env = g_getenv("XDG_CURRENT_DESKTOP");

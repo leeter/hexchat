@@ -418,6 +418,9 @@ Util_BuildEOLList(const char * const word[])
 	PyObject *list;
 	int listsize = 31;
 	int i;
+	char *accum = NULL;
+	char *last = NULL;
+
 	/* Find the last valid array member; there may be intermediate NULLs that
 	 * would otherwise cause us to drop some members. */
 	while (listsize > 0 &&
@@ -428,10 +431,9 @@ Util_BuildEOLList(const char * const word[])
 		PyErr_Print();
 		return NULL;
 	}
-	char *accum = NULL;
-	char *last = NULL;
 	for (i = listsize; i > 0; i--) {
 		const char *part = word[i];
+		PyObject * uni_part;
 		if (accum == NULL) {
 			accum = g_strdup (part);
 		} else if (part != NULL && part[0] != 0) {
@@ -447,7 +449,7 @@ Util_BuildEOLList(const char * const word[])
 				return NULL;
 			}
 		}
-		PyObject *uni_part = PyUnicode_FromString(accum);
+		uni_part = PyUnicode_FromString(accum);
 		PyList_SetItem(list, i - 1, uni_part);
 	}
 

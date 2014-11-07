@@ -63,11 +63,6 @@
 #include <glib-object.h>			/* for g_type_init() */
 #endif
 
-#ifdef USE_OPENSSL
-#include <openssl/ssl.h>			/* SSL_() */
-#include "ssl.hpp"
-#endif
-
 #ifdef USE_MSPROXY
 #include "msproxy.hpp"
 #endif
@@ -126,11 +121,6 @@ gint arg_existing = FALSE;
 struct session *current_tab;
 struct session *current_sess = 0;
 struct hexchatprefs prefs;
-
-
-#ifdef USE_OPENSSL
-SSL_CTX *ctx = nullptr;
-#endif
 
 #ifdef USE_LIBPROXY
 pxProxyFactory *libproxy_factory;
@@ -608,7 +598,7 @@ exec_notify_kill (session * sess)
 		waitpid (re->childpid, nullptr, WNOHANG);
 		fe_input_remove (re->iotag);
 		close (re->myfd);
-		free(re->linebuf);
+			free(re->linebuf);
 		free (re);
 	}
 #endif
@@ -714,8 +704,8 @@ session_free (session *killsess)
 
 	send_quit_or_part (killsess);
 
-	free (killsess->topic);
-	free (killsess->current_modes);
+		free (killsess->topic);
+		free (killsess->current_modes);
 
 	fe_session_callback (killsess);
 
@@ -794,7 +784,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -1167,7 +1157,7 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
 
@@ -1177,11 +1167,6 @@ main (int argc, char *argv[])
 
 #ifdef USE_LIBPROXY
 	px_proxy_factory_free(libproxy_factory);
-#endif
-
-#ifdef USE_OPENSSL
-	if (ctx)
-		_SSL_context_free (ctx);
 #endif
 
 #ifdef WIN32

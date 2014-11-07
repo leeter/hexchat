@@ -88,7 +88,6 @@ namespace dcc = ::hexchat::dcc;
 #endif
 
 #ifdef USE_OPENSSL
-extern SSL_CTX *ctx;				  /* hexchat.c */
 /* local variables */
 static struct session *g_sess = nullptr;
 #endif
@@ -172,7 +171,7 @@ server_send_real (server *serv, const char *buf, int len)
 	fe_add_rawlog (serv, buf, len, TRUE);
 
 	url_check_line (buf, len);
-	
+
 	return tcp_send_real (serv->ssl, serv->sok, serv->encoding ? serv->encoding->c_str() : nullptr, serv->using_irc,
 								 buf, len, serv);
 }
@@ -197,27 +196,27 @@ tcp_send_queue (server *serv)
 	{
 		auto & top = serv->outbound_queue.top();
 
-		if (serv->next_send < now)
-			serv->next_send = now;
-		if (serv->next_send - now >= 10)
-		{
-			/* check for clock skew */
-			if (now >= serv->prev_now)
-				return 1;		  /* don't remove the timeout handler */
-			/* it is skewed, reset to something sane */
-			serv->next_send = now;
-		}
+				if (serv->next_send < now)
+					serv->next_send = now;
+				if (serv->next_send - now >= 10)
+				{
+					/* check for clock skew */
+					if (now >= serv->prev_now)
+						return 1;		  /* don't remove the timeout handler */
+					/* it is skewed, reset to something sane */
+					serv->next_send = now;
+				}
 
 		for (p = top.second.c_str(), i = top.second.size(); i && *p != ' '; p++, i--);
-		serv->next_send += (2 + i / 120);
+				serv->next_send += (2 + i / 120);
 		serv->sendq_len -= top.second.size();
-		serv->prev_now = now;
-		fe_set_throttle (serv);
+				serv->prev_now = now;
+				fe_set_throttle (serv);
 
 		server_send_real(serv, top.second.c_str(), top.second.size());
 
 		serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
-	}
+			}
 	return 0;						  /* remove the timeout handler */
 }
 
@@ -268,7 +267,7 @@ tcp_sendf (server *serv, const char *fmt, ...)
 {
 	va_list args;
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
-	  string shorter, so allow alot more than 512 for now. */
+      string shorter, so allow alot more than 512 for now. */
 	static char send_buf[1540];	/* good code hey (no it's not overflowable) */
 	int len;
 
@@ -1021,181 +1020,181 @@ server::find_channel(const std::string &chan)
 
 /* connect() successed */
 
-static void
-server_connect_success (server *serv)
-{
-#ifdef USE_OPENSSL
-#define	SSLDOCONNTMOUT	300
-	if (serv->use_ssl)
-	{
-		char *err;
-
-		/* it'll be a memory leak, if connection isn't terminated by
-		   server_cleanup() */
-		serv->ssl = io::ssl::_SSL_socket (ctx, serv->sok);
-		if ((err = io::ssl::_SSL_set_verify (ctx, ssl_cb_verify, nullptr)))
-		{
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, nullptr,
-							 nullptr, nullptr, 0);
-			serv->cleanup ();	/* ->connecting = FALSE */
-			return;
-		}
-		/* FIXME: it'll be needed by new servers */
-		/* send(serv->sok, "STLS\r\n", 6, 0); sleep(1); */
-		set_nonblocking (serv->sok);
-		serv->ssl_do_connect_tag = fe_timeout_add (SSLDOCONNTMOUT,
-																 (GSourceFunc)ssl_do_connect, serv);
-		return;
-	}
-
-	serv->ssl = nullptr;
-#endif
-	server_stopconnecting (serv);	/* ->connecting = FALSE */
-	/* activate glib poll */
-	server_connected (serv);
-}
+//static void
+//server_connect_success (server *serv)
+//{
+//#ifdef USE_OPENSSL
+//#define	SSLDOCONNTMOUT	300
+//	if (serv->use_ssl)
+//	{
+//		char *err;
+//
+//		/* it'll be a memory leak, if connection isn't terminated by
+//		   server_cleanup() */
+//		serv->ssl = io::ssl::_SSL_socket (ctx, serv->sok);
+//		if ((err = io::ssl::_SSL_set_verify (ctx, ssl_cb_verify, nullptr)))
+//		{
+//			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, nullptr,
+//							 nullptr, nullptr, 0);
+//			serv->cleanup ();	/* ->connecting = FALSE */
+//			return;
+//		}
+//		/* FIXME: it'll be needed by new servers */
+//		/* send(serv->sok, "STLS\r\n", 6, 0); sleep(1); */
+//		set_nonblocking (serv->sok);
+//		serv->ssl_do_connect_tag = fe_timeout_add (SSLDOCONNTMOUT,
+//																 (GSourceFunc)ssl_do_connect, serv);
+//		return;
+//	}
+//
+//	serv->ssl = nullptr;
+//#endif
+//	server_stopconnecting (serv);	/* ->connecting = FALSE */
+//	/* activate glib poll */
+//	server_connected (serv);
+//}
 
 /* receive info from the child-process about connection progress */
 
-static gboolean
-server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
-{
-	session *sess = serv->server_session;
-	char tbuf[128];
-	char outbuf[512];
-	char host[100];
-	char ip[100];
-#ifdef USE_MSPROXY
-	char *p;
-#endif
-
-	waitline2 (source, tbuf, sizeof tbuf);
-
-	switch (tbuf[0])
-	{
-	case '0':	/* print some text */
-		waitline2 (source, tbuf, sizeof tbuf);
-		PrintText (serv->server_session, tbuf);
-		break;
-	case '1':						  /* unknown host */
-		server_stopconnecting (serv);
-		closesocket (serv->sok4);
-		if (serv->proxy_sok4 != -1)
-			closesocket (serv->proxy_sok4);
-#ifdef USE_IPV6
-		if (serv->sok6 != -1)
-			closesocket (serv->sok6);
-		if (serv->proxy_sok6 != -1)
-			closesocket (serv->proxy_sok6);
-#endif
-		EMIT_SIGNAL (XP_TE_UKNHOST, sess, nullptr, nullptr, nullptr, nullptr, 0);
-		if (!servlist_cycle (serv))
-			if (prefs.hex_net_auto_reconnectonfail)
-				serv->auto_reconnect (false, -1);
-		break;
-	case '2':						  /* connection failed */
-		waitline2 (source, tbuf, sizeof tbuf);
-		server_stopconnecting (serv);
-		closesocket (serv->sok4);
-		if (serv->proxy_sok4 != -1)
-			closesocket (serv->proxy_sok4);
-#ifdef USE_IPV6
-		if (serv->sok6 != -1)
-			closesocket (serv->sok6);
-		if (serv->proxy_sok6 != -1)
-			closesocket (serv->proxy_sok6);
-#endif
-		EMIT_SIGNAL (XP_TE_CONNFAIL, sess, errorstring (atoi (tbuf)), nullptr,
-						 nullptr, nullptr, 0);
-		if (!servlist_cycle (serv))
-			if (prefs.hex_net_auto_reconnectonfail)
-				serv->auto_reconnect (false, -1);
-		break;
-	case '3':						  /* gethostbyname finished */
-		waitline2 (source, host, sizeof host);
-		waitline2 (source, ip, sizeof ip);
-		waitline2 (source, outbuf, sizeof outbuf);
-		EMIT_SIGNAL (XP_TE_CONNECT, sess, host, ip, outbuf, nullptr, 0);
-#ifdef WIN32
-		if (prefs.hex_identd)
-		{
-			if (serv->network && serv->network->user)
-			{
-				identd_start (serv->network->user);
-			}
-			else
-			{
-				identd_start (prefs.hex_irc_user_name);
-			}
-		}
-#else
-		snprintf (outbuf, sizeof (outbuf), "%s/auth/xchat_auth",
-					 g_get_home_dir ());
-		if (access (outbuf, X_OK) == 0)
-		{
-			snprintf (outbuf, sizeof (outbuf), "exec -d %s/auth/xchat_auth %s",
-						 g_get_home_dir (), prefs.hex_irc_user_name);
-			handle_command (serv->server_session, outbuf, FALSE);
-		}
-#endif
-		break;
-	case '4':						  /* success */
-		waitline2 (source, tbuf, sizeof (tbuf));
-#ifdef USE_MSPROXY
-		serv->sok = strtol (tbuf, &p, 10);
-		if (*p++ == ' ')
-		{
-			serv->proxy_sok = strtol (p, &p, 10);
-			serv->msp_state.clientid = strtol (++p, &p, 10);
-			serv->msp_state.serverid = strtol (++p, &p, 10);
-			serv->msp_state.seq_sent = atoi (++p);
-		} else
-			serv->proxy_sok = -1;
-#ifdef DEBUG_MSPROXY
-		printf ("Parent got main socket: %d, proxy socket: %d\n", serv->sok, serv->proxy_sok);
-		printf ("Client ID 0x%08x server ID 0x%08x seq_sent %d\n", serv->msp_state.clientid, serv->msp_state.serverid, serv->msp_state.seq_sent);
-#endif
-#else
-		serv->sok = atoi (tbuf);
-#endif
-#ifdef USE_IPV6
-		/* close the one we didn't end up using */
-		if (serv->sok == serv->sok4)
-			closesocket (serv->sok6);
-		else
-			closesocket (serv->sok4);
-		if (serv->proxy_sok != -1)
-		{
-			if (serv->proxy_sok == serv->proxy_sok4)
-				closesocket (serv->proxy_sok6);
-			else
-				closesocket (serv->proxy_sok4);
-		}
-#endif
-		server_connect_success (serv);
-		break;
-	case '5':						  /* prefs ip discovered */
-		waitline2 (source, tbuf, sizeof tbuf);
-		prefs.local_ip = inet_addr (tbuf);
-		break;
-	case '7':						  /* gethostbyname (prefs.hex_net_bind_host) failed */
-		sprintf (outbuf,
-					_("Cannot resolve hostname %s\nCheck your IP Settings!\n"),
-					prefs.hex_net_bind_host);
-		PrintText (sess, outbuf);
-		break;
-	case '8':
-		PrintText (sess, _("Proxy traversal failed.\n"));
-		serv->disconnect (sess, false, -1);
-		break;
-	case '9':
-		waitline2 (source, tbuf, sizeof tbuf);
-		EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, tbuf, nullptr, nullptr, nullptr, 0);
-		break;
-	}
-
-	return TRUE;
-}
+//static gboolean
+//server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
+//{
+//	session *sess = serv->server_session;
+//	char tbuf[128];
+//	char outbuf[512];
+//	char host[100];
+//	char ip[100];
+//#ifdef USE_MSPROXY
+//	char *p;
+//#endif
+//
+//	waitline2 (source, tbuf, sizeof tbuf);
+//
+//	switch (tbuf[0])
+//	{
+//	case '0':	/* print some text */
+//		waitline2 (source, tbuf, sizeof tbuf);
+//		PrintText (serv->server_session, tbuf);
+//		break;
+//	case '1':						  /* unknown host */
+//		server_stopconnecting (serv);
+//		closesocket (serv->sok4);
+//		if (serv->proxy_sok4 != -1)
+//			closesocket (serv->proxy_sok4);
+//#ifdef USE_IPV6
+//		if (serv->sok6 != -1)
+//			closesocket (serv->sok6);
+//		if (serv->proxy_sok6 != -1)
+//			closesocket (serv->proxy_sok6);
+//#endif
+//		EMIT_SIGNAL (XP_TE_UKNHOST, sess, nullptr, nullptr, nullptr, nullptr, 0);
+//		if (!servlist_cycle (serv))
+//			if (prefs.hex_net_auto_reconnectonfail)
+//				serv->auto_reconnect (false, -1);
+//		break;
+//	case '2':						  /* connection failed */
+//		waitline2 (source, tbuf, sizeof tbuf);
+//		server_stopconnecting (serv);
+//		closesocket (serv->sok4);
+//		if (serv->proxy_sok4 != -1)
+//			closesocket (serv->proxy_sok4);
+//#ifdef USE_IPV6
+//		if (serv->sok6 != -1)
+//			closesocket (serv->sok6);
+//		if (serv->proxy_sok6 != -1)
+//			closesocket (serv->proxy_sok6);
+//#endif
+//		EMIT_SIGNAL (XP_TE_CONNFAIL, sess, errorstring (atoi (tbuf)), nullptr,
+//						 nullptr, nullptr, 0);
+//		if (!servlist_cycle (serv))
+//			if (prefs.hex_net_auto_reconnectonfail)
+//				serv->auto_reconnect (false, -1);
+//		break;
+//	case '3':						  /* gethostbyname finished */
+//		waitline2 (source, host, sizeof host);
+//		waitline2 (source, ip, sizeof ip);
+//		waitline2 (source, outbuf, sizeof outbuf);
+//		EMIT_SIGNAL (XP_TE_CONNECT, sess, host, ip, outbuf, nullptr, 0);
+//#ifdef WIN32
+//		if (prefs.hex_identd)
+//		{
+//			if (serv->network && serv->network->user)
+//			{
+//				identd_start (serv->network->user);
+//			}
+//			else
+//			{
+//				identd_start (prefs.hex_irc_user_name);
+//			}
+//		}
+//#else
+//		snprintf (outbuf, sizeof (outbuf), "%s/auth/xchat_auth",
+//					 g_get_home_dir ());
+//		if (access (outbuf, X_OK) == 0)
+//		{
+//			snprintf (outbuf, sizeof (outbuf), "exec -d %s/auth/xchat_auth %s",
+//						 g_get_home_dir (), prefs.hex_irc_user_name);
+//			handle_command (serv->server_session, outbuf, FALSE);
+//		}
+//#endif
+//		break;
+//	case '4':						  /* success */
+//		waitline2 (source, tbuf, sizeof (tbuf));
+//#ifdef USE_MSPROXY
+//		serv->sok = strtol (tbuf, &p, 10);
+//		if (*p++ == ' ')
+//		{
+//			serv->proxy_sok = strtol (p, &p, 10);
+//			serv->msp_state.clientid = strtol (++p, &p, 10);
+//			serv->msp_state.serverid = strtol (++p, &p, 10);
+//			serv->msp_state.seq_sent = atoi (++p);
+//		} else
+//			serv->proxy_sok = -1;
+//#ifdef DEBUG_MSPROXY
+//		printf ("Parent got main socket: %d, proxy socket: %d\n", serv->sok, serv->proxy_sok);
+//		printf ("Client ID 0x%08x server ID 0x%08x seq_sent %d\n", serv->msp_state.clientid, serv->msp_state.serverid, serv->msp_state.seq_sent);
+//#endif
+//#else
+//		serv->sok = atoi (tbuf);
+//#endif
+//#ifdef USE_IPV6
+//		/* close the one we didn't end up using */
+//		if (serv->sok == serv->sok4)
+//			closesocket (serv->sok6);
+//		else
+//			closesocket (serv->sok4);
+//		if (serv->proxy_sok != -1)
+//		{
+//			if (serv->proxy_sok == serv->proxy_sok4)
+//				closesocket (serv->proxy_sok6);
+//			else
+//				closesocket (serv->proxy_sok4);
+//		}
+//#endif
+//		server_connect_success (serv);
+//		break;
+//	case '5':						  /* prefs ip discovered */
+//		waitline2 (source, tbuf, sizeof tbuf);
+//		prefs.local_ip = inet_addr (tbuf);
+//		break;
+//	case '7':						  /* gethostbyname (prefs.hex_net_bind_host) failed */
+//		sprintf (outbuf,
+//					_("Cannot resolve hostname %s\nCheck your IP Settings!\n"),
+//					prefs.hex_net_bind_host);
+//		PrintText (sess, outbuf);
+//		break;
+//	case '8':
+//		PrintText (sess, _("Proxy traversal failed.\n"));
+//		serv->disconnect (sess, false, -1);
+//		break;
+//	case '9':
+//		waitline2 (source, tbuf, sizeof tbuf);
+//		EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, tbuf, nullptr, nullptr, nullptr, 0);
+//		break;
+//	}
+//
+//	return TRUE;
+//}
 
 /* kill all sockets & iotags of a server. Stop a connection attempt, or
    disconnect if already connected. */
@@ -1269,7 +1268,7 @@ server::cleanup ()
 	}
 
 	return cleanup_result::not_connected;
-}
+	}
 
 // if the server isn't dead yet, kill it
 static gboolean
@@ -1294,7 +1293,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 		serv->death_timer = fe_timeout_add(500, (GSourceFunc)server_kill, sess);
 		return;
 	}
-	
+
 	fe_server_event (serv, FE_SE_DISCONNECT, 0);
 
 	// flush any outgoing messages
@@ -1914,7 +1913,7 @@ server::connect (char *hostname, int port, bool no_login)
 #ifdef USE_OPENSSL
 	if (!ctx && this->use_ssl)
 	{
-		if (!(ctx = _SSL_context_init (ssl_cb_info, FALSE)))
+		if (!(serv->ctx = _SSL_context_init (ssl_cb_info, FALSE)))
 		{
 			fprintf (stderr, "_SSL_context_init failed\n");
 			exit (1);
@@ -2285,23 +2284,23 @@ server::set_name (const std::string& name)
 		} else
 		{
 			safe_strcpy (this->server_session->channel, name.c_str(), CHANLEN);
-		}
+}
 		fe_set_channel (this->server_session);
 	}
 }
 
 boost::optional<const std::pair<bool, std::string>& >
 server::get_away_message(const std::string & nick) const NOEXCEPT
-{
+		{
 	auto res = this->away_map.find(nick);
 	if (res == this->away_map.cend())
 		return boost::none;
 	return boost::make_optional<const std::pair<bool, std::string>&>(res->second);
 }
 
-void 
+void
 server::save_away_message(const std::string& nick, const boost::optional<std::string>& message)
-{
+		{
 	this->away_map.insert({ nick, std::make_pair(static_cast<bool>(message), message ? message.get() : "") });
 }
 

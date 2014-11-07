@@ -43,10 +43,10 @@
 #include <iostream>
 #include <limits>
 
-int main()
-{	
+int main(void)
+{
 	std::vector<std::string> defines;
-	int i = 0, max;
+  	int i = 0, max;
 	std::cout.sync_with_stdio(false);
 	std::cout << "/* this file is auto generated, edit textevents.in instead! */\nextern const struct text_event te[] = {\n";
 	for (std::string name; std::getline(std::cin, name);)
@@ -69,10 +69,10 @@ int main()
 		defines.push_back(num);
 		i++;
 	}
-	
+
 	std::cout << "};\n";
 	std::cout.flush();
-
+	
 	std::clog.sync_with_stdio(false);    
 	std::clog << "/* this file is auto generated, edit textevents.in instead! */\n\nenum\n{\n";
 	max = i;

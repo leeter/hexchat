@@ -133,8 +133,8 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 	return(ctx);
 }
 /*
-	FIXME: Master-Key, Extensions, CA bits
-		(openssl x509 -text -in servcert.pem)
+    FIXME: Master-Key, Extensions, CA bits
+	    (openssl x509 -text -in servcert.pem)
 */
 int
 get_cert_info (cert_info &cert_info, const SSL * ssl)
@@ -278,7 +278,7 @@ _SSL_socket (SSL_CTX *ctx, int sd)
 	if (ctx->method == SSLv23_client_method())
 		SSL_set_connect_state (ssl);
 	else
-			SSL_set_accept_state(ssl);
+	        SSL_set_accept_state(ssl);
 
 	return (ssl);
 }

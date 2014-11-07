@@ -24,7 +24,7 @@
 bool hwmon_chip_present()
 {
 	return boost::filesystem::exists("/sys/class/hwmon/hwmon0/device/name");
-}
+	}
 
 #if 0
 void get_hwmon_chip_name(char *name)
