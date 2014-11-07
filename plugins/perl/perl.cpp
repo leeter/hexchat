@@ -635,7 +635,7 @@ print_cb(const char *const word[], void *userdata)
  *
  */
 
-XS_INTERNAL (XS_HexChat_register)
+static XSPROTO (XS_HexChat_register)
 {
 	char *name, *version, *desc, *filename;
 	void *gui_entry;
@@ -659,7 +659,7 @@ XS_INTERNAL (XS_HexChat_register)
 
 
 /* HexChat::print(output) */
-XS_INTERNAL (XS_HexChat_print)
+static XSPROTO (XS_HexChat_print)
 {
 
 	char *text = NULL;
@@ -674,7 +674,7 @@ XS_INTERNAL (XS_HexChat_print)
 	XSRETURN_EMPTY;
 }
 
-XS_INTERNAL (XS_HexChat_emit_print)
+static XSPROTO (XS_HexChat_emit_print)
 {
 	char *event_name;
 	int RETVAL;
@@ -727,7 +727,7 @@ XS_INTERNAL (XS_HexChat_emit_print)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_send_modes)
+static XSPROTO (XS_HexChat_send_modes)
 {
 	AV *p_targets = NULL;
 	int modes_per_line = 0;
@@ -781,7 +781,7 @@ XS_INTERNAL (XS_HexChat_send_modes)
 }
 
 
-XS_INTERNAL (XS_HexChat_get_info)
+static XSPROTO (XS_HexChat_get_info)
 {
 	SV *temp = NULL;
 	dXSARGS;
@@ -819,7 +819,7 @@ XS_INTERNAL (XS_HexChat_get_info)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_context_info)
+static XSPROTO (XS_HexChat_context_info)
 {
 	const char *const *fields;
 	dXSARGS;
@@ -832,7 +832,7 @@ XS_INTERNAL (XS_HexChat_context_info)
 	XSRETURN (1);
 }
 
-XS_INTERNAL (XS_HexChat_get_prefs)
+static XSPROTO (XS_HexChat_get_prefs)
 {
 	const char *str;
 	int integer;
@@ -869,7 +869,7 @@ XS_INTERNAL (XS_HexChat_get_prefs)
 }
 
 /* HexChat::Internal::hook_server(name, priority, callback, userdata) */
-XS_INTERNAL (XS_HexChat_hook_server)
+static XSPROTO (XS_HexChat_hook_server)
 {
 
 	char *name;
@@ -909,7 +909,7 @@ XS_INTERNAL (XS_HexChat_hook_server)
 }
 
 /* HexChat::Internal::hook_command(name, priority, callback, help_text, userdata) */
-XS_INTERNAL (XS_HexChat_hook_command)
+static XSPROTO (XS_HexChat_hook_command)
 {
 	char *name;
 	int pri;
@@ -957,7 +957,7 @@ XS_INTERNAL (XS_HexChat_hook_command)
 }
 
 /* HexChat::Internal::hook_print(name, priority, callback, [userdata]) */
-XS_INTERNAL (XS_HexChat_hook_print)
+static XSPROTO (XS_HexChat_hook_print)
 {
 
 	char *name;
@@ -995,7 +995,7 @@ XS_INTERNAL (XS_HexChat_hook_print)
 }
 
 /* HexChat::Internal::hook_timer(timeout, callback, userdata) */
-XS_INTERNAL (XS_HexChat_hook_timer)
+static XSPROTO (XS_HexChat_hook_timer)
 {
 	int timeout;
 	SV *callback;
@@ -1033,7 +1033,7 @@ XS_INTERNAL (XS_HexChat_hook_timer)
 }
 
 /* HexChat::Internal::hook_fd(fd, callback, flags, userdata) */
-XS_INTERNAL (XS_HexChat_hook_fd)
+static XSPROTO (XS_HexChat_hook_fd)
 {
 	int fd;
 	SV *callback;
@@ -1085,7 +1085,7 @@ XS_INTERNAL (XS_HexChat_hook_fd)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_unhook)
+static XSPROTO (XS_HexChat_unhook)
 {
 	hexchat_hook *hook;
 	HookData *userdata;
@@ -1120,7 +1120,7 @@ XS_INTERNAL (XS_HexChat_unhook)
 }
 
 /* HexChat::Internal::command(command) */
-XS_INTERNAL (XS_HexChat_command)
+static XSPROTO (XS_HexChat_command)
 {
 	char *cmd = NULL;
 
@@ -1135,7 +1135,7 @@ XS_INTERNAL (XS_HexChat_command)
 	XSRETURN_EMPTY;
 }
 
-XS_INTERNAL (XS_HexChat_find_context)
+static XSPROTO (XS_HexChat_find_context)
 {
 	char *server = NULL;
 	char *chan = NULL;
@@ -1190,7 +1190,7 @@ XS_INTERNAL (XS_HexChat_find_context)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_get_context)
+static XSPROTO (XS_HexChat_get_context)
 {
 	dXSARGS;
 	if (items != 0) {
@@ -1200,7 +1200,7 @@ XS_INTERNAL (XS_HexChat_get_context)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_set_context)
+static XSPROTO (XS_HexChat_set_context)
 {
 	hexchat_context *ctx;
 	dXSARGS;
@@ -1212,7 +1212,7 @@ XS_INTERNAL (XS_HexChat_set_context)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_nickcmp)
+static XSPROTO (XS_HexChat_nickcmp)
 {
 	dXSARGS;
 	if (items != 2) {
@@ -1223,7 +1223,7 @@ XS_INTERNAL (XS_HexChat_nickcmp)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_get_list)
+static XSPROTO (XS_HexChat_get_list)
 {
 	SV *name;
 	hexchat_list *list;
@@ -1263,7 +1263,7 @@ XS_INTERNAL (XS_HexChat_get_list)
 	}
 }
 
-XS_INTERNAL (XS_HexChat_Embed_plugingui_remove)
+static XSPROTO (XS_HexChat_Embed_plugingui_remove)
 {
 	void *gui_entry;
 	dXSARGS;
@@ -1276,7 +1276,7 @@ XS_INTERNAL (XS_HexChat_Embed_plugingui_remove)
 	XSRETURN_EMPTY;
 }
 
-XS_INTERNAL (XS_HexChat_plugin_pref_set)
+static XSPROTO (XS_HexChat_plugin_pref_set)
 {
 	dMARK;
 	dAX;
@@ -1285,7 +1285,7 @@ XS_INTERNAL (XS_HexChat_plugin_pref_set)
 													SvPV_nolen (ST (1))));
 }
 
-XS_INTERNAL (XS_HexChat_plugin_pref_get)
+static XSPROTO (XS_HexChat_plugin_pref_get)
 {
 	int result;
 	char value[512];
@@ -1301,7 +1301,7 @@ XS_INTERNAL (XS_HexChat_plugin_pref_get)
 	XSRETURN_UNDEF;
 }
 
-XS_INTERNAL (XS_HexChat_plugin_pref_delete)
+static XSPROTO (XS_HexChat_plugin_pref_delete)
 {
 	dMARK;
 	dAX;
@@ -1309,7 +1309,7 @@ XS_INTERNAL (XS_HexChat_plugin_pref_delete)
 	XSRETURN_IV ((IV) hexchat_pluginpref_delete (ph, SvPV_nolen (ST (0))));
 }
 
-XS_INTERNAL (XS_HexChat_plugin_pref_list)
+static XSPROTO (XS_HexChat_plugin_pref_list)
 {
 	char list[4096];
 	char value[512];
