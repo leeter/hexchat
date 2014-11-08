@@ -1007,7 +1007,7 @@ PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...)
    (char []) that number of byte to be memcpy'ed into the buffer
    }
    1 =
-   (byte) number of varable to insert
+   (byte) number of variable to insert
    2 = end of buffer
 
    Each XP_TE_* signal is hard coded to call text_emit which calls
@@ -1815,48 +1815,49 @@ void
 format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
 {
 	int len, oi, ii, numargs;
-	char *i, *ar, d, a, done_all = FALSE;
+	char *ar, d, a;
+	bool done_all = false;
 
-	i = pntevts[index];
+	const char* display_evt = pntevts[index];
 	numargs = te[index].num_args & 0x7f;
 
 	oi = ii = len = d = a = 0;
 	dst[0] = 0;
 
-	if (i == NULL)
+	if (display_evt == NULL)
 		return;
 
-	while (done_all == FALSE)
+	while (!done_all)
 	{
-		d = i[ii++];
+		d = display_evt[ii++];
 		switch (d)
 		{
 		case 0:
-			memcpy (&len, &(i[ii]), sizeof (int));
+			memcpy (&len, &(display_evt[ii]), sizeof (int));
 			ii += sizeof (int);
 			if (oi + len > dstsize)
 			{
-				printf ("Overflow in display_event (%s)\n", i);
+				fprintf(stderr, "Overflow in display_event (%s)\n", display_evt);
 				dst[0] = 0;
 				return;
 			}
-			memcpy (&(dst[oi]), &(i[ii]), len);
+			memcpy(&(dst[oi]), &(display_evt[ii]), len);
 			oi += len;
 			ii += len;
 			break;
 		case 1:
-			a = i[ii++];
+			a = display_evt[ii++];
 			if (a > numargs)
 			{
 				fprintf (stderr,
 							"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
-							a, numargs, i);
+							a, numargs, display_evt);
 				break;
 			}
 			ar = args[(int) a + 1];
 			if (ar == NULL)
 			{
-				printf ("arg[%d] is NULL in print event\n", a + 1);
+				fprintf (stderr, "arg[%d] is NULL in print event\n", a + 1);
 			} else
 			{
 				if (strlen (ar) > dstsize - oi - 4)
@@ -1869,7 +1870,7 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 		case 2:
 			dst[oi++] = '\n';
 			dst[oi++] = 0;
-			done_all = TRUE;
+			done_all = true;
 			continue;
 		case 3:
 /*			if (sess->type == SESS_DIALOG)
