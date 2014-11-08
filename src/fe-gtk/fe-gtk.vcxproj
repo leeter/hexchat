@@ -109,10 +109,12 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClCompile>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</SDLCheck>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Zc:rvalueCast %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</SDLCheck>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zc:rvalueCast %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</LargeAddressAware>
