@@ -1614,6 +1614,8 @@ hexchat_plugin_init (hexchat_plugin * plugin_handle, char **plugin_name,
 
 #ifdef WIN32
 	std::locale::global(boost::locale::generator().generate(""));
+	// Make boost.filesystem use it
+	boost::filesystem::path::imbue(std::locale());
 #endif
 
 	*plugin_name = "Perl";
