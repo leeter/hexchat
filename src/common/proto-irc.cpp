@@ -699,7 +699,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 324:
-		sess = find_channel (serv, word[4]);
+		sess = find_channel (*serv, word[4]);
 		if (!sess)
 			sess = serv->server_session;
 		if (sess->ignore_mode)
@@ -719,7 +719,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 328: /* channel url */
-		sess = find_channel (serv, word[4]);
+		sess = find_channel (*serv, word[4]);
 		if (sess)
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANURL, sess, word[4], word[5] + 1,
@@ -728,11 +728,11 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 329:
-		sess = find_channel (serv, word[4]);
+		sess = find_channel (*serv, word[4]);
 		if (sess)
 		{
 			if (sess->ignore_date)
-				sess->ignore_date = FALSE;
+				sess->ignore_date = false;
 			else
 				channel_date (sess, word[4], word[5], tags_data);
 		}
@@ -773,7 +773,7 @@ process_numeric (session * sess, int n,
 	case 352:						  /* WHO */
 		{
 			unsigned int away = 0;
-			session *who_sess = find_channel (serv, word[4]);
+			session *who_sess = find_channel (*serv, word[4]);
 
 			if (*word[9] == 'G')
 				away = 1;
@@ -797,7 +797,7 @@ process_numeric (session * sess, int n,
 			/* irc_away_status and irc_user_list sends out a "152" */
 			if (!strcmp (word[4], "152"))
 			{
-				who_sess = find_channel (serv, word[5]);
+				who_sess = find_channel (*serv, word[5]);
 
 				if (*word[10] == 'G')
 					away = 1;
@@ -820,7 +820,7 @@ process_numeric (session * sess, int n,
 	case 315:						  /* END OF WHO */
 		{
 			session *who_sess;
-			who_sess = find_channel (serv, word[4]);
+			who_sess = find_channel (*serv, word[4]);
 			if (who_sess)
 			{
 				if (!who_sess->doing_who)
@@ -856,7 +856,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 349:	/* end of exemption list */
-		sess = find_channel (serv, word[4]);
+		sess = find_channel (*serv, word[4]);
 		if (!sess)
 		{
 			sess = serv->front_session;
@@ -884,7 +884,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 368:
-		sess = find_channel (serv, word[4]);
+		sess = find_channel (*serv, word[4]);
 		if (!sess)
 		{
 			sess = serv->front_session;
@@ -1032,7 +1032,7 @@ process_numeric (session * sess, int n,
 		
 			if (serv->is_channel_name (word[4]))
 			{
-				sess = find_channel (serv, word[4]);
+				sess = find_channel (*serv, word[4]);
 				if (!sess)
 					sess = serv->server_session;
 			}

@@ -352,7 +352,7 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 	{
 		if (serv->is_channel_name (chan))
 		{
-			sess = find_channel (serv, chan);
+			sess = find_channel (*serv, chan);
 		} else
 		{
 			/* it's a private action! */
@@ -446,7 +446,7 @@ inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 	{
 		if (chan)
 		{
-			sess = find_channel (serv, chan);
+			sess = find_channel (*serv, chan);
 			if (!sess && !serv->is_channel_name (chan))
 				sess = find_dialog (serv, chan);
 		} else
@@ -594,7 +594,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	bool found_unused = false;
 
 	/* already joined? probably a bnc */
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (!sess)
 	{
 		/* see if a window is waiting to join this channel */
@@ -650,7 +650,7 @@ void
 inbound_ukick (server *serv, char *chan, char *kicker, char *reason,
 					const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker, 
@@ -668,7 +668,7 @@ void
 inbound_upart (server *serv, char *chan, char *ip, char *reason,
 					const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		if (*reason)
@@ -691,7 +691,7 @@ inbound_nameslist (server *serv, char *chan, char *names,
 	char name[NICKLEN];
 	int i, offset;
 
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (!sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_USERSONCHAN, serv->server_session, chan,
@@ -745,7 +745,7 @@ void
 inbound_topic (server *serv, char *chan, char *topic_text,
 					const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	char *stripped_topic;
 
 	if (sess)
@@ -767,7 +767,7 @@ inbound_topicnew (server *serv, char *nick, char *chan, char *topic,
 	session *sess;
 	char *stripped_topic;
 
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_NEWTOPIC, sess, nick, topic, chan, nullptr, 0,
@@ -782,7 +782,7 @@ void
 inbound_join (server *serv, char *chan, char *user, char *ip, char *account,
 				  char *realname, const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_JOIN, sess, user, chan, ip, account, 0,
@@ -795,7 +795,7 @@ void
 inbound_kick (server *serv, char *chan, char *user, char *kicker, char *reason,
 				  const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_KICK, sess, kicker, user, chan, reason, 0,
@@ -808,7 +808,7 @@ void
 inbound_part (server *serv, char *chan, char *user, char *ip, char *reason,
 				  const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		if (*reason)
@@ -826,7 +826,7 @@ inbound_topictime (server *serv, char *chan, char *nick, time_t stamp,
 						 const message_tags_data *tags_data)
 {
 	char *tim = ctime (&stamp);
-	session *sess = find_channel (serv, chan);
+	session *sess = find_channel (*serv, chan);
 
 	if (!sess)
 		sess = serv->server_session;
@@ -954,13 +954,13 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 	bool server_notice = false;
 
 	if (serv->is_channel_name (ptr))
-		sess = find_channel (serv, ptr);
+		sess = find_channel (*serv, ptr);
 
 	/* /notice [mode-prefix]#channel should end up in that channel */
 	if (!sess && serv->nick_prefixes.find_first_of(ptr[0]) != std::string::npos)
 	{
 		ptr++;
-		sess = find_channel (serv, ptr);
+		sess = find_channel (*serv, ptr);
 	}
 
 	if (strcmp (nick, ip) == 0)
@@ -982,7 +982,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 					if (end)
 					{
 						*end = 0;
-						sess = find_channel (serv, dest);
+						sess = find_channel (*serv, dest);
 					}
 					free (dest);
 				}
@@ -1138,7 +1138,7 @@ inbound_nameslist_end (server *serv, char *chan,
 		}
 		return TRUE;
 	}
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (sess)
 	{
 		sess->end_of_names = TRUE;
@@ -1468,7 +1468,7 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 
 	if (chan)
 	{
-		who_sess = find_channel (serv, chan);
+		who_sess = find_channel (*serv, chan);
 		if (who_sess)
 			userlist_add_hostname (who_sess, nick, uhost, realname, servname, account, away);
 		else
@@ -1511,7 +1511,7 @@ inbound_banlist (session *sess, time_t stamp, char *chan, char *mask,
 			*nl = 0;
 	}
 
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (!sess)
 	{
 		sess = serv->front_session;

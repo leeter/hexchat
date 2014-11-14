@@ -162,7 +162,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 
 			if (sess->server->is_channel_name(to))
 			{
-				chansess = find_channel (sess->server, to);
+				chansess = find_channel (*(sess->server), to);
 				if (!chansess)
 					chansess = sess;
 
@@ -197,7 +197,7 @@ generic:
 									  nick, NULL, NULL, 0, tags_data->timestamp);
 	} else
 	{
-		chansess = find_channel (sess->server, to);
+		chansess = find_channel (*(sess->server), to);
 		if (!chansess)
 			chansess = sess;
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGENC, chansess, msg, nick, to, NULL, 0,

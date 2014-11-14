@@ -382,7 +382,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	outbuf[2] = mode;
 	outbuf[3] = 0;
 
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (!sess || !serv->is_channel_name (chan))
 	{
 		/* got modes for a chan we're not in! probably nickmode +isw etc */
@@ -673,7 +673,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	if (*modes == 0)
 		return;	/* beyondirc's blank modes */
 
-	sess = find_channel (serv, chan);
+	sess = find_channel (*serv, chan);
 	if (!sess)
 	{
 		sess = serv->front_session;

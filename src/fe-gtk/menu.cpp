@@ -1001,10 +1001,10 @@ void
 menu_chanmenu (struct session *sess, GdkEventButton * event, char *chan)
 {
 	GtkWidget *menu;
-	int is_joined = FALSE;
+	bool is_joined = false;
 
-	if (find_channel (sess->server, chan))
-		is_joined = TRUE;
+	if (find_channel (*(sess->server), chan))
+		is_joined = true;
 
 	if (str_copy)
 		free (str_copy);

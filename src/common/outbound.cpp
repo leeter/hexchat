@@ -767,7 +767,7 @@ cmd_cycle (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (chan)
 	{
-		chan_sess = find_channel (sess->server, chan);
+		chan_sess = find_channel (*(sess->server), chan);
 
 		if (chan_sess && chan_sess->type == session::SESS_CHANNEL)
 		{
@@ -2359,7 +2359,7 @@ cmd_join (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		char *po, *pass = word[3];
 
-		sess_find = find_channel (sess->server, chan);
+		sess_find = find_channel (*(sess->server), chan);
 		if (!sess_find)
 		{
 			sess->server->p_join (chan, pass ? pass : "");
@@ -2781,7 +2781,7 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			}
 			newsess = find_dialog (sess->server, nick);
 			if (!newsess)
-				newsess = find_channel (sess->server, nick);
+				newsess = find_channel (*(sess->server), nick);
 			if (newsess)
 			{
 				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
