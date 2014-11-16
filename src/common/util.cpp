@@ -1756,13 +1756,13 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 		unsigned char randbytes[16];
 		if (!RAND_bytes (randbytes, padlen))
 			goto end;
-		std::copy_n(std::cbegin(randbytes), padlen, ptr);
+		std::copy_n(std::begin(randbytes), padlen, ptr);
 	}
 
 	if (!RAND_bytes (iv, sizeof (iv)))
 		goto end;
 
-	std::copy(std::cbegin(iv), std::cend(iv), std::begin(iv_copy));
+	std::copy(std::begin(iv), std::end(iv), std::begin(iv_copy));
 
 	/* Encrypt */
 	AES_set_encrypt_key (secret, key_size * 8, &key);
