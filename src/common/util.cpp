@@ -33,6 +33,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <iterator>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
