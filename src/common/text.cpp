@@ -1639,7 +1639,7 @@ pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 		if (pntevts_text[penum])
 			free (pntevts_text[penum]);
 		pntevts_text[penum] = static_cast<char*>(malloc (len));
-		memcpy (pntevts_text[penum], text, len);
+		std::copy_n(text, len, pntevts_text[penum]);
 	}
 
 	if (text)
@@ -1914,7 +1914,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 
 	len = strlen (input);
 	i = static_cast<char*>(malloc (len + 1));
-	memcpy (i, input, len + 1);
+	std::copy_n(input, len + 1, i);
 	check_special_chars (i, TRUE);
 
 	len = strlen (i);
@@ -2063,7 +2063,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	while (s)
 	{
 		next = s->next;
-		memcpy (&obuf[oi], s->data, s->len);
+		std::copy_n(s->data, s->len, &obuf[oi]);
 		oi += s->len;
 		free (s->data);
 		free (s);

@@ -146,7 +146,7 @@ ascii_open (void)
 
 		i++;
 		len = g_utf8_skip[table_pos[0]];
-		memcpy (name, table_pos, len);
+		std::copy_n(table_pos, len, std::begin(name));
 		name[len] = 0;
 
 		but = gtk_button_new_with_label (name);

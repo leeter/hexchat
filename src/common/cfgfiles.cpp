@@ -81,9 +81,9 @@ list_addentry (GSList ** list, const char *cmd, const char *name)
 	pop->name = (char *) pop + sizeof (struct popup);
 	pop->cmd = pop->name + name_len;
 
-	memcpy (pop->name, name, name_len);
+	std::copy_n(name, name_len, pop->name);
 	if (cmd)
-		memcpy (pop->cmd, cmd, cmd_len);
+		std::copy_n(cmd, cmd_len, pop->cmd);
 	else
 		pop->cmd[0] = 0;
 
@@ -1098,7 +1098,7 @@ set_showval (session *sess, const struct prefs *var, char *tbuf)
 	size_t j;
 
 	len = strlen (var->name);
-	memcpy (tbuf, var->name, len);
+	std::copy_n(var->name, len, tbuf);
 	if (len > 29)
 		dots = 0;
 	else

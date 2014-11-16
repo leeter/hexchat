@@ -1488,7 +1488,7 @@ safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 		}
 		else				/* multibyte char */
 		{
-			memcpy (dest, src, mbl);
+			std::copy_n(src, mbl, dest);
 			dest += mbl;
 			src += mbl;
 			bytes_left -= mbl;
@@ -1667,7 +1667,7 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 		free(secret);
 		return NULL;
 	}
-	memcpy (plain_pass, pass, pass_len);
+	std::copy_n(pass, pass_len, plain_pass);
 	out_ptr = (char*)encrypted_pass;
 	in_ptr = (char*)plain_pass;
 
@@ -1691,11 +1691,11 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	out_ptr += BN_num_bytes (dh->pub_key);
 
 	/* username */
-	memcpy (out_ptr, user, user_len + 1);
+	std::copy_n(user, user_len + 1, out_ptr);
 	out_ptr += user_len + 1;
 
 	/* pass */
-	memcpy (out_ptr, encrypted_pass, pass_len);
+	std::copy_n(encrypted_pass, pass_len, out_ptr);
 	
 	ret = g_base64_encode ((const guchar*)response, length);
 
@@ -1745,9 +1745,9 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	/* create message */
 	/* format of: <username>\0<password>\0<padding> */
 	ptr = plain_userpass;
-	memcpy (ptr, user, user_len);
+	std::copy_n(user, user_len, ptr);
 	ptr += user_len;
-	memcpy (ptr, pass, pass_len);
+	std::copy_n(pass, pass_len, ptr);
 	ptr += pass_len;
 	if (padlen)
 	{
@@ -1755,14 +1755,13 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 		unsigned char randbytes[16];
 		if (!RAND_bytes (randbytes, padlen))
 			goto end;
-
-		memcpy (ptr, randbytes, padlen);
+		std::copy_n(std::cbegin(randbytes), padlen, ptr);
 	}
 
 	if (!RAND_bytes (iv, sizeof (iv)))
 		goto end;
 
-	memcpy (iv_copy, iv, sizeof(iv));
+	std::copy(std::cbegin(iv), std::cend(iv), std::begin(iv_copy));
 
 	/* Encrypt */
 	AES_set_encrypt_key (secret, key_size * 8, &key);
@@ -1782,11 +1781,11 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	out_ptr += key_size;
 
 	/* iv */
-	memcpy (out_ptr, iv, sizeof(iv));
+	std::copy_n(iv, sizeof(iv), out_ptr);
 	out_ptr += sizeof(iv);
 
 	/* userpass */
-	memcpy (out_ptr, encrypted_userpass, userpass_len);
+	std::copy_n(encrypted_userpass, userpass_len, out_ptr);
 	
 	ret = g_base64_encode ((const guchar*)response, length);
 

@@ -251,7 +251,7 @@ def:
 			} else
 			{
 				/* skip past a multi-byte utf8 char */
-				memcpy (buf + j, cmd, len);
+				std::copy_n(cmd, len, buf + j);
 				j += len;
 				cmd += len;
 			}
@@ -1683,7 +1683,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 	if (len) {
 		/* append new data to buffered incomplete line */
 		buf = static_cast<char*>(malloc(len + 2050));
-		memcpy(buf, s->linebuf, len);
+		std::copy_n(s->linebuf, len, buf);
 		readpos = buf + len;
 		free(s->linebuf);
 		s->linebuf = NULL;
@@ -1729,7 +1729,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 	if (*rest) {
 		s->buffill = len - (rest - buf); /* = strlen(rest) */
 		s->linebuf = static_cast<char*>(malloc(s->buffill + 1));
-		memcpy(s->linebuf, rest, s->buffill);
+		std::copy_n(rest, s->buffill, s->linebuf);
 		*rest = '\0';
 		len -= s->buffill; /* possibly 0 */
 	}
@@ -4169,7 +4169,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 							return 2;
 						}
 
-						memcpy (dest, utf, utf_len);
+						std::copy_n(utf, utf_len, dest);
 						g_free ((gpointer)utf);
 						dest += utf_len;
 					}
@@ -4274,7 +4274,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 				src++;
 			} else
 			{
-				memcpy (dest, src, utf_len);
+				std::copy_n(src, utf_len, dest);
 				dest += utf_len;
 				src += utf_len;
 			}
@@ -4420,7 +4420,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 				char nick[NICKLEN];
 				nickdata data;
 
-				memcpy (nick, cmd, len);
+				std::copy_n(cmd, len, std::begin(nick));
 				nick[len] = 0;
 
 				data.nick = nick;

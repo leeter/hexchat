@@ -2154,13 +2154,12 @@ gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret)
 				{
 					char *time_str;
 					int stamp_size = xtext_get_stamp_str (ent->stamp, &time_str);
-					memcpy (pos, time_str, stamp_size);
+					std::copy_n(time_str, stamp_size, pos);
 					g_free (time_str);
 					pos += stamp_size;
 				}
 
-				memcpy (pos, ent->str + ent->mark_start,
-						  ent->mark_end - ent->mark_start);
+				std::copy_n(ent->str + ent->mark_start, ent->mark_end - ent->mark_start, pos);
 				pos += ent->mark_end - ent->mark_start;
 			}
 		}
@@ -2468,7 +2467,7 @@ gtk_xtext_strip_color (unsigned char *text, int len, unsigned char *outbuf,
 				{
 					if (c.len1 == 0)
 						c.off1 = text - text0;
-					memcpy (new_str + i, text, mbl);
+					std::copy_n(text, mbl, new_str + i);
 					i += mbl;
 					c.len1 += mbl;
 				}
@@ -4691,9 +4690,9 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	ent = static_cast<textentry*>(malloc(left_len + right_len + 2 + sizeof(textentry)));
 	str = (unsigned char *) ent + sizeof (textentry);
 
-	memcpy (str, left_text, left_len);
+	std::copy_n(left_text, left_len, str);
 	str[left_len] = ' ';
-	memcpy (str + left_len + 1, right_text, right_len);
+	std::copy_n(right_text, right_len, str + left_len + 1);
 	str[left_len + 1 + right_len] = 0;
 
 	left_width = gtk_xtext_text_width (buf->xtext, left_text, left_len);
@@ -4747,7 +4746,7 @@ gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len)
 	ent->str = (unsigned char *) ent + sizeof (textentry);
 	ent->str_len = len;
 	if (len)
-		memcpy (ent->str, text, len);
+		std::copy_n(text, len, ent->str);
 	ent->str[len] = 0;
 	ent->indent = 0;
 	ent->left_len = -1;
