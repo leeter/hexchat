@@ -97,24 +97,24 @@ get_user_icon (server *serv, struct User *user)
 }
 
 void
-fe_userlist_numbers (session *sess)
+fe_userlist_numbers (session &sess)
 {
 	char tbuf[256];
 
-	if (sess == current_tab || !sess->gui->is_tab)
+	if (&sess == current_tab || !sess.gui->is_tab)
 	{
-		if (sess->total)
+		if (sess.total)
 		{
-			snprintf (tbuf, sizeof (tbuf), _("%d ops, %d total"), sess->ops, sess->total);
+			snprintf (tbuf, sizeof (tbuf), _("%d ops, %d total"), sess.ops, sess.total);
 			tbuf[sizeof (tbuf) - 1] = 0;
-			gtk_label_set_text (GTK_LABEL (sess->gui->namelistinfo), tbuf);
+			gtk_label_set_text (GTK_LABEL (sess.gui->namelistinfo), tbuf);
 		} else
 		{
-			gtk_label_set_text (GTK_LABEL (sess->gui->namelistinfo), NULL);
+			gtk_label_set_text (GTK_LABEL (sess.gui->namelistinfo), NULL);
 		}
 
-		if (sess->type == session::SESS_CHANNEL && prefs.hex_gui_win_ucount)
-			fe_set_title (sess);
+		if (sess.type == session::SESS_CHANNEL && prefs.hex_gui_win_ucount)
+			fe_set_title (&sess);
 	}
 }
 

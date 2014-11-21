@@ -927,7 +927,7 @@ mg_populate (session *sess)
 			ul_tag = g_idle_add ((GSourceFunc)mg_populate_userlist, NULL);
 	}
 
-	fe_userlist_numbers (sess);
+	fe_userlist_numbers (*sess);
 
 	/* restore all the channel mode buttons */
 	ignore_chanmode = TRUE;

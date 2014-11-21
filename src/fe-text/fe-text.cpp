@@ -710,7 +710,7 @@ fe_userlist_move (struct session *sess, struct User *user, int new_row)
 {
 }
 void
-fe_userlist_numbers (struct session *sess)
+fe_userlist_numbers (session &sess)
 {
 }
 void

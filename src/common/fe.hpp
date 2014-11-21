@@ -92,7 +92,7 @@ int fe_userlist_remove (struct session *sess, struct User *user);
 void fe_userlist_rehash (struct session *sess, struct User *user);
 void fe_userlist_update (struct session *sess, struct User *user);
 void fe_userlist_move (struct session *sess, struct User *user, int new_row);
-void fe_userlist_numbers (struct session *sess);
+void fe_userlist_numbers (session &sess);
 void fe_userlist_clear (session &sess);
 void fe_userlist_set_selected (struct session *sess);
 void fe_uselect (session *sess, char *word[], int do_clear, int scroll_to);

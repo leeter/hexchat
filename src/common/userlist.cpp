@@ -200,7 +200,7 @@ userlist_clear (session *sess)
 {
 	fe_userlist_clear (*sess);
 	userlist_free (*sess);
-	fe_userlist_numbers (sess);
+	fe_userlist_numbers (*sess);
 }
 
 static int
@@ -307,7 +307,7 @@ userlist_update_mode (session *sess, const char name[], char mode, char sign)
 
 	/* let GTK move it too */
 	fe_userlist_move (sess, user, pos);
-	fe_userlist_numbers (sess);
+	fe_userlist_numbers (*sess);
 }
 
 bool
@@ -325,7 +325,7 @@ userlist_change (struct session *sess, const char oldname[], const char newname[
 		tree_insert(static_cast<tree*>(sess->usertree_alpha), user);
 
 		fe_userlist_move(sess, user, tree_insert(static_cast<tree*>(sess->usertree), user));
-		fe_userlist_numbers (sess);
+		fe_userlist_numbers (*sess);
 
 		return true;
 	}
@@ -354,7 +354,7 @@ userlist_remove_user (struct session *sess, struct User *user)
 	if (user->hop)
 		sess->hops--;
 	sess->total--;
-	fe_userlist_numbers (sess);
+	fe_userlist_numbers (*sess);
 	fe_userlist_remove (sess, user);
 
 	if (user == sess->me)
@@ -428,7 +428,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 		sess->me = user;
 
 	fe_userlist_insert (sess, user, row, FALSE);
-	fe_userlist_numbers (sess);
+	fe_userlist_numbers (*sess);
 }
 
 static int
