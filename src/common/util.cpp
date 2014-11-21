@@ -755,11 +755,11 @@ break_while:
 }
 
 void
-for_files(const char *dirname, const char *mask, std::function<void(char* file)> callback)
+for_files(const char *dirname, const char *mask, const std::function<void(char* file)>& callback)
 {
 	namespace fs = boost::filesystem;
 
-	auto dir = fs::path(dirname);
+	fs::path dir(dirname);
 	boost::system::error_code ec;
 	if (fs::exists(dir, ec) && fs::is_directory(dir, ec))
 	{
