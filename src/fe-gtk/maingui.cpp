@@ -380,28 +380,28 @@ has_key (char *modes)
 #endif
 
 void
-fe_set_title (session *sess)
+fe_set_title (session &sess)
 {
 	char tbuf[512];
 	int type;
 
-	if (sess->gui->is_tab && sess != current_tab)
+	if (sess.gui->is_tab && (&sess) != current_tab)
 		return;
 
-	type = sess->type;
+	type = sess.type;
 
-	if (sess->server->connected == FALSE && sess->type != session::SESS_DIALOG)
+	if (!sess.server->connected && sess.type != session::SESS_DIALOG)
 		goto def;
 
 	switch (type)
 	{
 	case session::SESS_DIALOG:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s %s @ %s",
-			_("Dialog with"), sess->channel, sess->server->get_network(true));
+			_("Dialog with"), sess.channel, sess.server->get_network(true));
 		break;
 	case session::SESS_SERVER:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s",
-			sess->server->nick, sess->server->get_network(true));
+			sess.server->nick, sess.server->get_network(true));
 		break;
 	case session::SESS_CHANNEL:
 		/* don't display keys in the titlebar */
@@ -409,34 +409,34 @@ fe_set_title (session *sess)
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
-						 sess->server->nick, sess->server->get_network(true),
-						 sess->channel, sess->current_modes ? sess->current_modes : "");
+						 sess.server->nick, sess.server->get_network(true),
+						 sess.channel, sess.current_modes ? sess.current_modes : "");
 		}
 		else
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s",
-						 sess->server->nick, sess->server->get_network(true),
-						 sess->channel);
+						 sess.server->nick, sess.server->get_network(true),
+						 sess.channel);
 		}
 		if (prefs.hex_gui_win_ucount)
 		{
-			snprintf (tbuf + strlen (tbuf), 9, " (%d)", sess->total);
+			snprintf (tbuf + strlen (tbuf), 9, " (%d)", sess.total);
 		}
 		break;
 	case session::SESS_NOTICES:
 	case session::SESS_SNOTICES:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s (notices)",
-			sess->server->nick, sess->server->get_network(true));
+			sess.server->nick, sess.server->get_network(true));
 		break;
 	default:
 	def:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME);
-		gtk_window_set_title (GTK_WINDOW (sess->gui->window), tbuf);
+		gtk_window_set_title (GTK_WINDOW (sess.gui->window), tbuf);
 		return;
 	}
 
-	gtk_window_set_title (GTK_WINDOW (sess->gui->window), tbuf);
+	gtk_window_set_title (GTK_WINDOW (sess.gui->window), tbuf);
 }
 
 static gboolean
@@ -911,7 +911,7 @@ mg_populate (session *sess)
 	mg_restore_label (gui->throttleinfo, &res->queue_text);
 
 	mg_focus (sess);
-	fe_set_title (sess);
+	fe_set_title (*sess);
 
 	/* this one flickers, so only change if necessary */
 	if (strcmp (sess->server->nick, gtk_button_get_label (GTK_BUTTON (gui->nick_label))) != 0)
@@ -3527,7 +3527,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 		gui->is_tab = FALSE;
 		sess->gui = gui;
 		mg_create_topwindow (sess);
-		fe_set_title (sess);
+		fe_set_title (*sess);
 		if (user && user->hostname)
 			set_topic (sess, user->hostname, user->hostname);
 		return;

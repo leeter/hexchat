@@ -78,7 +78,7 @@ clear_channel (session &sess)
 	fe_clear_channel (sess);
 	userlist_clear (&sess);
 	fe_set_nonchannel (&sess, FALSE);
-	fe_set_title (&sess);
+	fe_set_title (sess);
 }
 
 void
@@ -534,7 +534,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 				safe_strcpy (sess->channel, newnick, CHANLEN);
 				fe_set_channel (sess);
 			}
-			fe_set_title (sess);
+			fe_set_title (*sess);
 		}
 		list = list->next;
 	}
@@ -617,7 +617,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	}
 
 	fe_set_channel (sess);
-	fe_set_title (sess);
+	fe_set_title (*sess);
 	fe_set_nonchannel (sess, TRUE);
 	userlist_clear (sess);
 
@@ -997,7 +997,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 				else
 					sess = new_ircwindow(serv, "(snotices)", session::SESS_SNOTICES, 0);
 				fe_set_channel (sess);
-				fe_set_title (sess);
+				fe_set_title (*sess);
 				fe_set_nonchannel (sess, FALSE);
 				userlist_clear (sess);
 				log_open_or_close (sess);

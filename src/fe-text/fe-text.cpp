@@ -777,7 +777,7 @@ fe_set_channel (struct session *sess)
 {
 }
 void
-fe_set_title (struct session *sess)
+fe_set_title (session &sess)
 {
 }
 void

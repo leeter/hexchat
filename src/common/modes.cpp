@@ -749,7 +749,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 
 	/* update the title at the end, now that the mode update is internal now */
 	if (!using_front_tab)
-		fe_set_title (sess);
+		fe_set_title (*sess);
 
 	/* print all the grouped Op/Deops */
 	mode_print_grouped (sess, nick, mr, tags_data);

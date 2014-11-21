@@ -565,7 +565,7 @@ fe_update_channel_key (struct session *sess)
 {
 	fe_update_mode_entry (sess, sess->gui->key_entry,
 								 &sess->res->key_text, sess->channelkey);
-	fe_set_title (sess);
+	fe_set_title (*sess);
 }
 
 void
@@ -576,7 +576,7 @@ fe_update_channel_limit (struct session *sess)
 	sprintf (tmp, "%d", sess->limit);
 	fe_update_mode_entry (sess, sess->gui->limit_entry,
 								 &sess->res->limit_text, tmp);
-	fe_set_title (sess);
+	fe_set_title (*sess);
 }
 
 int

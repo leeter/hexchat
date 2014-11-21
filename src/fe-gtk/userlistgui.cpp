@@ -114,7 +114,7 @@ fe_userlist_numbers (session &sess)
 		}
 
 		if (sess.type == session::SESS_CHANNEL && prefs.hex_gui_win_ucount)
-			fe_set_title (&sess);
+			fe_set_title (sess);
 	}
 }
 

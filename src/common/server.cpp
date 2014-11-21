@@ -2272,7 +2272,7 @@ server::set_name (const std::string& name)
 	{
 		sess = (session *) list->data;
 		if (sess->server == this)
-			fe_set_title (sess);
+			fe_set_title (*sess);
 		list = list->next;
 	}
 

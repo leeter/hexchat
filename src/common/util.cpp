@@ -160,13 +160,9 @@ errorstring (int err)
 	{
 		static char fbuf[384];
 		std::wstring tbuf(384, '\0');
-		OSVERSIONINFOW osvi = { 0 };
-
-		osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOW);
-		GetVersionExW (&osvi);
 
 		/* FormatMessage works on WSA*** errors starting from Win2000 */
-		if (osvi.dwMajorVersion >= 5)
+		if (IsWindowsXPOrGreater())
 		{
 			if (FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
 									  FORMAT_MESSAGE_IGNORE_INSERTS |

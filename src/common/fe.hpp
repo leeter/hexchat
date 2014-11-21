@@ -108,7 +108,7 @@ void fe_buttons_update (struct session *sess);
 void fe_dlgbuttons_update (struct session *sess);
 void fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive);
 void fe_set_channel (struct session *sess);
-void fe_set_title (struct session *sess);
+void fe_set_title (session &sess);
 void fe_set_nonchannel (struct session *sess, int state);
 void fe_set_nick (struct server *serv, char *newnick);
 void fe_ignore_update (int level);
