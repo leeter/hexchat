@@ -53,7 +53,7 @@ void userlist_set_account (session *sess, const char nick[], const char account[
 struct User *userlist_find (session *sess, const char name[]);
 struct User *userlist_find_global (server *serv, const char name[]);
 void userlist_clear (session *sess);
-void userlist_free (session *sess);
+void userlist_free (session &sess);
 void userlist_add (session *sess, const char name[], const char hostname[], const char account[],
 						const char realname[], const message_tags_data *tags_data);
 bool userlist_remove (session *sess, const char name[]);

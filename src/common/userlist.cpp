@@ -179,27 +179,27 @@ free_user (struct User *user, gpointer data)
 }
 
 void
-userlist_free (session *sess)
+userlist_free (session &sess)
 {
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)free_user, nullptr);
-	tree_destroy(static_cast<tree*>(sess->usertree));
-	tree_destroy(static_cast<tree*>(sess->usertree_alpha));
+	tree_foreach(static_cast<tree*>(sess.usertree), (tree_traverse_func *)free_user, nullptr);
+	tree_destroy(static_cast<tree*>(sess.usertree));
+	tree_destroy(static_cast<tree*>(sess.usertree_alpha));
 
-	sess->usertree = nullptr;
-	sess->usertree_alpha = nullptr;
-	sess->me = nullptr;
+	sess.usertree = nullptr;
+	sess.usertree_alpha = nullptr;
+	sess.me = nullptr;
 
-	sess->ops = 0;
-	sess->hops = 0;
-	sess->voices = 0;
-	sess->total = 0;
+	sess.ops = 0;
+	sess.hops = 0;
+	sess.voices = 0;
+	sess.total = 0;
 }
 
 void
 userlist_clear (session *sess)
 {
-	fe_userlist_clear (sess);
-	userlist_free (sess);
+	fe_userlist_clear (*sess);
+	userlist_free (*sess);
 	fe_userlist_numbers (sess);
 }
 

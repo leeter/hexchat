@@ -714,7 +714,7 @@ fe_userlist_numbers (struct session *sess)
 {
 }
 void
-fe_userlist_clear (struct session *sess)
+fe_userlist_clear (session &sess)
 {
 }
 void

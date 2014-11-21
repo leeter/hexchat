@@ -690,7 +690,7 @@ session_free (session *killsess)
 	sess_list = g_slist_remove (sess_list, killsess);
 
 	if (killsess->type == session::SESS_CHANNEL)
-		userlist_free (killsess);
+		userlist_free (*killsess);
 
 	oldidx = killsess->lastact_idx;
 	if (oldidx != LACT_NONE)

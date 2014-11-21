@@ -395,9 +395,9 @@ fe_userlist_move (session *sess, struct User *user, int new_row)
 }
 
 void
-fe_userlist_clear (session *sess)
+fe_userlist_clear (session &sess)
 {
-	gtk_list_store_clear (static_cast<GtkListStore*>(sess->res->user_model));
+	gtk_list_store_clear (static_cast<GtkListStore*>(sess.res->user_model));
 }
 
 static void
