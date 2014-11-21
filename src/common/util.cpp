@@ -757,26 +757,24 @@ break_while:
 void
 for_files(const char *dirname, const char *mask, std::function<void(char* file)> callback)
 {
-	GDir *dir;
-	const gchar *entry_name;
-	char *buf;
+	namespace fs = boost::filesystem;
 
-	dir = g_dir_open (dirname, 0, NULL);
-	if (dir)
+	auto dir = fs::path(dirname);
+	boost::system::error_code ec;
+	if (fs::exists(dir, ec) && fs::is_directory(dir, ec))
 	{
-		while ((entry_name = g_dir_read_name (dir)))
+		for(fs::directory_iterator itr(dir), end; itr != end; ++itr)
 		{
-			if (strcmp (entry_name, ".") && strcmp (entry_name, ".."))
+			auto file_status = itr->status(ec);
+			if (fs::exists(file_status) && fs::is_regular_file(file_status))
 			{
-				if (match (mask, entry_name))
+				if (match (mask, itr->path().filename().string().c_str()))
 				{
-					buf = g_build_filename (dirname, entry_name, NULL);
-					callback (buf);
-					g_free (buf);
+					std::string mutable_buffer = itr->path().string();
+					callback (&mutable_buffer[0]);
 				}
 			}
 		}
-		g_dir_close (dir);
 	}
 }
 
