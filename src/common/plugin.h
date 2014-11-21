@@ -174,9 +174,9 @@ struct t_hexchat_plugin
 };
 #endif
 
-char *plugin_load (session *sess, char *filename, char *arg);
-int plugin_reload (session *sess, char *name, int by_filename);
-void plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, int fake);
+const char *plugin_load (session *sess, const char *filename, char *arg);
+int plugin_reload (session *sess, const char *name, int by_filename);
+void plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, int fake);
 int plugin_kill (char *name, int by_filename);
 void plugin_kill_all (void);
 void plugin_auto_load (session *sess);

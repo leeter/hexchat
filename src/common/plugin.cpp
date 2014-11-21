@@ -247,7 +247,7 @@ hexchat_read_fd (hexchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 /* Load a static plugin */
 
 void
-plugin_add (session *sess, char *filename, void *handle, plugin_init_func init_func,
+plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func,
 				plugin_deinit_func deinit_func, char *arg, int fake)
 {
 	hexchat_plugin *pl;
@@ -377,25 +377,23 @@ plugin_kill_all (void)
 
 /* load a plugin from a filename. Returns: NULL-success or an error string */
 
-char *
-plugin_load (session *sess, char *filename, char *arg)
+const char *
+plugin_load (session *sess, const char *filename, char *arg)
 {
-	void *handle;
-	char *filepart;
+	namespace fs = boost::filesystem;
+	void *handle = nullptr;
 	plugin_init_func init_func;
 	plugin_deinit_func deinit_func;
-	char *pluginpath;
 
+	fs::path file_path(filename);
 	/* get the filename without path */
-	filepart = file_part (filename);
 
 	/* load the plugin */
-	if (!g_ascii_strcasecmp (filepart, filename))
+	if (file_path == file_path.filename())
 	{
 		/* no path specified, it's just the filename, try to load from config dir */
-		pluginpath = g_build_filename (get_xdir (), "addons", filename, NULL);
-		handle = g_module_open(pluginpath, static_cast<GModuleFlags>(0));
-		g_free (pluginpath);
+		auto pluginpath = fs::path(get_xdir()) / "addons" / file_path;
+		handle = g_module_open(pluginpath.string().c_str(), static_cast<GModuleFlags>(0));
 	}
 	else
 	{
@@ -403,8 +401,8 @@ plugin_load (session *sess, char *filename, char *arg)
 		handle = g_module_open(filename, static_cast<GModuleFlags>(0));
 	}
 
-	if (handle == NULL)
-		return (char *)g_module_error ();
+	if (!handle)
+		return g_module_error ();
 
 	/* find the init routine hexchat_plugin_init */
 	if (!g_module_symbol (static_cast<GModule*>(handle), "hexchat_plugin_init", (gpointer *)&init_func))
@@ -426,9 +424,9 @@ plugin_load (session *sess, char *filename, char *arg)
 static session *ps;
 
 static void
-plugin_auto_load_cb (char *filename)
+plugin_auto_load_cb (const char *filename)
 {
-	char *pMsg;
+	const char *pMsg;
 
 	pMsg = plugin_load (ps, filename, NULL);
 	if (pMsg)
@@ -481,11 +479,11 @@ plugin_auto_load (session *sess)
 }
 
 int
-plugin_reload (session *sess, char *name, int by_filename)
+plugin_reload (session *sess, const char *name, int by_filename)
 {
 	GSList *list;
 	char *filename;
-	char *ret;
+	const char *ret;
 	hexchat_plugin *pl;
 
 	list = plugin_list;

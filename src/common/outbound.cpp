@@ -2533,7 +2533,8 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *file, *buf;
 #ifdef USE_PLUGIN
-	char *error, *arg;
+	const char *error;
+	char *arg;
 #endif
 
 	if (!word[2][0])
