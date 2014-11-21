@@ -64,7 +64,7 @@ clear_channel (session *sess)
 	sess->doing_who = FALSE;
 	sess->done_away_check = FALSE;
 
-	log_close (sess);
+	log_close (*sess);
 
 	if (sess->current_modes)
 	{
@@ -614,7 +614,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	if (found_unused)
 	{
 		chanopt_load (sess);
-		scrollback_load (sess);
+		scrollback_load (*sess);
 		if (sess->scrollwritten && sess->scrollback_replay_marklast)
 			sess->scrollback_replay_marklast (sess);
 	}

@@ -577,7 +577,7 @@ new_ircwindow (server *serv, const char *name, ::session::session_type type, int
 
 	irc_init (sess);
 	chanopt_load (sess);
-	scrollback_load (sess);
+	scrollback_load (*sess);
 	if (sess->scrollwritten && sess->scrollback_replay_marklast)
 		sess->scrollback_replay_marklast (sess);
 	plugin_emit_dummy_print (sess, "Open Context");
@@ -698,8 +698,8 @@ session_free (session *killsess)
 
 	exec_notify_kill (killsess);
 
-	log_close (killsess);
-	scrollback_close (killsess);
+	log_close (*killsess);
+	scrollback_close (*killsess);
 	chanopt_save (killsess);
 
 	send_quit_or_part (killsess);

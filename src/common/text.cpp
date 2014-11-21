@@ -75,12 +75,12 @@ static void mkdir_p (char *filename);
 static std::string log_create_filename (const std::string& channame);
 
 static char *
-scrollback_get_filename (session *sess)
+scrollback_get_filename (session &sess)
 {
 	const char *net;
 	char *buf;
 
-	net = sess->server->get_network(false);
+	net = sess.server->get_network(false);
 	if (!net)
 		return NULL;
 	auto path = io::fs::make_path({ { get_xdir(), "scrollback", net, "" } });
@@ -89,7 +89,7 @@ scrollback_get_filename (session *sess)
 	mkdir_p (buf);
 	g_free (buf);*/
 
-	auto chan = log_create_filename (sess->channel);
+	auto chan = log_create_filename (sess.channel);
 	if (!chan.empty())
 		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan.c_str());
 	else
@@ -136,19 +136,19 @@ scrollback_lock (session *sess)
 #endif
 
 void
-scrollback_close (session *sess)
+scrollback_close (session &sess)
 {
-	if (sess->scrollfd != -1)
+	if (sess.scrollfd != -1)
 	{
-		close (sess->scrollfd);
-		sess->scrollfd = -1;
+		close (sess.scrollfd);
+		sess.scrollfd = -1;
 	}
 }
 
 /* shrink the file to roughly prefs.hex_text_max_lines */
 
 static void
-scrollback_shrink (session *sess)
+scrollback_shrink (session &sess)
 {
 	char *file;
 	char *buf;
@@ -159,7 +159,7 @@ scrollback_shrink (session *sess)
 	char *p;
 
 	scrollback_close (sess);
-	sess->scrollwritten = 0;
+	sess.scrollwritten = 0;
 	lines = 0;
 
 	if ((file = scrollback_get_filename (sess)) == NULL)
@@ -214,34 +214,34 @@ scrollback_shrink (session *sess)
 }
 
 static void
-scrollback_save (session *sess, const std::string & text)
+scrollback_save (session &sess, const std::string & text)
 {
 	char *buf;
 	time_t stamp;
 	size_t len;
 
-	if (sess->type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
+	if (sess.type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
 
-	if (sess->text_scrollback == SET_DEFAULT)
+	if (sess.text_scrollback == SET_DEFAULT)
 	{
 		if (!prefs.hex_text_replay)
 			return;
 	}
 	else
 	{
-		if (sess->text_scrollback != SET_ON)
+		if (sess.text_scrollback != SET_ON)
 			return;
 	}
 
-	if (sess->scrollfd == -1)
+	if (sess.scrollfd == -1)
 	{
 		if ((buf = scrollback_get_filename (sess)) == NULL)
 			return;
 
-		sess->scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY, 0644);
+		sess.scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY, 0644);
 		g_free (buf);
-		if (sess->scrollfd == -1)
+		if (sess.scrollfd == -1)
 			return;
 	}
 
@@ -250,23 +250,23 @@ scrollback_save (session *sess, const std::string & text)
 		buf = g_strdup_printf ("T %d ", (int) stamp);
 	else
 		buf = g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp);
-	write (sess->scrollfd, buf, strlen (buf));
+	write (sess.scrollfd, buf, strlen (buf));
 	g_free (buf);
 
 	len = text.size();
-	write (sess->scrollfd, text.c_str(), text.size());
+	write (sess.scrollfd, text.c_str(), text.size());
 	if (len && text[len - 1] != '\n')
-		write (sess->scrollfd, "\n", 1);
+		write (sess.scrollfd, "\n", 1);
 
-	sess->scrollwritten++;
+	sess.scrollwritten++;
 
-	if ((sess->scrollwritten * 2 > prefs.hex_text_max_lines && prefs.hex_text_max_lines > 0) ||
-	   sess->scrollwritten > 32000)
+	if ((sess.scrollwritten * 2 > prefs.hex_text_max_lines && prefs.hex_text_max_lines > 0) ||
+	   sess.scrollwritten > 32000)
 		scrollback_shrink (sess);
 }
 
 void
-scrollback_load (session *sess)
+scrollback_load (session &sess)
 {
 	char *buf;
 	char *text;
@@ -276,14 +276,14 @@ scrollback_load (session *sess)
 	GError *file_error = NULL;
 	GError *io_err = NULL;
 
-	if (sess->text_scrollback == SET_DEFAULT)
+	if (sess.text_scrollback == SET_DEFAULT)
 	{
 		if (!prefs.hex_text_replay)
 			return;
 	}
 	else
 	{
-		if (sess->text_scrollback != SET_ON)
+		if (sess.text_scrollback != SET_ON)
 			return;
 	}
 
@@ -370,7 +370,7 @@ scrollback_load (session *sess)
 
 	g_io_channel_unref (io);
 
-	sess->scrollwritten = lines;
+	sess.scrollwritten = lines;
 
 	if (lines)
 	{
@@ -384,17 +384,17 @@ scrollback_load (session *sess)
 }
 
 void
-log_close (session *sess)
+log_close (session &sess)
 {
-	if (sess->logfd != -1)
+	if (sess.logfd != -1)
 	{
 		std::time_t currenttime = std::time (NULL);
 		std::ostringstream stream(_("**** ENDING LOGGING AT "), std::ios_base::ate);
 		stream << std::ctime(&currenttime) <<"\n";
 		auto to_output = stream.str();
-		write (sess->logfd, to_output.c_str(), to_output.length());
-		close (sess->logfd);
-		sess->logfd = -1;
+		write (sess.logfd, to_output.c_str(), to_output.length());
+		close (sess.logfd);
+		sess.logfd = -1;
 	}
 }
 
@@ -621,18 +621,18 @@ log_open_file (const char *servname, const char *channame, const char *netname)
 }
 
 static void
-log_open (session *sess)
+log_open (session &sess)
 {
 	static bool log_error = false;
 
 	log_close (sess);
-	sess->logfd = log_open_file (sess->server->servername, sess->channel,
-		sess->server->get_network(false));
+	sess.logfd = log_open_file (sess.server->servername, sess.channel,
+		sess.server->get_network(false));
 
-	if (!log_error && sess->logfd == -1)
+	if (!log_error && sess.logfd == -1)
 	{
 		char *message;
-		char * path = log_create_pathname(sess->server->servername, sess->channel, sess->server->get_network(false));
+		char * path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false));
 		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"), path);
 		g_free(path);
 
@@ -649,16 +649,16 @@ log_open_or_close (session *sess)
 	if (sess->text_logging == SET_DEFAULT)
 	{
 		if (prefs.hex_irc_logging)
-			log_open (sess);
+			log_open (*sess);
 		else
-			log_close (sess);
+			log_close (*sess);
 	}
 	else
 	{
 		if (sess->text_logging)
-			log_open (sess);
+			log_open (*sess);
 		else
-			log_close (sess);
+			log_close (*sess);
 	}
 }
 
@@ -696,37 +696,37 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 }
 
 static void
-log_write (session *sess, const std::string & text, time_t ts)
+log_write (session &sess, const std::string & text, time_t ts)
 {
 	char *temp;
 	char *stamp;
 	char *file;
 	int len;
 
-	if (sess->text_logging == SET_DEFAULT)
+	if (sess.text_logging == SET_DEFAULT)
 	{
 		if (!prefs.hex_irc_logging)
 			return;
 	}
 	else
 	{
-		if (sess->text_logging != SET_ON)
+		if (sess.text_logging != SET_ON)
 			return;
 	}
 
-	if (sess->logfd == -1)
+	if (sess.logfd == -1)
 		log_open (sess);
 
 	/* change to a different log file? */
-	file = log_create_pathname (sess->server->servername, sess->channel,
-		sess->server->get_network(false));
+	file = log_create_pathname (sess.server->servername, sess.channel,
+		sess.server->get_network(false));
 	if (file)
 	{
 		if (g_access (file, F_OK) != 0)
 		{
-			close (sess->logfd);
-			sess->logfd = log_open_file (sess->server->servername, sess->channel,
-				sess->server->get_network(false));
+			close (sess.logfd);
+			sess.logfd = log_open_file (sess.server->servername, sess.channel,
+				sess.server->get_network(false));
 		}
 		g_free (file);
 	}
@@ -737,16 +737,16 @@ log_write (session *sess, const std::string & text, time_t ts)
 		len = get_stamp_str (prefs.hex_stamp_log_format, ts, &stamp);
 		if (len)
 		{
-			write (sess->logfd, stamp, len);
+			write (sess.logfd, stamp, len);
 			g_free (stamp);
 		}
 	}
 	temp = strip_color (text.c_str(), -1, STRIP_ALL);
 	len = strlen (temp);
-	write (sess->logfd, temp, len);
+	write (sess.logfd, temp, len);
 	/* lots of scripts/plugins print without a \n at the end */
 	if (temp[len - 1] != '\n')
-		write (sess->logfd, "\n", 1);	/* emulate what xtext would display */
+		write (sess.logfd, "\n", 1);	/* emulate what xtext would display */
 	g_free (temp);
 }
 
@@ -921,9 +921,9 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 		conv = text_validate (&buf_ptr, &len);
 	}
 
-	log_write(sess, buf, timestamp);
-	scrollback_save(sess, buf);
-	fe_print_text(sess, &buf[0], timestamp, FALSE);
+	log_write(*sess, buf, timestamp);
+	scrollback_save(*sess, buf);
+	fe_print_text(*sess, &buf[0], timestamp, FALSE);
 
 	if (conv)
 		g_free (conv);
