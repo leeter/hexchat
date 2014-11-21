@@ -755,7 +755,7 @@ break_while:
 }
 
 void
-for_files (char *dirname, char *mask, void callback (char *file))
+for_files(const char *dirname, const char *mask, std::function<void(char* file)> callback)
 {
 	GDir *dir;
 	const gchar *entry_name;

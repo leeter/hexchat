@@ -34,6 +34,7 @@
 #define HEXCHAT_UTIL_HPP
 
 #include <cstddef>
+#include <functional>
 #include <string>
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
@@ -44,7 +45,7 @@ char *expand_homedir (char *file);
 void path_part (char *file, char *path, int pathlen);
 int match (const char *mask, const char *string);
 char *file_part (char *file);
-void for_files (char *dirname, char *mask, void callback (char *file));
+void for_files (const char *dirname, const char *mask, std::function<void (char* file)> callback);
 int rfc_casecmp (const char *, const char *);
 int rfc_ncasecmp (char *, char *, int);
 int buf_get_line (char *, char **, int *, int len);

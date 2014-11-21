@@ -438,14 +438,14 @@ plugin_auto_load_cb (char *filename)
 	}
 }
 
-static char *
+static const char *
 plugin_get_libdir ()
 {
 	const char *libdir;
 
 	libdir = g_getenv ("HEXCHAT_LIBDIR");
 	if (libdir && *libdir)
-		return (char*)libdir;
+		return libdir;
 	else
 		return HEXCHATLIBDIR;
 }
@@ -453,12 +453,10 @@ plugin_get_libdir ()
 void
 plugin_auto_load (session *sess)
 {
-	char *lib_dir; 
-	char *sub_dir;
 	ps = sess;
 
-	lib_dir = plugin_get_libdir ();
-	sub_dir = g_build_filename (get_xdir (), "addons", NULL);
+	const char *lib_dir = plugin_get_libdir();
+	auto sub_dir = boost::filesystem::path(get_xdir()) / "addons";
 
 #ifdef WIN32
 	/* a long list of bundled plugins that should be loaded automatically,
@@ -479,9 +477,7 @@ plugin_auto_load (session *sess)
 	for_files (lib_dir, "*."G_MODULE_SUFFIX, plugin_auto_load_cb);
 #endif
 
-	for_files (sub_dir, "*."G_MODULE_SUFFIX, plugin_auto_load_cb);
-
-	g_free (sub_dir);
+	for_files (sub_dir.string().c_str(), "*."G_MODULE_SUFFIX, plugin_auto_load_cb);
 }
 
 int
