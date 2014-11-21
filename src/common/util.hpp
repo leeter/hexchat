@@ -44,6 +44,7 @@ extern const unsigned char rfc_tolowertab[];
 char *expand_homedir (char *file);
 void path_part (char *file, char *path, int pathlen);
 int match (const char *mask, const char *string);
+bool match_with_wildcards(const std::string &text, std::string wildcardPattern, bool caseSensitive /*= true*/);
 char *file_part (char *file);
 void for_files (const char *dirname, const char *mask, const std::function<void (char* file)>& callback);
 int rfc_casecmp (const char *, const char *);

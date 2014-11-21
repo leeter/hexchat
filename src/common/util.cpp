@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -671,6 +672,37 @@ buf_get_line (char *ibuf, char **buf, int *position, int len)
 	return 1;
 }
 
+void escape_regex(std::string &regex)
+{
+	boost::replace_all(regex, "\\", "\\\\");
+	boost::replace_all(regex, "^", "\\^");
+	boost::replace_all(regex, ".", "\\.");
+	boost::replace_all(regex, "$", "\\$");
+	boost::replace_all(regex, "|", "\\|");
+	boost::replace_all(regex, "(", "\\(");
+	boost::replace_all(regex, ")", "\\)");
+	boost::replace_all(regex, "[", "\\[");
+	boost::replace_all(regex, "]", "\\]");
+	boost::replace_all(regex, "*", "\\*");
+	boost::replace_all(regex, "+", "\\+");
+	boost::replace_all(regex, "?", "\\?");
+	boost::replace_all(regex, "/", "\\/");
+}
+
+bool match_with_wildcards(const std::string &text, std::string wildcardPattern, bool caseSensitive /*= true*/)
+{
+	// Escape all regex special chars
+	escape_regex(wildcardPattern);
+
+	// Convert chars '*?' back to their regex equivalents
+	boost::replace_all(wildcardPattern, "\\?", ".");
+	boost::replace_all(wildcardPattern, "\\*", ".*");
+
+	boost::regex pattern(wildcardPattern, caseSensitive ? boost::regex::normal : boost::regex::icase);
+
+	return regex_match(text, pattern);
+}
+
 int match(const char *mask, const char *string)
 {
   register const char *m = mask, *s = string;
@@ -768,7 +800,7 @@ for_files(const char *dirname, const char *mask, const std::function<void(char* 
 			auto file_status = itr->status(ec);
 			if (fs::exists(file_status) && fs::is_regular_file(file_status))
 			{
-				if (match (mask, itr->path().filename().string().c_str()))
+				if (match_with_wildcards(itr->path().filename().string(), mask, false))// match (mask, itr->path().filename().string().c_str()))
 				{
 					std::string mutable_buffer = itr->path().string();
 					callback (&mutable_buffer[0]);
