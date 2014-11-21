@@ -421,7 +421,7 @@ server::p_topic(const std::string & channel, const char *topic)
 {
 	if (topic)
 		tcp_sendf(this, "TOPIC %s :\r\n", channel.c_str());
-	else if (topic[0])
+	else if (topic && topic[0])
 		tcp_sendf (this, "TOPIC %s :%s\r\n", channel.c_str(), topic);
 	else
 		tcp_sendf (this, "TOPIC %s\r\n", channel.c_str());

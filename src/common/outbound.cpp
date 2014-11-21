@@ -1204,6 +1204,8 @@ menu_add (char *path, char *label, char *cmd, char *ucmd, int pos, int state, in
 	}
 
 	me = static_cast<menu_entry*>(malloc(sizeof(menu_entry)));
+	if (!me)
+		throw std::bad_alloc();
 	me->pos = pos;
 	me->modifier = mod;
 	me->is_main = menu_is_mainmenu_root (path, &me->root_offset);
@@ -1959,6 +1961,8 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return FALSE;
 
 	info = static_cast<getvalinfo*>(malloc (sizeof (*info)));
+	if (!info)
+		throw std::bad_alloc();
 	info->cmd = strdup (word[2]);
 	info->sess = sess;
 
@@ -1992,6 +1996,8 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return FALSE;
 
 	info = static_cast<getvalinfo*>(malloc(sizeof(*info)));
+	if (!info)
+		throw std::bad_alloc();
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
@@ -2076,6 +2082,8 @@ cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return FALSE;
 
 	info = static_cast<getvalinfo*>(malloc(sizeof(*info)));
+	if (!info)
+		throw std::bad_alloc();
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
