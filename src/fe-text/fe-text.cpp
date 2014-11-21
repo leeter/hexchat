@@ -740,7 +740,7 @@ fe_dcc_remove(struct ::hexchat::dcc::DCC *dcc)
 }
 }
 void
-fe_clear_channel (struct session *sess)
+fe_clear_channel (session &sess)
 {
 }
 void

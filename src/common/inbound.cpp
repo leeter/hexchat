@@ -56,32 +56,29 @@
 namespace dcc = hexchat::dcc;
 
 void
-clear_channel (session *sess)
+clear_channel (session &sess)
 {
-	if (sess->channel[0])
-		strcpy (sess->waitchannel, sess->channel);
-	sess->channel[0] = 0;
-	sess->doing_who = FALSE;
-	sess->done_away_check = FALSE;
+	if (sess.channel[0])
+		strcpy (sess.waitchannel, sess.channel);
+	sess.channel[0] = 0;
+	sess.doing_who = FALSE;
+	sess.done_away_check = FALSE;
 
-	log_close (*sess);
+	log_close (sess);
 
-	if (sess->current_modes)
+	free(sess.current_modes);
+	sess.current_modes = nullptr;
+
+	if (sess.mode_timeout_tag)
 	{
-		free (sess->current_modes);
-		sess->current_modes = nullptr;
-	}
-
-	if (sess->mode_timeout_tag)
-	{
-		fe_timeout_remove (sess->mode_timeout_tag);
-		sess->mode_timeout_tag = 0;
+		fe_timeout_remove (sess.mode_timeout_tag);
+		sess.mode_timeout_tag = 0;
 	}
 
 	fe_clear_channel (sess);
-	userlist_clear (sess);
-	fe_set_nonchannel (sess, FALSE);
-	fe_set_title (sess);
+	userlist_clear (&sess);
+	fe_set_nonchannel (&sess, FALSE);
+	fe_set_title (&sess);
 }
 
 void
@@ -655,7 +652,7 @@ inbound_ukick (server *serv, char *chan, char *kicker, char *reason,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker, 
 									  reason, 0, tags_data->timestamp);
-		clear_channel (sess);
+		clear_channel (*sess);
 		if (prefs.hex_irc_auto_rejoin)
 		{
 			serv->p_join (chan, sess->channelkey);
@@ -677,7 +674,7 @@ inbound_upart (server *serv, char *chan, char *ip, char *reason,
 		else
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_UPART, sess, serv->nick, ip, chan, nullptr,
 										  0, tags_data->timestamp);
-		clear_channel (sess);
+		clear_channel (*sess);
 	}
 }
 

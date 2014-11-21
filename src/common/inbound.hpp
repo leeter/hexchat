@@ -78,7 +78,7 @@ void inbound_login_end (session *sess, char *text,
 void inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 							 char *text, char fromme, int id, 
 							 const message_tags_data *tags_data);
-void clear_channel (session *sess);
+void clear_channel (session &sess);
 void set_topic (session *sess, char *topic, char *stripped_topic);
 void inbound_privmsg (server *serv, char *from, char *ip, char *text, int id, 
 							 const message_tags_data *tags_data);

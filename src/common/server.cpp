@@ -1326,7 +1326,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), nullptr, nullptr, nullptr, 0);
 
 			if (!sess->channel[0] || sess->type == session::SESS_CHANNEL)
-				clear_channel (sess);
+				clear_channel (*sess);
 		}
 		list = list->next;
 	}
