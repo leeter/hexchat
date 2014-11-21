@@ -16,26 +16,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #define WANTSOCKET
 #include "inet.hpp"				/* make it first to avoid macro redefinitions */
 
 #define __APPLE_API_STRICT_CONFORMANCE
 
 #define _FILE_OFFSET_BITS 64
-#include <sstream>
 #include <algorithm>
-#include <string>
-#include <functional>
-#include <unordered_map>
-#include <locale>
 #include <chrono>
 #include <cstdio>
-#include <cstring>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
+#include <functional>
 #include <iterator>
+#include <locale>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -1589,87 +1599,99 @@ encode_sasl_pass_plain (const char *user, const char *pass)
 #ifdef USE_OPENSSL
 /* Adapted from ZNC's SASL module */
 
-static int
-parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
+static bool
+parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_out, std::vector<unsigned char>& secret_out, int &keysize_out)
 {
-	DH *dh;
-	guchar *data, *decoded_data;
-	guchar *secret;
-	gsize data_len;
-	guint size;
-	guint16 size16;
-	BIGNUM *pubkey;
-	gint key_size;
+	namespace bai = boost::archive::iterators;
+	auto dsize = str.size();
 
-	dh = DH_new();
-	data = decoded_data = g_base64_decode (str, &data_len);
+	// Remove the padding characters, cf. https://svn.boost.org/trac/boost/ticket/5629
+	if (dsize && str[dsize - 1] == '=') {
+		--dsize;
+		if (dsize && str[dsize - 1] == '=') --dsize;
+	}
+	typedef bai::transform_width<bai::binary_from_base64<const char*>, 8, 6> base64_dec;
+	std::unique_ptr<DH, decltype(&DH_free)> dh(DH_new(), DH_free);
+	std::stringstream data_stream;
+	std::copy(
+		base64_dec(str.c_str()),
+		base64_dec(str.c_str() + dsize),
+		std::ostream_iterator<char>(data_stream));
+
+	auto data_len = data_stream.tellp();
 	if (data_len < 2)
-		goto fail;
-
+		return false;
+	data_stream.seekp(0);
+	std::uint16_t size16;
+	data_stream.read(reinterpret_cast<char*>(&size16), sizeof(size16));
 	/* prime number */
-	memcpy (&size16, data, sizeof(size16));
-	size = ntohs (size16);
-	data += 2;
+	auto size = ntohs (size16);
 	data_len -= 2;
 
 	if (size > data_len)
-		goto fail;
-
-	dh->p = BN_bin2bn (data, size, NULL);
-	data += size;
+		return false;
+	std::vector<unsigned char> data(size);
+	std::copy_n(
+		std::istream_iterator<unsigned char>(data_stream),
+		size,
+		data.begin());
+	dh->p = BN_bin2bn (data.data(), size, nullptr);
 
 	/* Generator */
 	if (data_len < 2)
-		goto fail;
+		return false;
 
-	memcpy (&size16, data, sizeof(size16));
+	data_stream.read(reinterpret_cast<char*>(&size16), sizeof(size16));
 	size = ntohs (size16);
-	data += 2;
 	data_len -= 2;
 	
 	if (size > data_len)
-		goto fail;
-
-	dh->g = BN_bin2bn (data, size, NULL);
-	data += size;
+		return false;
+	data.resize(size);
+	std::copy_n(
+		std::istream_iterator<unsigned char>(data_stream),
+		size,
+		data.begin());
+	dh->g = BN_bin2bn (data.data(), size, nullptr);
 
 	/* pub key */
 	if (data_len < 2)
-		goto fail;
+		return false;
 
-	memcpy (&size16, data, sizeof(size16));
+	data_stream.read(reinterpret_cast<char*>(&size16), sizeof(size16));
 	size = ntohs(size16);
-	data += 2;
 	data_len -= 2;
 
-	pubkey = BN_bin2bn (data, size, NULL);
-	if (!(DH_generate_key (dh)))
-		goto fail;
+	data.resize(size);
+	std::copy_n(
+		std::istream_iterator<unsigned char>(data_stream),
+		size,
+		data.begin());
 
-	secret = (unsigned char*)malloc (DH_size(dh));
-	key_size = DH_compute_key (secret, pubkey, dh);
+	std::unique_ptr<BIGNUM, decltype(&BN_free)> pubkey(
+		BN_bin2bn (data.data(), size, nullptr),
+		BN_free);
+	if (!(DH_generate_key (dh.get())))
+		return false;
+
+	std::vector<unsigned char> secret(DH_size(dh.get()));
+	int key_size = DH_compute_key (&secret[0], pubkey.get(), dh.get());
 	if (key_size == -1)
-		goto fail;
+		return false;
 
-	g_free (decoded_data);
-
-	*dh_out = dh;
-	*secret_out = secret;
-	*keysize_out = key_size;
-	return 1;
-
-fail:
-	if (decoded_data)
-		g_free (decoded_data);
-	return 0;
+	dh_out = std::move(dh);
+	secret_out = std::move(secret);
+	keysize_out = key_size;
+	return true;
 }
 
 char *
 encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 {
-	DH *dh;
+	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
 	char *response, *ret = NULL;
-	unsigned char *secret;
+	std::vector<unsigned char> secret;
+
 	unsigned char *encrypted_pass;
 	char *plain_pass;
 	BF_KEY key;
@@ -1679,9 +1701,9 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	guint16 size16;
 	char *in_ptr, *out_ptr;
 
-	if (!parse_dh (data, &dh, &secret, &key_size))
+	if (!parse_dh (data, dh, secret, key_size))
 		return NULL;
-	BF_set_key (&key, key_size, secret);
+	BF_set_key (&key, key_size, secret.data());
 
 	encrypted_pass = static_cast<unsigned char*>(calloc (1, pass_len));
 	plain_pass = static_cast<char*>(calloc(1, pass_len));
@@ -1690,8 +1712,6 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	{
 		free(encrypted_pass);
 		free(plain_pass);
-		DH_free(dh);
-		free(secret);
 		return NULL;
 	}
 	std::copy_n(pass, pass_len, plain_pass);
@@ -1729,10 +1749,8 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	
 	free(response);
 cleanup:
-	DH_free(dh);
 	free (plain_pass);
 	free (encrypted_pass);
-	free (secret);
 
 	return ret;
 }
@@ -1740,11 +1758,12 @@ cleanup:
 char *
 encode_sasl_pass_aes (char *user, char *pass, char *data)
 {
-	DH *dh;
+	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
 	AES_KEY key;
 	char *response = NULL;
 	char *out_ptr, *ret = NULL;
-	unsigned char *secret, *ptr;
+	std::vector<unsigned char> secret;
+	unsigned char *ptr;
 	unsigned char *encrypted_userpass, *plain_userpass;
 	int key_size, length;
 	guint16 size16;
@@ -1755,7 +1774,7 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	int padlen = 16 - (len % 16);
 	int userpass_len = len + padlen;
 
-	if (!parse_dh (data, &dh, &secret, &key_size))
+	if (!parse_dh (data, dh, secret, key_size))
 		return NULL;
 
 	encrypted_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*encrypted_userpass)));
@@ -1764,8 +1783,6 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	{
 		free(encrypted_userpass);
 		free(plain_userpass);
-		DH_free(dh);
-		free(secret);
 		return NULL;
 	}
 
@@ -1791,7 +1808,7 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	std::copy(std::begin(iv), std::end(iv), std::begin(iv_copy));
 
 	/* Encrypt */
-	AES_set_encrypt_key (secret, key_size * 8, &key);
+	AES_set_encrypt_key (secret.data(), key_size * 8, &key);
 	AES_cbc_encrypt(plain_userpass, encrypted_userpass, userpass_len, &key, iv_copy, AES_ENCRYPT);
 
 	/* Create response */
@@ -1817,10 +1834,8 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	ret = g_base64_encode ((const guchar*)response, length);
 
 end:
-	DH_free (dh);
 	free (plain_userpass);
 	free (encrypted_userpass);
-	free (secret);
 	if (response)
 		free (response);
 
