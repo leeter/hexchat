@@ -164,7 +164,7 @@ AC_ARG_WITH(theme-manager,
 	[AS_HELP_STRING([--with-theme-manager],[compile theme manager (needs monodevelop, default: off)])],
 		theme_manager=$withval, theme_manager=no)
 
-BOOST_REQUIRE([1.46])
+BOOST_REQUIRE([1.48])
 BOOST_IOSTREAMS
 BOOST_FILESYSTEM
 BOOST_SIGNALS2
