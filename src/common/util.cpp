@@ -1696,7 +1696,7 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	std::vector<unsigned char> secret;
 
 	unsigned char *encrypted_pass;
-	char *plain_pass;
+	//char *plain_pass;
 	BF_KEY key;
 	int key_size, length;
 	int pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
@@ -1709,17 +1709,18 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	BF_set_key (&key, key_size, secret.data());
 
 	encrypted_pass = static_cast<unsigned char*>(calloc (1, pass_len));
-	plain_pass = static_cast<char*>(calloc(1, pass_len));
+	std::string plain_pass(pass_len, '\0');
+	//plain_pass = static_cast<char*>(calloc(1, pass_len));
 
-	if (!encrypted_pass || !plain_pass)
+	if (!encrypted_pass /*|| !plain_pass*/)
 	{
 		free(encrypted_pass);
-		free(plain_pass);
+		//free(plain_pass);
 		return NULL;
 	}
-	std::copy_n(pass, pass_len, plain_pass);
+	std::copy_n(pass, pass_len, plain_pass.begin());
 	out_ptr = (char*)encrypted_pass;
-	in_ptr = (char*)plain_pass;
+	in_ptr = (char*)&plain_pass[0];
 
 	for (length = pass_len; length; length -= 8, in_ptr += 8, out_ptr += 8)
 		BF_ecb_encrypt ((unsigned char*)in_ptr, (unsigned char*)out_ptr, &key, BF_ENCRYPT);
@@ -1752,7 +1753,7 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	
 	free(response);
 cleanup:
-	free (plain_pass);
+	//free (plain_pass);
 	free (encrypted_pass);
 
 	return ret;
