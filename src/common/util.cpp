@@ -1603,6 +1603,7 @@ static bool
 parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_out, std::vector<unsigned char>& secret_out, int &keysize_out)
 {
 	namespace bai = boost::archive::iterators;
+	typedef bai::transform_width<bai::binary_from_base64<const char*>, 8, 6> base64_dec;
 	auto dsize = str.size();
 
 	// Remove the padding characters, cf. https://svn.boost.org/trac/boost/ticket/5629
@@ -1610,8 +1611,10 @@ parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_ou
 		--dsize;
 		if (dsize && str[dsize - 1] == '=') --dsize;
 	}
-	typedef bai::transform_width<bai::binary_from_base64<const char*>, 8, 6> base64_dec;
+	
 	std::unique_ptr<DH, decltype(&DH_free)> dh(DH_new(), DH_free);
+	if (!dh)
+		return false;
 	std::stringstream data_stream;
 	std::copy(
 		base64_dec(str.c_str()),
