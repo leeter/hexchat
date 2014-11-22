@@ -1691,58 +1691,47 @@ parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_ou
 char *
 encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 {
-	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
+	auto pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
+	auto user_len = strlen (user);
 	
+	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
 	std::vector<unsigned char> secret;
-
-	BF_KEY key;
-	int key_size, length;
-	int pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
-	int user_len = strlen (user);
-	guint16 size16;
-	char *in_ptr, *out_ptr;
-
+	int key_size = 0;
 	if (!parse_dh (data, dh, secret, key_size))
 		return nullptr;
+	
+	BF_KEY key;
 	BF_set_key (&key, key_size, secret.data());
 
 	std::vector<unsigned char> encrypted_pass(pass_len);
 	std::fill(encrypted_pass.begin(), encrypted_pass.end(), '\0');
-	std::string plain_pass(pass_len, '\0');
-	
-	std::copy_n(pass, pass_len, plain_pass.begin());
-	out_ptr = (char*)&encrypted_pass[0];
-	in_ptr = (char*)&plain_pass[0];
+	std::string plain_pass(pass);
+	plain_pass.resize(pass_len);
 
-	for (length = pass_len; length; length -= 8, in_ptr += 8, out_ptr += 8)
-		BF_ecb_encrypt ((unsigned char*)in_ptr, (unsigned char*)out_ptr, &key, BF_ENCRYPT);
+	unsigned char * out_ptr = &encrypted_pass[0];
+	char *in_ptr = &plain_pass[0];
+
+	for (auto length = pass_len; length; length -= 8, in_ptr += 8, out_ptr += 8)
+		BF_ecb_encrypt (reinterpret_cast<unsigned char*>(in_ptr), out_ptr, &key, BF_ENCRYPT);
 
 	/* Create response */
-	length = 2 + BN_num_bytes (dh->pub_key) + pass_len + user_len + 1;
-	char * response = static_cast<char*>(calloc(length, sizeof(char)));
-
-	if (!response)
-		return nullptr;
-
-	out_ptr = response;
+	auto length = 2 + BN_num_bytes (dh->pub_key) + pass_len + user_len + 1;
+	std::ostringstream response;
 
 	/* our key */
-	size16 = htons ((guint16)BN_num_bytes (dh->pub_key));
-	memcpy (out_ptr, &size16, sizeof(size16));
-	out_ptr += 2;
-	BN_bn2bin (dh->pub_key, (guchar*)out_ptr);
-	out_ptr += BN_num_bytes (dh->pub_key);
+	std::uint16_t size16 = htons((std::uint16_t)BN_num_bytes(dh->pub_key));
+	response.write(reinterpret_cast<const char*>(&size16), sizeof(size16));
+	std::vector<unsigned char> buffer(BN_num_bytes(dh->pub_key));
+	BN_bn2bin (dh->pub_key, &buffer[0]);
+	std::copy(buffer.cbegin(), buffer.cend(), std::ostream_iterator<unsigned char>(response));
 
 	/* username */
-	std::copy_n(user, user_len + 1, out_ptr);
-	out_ptr += user_len + 1;
+	response.write(user, user_len + 1);
 
 	/* pass */
-	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), out_ptr);
+	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), std::ostream_iterator<unsigned char>(response));
 	
-	char * ret = g_base64_encode ((const guchar*)response, length);
-
-	free(response);
+	char * ret = g_base64_encode ((const guchar*)response.str().c_str(), length);
 
 	return ret;
 }
