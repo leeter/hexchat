@@ -1689,10 +1689,10 @@ parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_ou
 }
 
 char *
-encode_sasl_pass_blowfish (char *user, char *pass, char *data)
+encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data)
 {
-	auto pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
-	auto user_len = strlen (user);
+	auto pass_len = pass.size() + (8 - (pass.size() % 8));
+	auto user_len = user.size();
 	
 	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
 	std::vector<unsigned char> secret;
@@ -1719,14 +1719,15 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	std::ostringstream response;
 
 	/* our key */
-	std::uint16_t size16 = htons((std::uint16_t)BN_num_bytes(dh->pub_key));
+	std::uint16_t size16 = htons(static_cast<std::uint16_t>(BN_num_bytes(dh->pub_key)));
 	response.write(reinterpret_cast<const char*>(&size16), sizeof(size16));
 	std::vector<unsigned char> buffer(BN_num_bytes(dh->pub_key));
 	BN_bn2bin (dh->pub_key, &buffer[0]);
 	std::copy(buffer.cbegin(), buffer.cend(), std::ostream_iterator<unsigned char>(response));
 
 	/* username */
-	response.write(user, user_len + 1);
+	std::copy(user.cbegin(), user.cend(), std::ostream_iterator<char>(response));
+	response.put(0);
 
 	/* pass */
 	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), std::ostream_iterator<unsigned char>(response));
