@@ -1692,11 +1692,9 @@ char *
 encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 {
 	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
-	char *response, *ret = NULL;
+	
 	std::vector<unsigned char> secret;
 
-	unsigned char *encrypted_pass;
-	//char *plain_pass;
 	BF_KEY key;
 	int key_size, length;
 	int pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
@@ -1705,21 +1703,15 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	char *in_ptr, *out_ptr;
 
 	if (!parse_dh (data, dh, secret, key_size))
-		return NULL;
+		return nullptr;
 	BF_set_key (&key, key_size, secret.data());
 
-	encrypted_pass = static_cast<unsigned char*>(calloc (1, pass_len));
+	std::vector<unsigned char> encrypted_pass(pass_len);
+	std::fill(encrypted_pass.begin(), encrypted_pass.end(), '\0');
 	std::string plain_pass(pass_len, '\0');
-	//plain_pass = static_cast<char*>(calloc(1, pass_len));
-
-	if (!encrypted_pass /*|| !plain_pass*/)
-	{
-		free(encrypted_pass);
-		//free(plain_pass);
-		return NULL;
-	}
+	
 	std::copy_n(pass, pass_len, plain_pass.begin());
-	out_ptr = (char*)encrypted_pass;
+	out_ptr = (char*)&encrypted_pass[0];
 	in_ptr = (char*)&plain_pass[0];
 
 	for (length = pass_len; length; length -= 8, in_ptr += 8, out_ptr += 8)
@@ -1727,10 +1719,10 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 
 	/* Create response */
 	length = 2 + BN_num_bytes (dh->pub_key) + pass_len + user_len + 1;
-	response = static_cast<char*>(calloc(length, sizeof(char)));
+	char * response = static_cast<char*>(calloc(length, sizeof(char)));
 
 	if (!response)
-		goto cleanup;
+		return nullptr;
 
 	out_ptr = response;
 
@@ -1746,15 +1738,11 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	out_ptr += user_len + 1;
 
 	/* pass */
-	std::copy_n(encrypted_pass, pass_len, out_ptr);
+	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), out_ptr);
 	
-	ret = g_base64_encode ((const guchar*)response, length);
+	char * ret = g_base64_encode ((const guchar*)response, length);
 
-	
 	free(response);
-cleanup:
-	//free (plain_pass);
-	free (encrypted_pass);
 
 	return ret;
 }
