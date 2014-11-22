@@ -44,8 +44,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -70,6 +68,7 @@
 #include "hexchatc.hpp"
 #include "util.hpp"
 #include "charset_helpers.hpp"
+#include "base64.hpp"
 
 #if defined (USING_FREEBSD) || defined (__APPLE__)
 #include <sys/sysctl.h>
@@ -1602,24 +1601,13 @@ encode_sasl_pass_plain (const char *user, const char *pass)
 static bool
 parse_dh (const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_out, std::vector<unsigned char>& secret_out, int &keysize_out)
 {
-	namespace bai = boost::archive::iterators;
-	typedef bai::transform_width<bai::binary_from_base64<const char*>, 8, 6> base64_dec;
-	auto dsize = str.size();
+	std::stringstream data_stream;
+	if (!util::transforms::decode_base64(str, data_stream))
+		return false;
 
-	// Remove the padding characters, cf. https://svn.boost.org/trac/boost/ticket/5629
-	if (dsize && str[dsize - 1] == '=') {
-		--dsize;
-		if (dsize && str[dsize - 1] == '=') --dsize;
-	}
-	
 	std::unique_ptr<DH, decltype(&DH_free)> dh(DH_new(), DH_free);
 	if (!dh)
 		return false;
-	std::stringstream data_stream;
-	std::copy(
-		base64_dec(str.c_str()),
-		base64_dec(str.c_str() + dsize),
-		std::ostream_iterator<char>(data_stream));
 
 	auto data_len = data_stream.tellp();
 	if (data_len < 2)

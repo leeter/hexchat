@@ -5,6 +5,7 @@ noinst_LIBRARIES = libhexchatcommon.a
 AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../libirc
 
 EXTRA_DIST = \
+	base64.hpp \
 	cfgfiles.hpp \
 	chanopt.hpp \
 	ctcp.hpp \
@@ -65,7 +66,7 @@ noinst_PROGRAMS = make-te
 make_te_SOURCES = make-te.cpp
 make_te_CPPFLAGS = $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 
-libhexchatcommon_a_SOURCES = cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp filesystem.cpp hexchat.cpp \
+libhexchatcommon_a_SOURCES = base64.cpp cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp filesystem.cpp hexchat.cpp \
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
 	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp tree.cpp url.cpp userlist.cpp util.cpp

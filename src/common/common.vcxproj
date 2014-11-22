@@ -14,6 +14,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="base64.hpp" />
     <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.hpp" />
     <ClInclude Include="charset_helpers.hpp" />
@@ -54,6 +55,7 @@
     <ClInclude Include="w32dcc_security.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="base64.cpp" />
     <ClCompile Include="cfgfiles.cpp" />
     <ClCompile Include="chanopt.cpp" />
     <ClCompile Include="charset_helpers.cpp" />
