@@ -56,6 +56,12 @@ encode_base64(const char* in, std::size_t in_length)
 	return outstream.str();
 }
 
+std::string
+encode_base64(const std::string& in)
+{
+	return encode_base64(in.c_str(), in.size());
+}
+
 bool
 decode_base64(const std::string & data, std::ostream & out)
 {

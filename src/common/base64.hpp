@@ -27,6 +27,7 @@ namespace util
 {
 	namespace transforms
 	{
+		std::string encode_base64(const std::string & in);
 		std::string encode_base64(const char* in, std::size_t in_length);
 		void encode_base64(const char* in, std::size_t in_length, std::ostream & out);
 		bool decode_base64(const std::string &data, std::ostream & out);

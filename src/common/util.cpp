@@ -1720,9 +1720,9 @@ encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, con
 	/* pass */
 	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), std::ostream_iterator<unsigned char>(response));
 	
-	char * ret = g_base64_encode ((const guchar*)response.str().c_str(), length);
+	auto encoded = util::transforms::encode_base64(response.str());
 
-	return ret;
+	return g_strdup(encoded.c_str());
 }
 
 char *
