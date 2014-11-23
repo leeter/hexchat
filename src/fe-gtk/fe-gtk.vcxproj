@@ -122,6 +122,9 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <Link>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ascii.hpp" />
