@@ -21,6 +21,7 @@
 #include "../../config.h"
 
 #include <algorithm>
+#include <cstring>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -35,6 +36,10 @@
 #include <openssl/rand.h>
 #include <openssl/blowfish.h>
 #include <openssl/aes.h>
+
+#ifndef WIN32
+#include <arpa/inet.h>
+#endif
 
 #include "sasl.hpp"
 #include "base64.hpp"
