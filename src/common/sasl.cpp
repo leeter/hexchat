@@ -55,6 +55,9 @@
 
 namespace
 {
+class dh_setup;
+
+static bool parse_dh(const std::string& str, dh_setup & setup);
 
 class dh_setup
 {
