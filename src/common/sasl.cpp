@@ -37,8 +37,16 @@
 #include <openssl/blowfish.h>
 #include <openssl/aes.h>
 
+#include <boost/config.hpp>
+
 #ifndef WIN32
 #include <arpa/inet.h>
+#endif
+
+#ifdef BOOST_NO_NOEXCEPT
+#define NOEXCEPT throw()
+#else
+#define NOEXCEPT noexcept
 #endif
 
 #include "sasl.hpp"
@@ -47,10 +55,70 @@
 
 namespace
 {
+
+class dh_setup
+{
+	std::vector<unsigned char> _secret;
+	std::unique_ptr<BIGNUM, decltype(&BN_free)> _pubkey;
+	std::unique_ptr<DH, decltype(&DH_free)> _dh;
+	int _key_size;
+
+	explicit dh_setup(
+		std::vector<unsigned char> && secret,
+		std::unique_ptr<BIGNUM, decltype(&BN_free)> pubkey,
+		std::unique_ptr<DH, decltype(&DH_free)> dh,
+		int key_size) NOEXCEPT
+		:_secret(std::forward<std::vector<unsigned char> && >(secret)),
+		_pubkey(std::move(pubkey)),
+		_dh(std::move(dh)),
+		_key_size(key_size)
+	{
+	}
+	dh_setup(const dh_setup&) = delete;
+	dh_setup& operator=(const dh_setup&) = delete;
+public:
+	dh_setup()
+		:_pubkey(nullptr, BN_free), _dh(nullptr, DH_free)
+	{}
+	dh_setup(dh_setup&& other) NOEXCEPT
+		:_pubkey(nullptr, BN_free), _dh(nullptr, DH_free)
+	{
+		*this = std::move(other);
+	}
+
+	dh_setup& operator=(dh_setup&& other) NOEXCEPT
+	{
+		if (this != &other)
+		{
+			this->_pubkey = std::move(other._pubkey);
+			this->_dh = std::move(other._dh);
+			this->_secret = std::move(other._secret);
+			this->_key_size = other._key_size;
+			other._key_size = 0;
+		}
+		return *this;
+	}
+
+	const DH* dh() const NOEXCEPT
+	{
+		return _dh.get();
+	}
+
+	const unsigned char* secret() const NOEXCEPT
+	{
+		return _secret.data();
+	}
+
+	int key_size() const NOEXCEPT
+	{
+		return _key_size;
+	}
+	friend bool parse_dh(const std::string& str, dh_setup & setup);
+};
 	/* Adapted from ZNC's SASL module */
 
 static bool
-	parse_dh(const std::string& str, std::unique_ptr<DH, decltype(&DH_free)> &dh_out, std::vector<unsigned char>& secret_out, int &keysize_out)
+parse_dh(const std::string& str, dh_setup & setup)
 {
 	std::stringstream data_stream;
 	if (!util::transforms::decode_base64(str, data_stream))
@@ -114,16 +182,15 @@ static bool
 		BN_bin2bn(data.data(), size, nullptr),
 		BN_free);
 	if (!(DH_generate_key(dh.get())))
-		return false;
+		false;
 
 	std::vector<unsigned char> secret(DH_size(dh.get()));
 	int key_size = DH_compute_key(&secret[0], pubkey.get(), dh.get());
 	if (key_size == -1)
 		return false;
 
-	dh_out = std::move(dh);
-	secret_out = std::move(secret);
-	keysize_out = key_size;
+	setup = dh_setup(std::move(secret), std::move(pubkey), std::move(dh), key_size);
+
 	return true;
 }
 } //end anonymous namespace
@@ -155,14 +222,12 @@ encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, con
 	auto pass_len = pass.size() + (8 - (pass.size() % 8));
 	auto user_len = user.size();
 
-	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
-	std::vector<unsigned char> secret;
-	int key_size = 0;
-	if (!parse_dh(data, dh, secret, key_size))
+	dh_setup setup;
+	if (!parse_dh(data, setup))
 		return nullptr;
 
 	BF_KEY key;
-	BF_set_key(&key, key_size, secret.data());
+	BF_set_key(&key, setup.key_size(), setup.secret());
 
 	std::vector<unsigned char> encrypted_pass(pass_len);
 	std::fill(encrypted_pass.begin(), encrypted_pass.end(), '\0');
@@ -176,14 +241,14 @@ encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, con
 		BF_ecb_encrypt(reinterpret_cast<unsigned char*>(in_ptr), out_ptr, &key, BF_ENCRYPT);
 
 	/* Create response */
-	auto length = 2 + BN_num_bytes(dh->pub_key) + pass_len + user_len + 1;
+	auto length = 2 + BN_num_bytes(setup.dh()->pub_key) + pass_len + user_len + 1;
 	std::ostringstream response;
 
 	/* our key */
-	std::uint16_t size16 = htons(static_cast<std::uint16_t>(BN_num_bytes(dh->pub_key)));
+	std::uint16_t size16 = htons(static_cast<std::uint16_t>(BN_num_bytes(setup.dh()->pub_key)));
 	response.write(reinterpret_cast<const char*>(&size16), sizeof(size16));
-	std::vector<unsigned char> buffer(BN_num_bytes(dh->pub_key));
-	BN_bn2bin(dh->pub_key, &buffer[0]);
+	std::vector<unsigned char> buffer(BN_num_bytes(setup.dh()->pub_key));
+	BN_bn2bin(setup.dh()->pub_key, &buffer[0]);
 	std::copy(buffer.cbegin(), buffer.cend(), std::ostream_iterator<unsigned char>(response));
 
 	/* username */
@@ -201,14 +266,12 @@ encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, con
 char *
 encode_sasl_pass_aes(char *user, char *pass, char *data)
 {
-	std::unique_ptr<DH, decltype(&DH_free)> dh{ nullptr, DH_free };
 	AES_KEY key;
 	char *response = NULL;
 	char *out_ptr, *ret = NULL;
-	std::vector<unsigned char> secret;
 	unsigned char *ptr;
 	unsigned char *encrypted_userpass, *plain_userpass;
-	int key_size, length;
+	int length;
 	guint16 size16;
 	unsigned char iv[16], iv_copy[16];
 	int user_len = strlen(user) + 1;
@@ -217,7 +280,8 @@ encode_sasl_pass_aes(char *user, char *pass, char *data)
 	int padlen = 16 - (len % 16);
 	int userpass_len = len + padlen;
 
-	if (!parse_dh(data, dh, secret, key_size))
+	dh_setup setup;
+	if (!parse_dh(data, setup))
 		return NULL;
 
 	encrypted_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*encrypted_userpass)));
@@ -251,21 +315,21 @@ encode_sasl_pass_aes(char *user, char *pass, char *data)
 	std::copy(std::begin(iv), std::end(iv), std::begin(iv_copy));
 
 	/* Encrypt */
-	AES_set_encrypt_key(secret.data(), key_size * 8, &key);
+	AES_set_encrypt_key(setup.secret(), setup.key_size() * 8, &key);
 	AES_cbc_encrypt(plain_userpass, encrypted_userpass, userpass_len, &key, iv_copy, AES_ENCRYPT);
 
 	/* Create response */
 	/* format of:  <size pubkey><pubkey><iv (always 16 bytes)><ciphertext> */
-	length = 2 + key_size + sizeof(iv) + userpass_len;
+	length = 2 + setup.key_size() + sizeof(iv) + userpass_len;
 	response = (char*)malloc(length);
 	out_ptr = response;
 
 	/* our key */
-	size16 = htons((guint16)key_size);
+	size16 = htons((guint16)setup.key_size());
 	memcpy(out_ptr, &size16, sizeof(size16));
 	out_ptr += 2;
-	BN_bn2bin(dh->pub_key, (guchar*)out_ptr);
-	out_ptr += key_size;
+	BN_bn2bin(setup.dh()->pub_key, (guchar*)out_ptr);
+	out_ptr += setup.key_size();
 
 	/* iv */
 	std::copy_n(iv, sizeof(iv), out_ptr);
