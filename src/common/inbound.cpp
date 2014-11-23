@@ -52,6 +52,7 @@
 #include "hexchatc.hpp"
 #include "chanopt.hpp"
 #include "dcc.hpp"
+#include "sasl.hpp"
 
 namespace dcc = hexchat::dcc;
 
@@ -1878,14 +1879,14 @@ inbound_sasl_authenticate (server *serv, char *data)
 		switch (serv->sasl_mech)
 		{
 		case MECH_PLAIN:
-			pass = encode_sasl_pass_plain (user, serv->password);
+			pass = auth::sasl::encode_sasl_pass_plain (user, serv->password);
 			break;
 #ifdef USE_OPENSSL
 		case MECH_BLOWFISH:
-			pass = encode_sasl_pass_blowfish (user, serv->password, data);
+			pass = auth::sasl::encode_sasl_pass_blowfish (user, serv->password, data);
 			break;
 		case MECH_AES:
-			pass = encode_sasl_pass_aes (user, serv->password, data);
+			pass = auth::sasl::encode_sasl_pass_aes (user, serv->password, data);
 			break;
 		case MECH_EXTERNAL:
 			pass = g_strdup ("+");

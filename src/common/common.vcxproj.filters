@@ -131,6 +131,9 @@
     <ClInclude Include="base64.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sasl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">
@@ -224,6 +227,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sasl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
