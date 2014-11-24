@@ -50,7 +50,7 @@
 void
 server::p_login(const std::string& user, const std::string& realname)
 {
-	tcp_sendf (this, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
+	tcp_send(this, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
 	this->sent_capend = FALSE;	/* track if we have finished */
 
 	if (this->password[0] && this->loginmethod == LOGIN_PASS)
@@ -288,13 +288,13 @@ server::p_quit (const std::string & reason)
 	if (!reason.empty())
 		tcp_sendf (this, "QUIT :%s\r\n", reason.c_str());
 	else
-		tcp_send_len (this, "QUIT\r\n", 6);
+		tcp_send (this, "QUIT\r\n");
 }
 
 void
 server::p_set_back ()
 {
-	tcp_send_len (this, "AWAY\r\n", 6);
+	tcp_send (this, "AWAY\r\n");
 }
 
 void
@@ -439,7 +439,7 @@ server::p_list_channels(const std::string & arg, int min_users)
 	if (this->use_listargs)
 		tcp_sendf (this, "LIST >%d,<10000\r\n", min_users - 1);
 	else
-		tcp_send_len (this, "LIST\r\n", 6);
+		tcp_send (this, "LIST\r\n");
 }
 
 void
@@ -1007,7 +1007,7 @@ process_numeric (session * sess, int n,
 		if (!serv->sent_capend)
 		{
 			serv->sent_capend = TRUE;
-			tcp_send_len (serv, "CAP END\r\n", 9);
+			tcp_send (serv, "CAP END\r\n");
 		}
 		break;
 	case 908:	/* Supported SASL Mechs */

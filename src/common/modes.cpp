@@ -822,7 +822,7 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 		} else if (strcmp (word[w], "NAMESX") == 0)
 		{
 									/* 12345678901234567 */
-			tcp_send_len (serv, "PROTOCTL NAMESX\r\n", 17);
+			tcp_send (serv, "PROTOCTL NAMESX\r\n");
 		} else if (strcmp (word[w], "WHOX") == 0)
 		{
 			serv->have_whox = TRUE;

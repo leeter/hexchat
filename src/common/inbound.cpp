@@ -1692,17 +1692,17 @@ inbound_cap_ack (server *serv, char *nick, char *extensions,
 		if (serv->loginmethod == LOGIN_SASLEXTERNAL)
 		{
 			serv->sasl_mech = MECH_EXTERNAL;
-			tcp_send_len (serv, "AUTHENTICATE EXTERNAL\r\n", 23);
+			tcp_send (serv, "AUTHENTICATE EXTERNAL\r\n");
 		}
 		else
 		{
 			/* default to most secure, it will fallback if not supported */
 			serv->sasl_mech = MECH_AES;
-			tcp_send_len (serv, "AUTHENTICATE DH-AES\r\n", 21);
+			tcp_send (serv, "AUTHENTICATE DH-AES\r\n");
 		}
 #else
 		serv->sasl_mech = MECH_PLAIN;
-		tcp_send_len (serv, "AUTHENTICATE PLAIN\r\n", 20);
+		tcp_send (serv, "AUTHENTICATE PLAIN\r\n");
 #endif
 	}
 }
@@ -1804,7 +1804,7 @@ inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 	{
 		/* if we use SASL, CAP END is dealt via raw numerics */
 		serv->sent_capend = TRUE;
-		tcp_send_len (serv, "CAP END\r\n", 9);
+		tcp_send(serv, "CAP END\r\n");
 	}
 }
 
@@ -1812,7 +1812,7 @@ void
 inbound_cap_nak (server *serv, const message_tags_data *tags_data)
 {
 	serv->sent_capend = TRUE;
-	tcp_send_len (serv, "CAP END\r\n", 9);
+	tcp_send (serv, "CAP END\r\n");
 }
 
 void
@@ -1853,7 +1853,7 @@ inbound_sasl_supportedmechs (server *serv, char *list)
 
 	/* Abort, none supported */
 	serv->sent_saslauth = TRUE;
-	tcp_sendf (serv, "AUTHENTICATE *\r\n");
+	tcp_send(serv, "AUTHENTICATE *\r\n");
 	return;
 }
 
@@ -1898,7 +1898,7 @@ inbound_sasl_authenticate (server *serv, char *data)
 		{
 			/* something went wrong abort */
 			serv->sent_saslauth = TRUE; /* prevent trying PLAIN */
-			tcp_send_len (serv, "AUTHENTICATE *\r\n", 16);
+			tcp_send (serv, "AUTHENTICATE *\r\n");
 			return;
 		}
 
