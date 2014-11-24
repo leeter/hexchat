@@ -2448,8 +2448,10 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 
 	if (!is_session (sess))
 		return;
+	if (!sess->server)
+		throw std::runtime_error("Invalid Server reference");
 
-	lastlog_sess = find_dialog (sess->server, "(lastlog)");
+	lastlog_sess = find_dialog (*(sess->server), "(lastlog)");
 	if (!lastlog_sess)
 		lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, 0);
 
@@ -2788,7 +2790,7 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				sess->server->p_message (nick, msg + offset);
 				offset = 0;
 			}
-			newsess = find_dialog (sess->server, nick);
+			newsess = find_dialog (*(sess->server), nick);
 			if (!newsess)
 				newsess = find_channel (*(sess->server), nick);
 			if (newsess)
@@ -2797,7 +2799,7 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 				{
-					inbound_chanmsg (newsess->server, NULL, newsess->channel,
+					inbound_chanmsg (*(newsess->server), NULL, newsess->channel,
 										  newsess->server->nick, split_text, TRUE, FALSE,
 										  &no_tags);
 
@@ -2806,7 +2808,7 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 					g_free(split_text);
 				}
-				inbound_chanmsg (newsess->server, NULL, newsess->channel,
+				inbound_chanmsg (*(newsess->server), NULL, newsess->channel,
 									  newsess->server->nick, msg + offset, TRUE, FALSE,
 									  &no_tags);
 			}
@@ -2872,7 +2874,7 @@ cmd_nick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		else
 		{
 			message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
-			inbound_newnick (sess->server, sess->server->nick, nick, TRUE,
+			inbound_newnick (*(sess->server), sess->server->nick, nick, TRUE,
 								  &no_tags);
 		}
 		return TRUE;
@@ -3001,13 +3003,13 @@ cmd_ping (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 session *
-open_query (server *serv, const char *nick, gboolean focus_existing)
+open_query (server &serv, const char *nick, gboolean focus_existing)
 {
 	session *sess;
 
 	sess = find_dialog (serv, nick);
 	if (!sess)
-		sess = new_ircwindow(serv, nick, session::SESS_DIALOG, focus_existing);
+		sess = new_ircwindow(&serv, nick, session::SESS_DIALOG, focus_existing);
 	else if (focus_existing)
 		fe_ctrl_gui(sess, FE_GUI_FOCUS, 0);	/* bring-to-front */
 
@@ -3035,7 +3037,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		struct session *nick_sess;
 
-		nick_sess = open_query (sess->server, nick, focus);
+		nick_sess = open_query (*sess->server, nick, focus);
 
 		if (*msg)
 		{
@@ -3050,7 +3052,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 			{
 				sess->server->p_message (nick, split_text);
-				inbound_chanmsg (nick_sess->server, nick_sess, nick_sess->channel,
+				inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
 								 nick_sess->server->nick, split_text, TRUE, FALSE,
 								 &no_tags);
 
@@ -3060,7 +3062,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				g_free(split_text);
 			}
 			sess->server->p_message (nick, msg + offset);
-			inbound_chanmsg (nick_sess->server, nick_sess, nick_sess->channel,
+			inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
 							 nick_sess->server->nick, msg + offset, TRUE, FALSE,
 							 &no_tags);
 		}
@@ -3810,7 +3812,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 			{
 				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
 
-				inbound_chanmsg (sess->server, NULL, sess->channel,
+				inbound_chanmsg (*sess->server, NULL, sess->channel,
 									  sess->server->nick, word_eol[2], TRUE, FALSE, 
 									  &no_tags);
 				sess->server->p_message (sess->channel, word_eol[2]);
@@ -4536,7 +4538,7 @@ handle_say (session *sess, char *text, int check_spch)
 		dcc = dcc::dcc_write_chat (sess->channel, text);
 		if (dcc)
 		{
-			inbound_chanmsg (sess->server, NULL, sess->channel,
+			inbound_chanmsg (*sess->server, NULL, sess->channel,
 								  sess->server->nick, text, TRUE, FALSE, &no_tags);
 			set_topic (sess, net_ip (dcc->addr), net_ip (dcc->addr));
 			goto xit;
@@ -4551,7 +4553,7 @@ handle_say (session *sess, char *text, int check_spch)
 
 		while ((split_text = split_up_text (sess, text + offset, cmd_length, split_text)))
 		{
-			inbound_chanmsg (sess->server, sess, sess->channel, sess->server->nick,
+			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
 								  split_text, TRUE, FALSE, &no_tags);
 			sess->server->p_message (sess->channel, split_text);
 			
@@ -4561,7 +4563,7 @@ handle_say (session *sess, char *text, int check_spch)
 			g_free(split_text);
 		}
 
-		inbound_chanmsg (sess->server, sess, sess->channel, sess->server->nick,
+		inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
 							  text + offset, TRUE, FALSE, &no_tags);
 		sess->server->p_message (sess->channel, text + offset);
 	} else

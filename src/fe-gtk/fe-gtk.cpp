@@ -370,7 +370,7 @@ log_handler (const gchar   *log_domain,
 	/* if (getenv ("HEXCHAT_WARNING_IGNORE")) this gets ignored sometimes, so simply just disable all warnings */
 		return;
 
-	sess = find_dialog (static_cast<server*>(serv_list->data), "(warnings)");
+	sess = find_dialog (*static_cast<server*>(serv_list->data), "(warnings)");
 	if (!sess)
 		sess = new_ircwindow(static_cast<server*>(serv_list->data), "(warnings)", session::SESS_DIALOG, 0);
 

@@ -55,11 +55,11 @@ int notify_tag = 0;
 /* monitor this nick on this particular network? */
 
 static bool
-notify_do_network (struct notify *notify, server *serv)
+notify_do_network (struct notify *notify, const server &serv)
 {
 	if (notify->networks.empty())	/* ALL networks for this nick */
 		return true;
-	std::string serv_str(serv->get_network(true));
+	std::string serv_str(serv.get_network(true));
 	serv_str.erase(
 		std::remove_if(
 		serv_str.begin(),
@@ -75,7 +75,7 @@ notify_do_network (struct notify *notify, server *serv)
 }
 
 struct notify_per_server *
-notify_find_server_entry (struct notify *notify, struct server *serv)
+notify_find_server_entry (struct notify *notify, struct server &serv)
 {
 	GSList *list = notify->server_list;
 	struct notify_per_server *servnot;
@@ -83,7 +83,7 @@ notify_find_server_entry (struct notify *notify, struct server *serv)
 	while (list)
 	{
 		servnot = (struct notify_per_server *) list->data;
-		if (servnot->server == serv)
+		if (servnot->server == &serv)
 			return servnot;
 		list = list->next;
 	}
@@ -96,7 +96,7 @@ notify_find_server_entry (struct notify *notify, struct server *serv)
 	servnot = static_cast<notify_per_server*>(calloc (1, sizeof (struct notify_per_server)));
 	if (servnot)
 	{
-		servnot->server = serv;
+		servnot->server = &serv;
 		servnot->notify = notify;
 		notify->server_list = g_slist_prepend (notify->server_list, servnot);
 	}
@@ -159,7 +159,7 @@ notify_load (void)
 }
 
 static struct notify_per_server *
-notify_find (server *serv, const std::string& nick)
+notify_find (server &serv, const std::string& nick)
 {
 	GSList *list = notify_list;
 	struct notify_per_server *servnot;
@@ -176,7 +176,7 @@ notify_find (server *serv, const std::string& nick)
 			continue;
 		}
 
-		if (!serv->p_cmp (notify->name.c_str(), nick.c_str()))
+		if (!serv.p_cmp (notify->name.c_str(), nick.c_str()))
 			return servnot;
 
 		list = list->next;
@@ -186,32 +186,32 @@ notify_find (server *serv, const std::string& nick)
 }
 
 static void
-notify_announce_offline (server * serv, struct notify_per_server *servnot,
+notify_announce_offline (server & serv, struct notify_per_server *servnot,
 								 const std::string &nick, bool quiet, 
 								 const message_tags_data *tags_data)
 {
 	session *sess;
 
-	sess = serv->front_session;
+	sess = serv.front_session;
 
 	servnot->ison = false;
 	servnot->lastoff = time (0);
 	std::string mutable_nick(nick);
 	if (!quiet)
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv->servername,
-									  serv->get_network (true), NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
+									  serv.get_network (true), NULL, 0,
 									  tags_data->timestamp);
 	fe_notify_update(&mutable_nick[0]);
 	fe_notify_update (0);
 }
 
 static void
-notify_announce_online (server * serv, struct notify_per_server *servnot,
+notify_announce_online (server & serv, struct notify_per_server *servnot,
 								const std::string& nick, const message_tags_data *tags_data)
 {
 	session *sess;
 
-	sess = serv->front_session;
+	sess = serv.front_session;
 
 	servnot->lastseen = time (0);
 	if (servnot->ison)
@@ -221,8 +221,8 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	servnot->laston = time (0);
 	std::string mutable_nick = nick;
 	mutable_nick.push_back(0);
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv->servername,
-					 serv->get_network (true), NULL, 0,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
+					 serv.get_network (true), NULL, 0,
 					 tags_data->timestamp);
 	fe_notify_update (&mutable_nick[0]);
 	fe_notify_update (0);
@@ -233,14 +233,14 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 	    /* Let's do whois with idle time (like in /quote WHOIS %s %s) */
 		std::string wii_str(nick.size() * 2 + 2, '\0');
 		sprintf(&wii_str[0], "%s %s", nick.c_str(), nick.c_str());
-		serv->p_whois (wii_str);
+		serv.p_whois (wii_str);
 	}
 }
 
 /* handles numeric 601 */
 
 void
-notify_set_offline(server * serv, const std::string & nick, bool quiet,
+notify_set_offline(server & serv, const std::string & nick, bool quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -255,7 +255,7 @@ notify_set_offline(server * serv, const std::string & nick, bool quiet,
 /* handles numeric 604 and 600 */
 
 void
-notify_set_online (server * serv, const std::string& nick,
+notify_set_online (server & serv, const std::string& nick,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -270,11 +270,11 @@ notify_set_online (server * serv, const std::string& nick,
 /* monitor can send lists for numeric 730/731 */
 
 void
-notify_set_offline_list (server * serv, const std::string & users, bool quiet,
+notify_set_offline_list (server & serv, const std::string & users, bool quiet,
 						  const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
-	char nick[NICKLEN] = { 0 };
+	//char nick[NICKLEN] = { 0 };
 
 	std::istringstream stream(users);
 	for (std::string token; std::getline(stream, token, ',');)
@@ -283,10 +283,10 @@ notify_set_offline_list (server * serv, const std::string & users, bool quiet,
 		if (pos == std::string::npos)
 			continue;
 
-		if (pos + 1 >= sizeof(nick))
+		if (pos + 1 >= NICKLEN)
 			continue;
-
-		std::copy_n(token.cbegin(), pos, std::begin(nick));
+		auto nick = token.substr(0, pos);
+		//std::copy_n(token.cbegin(), pos, std::begin(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
@@ -295,7 +295,7 @@ notify_set_offline_list (server * serv, const std::string & users, bool quiet,
 }
 
 void
-notify_set_online_list (server * serv, const std::string& users,
+notify_set_online_list (server & serv, const std::string& users,
 						 const message_tags_data *tags_data)
 {
 	struct notify_per_server *servnot;
@@ -346,39 +346,39 @@ notify_watch_all (struct notify *notify, bool add)
 	while (list)
 	{
 		serv = static_cast<server*>(list->data);
-		if (serv->connected && serv->end_of_motd && notify_do_network (notify, serv))
+		if (serv->connected && serv->end_of_motd && notify_do_network (notify, *serv))
 			notify_watch (serv, notify->name, add);
 		list = list->next;
 	}
 }
 
 static void
-notify_flush_watches(server * serv, std::vector<struct notify*>::const_iterator from, std::vector<struct notify*>::const_iterator end)
+notify_flush_watches(server & serv, std::vector<struct notify*>::const_iterator from, std::vector<struct notify*>::const_iterator end)
 {
 	std::ostringstream buffer;
-	buffer << (serv->supports_monitor ? "MONITOR + " : "WATCH");
+	buffer << (serv.supports_monitor ? "MONITOR + " : "WATCH");
 	auto it = from;
 	buffer << (*it)->name;
 	++it;
 	for (;it != end; ++it)
 	{
 		struct notify *notify = *it;
-		if (serv->supports_monitor)
+		if (serv.supports_monitor)
 			buffer << ",";
 		else
 			buffer << " +";
 		buffer << notify->name;
 	}
-	serv->p_raw (buffer.str());
+	serv.p_raw (buffer.str());
 }
 
 /* called when logging in. e.g. when End of motd. */
 
 void
-notify_send_watches (server * serv)
+notify_send_watches (server & serv)
 {
 	struct notify *notify;
-	const int format_len = serv->supports_monitor ? 1 : 2; /* just , for monitor or + and space for watch */
+	const int format_len = serv.supports_monitor ? 1 : 2; /* just , for monitor or + and space for watch */
 	GSList *list;
 	std::vector<struct notify*> send_list;
 	int len = 0;
@@ -422,7 +422,7 @@ notify_send_watches (server * serv)
 /* called when receiving a ISON 303 - should this func go? */
 
 void
-notify_markonline(server *serv, const char * const word[], const message_tags_data *tags_data)
+notify_markonline(server &serv, const char * const word[], const message_tags_data *tags_data)
 {
 	struct notify *notify;
 	struct notify_per_server *servnot;
@@ -442,7 +442,7 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 		bool seen = false;
 		while (*word[i])
 		{
-			if (!serv->p_cmp (notify->name.c_str(), word[i]))
+			if (!serv.p_cmp (notify->name.c_str(), word[i]))
 			{
 				seen = true;
 				notify_announce_online (serv, servnot, notify->name, tags_data);
@@ -469,7 +469,7 @@ notify_markonline(server *serv, const char * const word[], const message_tags_da
 /* yuck! Old routine for ISON notify */
 
 static void
-notify_checklist_for_server (server *serv)
+notify_checklist_for_server (server &serv)
 {
 	char outbuf[512] = { 0 };
 	struct notify *notify;
@@ -498,7 +498,7 @@ notify_checklist_for_server (server *serv)
 	}
 
 	if (i)
-		serv->p_raw (outbuf);
+		serv.p_raw (outbuf);
 }
 
 int
@@ -512,7 +512,7 @@ notify_checklist (void)	/* check ISON list */
 		serv = static_cast<server*>(list->data);
 		if (serv->connected && serv->end_of_motd && !serv->supports_watch && !serv->supports_monitor)
 		{
-			notify_checklist_for_server (serv);
+			notify_checklist_for_server (*serv);
 		}
 		list = list->next;
 	}
@@ -534,7 +534,7 @@ notify_showlist (struct session *sess, const message_tags_data *tags_data)
 	{
 		i++;
 		notify = (struct notify *) list->data;
-		servnot = notify_find_server_entry (notify, sess->server);
+		servnot = notify_find_server_entry (notify, *sess->server);
 		if (servnot && servnot->ison)
 			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), notify->name.c_str());
 		else
@@ -651,7 +651,7 @@ notify_isnotify (struct session *sess, const char *name)
 		notify = (struct notify *) list->data;
 		if (!sess->server->p_cmp (notify->name.c_str(), name))
 		{
-			servnot = notify_find_server_entry (notify, sess->server);
+			servnot = notify_find_server_entry (notify, *sess->server);
 			if (servnot && servnot->ison)
 				return true;
 		}

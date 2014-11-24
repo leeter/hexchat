@@ -1355,7 +1355,7 @@ hexchat_list_next (hexchat_plugin *ph, hexchat_list *xlist)
 	if (xlist->type == LIST_NOTIFY)
 	{
 		xlist->notifyps = notify_find_server_entry (static_cast<notify*>(xlist->pos->data),
-													((session *)xlist->head)->server);
+													*((session *)xlist->head)->server);
 		if (!xlist->notifyps)
 			return 0;
 	}

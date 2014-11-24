@@ -214,7 +214,7 @@ is_session (session * sess)
 }
 
 session *
-find_dialog (server *serv, const char *nick)
+find_dialog (const server &serv, const char *nick)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -222,9 +222,9 @@ find_dialog (server *serv, const char *nick)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if (sess->server == serv && sess->type == session::SESS_DIALOG)
+		if (sess->server == &serv && sess->type == session::SESS_DIALOG)
 		{
-			if (!serv->p_cmp (nick, sess->channel))
+			if (!serv.p_cmp (nick, sess->channel))
 				return (sess);
 		}
 		list = list->next;

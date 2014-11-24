@@ -785,7 +785,7 @@ fe_set_nonchannel (struct session *sess, int state)
 {
 }
 void
-fe_set_nick (struct server *serv, char *newnick)
+fe_set_nick (const server &serv, const char *newnick)
 {
 }
 void
@@ -828,7 +828,7 @@ fe_set_throttle (server * serv)
 {
 }
 void
-fe_set_away (server *serv)
+fe_set_away (server &serv)
 {
 }
 void

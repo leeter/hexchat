@@ -264,7 +264,7 @@ tcp_send (server *serv, char *buf)
 }*/
 
 void
-tcp_sendf (server *serv, const char *fmt, ...)
+tcp_sendf (server &serv, const char *fmt, ...)
 {
 	va_list args;
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
@@ -280,7 +280,7 @@ tcp_sendf (server *serv, const char *fmt, ...)
 	if (len < 0 || len > (sizeof (send_buf) - 1))
 		len = strlen (send_buf);
 
-	tcp_send_len (*serv, send_buf, len);
+	tcp_send_len (serv, send_buf, len);
 }
 
 static int
@@ -1913,7 +1913,7 @@ server::connect (char *hostname, int port, bool no_login)
 	this->no_login = no_login;
 
 	fe_server_event (this, FE_SE_CONNECTING, 0);
-	fe_set_away (this);
+	fe_set_away (*this);
 	this->flush_queue ();
 	this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
 #if 0
@@ -2243,7 +2243,7 @@ server::reset_to_defaults()
 }
 
 char *
-server::get_network (bool fallback)
+server::get_network (bool fallback) const
 {
 	/* check the network list */
 	if (this->network)
@@ -2254,7 +2254,7 @@ server::get_network (bool fallback)
 		return this->server_session->channel;
 
 	if (fallback)
-		return this->servername;
+		return const_cast<char*>(this->servername); // DANGER WE NEED TO FIX THE CALLERS
 
 	return nullptr;
 }

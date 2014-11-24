@@ -373,7 +373,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	int prefix_chars;
 	auto acc = nick_access (sess->server, name, &prefix_chars);
 
-	notify_set_online (sess->server, name + prefix_chars, tags_data);
+	notify_set_online (*sess->server, name + prefix_chars, tags_data);
 
 	auto user = static_cast<User*>(calloc(1, sizeof(struct User)));
 	if (!user)

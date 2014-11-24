@@ -405,7 +405,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	/* we really need valid UTF-8 now */
 	conv = text_validate(&line, &len);
 
-	sess = find_dialog(dcc->serv, dcc->nick);
+	sess = find_dialog(*(dcc->serv), dcc->nick);
 	if (!sess)
 		sess = dcc->serv->front_session;
 
@@ -453,7 +453,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	}
 	else
 	{
-		inbound_privmsg(dcc->serv, dcc->nick, "", line, FALSE, &no_tags);
+		inbound_privmsg(*(dcc->serv), dcc->nick, "", line, FALSE, &no_tags);
 	}
 	if (utf)
 		g_free(utf);
@@ -664,7 +664,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 }
 
 static void
-dcc_open_query(server *serv, char *nick)
+dcc_open_query(server &serv, const char *nick)
 {
 	if (prefs.hex_gui_autoopen_dialog)
 		open_query(serv, nick, FALSE);
@@ -752,7 +752,7 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 			dcc->nick, host, dcc->file, NULL, 0);
 		break;
 	case ::dcc::DCC::dcc_type::TYPE_CHATSEND:	/* pchat */
-		dcc_open_query(dcc->serv, dcc->nick);
+		dcc_open_query(*dcc->serv, dcc->nick);
 	case ::dcc::DCC::dcc_type::TYPE_CHATRECV:	/* normal chat */
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
@@ -1492,7 +1492,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		break;
 
 	case ::dcc::DCC::dcc_type::TYPE_CHATSEND:
-		dcc_open_query(dcc->serv, dcc->nick);
+		dcc_open_query(*dcc->serv, dcc->nick);
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 		dcc->dccchat = static_cast<struct ::dcc::dcc_chat*>(malloc(sizeof(struct ::dcc::dcc_chat)));
 		if (!dcc->dccchat)
@@ -2228,7 +2228,7 @@ find_dcc (const char *nick, const char *file, DCC::dcc_type type)
 /* called when we receive a NICK change from server */
 
 void
-dcc_change_nick (struct server *serv, char *oldnick, char *newnick)
+dcc_change_nick (const server &serv, const char *oldnick, const char *newnick)
 {
 	::dcc::DCC *dcc;
 	GSList *list = dcc_list;
@@ -2236,9 +2236,9 @@ dcc_change_nick (struct server *serv, char *oldnick, char *newnick)
 	while (list)
 	{
 		dcc = (::dcc::DCC *) list->data;
-		if (dcc->serv == serv)
+		if (dcc->serv == &serv)
 		{
-			if (!serv->p_cmp (dcc->nick, oldnick))
+			if (!serv.p_cmp (dcc->nick, oldnick))
 			{
 				if (dcc->nick)
 					free (dcc->nick);

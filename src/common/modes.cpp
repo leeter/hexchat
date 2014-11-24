@@ -50,10 +50,10 @@ static char *mode_cat (char *str, const char *addition);
 static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 										  char *chan, char *arg, int quiet, int is_324,
 										  const message_tags_data *tags_data);
-static int mode_has_arg (server *serv, char sign, char mode);
+static bool mode_has_arg(const server & serv, char sign, char mode);
 static void mode_print_grouped (session *sess, char *nick, mode_run &mr,
 										  const message_tags_data *tags_data);
-static int mode_chanmode_type (server * serv, char mode);
+static int mode_chanmode_type(const server & serv, char mode);
 
 
 /* word[] - list of nicks.
@@ -230,7 +230,9 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 	/* Somebody needed to acutally update sess->current_modes, needed to
 		play nice with bouncers, and less mode calls. Also keeps modes up
 		to date for scripts */
-	server *serv = sess->server;
+	if (!sess->server)
+		throw std::runtime_error("Invalid Server Reference");
+	server &serv = *sess->server;
 	GString *current = g_string_new(sess->current_modes);
 	gint mode_pos = -1;
 	gchar *current_char = current->str;
@@ -373,7 +375,9 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 						  const message_tags_data *tags_data)
 {
 	session *sess;
-	server *serv = mr.serv;
+	if (!mr.serv)
+		throw std::runtime_error("Invalid server reference");
+	server &serv = *(mr.serv);
 	char outbuf[4];
 	bool supportsq = false;
 
@@ -382,16 +386,16 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	outbuf[2] = mode;
 	outbuf[3] = 0;
 
-	sess = find_channel (*serv, chan);
-	if (!sess || !serv->is_channel_name (chan))
+	sess = find_channel (serv, chan);
+	if (!sess || !serv.is_channel_name (chan))
 	{
 		/* got modes for a chan we're not in! probably nickmode +isw etc */
-		sess = serv->front_session;
+		sess = serv.front_session;
 		goto genmode;
 	}
 
 	/* is this a nick mode? */
-	if (serv->nick_modes.find_first_of(mode) != std::string::npos)
+	if (serv.nick_modes.find_first_of(mode) != std::string::npos)
 	{
 		/* update the user in the userlist */
 		userlist_update_mode (sess, /*nickname */ arg, mode, sign);
@@ -402,7 +406,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* Is q a chanmode on this server? */
-	for (char cm : serv->chanmodes)
+	for (char cm : serv.chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -529,7 +533,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 
  genmode:
 	/* Received umode +e. If we're waiting to send JOIN then send now! */
-	if (mode == 'e' && sign == '+' && !serv->p_cmp (chan, serv->nick))
+	if (mode == 'e' && sign == '+' && !serv.p_cmp (chan, serv.nick))
 		inbound_identified (serv);
 
 	if (!quiet)
@@ -548,41 +552,41 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 
 /* does this mode have an arg? like +b +l +o */
 
-static int
-mode_has_arg (server * serv, char sign, char mode)
+static bool
+mode_has_arg (const server & serv, char sign, char mode)
 {
 	int type;
 
 	/* if it's a nickmode, it must have an arg */
-	if (serv->nick_modes.find_first_of(mode) != std::string::npos)
-		return 1;
+	if (serv.nick_modes.find_first_of(mode) != std::string::npos)
+		return true;
 
 	type = mode_chanmode_type (serv, mode);
 	switch (type)
 	{
 	case 0:					  /* type A */
 	case 1:					  /* type B */
-		return 1;
+		return true;
 	case 2:					  /* type C */
 		if (sign == '+')
-			return 1;
+			return true;
 	case 3:					  /* type D */
-		return 0;
+		return false;
 	default:
-		return 0;
+		return false;
 	}
 
 }
 
 /* what type of chanmode is it? -1 for not in chanmode */
 static int
-mode_chanmode_type (server * serv, char mode)
+mode_chanmode_type (const server & serv, char mode)
 {
 	/* see what numeric 005 CHANMODES=xxx said */
 	int type = 0;
 	bool found = false;
 
-	for(char cm : serv->chanmodes)
+	for(auto &cm : serv.chanmodes)
 	{
 		if (cm == ',')
 		{
@@ -642,7 +646,7 @@ mode_print_grouped (session *sess, char *nick, mode_run &mr,
 /* handle a MODE or numeric 324 from server */
 
 void
-handle_mode (server * serv, char *word[], char *word_eol[],
+handle_mode (server & serv, char *word[], char *word_eol[],
 				 char *nick, int numeric_324, const message_tags_data *tags_data)
 {
 	session *sess;
@@ -659,7 +663,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	bool using_front_tab = false;
 	mode_run mr = mode_run();
 
-	mr.serv = serv;
+	mr.serv = &serv;
 
 	/* numeric 324 has everything 1 word later (as opposed to MODE) */
 	if (numeric_324)
@@ -673,10 +677,10 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	if (*modes == 0)
 		return;	/* beyondirc's blank modes */
 
-	sess = find_channel (*serv, chan);
+	sess = find_channel (serv, chan);
 	if (!sess)
 	{
-		sess = serv->front_session;
+		sess = serv.front_session;
 		using_front_tab = true;
 	}
 	/* remove trailing space */
@@ -758,7 +762,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 /* handle the 005 numeric */
 
 void
-inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
+inbound_005 (server & serv, char *word[], const message_tags_data *tags_data)
 {
 	int w;
 	char *pre;
@@ -768,56 +772,56 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 	{
 		if (strncmp (word[w], "MODES=", 6) == 0)
 		{
-			serv->modes_per_line = atoi (word[w] + 6);
+			serv.modes_per_line = atoi (word[w] + 6);
 		} else if (strncmp (word[w], "CHANTYPES=", 10) == 0)
 		{
-			serv->chantypes.clear();
-			serv->chantypes = (word[w] + 10);
+			serv.chantypes.clear();
+			serv.chantypes = (word[w] + 10);
 		} else if (strncmp (word[w], "CHANMODES=", 10) == 0)
 		{
-			serv->chanmodes = (word[w] + 10);
+			serv.chanmodes = (word[w] + 10);
 		} else if (strncmp (word[w], "PREFIX=", 7) == 0)
 		{
 			pre = strchr (word[w] + 7, ')');
 			if (pre)
 			{
 				pre[0] = 0;			  /* NULL out the ')' */
-				serv->nick_prefixes = (pre + 1);
-				serv->nick_modes = (word[w] + 8);
+				serv.nick_prefixes = (pre + 1);
+				serv.nick_modes = (word[w] + 8);
 			} else
 			{
 				/* bad! some ircds don't give us the modes. */
 				/* in this case, we use it only to strip /NAMES */
-				serv->bad_prefix = true;
-				serv->bad_nick_prefixes = (word[w] + 7);
+				serv.bad_prefix = true;
+				serv.bad_nick_prefixes = (word[w] + 7);
 			}
 		} else if (strncmp (word[w], "WATCH=", 6) == 0)
 		{
-			serv->supports_watch = TRUE;
+			serv.supports_watch = TRUE;
 		} else if (strncmp (word[w], "MONITOR=", 8) == 0)
 		{
-			serv->supports_monitor = TRUE;
+			serv.supports_monitor = TRUE;
 		} else if (strncmp (word[w], "NETWORK=", 8) == 0)
 		{
-/*			if (serv->networkname)
-				free (serv->networkname);
-			serv->networkname = strdup (word[w] + 8);*/
+/*			if (serv.networkname)
+				free (serv.networkname);
+			serv.networkname = strdup (word[w] + 8);*/
 
-			if (serv->server_session->type == session::SESS_SERVER)
+			if (serv.server_session->type == session::SESS_SERVER)
 			{
-				safe_strcpy (serv->server_session->channel, word[w] + 8, CHANLEN);
-				fe_set_channel (serv->server_session);
+				safe_strcpy (serv.server_session->channel, word[w] + 8, CHANLEN);
+				fe_set_channel (serv.server_session);
 			}
 
 		} else if (strncmp (word[w], "CASEMAPPING=", 12) == 0)
 		{
 			if (strcmp (word[w] + 12, "ascii") == 0)	/* bahamut */
-				serv->p_cmp = (int(*)(const char*, const char*))g_ascii_strcasecmp;
+				serv.p_cmp = (int(*)(const char*, const char*))g_ascii_strcasecmp;
 		} else if (strncmp (word[w], "CHARSET=", 8) == 0)
 		{
 			if (g_ascii_strncasecmp (word[w] + 8, "UTF-8", 5) == 0)
 			{
-				serv->set_encoding ("UTF-8");
+				serv.set_encoding ("UTF-8");
 			}
 		} else if (strcmp (word[w], "NAMESX") == 0)
 		{
@@ -825,19 +829,19 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 			tcp_send (serv, "PROTOCTL NAMESX\r\n");
 		} else if (strcmp (word[w], "WHOX") == 0)
 		{
-			serv->have_whox = TRUE;
+			serv.have_whox = TRUE;
 		} else if (strcmp (word[w], "EXCEPTS") == 0)
 		{
-			serv->have_except = TRUE;
+			serv.have_except = TRUE;
 		} else if (strcmp (word[w], "INVEX") == 0)
 		{
 			/* supports mode letter +I, default channel invite */
-			serv->have_invite = TRUE;
+			serv.have_invite = TRUE;
 		} else if (strncmp (word[w], "ELIST=", 6) == 0)
 		{
 			/* supports LIST >< min/max user counts? */
 			if (strchr (word[w] + 6, 'U') || strchr (word[w] + 6, 'u'))
-				serv->use_listargs = TRUE;
+				serv.use_listargs = TRUE;
 		}
 
 		w++;

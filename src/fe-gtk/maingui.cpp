@@ -3455,7 +3455,7 @@ fe_update_mode_buttons (session *sess, char mode, char sign)
 }
 
 void
-fe_set_nick (server *serv, char *newnick)
+fe_set_nick (const server &serv, const char *newnick)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -3463,7 +3463,7 @@ fe_set_nick (server *serv, char *newnick)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if (sess->server == serv)
+		if (sess->server == &serv)
 		{
 			if (current_tab == sess || !sess->gui->is_tab)
 				gtk_button_set_label (GTK_BUTTON (sess->gui->nick_label), newnick);
@@ -3473,7 +3473,7 @@ fe_set_nick (server *serv, char *newnick)
 }
 
 void
-fe_set_away (server *serv)
+fe_set_away (server &serv)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -3481,13 +3481,13 @@ fe_set_away (server *serv)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		if (sess->server == serv)
+		if (sess->server == &serv)
 		{
 			if (!sess->gui->is_tab || sess == current_tab)
 			{
-				menu_set_away (sess->gui, serv->is_away);
+				menu_set_away (sess->gui, serv.is_away);
 				/* gray out my nickname */
-				mg_set_myself_away (sess->gui, serv->is_away);
+				mg_set_myself_away (sess->gui, serv.is_away);
 			}
 		}
 		list = list->next;

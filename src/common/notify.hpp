@@ -47,16 +47,16 @@ extern GSList *notify_list;
 extern int notify_tag;
 
 /* the WATCH stuff */
-void notify_set_online(server * serv, const std::string &nick,
+void notify_set_online(server & serv, const std::string &nick,
 								const message_tags_data *tags_data);
-void notify_set_offline (server * serv, const std::string & nick, bool quiet,
+void notify_set_offline (server & serv, const std::string & nick, bool quiet,
 								 const message_tags_data *tags_data);
 /* the MONITOR stuff */
-void notify_set_online_list (server * serv, const std::string& users,
+void notify_set_online_list (server & serv, const std::string& users,
 								const message_tags_data *tags_data);
-void notify_set_offline_list (server * serv, const std::string& users, bool quiet,
+void notify_set_offline_list (server & serv, const std::string& users, bool quiet,
 								 const message_tags_data *tags_data);
-void notify_send_watches (server * serv);
+void notify_send_watches (server & serv);
 
 /* the general stuff */
 void notify_adduser (const char *name, const char *networks);
@@ -67,10 +67,10 @@ void notify_save (void);
 void notify_showlist (session *sess, const message_tags_data *tags_data);
 bool notify_is_in_list (const server &serv, const std::string & name);
 bool notify_isnotify (session *sess, const char *name);
-struct notify_per_server *notify_find_server_entry (struct notify *notify, struct server *serv);
+struct notify_per_server *notify_find_server_entry (struct notify *notify, server &serv);
 
 /* the old ISON stuff - remove me? */
-void notify_markonline (server *serv, const char * const word[], 
+void notify_markonline (server &serv, const char * const word[], 
 								const message_tags_data *tags_data);
 int notify_checklist (void);
 

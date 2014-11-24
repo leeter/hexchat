@@ -154,7 +154,7 @@ notify_opendialog_clicked(GtkWidget * igad)
 	if (gtkutil_treeview_get_selected(view, &iter, NPS_COLUMN, &servnot, -1))
 	{
 		if (servnot)
-			open_query(servnot->server, servnot->notify->name.c_str(), TRUE);
+			open_query(*servnot->server, servnot->notify->name.c_str(), TRUE);
 	}
 }
 
