@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <stdexcept>
 
 #include "hexchat.hpp"
 #include "hexchatc.hpp"

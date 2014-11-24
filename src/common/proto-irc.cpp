@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cctype>
 #include <cstdarg>
+#include <stdexcept>
 
 #ifndef WIN32
 #include <unistd.h>

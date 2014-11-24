@@ -37,6 +37,7 @@
 #include <cctype>
 #include <climits>
 #include <cerrno>
+#include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/scope_exit.hpp>

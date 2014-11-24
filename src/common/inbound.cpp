@@ -22,6 +22,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstdio>
+#include <stdexcept>
 #include <sys/types.h>
 #include <ctime>
 
