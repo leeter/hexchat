@@ -166,7 +166,7 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 }
 
 static int
-server_send_real (server *serv, const char *buf, int len)
+server_send_real (server *serv, const char *buf, size_t len)
 {
 	fe_add_rawlog (serv, buf, len, TRUE);
 
@@ -221,7 +221,7 @@ tcp_send_queue (server *serv)
 }
 
 int
-tcp_send_len (server *serv, const char *buf, int len)
+tcp_send_len (server *serv, const char *buf, size_t len)
 {
 	bool noqueue = serv->outbound_queue.empty();
 
@@ -299,7 +299,7 @@ close_socket (int sok)
 /* handle 1 line of text received from the server */
 
 static void
-server_inline (server *serv, char *line, int len)
+server_inline (server *serv, char *line, size_t len)
 {
 	char *utf_line_allocated = nullptr;
 
@@ -335,7 +335,7 @@ server_inline (server *serv, char *line, int len)
 		if (encoding != nullptr)
 		{
 			char *conv_line; /* holds a copy of the original string */
-			int conv_len; /* tells g_convert how much of line to convert */
+			size_t conv_len; /* tells g_convert how much of line to convert */
 			gsize utf_len;
 			gsize read_len;
 			GError *err;
@@ -537,7 +537,7 @@ server_connected1(server * serv, const boost::system::error_code & error)
 	}
 
 	serv->set_name(serv->servername);
-	fe_server_event(serv, FE_SE_CONNECT, 0);   
+	fe_server_event(serv, FE_SE_CONNECT, 0);
 }
 
 static void

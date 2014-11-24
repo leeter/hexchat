@@ -1001,7 +1001,7 @@ void
 hexchat_command (hexchat_plugin *ph, const char *command)
 {
 	char *conv;
-	int len = -1;
+	size_t len = 0;
 
 	if (!is_session (ph->context))
 	{

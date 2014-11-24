@@ -852,7 +852,7 @@ iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
 }
 
 char *
-text_validate (char **text, int *len)
+text_validate (char **text, size_t *len)
 {
 	char *utf;
 	gsize utf_len;
@@ -909,7 +909,7 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 		buf.push_back(0);
 	} else
 	{
-		int len = -1;
+		size_t len = 0;
 		buf.push_back(0);
 		char* buf_ptr = &buf[0];
 		conv = text_validate (&buf_ptr, &len);

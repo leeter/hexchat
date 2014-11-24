@@ -377,7 +377,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	char *utf;
 	char *conv;
 	int ret, i;
-	int len;
+	size_t len;
 	gsize utf_len;
 	char portbuf[32];
 	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;

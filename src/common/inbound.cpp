@@ -1898,7 +1898,7 @@ inbound_sasl_authenticate (server *serv, char *data)
 		{
 			/* something went wrong abort */
 			serv->sent_saslauth = TRUE; /* prevent trying PLAIN */
-			tcp_sendf (serv, "AUTHENTICATE *\r\n");
+			tcp_sendf (serv,"%s", "AUTHENTICATE *\r\n");
 			return;
 		}
 
