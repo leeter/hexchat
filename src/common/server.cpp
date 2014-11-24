@@ -167,14 +167,14 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 }
 
 static int
-server_send_real (server *serv, const char *buf, size_t len)
+server_send_real (server &serv, const char *buf, size_t len)
 {
-	fe_add_rawlog (serv, buf, len, TRUE);
+	fe_add_rawlog (&serv, buf, len, TRUE);
 
 	url_check_line (buf, len);
 
-	return tcp_send_real (serv->ssl, serv->sok, serv->encoding ? serv->encoding->c_str() : nullptr, serv->using_irc,
-								 buf, len, serv);
+	return tcp_send_real (serv.ssl, serv.sok, serv.encoding ? serv.encoding->c_str() : nullptr, serv.using_irc,
+								 buf, len, &serv);
 }
 
 /* new throttling system, uses the same method as the Undernet
@@ -214,7 +214,7 @@ tcp_send_queue (server *serv)
 				serv->prev_now = now;
 				fe_set_throttle (serv);
 
-		server_send_real(serv, top.second.c_str(), top.second.size());
+		server_send_real(*serv, top.second.c_str(), top.second.size());
 
 		serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
 			}
@@ -222,9 +222,9 @@ tcp_send_queue (server *serv)
 }
 
 int
-tcp_send_len (server *serv, const char *buf, size_t len)
+tcp_send_len (server &serv, const char *buf, size_t len)
 {
-	bool noqueue = serv->outbound_queue.empty();
+	bool noqueue = serv.outbound_queue.empty();
 
 	if (!prefs.hex_net_throttle)
 		return server_send_real (serv, buf, len);
@@ -248,11 +248,11 @@ tcp_send_len (server *serv, const char *buf, size_t len)
 			priority = 0;
 	}
 
-	serv->outbound_queue.emplace(std::make_pair(priority, dbuf));
-	serv->sendq_len += len; /* tcp_send_queue uses strlen */
+	serv.outbound_queue.emplace(std::make_pair(priority, dbuf));
+	serv.sendq_len += len; /* tcp_send_queue uses strlen */
 
-	if (tcp_send_queue (serv) && noqueue)
-		fe_timeout_add(500, (GSourceFunc)tcp_send_queue, serv);
+	if (tcp_send_queue (&serv) && noqueue)
+		fe_timeout_add(500, (GSourceFunc)tcp_send_queue, &serv);
 
 	return 1;
 }
@@ -280,7 +280,7 @@ tcp_sendf (server *serv, const char *fmt, ...)
 	if (len < 0 || len > (sizeof (send_buf) - 1))
 		len = strlen (send_buf);
 
-	tcp_send_len (serv, send_buf, len);
+	tcp_send_len (*serv, send_buf, len);
 }
 
 static int

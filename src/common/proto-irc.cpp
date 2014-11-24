@@ -472,11 +472,11 @@ server::p_raw(const std::string &raw)
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
 			auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
-			tcp_send_len (this, tbuf, len);
+			tcp_send_len (*this, tbuf, len);
 		} else
 		{
-			tcp_send_len (this, raw.c_str(), raw.size());
-			tcp_send_len (this, "\r\n", 2);
+			tcp_send_len (*this, raw.c_str(), raw.size());
+			tcp_send_len (*this, "\r\n", 2);
 		}
 		return true;
 	}
