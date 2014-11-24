@@ -24,6 +24,7 @@
 /*#define DEBUG_MSPROXY*/
 
 #include <algorithm>
+#include <array>
 #include <string>
 #include <vector>
 #include <iterator>
@@ -1400,7 +1401,8 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 	sc1.nmethods = 1;
 	std::vector<unsigned char> sc2;
 	unsigned int packetlen;
-	unsigned char buf[260];
+	std::array<unsigned char, 260> buf;
+	//unsigned char buf[260];
 	int auth = prefs.hex_net_proxy_auth && prefs.hex_net_proxy_user[0] && prefs.hex_net_proxy_pass[0];
 
 	if (auth)
@@ -1408,7 +1410,7 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 	else
 		sc1.method = 0;  /* NO Authentication */
 	send (sok, (char *) &sc1, 3, 0);
-	if (recv (sok, (char*)buf, 2, 0) != 2)
+	if (recv (sok, (char*)&buf[0], 2, 0) != 2)
 		goto read_error;
 
 	if (buf[0] != 5)
@@ -1431,20 +1433,26 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 			proxy_error (print_fd, "SOCKS\tServer doesn't support UPA authentication.\n");
 			return 1;
 		}
-
-		memset (buf, 0, sizeof(buf));
+		buf.fill(0);
 
 		/* form the UPA request */
 		len_u = strlen (prefs.hex_net_proxy_user);
 		len_p = strlen (prefs.hex_net_proxy_pass);
 		buf[0] = 1;
 		buf[1] = len_u;
-		memcpy (buf + 2, prefs.hex_net_proxy_user, len_u);
+		auto buf_itr = buf.begin();
+		std::copy(
+			std::begin(prefs.hex_net_proxy_user),
+			std::end(prefs.hex_net_proxy_user),
+			buf_itr + 2);
 		buf[2 + len_u] = len_p;
-		memcpy (buf + 3 + len_u, prefs.hex_net_proxy_pass, len_p);
+		std::copy(
+			std::begin(prefs.hex_net_proxy_pass), 
+			std::end(prefs.hex_net_proxy_pass), 
+			buf_itr + 3 + len_u);
 
-		send (sok, (char*)buf, 3 + len_u + len_p, 0);
-		if ( recv (sok, (char*)buf, 2, 0) != 2 )
+		send (sok, (char*)&buf[0], 3 + len_u + len_p, 0);
+		if (recv(sok, (char*)&buf[0], 2, 0) != 2)
 			goto read_error;
 		if ( buf[1] != 0 )
 		{
@@ -1472,38 +1480,37 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 	{
 		auto it = sc2.begin() + 5;
 		::std::copy(serverAddr.cbegin(), serverAddr.cend(), it);
-		//memcpy (sc2[5], serverAddr, addrlen);
 		it += serverAddr.length();
 		*((unsigned short *)&(*it)) = htons(port);
 		send(sok, (char*)&sc2[0], packetlen, 0);
 	}
 
 	/* consume all of the reply */
-	if (recv (sok, (char*)buf, 4, 0) != 4)
+	if (recv(sok, (char*)&buf[0], 4, 0) != 4)
 		goto read_error;
 	if (buf[0] != 5 || buf[1] != 0)
 	{
 		if (buf[1] == 2)
-			snprintf ((gchar*)buf, sizeof (buf), "SOCKS\tProxy refused to connect to host (not allowed).\n");
+			snprintf((gchar*)&buf[0], sizeof(buf), "SOCKS\tProxy refused to connect to host (not allowed).\n");
 		else
-			snprintf ((gchar*)buf, sizeof (buf), "SOCKS\tProxy failed to connect to host (error %d).\n", buf[1]);
-		proxy_error (print_fd, (char*)buf);
+			snprintf((gchar*)&buf[0], sizeof(buf), "SOCKS\tProxy failed to connect to host (error %d).\n", buf[1]);
+		proxy_error(print_fd, (char*)&buf[0]);
 		return 1;
 	}
 	if (buf[3] == 1)	/* IPV4 32bit address */
 	{
-		if (recv (sok, (char*)buf, 6, 0) != 6)
+		if (recv(sok, (char*)&buf[0], 6, 0) != 6)
 			goto read_error;
 	} else if (buf[3] == 4)	/* IPV6 128bit address */
 	{
-		if (recv (sok, (char*)buf, 18, 0) != 18)
+		if (recv(sok, (char*)&buf[0], 18, 0) != 18)
 			goto read_error;
 	} else if (buf[3] == 3)	/* string, 1st byte is size */
 	{
-		if (recv (sok, (char*)buf, 1, 0) != 1)	/* read the string size */
+		if (recv(sok, (char*)&buf[0], 1, 0) != 1)	/* read the string size */
 			goto read_error;
 		packetlen = buf[0] + 2;	/* can't exceed 260 */
-		if (recv (sok, (char*)buf, packetlen, 0) != packetlen)
+		if (recv(sok, (char*)&buf[0], packetlen, 0) != packetlen)
 			goto read_error;
 	}
 
