@@ -178,7 +178,7 @@ scrollback_shrink (session &sess)
 		p++;
 	}
 
-	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
+	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY | O_BINARY, 0644);
 	g_free (file);
 	if (fh == -1)
 	{
@@ -234,7 +234,7 @@ scrollback_save (session &sess, const std::string & text)
 		if ((buf = scrollback_get_filename (sess)) == NULL)
 			return;
 
-		sess.scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY, 0644);
+		sess.scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY | O_BINARY, 0644);
 		g_free (buf);
 		if (sess.scrollfd == -1)
 			return;
@@ -907,11 +907,11 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 	if (buf.empty())
 	{
 		buf = "\n";
-		buf.push_back(0);
+		//buf.push_back(0);
 	} else
 	{
 		size_t len = 0;
-		buf.push_back(0);
+		//buf.push_back(0);
 		char* buf_ptr = &buf[0];
 		conv = text_validate (&buf_ptr, &len);
 	}
