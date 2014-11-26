@@ -2052,9 +2052,9 @@ server::connect (char *hostname, int port, bool no_login)
 }
 
 void
-server_fill_her_up (server *serv)
+server_fill_her_up (server &serv)
 {
-	serv->p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
+	serv.p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
 }
 
 void
@@ -2190,7 +2190,7 @@ server_new (void)
 	serv = new server;// calloc(1, sizeof(*serv))
 
 	/* use server.c and proto-irc.c functions */
-	server_fill_her_up(serv);
+	server_fill_her_up(*serv);
 	serv->id = id++;
 	serv->sok = -1;
 	strcpy (serv->nick, prefs.hex_irc_nick1);

@@ -1924,7 +1924,7 @@ cmd_gate (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 #ifdef USE_OPENSSL
 		serv->use_ssl = FALSE;
 #endif
-		server_fill_her_up (serv);
+		server_fill_her_up (*serv);
 		if (*port)
 			serv->connect (server_name, atoi (port), true);
 		else

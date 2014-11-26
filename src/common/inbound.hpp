@@ -21,6 +21,7 @@
 
 #ifndef HEXCHAT_INBOUND_HPP
 #define HEXCHAT_INBOUND_HPP
+#include <string>
 
 void inbound_next_nick (session *sess, char *nick, int error,
 								const message_tags_data *tags_data);
@@ -82,7 +83,7 @@ void clear_channel (session &sess);
 void set_topic (session *sess, char *topic, char *stripped_topic);
 void inbound_privmsg (server &serv, char *from, char *ip, char *text, int id, 
 							 const message_tags_data *tags_data);
-void inbound_action (session *sess, char *chan, char *from, char *ip,
+void inbound_action (session *sess, const std::string & chan, char *from, char *ip,
 							char *text, int fromme, int id,
 							const message_tags_data *tags_data);
 void inbound_newnick (server &serv, char *nick, char *newnick, int quiet,

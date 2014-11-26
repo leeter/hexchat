@@ -599,7 +599,7 @@ servlist_connect (session *sess, ircnet *net, gboolean join)
 	ircserv = static_cast<ircserver*>(list->data);
 
 	/* in case a protocol switch is added to the servlist gui */
-	server_fill_her_up (sess->server);
+	server_fill_her_up (*sess->server);
 
 	if (join)
 	{

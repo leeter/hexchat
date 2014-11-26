@@ -337,7 +337,7 @@ is_hilight (char *from, char *text, session *sess, server &serv)
 }
 
 void
-inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
+inbound_action (session *sess, const std::string& chan, char *from, char *ip, char *text,
 					 int fromme, int id, const message_tags_data *tags_data)
 {
 	session *def = sess;
