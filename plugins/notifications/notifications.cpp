@@ -232,7 +232,7 @@ namespace
 		{
 			auto what = ex->ToString();
 
-			hexchat_printf(ph, "An Error Occured Printing a Notification HRESULT: %#X : %s", static_cast<unsigned long>(ex->HResult), narrow(what->Data()).c_str());
+			hexchat_printf(ph, "An Error Occurred Printing a Notification HRESULT: %#X : %s", static_cast<unsigned long>(ex->HResult), narrow(what->Data()).c_str());
 		}
 		return HEXCHAT_EAT_NONE;
 	}
