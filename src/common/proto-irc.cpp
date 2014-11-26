@@ -18,6 +18,7 @@
 
 /* IRC RFC1459(+commonly used extensions) protocol implementation */
 
+#include <cstdint>
 #include <string>
 #include <cstring>
 #include <cstdio>
@@ -25,6 +26,8 @@
 #include <cctype>
 #include <cstdarg>
 #include <stdexcept>
+
+#include <boost/config.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -1050,6 +1053,21 @@ process_numeric (session * sess, int n,
 	}
 }
 
+namespace {
+	BOOST_CONSTEXPR std::uint32_t
+		wordl(std::uint8_t c0, std::uint8_t c1, std::uint8_t c2, std::uint8_t c3)
+	{
+		return static_cast<std::uint32_t>(c0 | (c1 << 8) | (c2 << 16) | (c3 << 24));
+	}
+}
+
+#ifdef BOOST_NO_CONSTEXPR
+/* force a 32bit CMP.L */
+#define WORDL(c0, c1, c2, c3) (std::uint32_t)(c0 | (c1 << 8) | (c2 << 16) | (c3 << 24))
+#else
+#define WORDL wordl
+#endif
+
 /* handle named messages that starts with a ':' */
 
 static void
@@ -1079,9 +1097,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	if (len == 4)
 	{
-		guint32 t;
-
-		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]); 	
+		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
@@ -1182,9 +1198,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	else if (len >= 5)
 	{
-		guint32 t;
-
-		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]); 	
+		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
@@ -1322,9 +1336,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	else if (len == 3)
 	{
-		guint32 t;
-
-		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]);
+		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]);
 		switch (t)
 		{
 			case WORDL('C','A','P','\0'):
