@@ -103,7 +103,7 @@ namespace
 			_com_util::CheckError(charWritten > 0 ? S_OK : E_FAIL);
 
 			IShellLinkWPtr shellLink(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER);
-			if (shellLink == nullptr)
+			if (shellLink)
 				_com_issue_error(E_NOINTERFACE);
 			
 			_com_util::CheckError(shellLink->SetPath(exePath));
@@ -111,7 +111,7 @@ namespace
 			_com_util::CheckError(shellLink->SetArguments(L""));
 			
 			IPropertyStorePtr propertyStore(shellLink);
-			if (propertyStore == nullptr)
+			if (propertyStore)
 				_com_issue_error(E_NOINTERFACE);
 
 			PROPVARIANT appIdPropVar;
@@ -122,7 +122,7 @@ namespace
 			_com_util::CheckError(propertyStore->Commit());
 			
 			IPersistFilePtr persistFile(shellLink);
-			if (persistFile == nullptr)
+			if (persistFile)
 				_com_issue_error(E_NOINTERFACE);
 			
 			_com_util::CheckError(persistFile->Save(shortcutPath.c_str(), TRUE));
