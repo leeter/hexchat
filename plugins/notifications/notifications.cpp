@@ -41,9 +41,8 @@
 #include <VersionHelpers.h>
 
 #include <roapi.h>
-#include <wrl\client.h>
-#include <wrl\implements.h>
 #include <windows.ui.notifications.h>
+#include <comdef.h>
 
 #include "hexchat-plugin.h"
 
@@ -92,59 +91,47 @@ namespace
 		return converter.to_bytes(to_narrow);
 	}
 
+	_COM_SMARTPTR_TYPEDEF(IPropertyStore, __uuidof(IPropertyStore));
 	// we have to create an app compatible shortcut to use toast notifications
 	HRESULT InstallShortcut(const std::wstring& shortcutPath)
 	{
 		wchar_t exePath[MAX_PATH];
 
 		DWORD charWritten = GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
-
-		HRESULT hr = charWritten > 0 ? S_OK : E_FAIL;
-
-		if (SUCCEEDED(hr))
+		try
 		{
-			Microsoft::WRL::ComPtr<IShellLinkW> shellLink;
-			hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&shellLink));
+			_com_util::CheckError(charWritten > 0 ? S_OK : E_FAIL);
 
-			if (SUCCEEDED(hr))
-			{
-				hr = shellLink->SetPath(exePath);
-				if (SUCCEEDED(hr))
-				{
-					hr = shellLink->SetArguments(L"");
-					if (SUCCEEDED(hr))
-					{
-						Microsoft::WRL::ComPtr<IPropertyStore> propertyStore;
+			IShellLinkWPtr shellLink(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER);
+			if (shellLink == nullptr)
+				_com_issue_error(E_NOINTERFACE);
+			
+			_com_util::CheckError(shellLink->SetPath(exePath));
 
-						hr = shellLink.As(&propertyStore);
-						if (SUCCEEDED(hr))
-						{
-							PROPVARIANT appIdPropVar;
-							hr = InitPropVariantFromString(AppId, &appIdPropVar);
-							if (SUCCEEDED(hr))
-							{
-								hr = propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar);
-								if (SUCCEEDED(hr))
-								{
-									hr = propertyStore->Commit();
-									if (SUCCEEDED(hr))
-									{
-										Microsoft::WRL::ComPtr<IPersistFile> persistFile;
-										hr = shellLink.As(&persistFile);
-										if (SUCCEEDED(hr))
-										{
-											hr = persistFile->Save(shortcutPath.c_str(), TRUE);
-										}
-									}
-								}
-								PropVariantClear(&appIdPropVar);
-							}
-						}
-					}
-				}
-			}
+			_com_util::CheckError(shellLink->SetArguments(L""));
+			
+			IPropertyStorePtr propertyStore(shellLink);
+			if (propertyStore == nullptr)
+				_com_issue_error(E_NOINTERFACE);
+
+			PROPVARIANT appIdPropVar;
+			_com_util::CheckError(InitPropVariantFromString(AppId, &appIdPropVar));
+			std::unique_ptr<PROPVARIANT, decltype(&PropVariantClear)> pro_var(&appIdPropVar, PropVariantClear);
+			_com_util::CheckError(propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar));
+			
+			_com_util::CheckError(propertyStore->Commit());
+			
+			IPersistFilePtr persistFile(shellLink);
+			if (persistFile == nullptr)
+				_com_issue_error(E_NOINTERFACE);
+			
+			_com_util::CheckError(persistFile->Save(shortcutPath.c_str(), TRUE));
 		}
-		return hr;
+		catch (const _com_error & ex)
+		{
+			return ex.Error();
+		}
+		return S_OK;
 	}
 
 	HRESULT TryInstallAppShortcut()
