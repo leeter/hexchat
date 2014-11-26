@@ -25,6 +25,7 @@
 #include <cctype>
 #include <ctime>
 #include <numeric>
+#include <stdexcept>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -1808,14 +1809,15 @@ load_text_events ()
 void
 format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
 {
-	int len, oi, ii, numargs;
-	char *ar, d, a;
+	int len, output_index, input_index, numargs;
 	bool done_all = false;
+	if (index < 0 || index > sizeof(pntevts))
+		throw std::invalid_argument("Invalid index");
 
 	const char* display_evt = pntevts[index];
 	numargs = te[index].num_args & 0x7f;
 
-	oi = ii = len = d = a = 0;
+	output_index = input_index = len = 0;
 	dst[0] = 0;
 
 	if (display_evt == NULL)
@@ -1823,67 +1825,72 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 
 	while (!done_all)
 	{
-		d = display_evt[ii++];
+		char d = display_evt[input_index++];
 		switch (d)
 		{
 		case 0:
-			memcpy (&len, &(display_evt[ii]), sizeof (int));
-			ii += sizeof (int);
-			if (oi + len > dstsize)
+			memcpy (&len, &(display_evt[input_index]), sizeof (int));
+			input_index += sizeof (int);
+			if (output_index + len > dstsize)
 			{
 				fprintf(stderr, "Overflow in display_event (%s)\n", display_evt);
 				dst[0] = 0;
 				return;
 			}
-			memcpy(&(dst[oi]), &(display_evt[ii]), len);
-			oi += len;
-			ii += len;
+			memcpy(&(dst[output_index]), &(display_evt[input_index]), len);
+			output_index += len;
+			input_index += len;
 			break;
 		case 1:
-			a = display_evt[ii++];
-			if (a > numargs)
+		{
+			char arg_idx = display_evt[input_index++];
+			if (arg_idx > numargs)
 			{
-				fprintf (stderr,
-							"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
-							a, numargs, display_evt);
+				fprintf(stderr,
+					"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
+					arg_idx, numargs, display_evt);
 				break;
 			}
-			ar = args[(int) a + 1];
-			if (ar == NULL)
+			const char* current_argument = args[(int)arg_idx + 1];
+			if (current_argument == NULL)
 			{
-				fprintf (stderr, "arg[%d] is NULL in print event\n", a + 1);
-			} else
-			{
-				if (strlen (ar) > dstsize - oi - 4)
-					ar[dstsize - oi - 4] = 0;	/* Avoid buffer overflow */
-				if (stripcolor_args & ARG_FLAG(a + 1)) len = strip_color2 (ar, -1, &dst[oi], STRIP_ALL);
-				else len = strip_hidden_attribute (ar, &dst[oi]);
-				oi += len;
+				fprintf(stderr, "arg[%d] is NULL in print event\n", arg_idx + 1);
 			}
+			else
+			{
+				std::string mutable_argument(current_argument);
+				if (mutable_argument.size() > dstsize - output_index - 4)
+					mutable_argument = mutable_argument.substr(0, dstsize - output_index - 4);
+					//current_argument[dstsize - output_index - 4] = 0;	/* Avoid buffer overflow */
+				if (stripcolor_args & ARG_FLAG(arg_idx + 1)) len = strip_color2(mutable_argument.c_str(), -1, &dst[output_index], STRIP_ALL);
+				else len = strip_hidden_attribute(mutable_argument, &dst[output_index]);
+				output_index += len;
+			}
+		}
 			break;
 		case 2:
-			dst[oi++] = '\n';
-			dst[oi++] = 0;
+			dst[output_index++] = '\n';
+			dst[output_index++] = 0;
 			done_all = true;
 			continue;
 		case 3:
 /*			if (sess->type == SESS_DIALOG)
 			{
 				if (prefs.dialog_indent_nicks)
-					o[oi++] = '\t';
+					o[output_index++] = '\t';
 				else
-					o[oi++] = ' ';
+					o[output_index++] = ' ';
 			} else
 			{*/
 				if (prefs.hex_text_indent)
-					dst[oi++] = '\t';
+					dst[output_index++] = '\t';
 				else
-					dst[oi++] = ' ';
+					dst[output_index++] = ' ';
 			/*}*/
 			break;
 		}
 	}
-	dst[oi] = 0;
+	dst[output_index] = 0;
 	if (*dst == '\n')
 		dst[0] = 0;
 }
@@ -1904,7 +1911,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	struct pevt_stage1 *s = NULL, *base = NULL, *last = NULL, *next;
 	int clen;
 	char o[4096], d, *obuf, *i;
-	int oi, ii, max = -1, len, x;
+	int output_index, input_index, max = -1, len, x;
 
 	len = strlen (input);
 	i = static_cast<char*>(malloc (len + 1));
@@ -1913,24 +1920,24 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 
 	len = strlen (i);
 
-	clen = oi = ii = 0;
+	clen = output_index = input_index = 0;
 
 	for (;;)
 	{
-		if (ii == len)
+		if (input_index == len)
 			break;
-		d = i[ii++];
+		d = i[input_index++];
 		if (d != '$')
 		{
-			o[oi++] = d;
+			o[output_index++] = d;
 			continue;
 		}
-		if (i[ii] == '$')
+		if (i[input_index] == '$')
 		{
-			o[oi++] = '$';
+			o[output_index++] = '$';
 			continue;
 		}
-		if (oi > 0)
+		if (output_index > 0)
 		{
 			s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
 			if (base == NULL)
@@ -1939,41 +1946,41 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 				last->next = s;
 			last = s;
 			s->next = NULL;
-			s->data = static_cast<char*>(malloc (oi + sizeof (int) + 1));
-			s->len = oi + sizeof (int) + 1;
-			clen += oi + sizeof (int) + 1;
+			s->data = static_cast<char*>(malloc (output_index + sizeof (int) + 1));
+			s->len = output_index + sizeof (int) + 1;
+			clen += output_index + sizeof (int) + 1;
 			s->data[0] = 0;
-			memcpy (&(s->data[1]), &oi, sizeof (int));
-			memcpy (&(s->data[1 + sizeof (int)]), o, oi);
-			oi = 0;
+			memcpy (&(s->data[1]), &output_index, sizeof (int));
+			memcpy (&(s->data[1 + sizeof (int)]), o, output_index);
+			output_index = 0;
 		}
-		if (ii == len)
+		if (input_index == len)
 		{
 			fe_message ("String ends with a $", FE_MSG_WARN);
 			return 1;
 		}
-		d = i[ii++];
+		d = i[input_index++];
 		if (d == 'a')
 		{								  /* Hex value */
 			x = 0;
-			if (ii == len)
+			if (input_index == len)
 				goto a_len_error;
-			d = i[ii++];
+			d = i[input_index++];
 			d -= '0';
 			x = d * 100;
-			if (ii == len)
+			if (input_index == len)
 				goto a_len_error;
-			d = i[ii++];
+			d = i[input_index++];
 			d -= '0';
 			x += d * 10;
-			if (ii == len)
+			if (input_index == len)
 				goto a_len_error;
-			d = i[ii++];
+			d = i[input_index++];
 			d -= '0';
 			x += d;
 			if (x > 255)
 				goto a_range_error;
-			o[oi++] = x;
+			o[output_index++] = x;
 			continue;
 
 		 a_len_error:
@@ -2022,7 +2029,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		s->data[0] = 1;
 		s->data[1] = d - 1;
 	}
-	if (oi > 0)
+	if (output_index > 0)
 	{
 		s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
 		if (base == NULL)
@@ -2031,13 +2038,13 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 			last->next = s;
 		last = s;
 		s->next = NULL;
-		s->data = static_cast<char*>(malloc(oi + sizeof(int) + 1));
-		s->len = oi + sizeof (int) + 1;
-		clen += oi + sizeof (int) + 1;
+		s->data = static_cast<char*>(malloc(output_index + sizeof(int) + 1));
+		s->len = output_index + sizeof (int) + 1;
+		clen += output_index + sizeof (int) + 1;
 		s->data[0] = 0;
-		memcpy (&(s->data[1]), &oi, sizeof (int));
-		memcpy (&(s->data[1 + sizeof (int)]), o, oi);
-		oi = 0;
+		memcpy (&(s->data[1]), &output_index, sizeof (int));
+		memcpy (&(s->data[1 + sizeof (int)]), o, output_index);
+		output_index = 0;
 	}
 	s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
 	if (base == NULL)
@@ -2051,14 +2058,14 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	clen += 1;
 	s->data[0] = 2;
 
-	oi = 0;
+	output_index = 0;
 	s = base;
 	obuf = static_cast<char*>(malloc(clen));
 	while (s)
 	{
 		next = s->next;
-		std::copy_n(s->data, s->len, &obuf[oi]);
-		oi += s->len;
+		std::copy_n(s->data, s->len, &obuf[output_index]);
+		output_index += s->len;
 		free (s->data);
 		free (s);
 		s = next;
