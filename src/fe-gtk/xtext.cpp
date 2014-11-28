@@ -38,6 +38,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <iterator>
+#include <sstream>
 #include <stdexcept>
 
 #include "../../config.h"
@@ -2094,7 +2096,7 @@ gtk_xtext_selection_kill (GtkXText *xtext, GdkEventSelection *event)
 {
 #ifndef WIN32
 	if (xtext.buffer->last_ent_start)
-		gtk_xtext_unselect (xtext);
+		gtk_xtext_unselect (*xtext);
 #endif
 	return TRUE;
 }
@@ -2418,14 +2420,11 @@ gtk_xtext_strip_color (const unsigned char *text, size_t len, unsigned char *out
 	int i = 0;
 	int rcol = 0, bgcol = 0;
 	bool hidden = false;
-	unsigned char *new_str;
 	const unsigned char *text0 = text;
 	int mbl;	/* multi-byte length */
 
-	if (outbuf == NULL)
-		new_str = static_cast<unsigned char*>(malloc (len + 2));
-	else
-		new_str = outbuf;
+	std::stringstream output_stream;
+	std::ostream_iterator<unsigned char> new_str(output_stream);
 
 	c.slp = NULL;
 	c.off1 = 0;
@@ -2435,7 +2434,7 @@ gtk_xtext_strip_color (const unsigned char *text, size_t len, unsigned char *out
 	{
 		mbl = charlen (text);
 		if (mbl > len)
-			goto bad_utf8;
+			break;
 
 		if (rcol > 0 && (isdigit (*text) || (*text == ',' && isdigit (text[1]) && !bgcol)))
 		{
@@ -2478,8 +2477,7 @@ gtk_xtext_strip_color (const unsigned char *text, size_t len, unsigned char *out
 				{
 					if (c.len1 == 0)
 						c.off1 = text - text0;
-					std::copy_n(text, mbl, new_str + i);
-					i += mbl;
+					std::copy_n(text, mbl, new_str);
 					c.len1 += mbl;
 				}
 			}
@@ -2488,20 +2486,26 @@ gtk_xtext_strip_color (const unsigned char *text, size_t len, unsigned char *out
 		//len -= mbl;
 	}
 
-bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
+//bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
 	xtext_do_chunk (c);
 
-	new_str[i] = 0;
-
 	if (newlen != NULL)
-		*newlen = i;
+		*newlen = output_stream.tellp();
 
 	if (slpp)
 		*slpp = c.slp;
 	else
 		g_slist_free_full (c.slp, free);
 
-	return new_str;
+	if (outbuf == NULL)
+		return (unsigned char*)strdup(output_stream.str().c_str());
+	else
+	{
+		output_stream.seekp(0);
+		std::istream_iterator<unsigned char> output_itr (output_stream);
+		std::copy(output_itr, std::istream_iterator<unsigned char>(), outbuf);
+		return outbuf;
+	}
 }
 
 /* gives width of a string, excluding the mIRC codes */
