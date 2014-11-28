@@ -25,13 +25,14 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT_TYPED_ITEMIDS
+#include <algorithm>
+#include <functional>
 #include <memory>
 #include <string>
 #include <locale>
 #include <codecvt>
 #include <unordered_map>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
+#include <filesystem>
 
 #include <Windows.h>
 #include <ShlObj.h>
@@ -136,20 +137,20 @@ namespace
 
 	HRESULT TryInstallAppShortcut()
 	{
-		wchar_t*roaming_path_wide = nullptr;
+		wchar_t * roaming_path_wide = nullptr;
 		HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &roaming_path_wide);
 		if (FAILED(hr))
 			return hr;
 
 		std::unique_ptr<wchar_t, decltype(&::CoTaskMemFree)> roaming_path(roaming_path_wide, &::CoTaskMemFree);
-		boost::filesystem::path path(roaming_path_wide);
+		std::tr2::sys::wpath path(roaming_path_wide);
 
 		path /= L"\\Microsoft\\Windows\\Start Menu\\Programs\\Hexchat.lnk";
-		bool fileExists = boost::filesystem::exists(path);
+		bool fileExists = std::tr2::sys::exists(path);
 
 		if (!fileExists)
 		{
-			hr = InstallShortcut(path.wstring());
+			hr = InstallShortcut(path.string());
 		}
 		else
 		{
@@ -206,7 +207,9 @@ namespace
 				sanitizer_del);
 			auto widen_str = widen(sanitized.get());
 			widen_str.erase(0, 1);
-			boost::algorithm::erase_all(widen_str, L"\x1");
+			// remove characters that would break the toast
+			widen_str.erase(std::remove(widen_str.begin(), widen_str.end(), L'\x1'), widen_str.end());
+
 			auto node2 = node_list->GetAt(2);
 			node2->AppendChild(
 				toastTemplate->CreateTextNode(
@@ -243,9 +246,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 	if (FAILED(hr))
 		return FALSE;
 	
-   // hexchat_hook_command(ph, "RTNOTIFIY", HEXCHAT_PRI_NORM, cmd_cb, helptext, nullptr);
 	hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
-	//hexchat_command(ph, "MENU -ishare\\system.png ADD \"Window/Set up WinRT Notifications\" \"RTNOTIFY\"");
 	
 	hexchat_printf(ph, "%s plugin loaded\n", name);
 

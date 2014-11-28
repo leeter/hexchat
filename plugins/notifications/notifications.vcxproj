@@ -83,8 +83,11 @@
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
       <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(YourBoostPath)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>6.03</MinimumRequiredVersion>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -111,8 +114,11 @@
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
       <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(YourBoostPath)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>6.03</MinimumRequiredVersion>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="notifications.cpp" />
