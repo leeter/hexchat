@@ -2095,7 +2095,7 @@ static gboolean
 gtk_xtext_selection_kill (GtkXText *xtext, GdkEventSelection *event)
 {
 #ifndef WIN32
-	if (xtext.buffer->last_ent_start)
+	if (xtext->buffer->last_ent_start)
 		gtk_xtext_unselect (*xtext);
 #endif
 	return TRUE;
