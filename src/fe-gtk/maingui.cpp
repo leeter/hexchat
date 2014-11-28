@@ -897,7 +897,7 @@ mg_populate (session *sess)
 	if (vis != gui->ul_hidden && allocation.width > 1)
 		render = FALSE;
 
-	gtk_xtext_buffer_show (GTK_XTEXT (gui->xtext), static_cast<xtext_buffer*>(res->buffer), render);
+	gtk_xtext_buffer_show (*GTK_XTEXT (gui->xtext), static_cast<xtext_buffer*>(res->buffer), render);
 
 	if (gui->is_tab)
 		gtk_widget_set_sensitive (gui->menu, TRUE);
@@ -1717,7 +1717,7 @@ mg_add_chan (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
+		sess->res->buffer = gtk_xtext_buffer_new (*GTK_XTEXT (sess->gui->xtext));
 		gtk_xtext_set_time_stamp(static_cast<xtext_buffer*>(sess->res->buffer), prefs.hex_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
@@ -2303,7 +2303,7 @@ mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 void
 mg_update_xtext (GtkWidget *wid)
 {
-	GtkXText *xtext = GTK_XTEXT (wid);
+	GtkXText &xtext = *GTK_XTEXT (wid);
 
 	gtk_xtext_set_palette (xtext, colors);
 	gtk_xtext_set_max_lines (xtext, prefs.hex_text_max_lines);
@@ -2325,7 +2325,6 @@ static void
 mg_create_textarea (session *sess, GtkWidget *box)
 {
 	GtkWidget *inbox, *vbox, *frame;
-	GtkXText *xtext;
 	session_gui *gui = sess->gui;
 	static const GtkTargetEntry dnd_targets[] =
 	{
@@ -2346,20 +2345,20 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
 	gtk_container_add (GTK_CONTAINER (inbox), frame);
 
-	gui->xtext = gtk_xtext_new (colors, TRUE);
-	xtext = GTK_XTEXT (gui->xtext);
+	gui->xtext = gtk_xtext_new (colors, true);
+	GtkXText & xtext = *GTK_XTEXT(gui->xtext);
 	gtk_xtext_set_max_indent (xtext, prefs.hex_text_max_indent);
 	gtk_xtext_set_thin_separator (xtext, prefs.hex_text_thin_sep);
 	gtk_xtext_set_urlcheck_function (xtext, mg_word_check);
 	gtk_xtext_set_max_lines (xtext, prefs.hex_text_max_lines);
-	gtk_container_add (GTK_CONTAINER (frame), GTK_WIDGET (xtext));
+	gtk_container_add(GTK_CONTAINER(frame), gui->xtext);
 
-	mg_update_xtext (GTK_WIDGET (xtext));
+	mg_update_xtext(gui->xtext);
 
-	g_signal_connect (G_OBJECT (xtext), "word_click",
+	g_signal_connect(G_OBJECT(gui->xtext), "word_click",
 							G_CALLBACK (mg_word_clicked), NULL);
 
-	gui->vscrollbar = gtk_vscrollbar_new (GTK_XTEXT (xtext)->adj);
+	gui->vscrollbar = gtk_vscrollbar_new(GTK_XTEXT(gui->xtext)->adj);
 	gtk_box_pack_start (GTK_BOX (inbox), gui->vscrollbar, FALSE, TRUE, 0);
 
 	gtk_drag_dest_set(gui->vscrollbar, static_cast<GtkDestDefaults>(GTK_DEST_DEFAULT_DROP | GTK_DEST_DEFAULT_MOTION), dnd_dest_targets, 2,
@@ -2810,7 +2809,7 @@ search_handle_event(int search_type, session *sess)
 
 	if (search_type != SEARCH_REFRESH)
 		text = gtk_entry_get_text (GTK_ENTRY(sess->gui->shentry));
-	last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
+	last = gtk_xtext_search (*GTK_XTEXT (sess->gui->xtext), text, flags, &err);
 
 	if (err)
 	{
@@ -2827,7 +2826,7 @@ search_handle_event(int search_type, session *sess)
 		else
 		{
 			/* Either end of search or not found, try again to wrap if only end */
-			last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
+			last = gtk_xtext_search (*GTK_XTEXT (sess->gui->xtext), text, flags, &err);
 			if (!last) /* Not found error */
 			{
 				gtk_entry_set_icon_from_stock (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_ERROR);
@@ -3079,7 +3078,7 @@ mg_tabwin_focus_cb (GtkWindow * win, GdkEventFocus *event, gpointer userdata)
 	current_sess = current_tab;
 	if (current_sess)
 	{
-		gtk_xtext_check_marker_visibility (GTK_XTEXT (current_sess->gui->xtext));
+		gtk_xtext_check_marker_visibility (*GTK_XTEXT (current_sess->gui->xtext));
 		plugin_emit_dummy_print (current_sess, "Focus Window");
 	}
 	unflash_window (GTK_WIDGET (win));
@@ -3092,7 +3091,7 @@ mg_topwin_focus_cb (GtkWindow * win, GdkEventFocus *event, session *sess)
 	current_sess = sess;
 	if (!sess->server->server_session)
 		sess->server->server_session = sess;
-	gtk_xtext_check_marker_visibility(GTK_XTEXT (current_sess->gui->xtext));
+	gtk_xtext_check_marker_visibility(*GTK_XTEXT (current_sess->gui->xtext));
 	unflash_window (GTK_WIDGET (win));
 	plugin_emit_dummy_print (sess, "Focus Window");
 	return FALSE;
@@ -3165,8 +3164,8 @@ mg_create_topwindow (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		gtk_xtext_buffer_show(GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), TRUE);
+		sess->res->buffer = gtk_xtext_buffer_new (*GTK_XTEXT (sess->gui->xtext));
+		gtk_xtext_buffer_show(*GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), TRUE);
 		gtk_xtext_set_time_stamp(static_cast<xtext_buffer*>(sess->res->buffer), prefs.hex_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}

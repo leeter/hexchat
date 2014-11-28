@@ -66,7 +66,7 @@ static void
 PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, time_t timet)
 {
 	unsigned char *tab;
-	int leftlen;
+	std::ptrdiff_t leftlen;
 
 	if (len == 0)
 		len = 1;
@@ -457,11 +457,11 @@ pevent_dialog_show ()
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (wid), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 	gtk_box_pack_start (GTK_BOX (vbox), wid, FALSE, TRUE, 0);
 
-	pevent_dialog_twid = gtk_xtext_new (colors, 0);
+	pevent_dialog_twid = gtk_xtext_new (colors, false);
 	gtk_widget_set_sensitive (pevent_dialog_twid, FALSE);
 	gtk_widget_set_size_request (pevent_dialog_twid, -1, 75);
 	gtk_container_add (GTK_CONTAINER (wid), pevent_dialog_twid);
-	gtk_xtext_set_font (GTK_XTEXT (pevent_dialog_twid), prefs.hex_text_font);
+	gtk_xtext_set_font (*GTK_XTEXT (pevent_dialog_twid), prefs.hex_text_font);
 
 	hbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbox), GTK_BUTTONBOX_SPREAD);

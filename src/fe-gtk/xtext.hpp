@@ -209,42 +209,42 @@ struct GtkXText
 	int clip_y2;		/* from y to y2 */
 
 	/* current text states */
-	unsigned int underline:1;
-	unsigned int hidden:1;
+	bool underline;
+	bool hidden;
 
 	/* text parsing states */
-	unsigned int parsing_backcolor:1;
-	unsigned int parsing_color:1;
-	unsigned int backcolor:1;
+	bool parsing_backcolor;
+	bool parsing_color;
+	bool backcolor;
 
 	/* various state information */
-	unsigned int moving_separator:1;
-	unsigned int word_select:1;
-	unsigned int line_select:1;
-	unsigned int button_down:1;
-	unsigned int hilighting:1;
-	unsigned int dont_render:1;
-	unsigned int dont_render2:1;
-	unsigned int cursor_hand:1;
-	unsigned int cursor_resize:1;
-	unsigned int skip_border_fills:1;
-	unsigned int skip_stamp:1;
-	unsigned int mark_stamp:1;	/* Cut&Paste with stamps? */
-	unsigned int force_stamp:1;	/* force redrawing it */
-	unsigned int render_hilights_only:1;
-	unsigned int in_hilight:1;
-	unsigned int un_hilight:1;
-	unsigned int recycle:1;
-	unsigned int force_render:1;
-	unsigned int color_paste:1; /* CTRL was pressed when selection finished */
+	bool moving_separator;
+	bool word_select;
+	bool line_select;
+	bool button_down;
+	bool hilighting;
+	bool dont_render;
+	bool dont_render2;
+	bool cursor_hand;
+	bool cursor_resize;
+	bool skip_border_fills;
+	bool skip_stamp;
+	bool mark_stamp;	/* Cut&Paste with stamps? */
+	bool force_stamp;	/* force redrawing it */
+	bool render_hilights_only;
+	bool in_hilight;
+	bool un_hilight;
+	bool recycle;
+	bool force_render;
+	bool color_paste; /* CTRL was pressed when selection finished */
 
 	/* settings/prefs */
-	unsigned int auto_indent:1;
-	unsigned int thinline:1;
-	unsigned int marker:1;
-	unsigned int separator:1;
-	unsigned int wordwrap:1;
-	unsigned int ignore_hidden:1;	/* rawlog uses this */
+	bool auto_indent;
+	bool thinline;
+	bool marker;
+	bool separator;
+	bool wordwrap;
+	bool ignore_hidden;	/* rawlog uses this */
 };
 
 struct GtkXTextClass
@@ -254,43 +254,42 @@ struct GtkXTextClass
 	void (*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
 };
 
-GtkWidget *gtk_xtext_new (GdkColor palette[], int separator);
+GtkWidget *gtk_xtext_new (GdkColor palette[], bool separator);
 void gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len);
 void gtk_xtext_append_indent (xtext_buffer *buf,
 										unsigned char *left_text, int left_len,
 										unsigned char *right_text, int right_len,
 										time_t stamp);
-int gtk_xtext_set_font (GtkXText *xtext, char *name);
-void gtk_xtext_set_background (GtkXText * xtext, GdkPixmap * pixmap);
-void gtk_xtext_set_palette (GtkXText * xtext, GdkColor palette[]);
+int gtk_xtext_set_font (GtkXText &xtext, const char *name);
+void gtk_xtext_set_background (GtkXText & xtext, GdkPixmap * pixmap);
+void gtk_xtext_set_palette (GtkXText & xtext, GdkColor palette[]);
 void gtk_xtext_clear (xtext_buffer *buf, int lines);
-void gtk_xtext_save (GtkXText * xtext, int fh);
-void gtk_xtext_refresh (GtkXText * xtext);
+void gtk_xtext_save (GtkXText & xtext, int fh);
+void gtk_xtext_refresh (GtkXText & xtext);
 int gtk_xtext_lastlog (xtext_buffer *out, xtext_buffer *search_area);
-textentry *gtk_xtext_search (GtkXText * xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
-void gtk_xtext_reset_marker_pos (GtkXText *xtext);
-int gtk_xtext_moveto_marker_pos (GtkXText *xtext);
-void gtk_xtext_check_marker_visibility(GtkXText *xtext);
+textentry *gtk_xtext_search (GtkXText & xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
+void gtk_xtext_reset_marker_pos (GtkXText &xtext);
+marker_reset_reason gtk_xtext_moveto_marker_pos(GtkXText &xtext);
+void gtk_xtext_check_marker_visibility(GtkXText &xtext);
 void gtk_xtext_set_marker_last (session *sess);
 
 gboolean gtk_xtext_is_empty (xtext_buffer *buf);
 typedef void (*GtkXTextForeach) (GtkXText *xtext, unsigned char *text, void *data);
 void gtk_xtext_foreach (xtext_buffer *buf, GtkXTextForeach func, void *data);
 
-void gtk_xtext_set_error_function (GtkXText *xtext, void (*error_function) (int));
-void gtk_xtext_set_indent (GtkXText *xtext, gboolean indent);
-void gtk_xtext_set_max_indent (GtkXText *xtext, int max_auto_indent);
-void gtk_xtext_set_max_lines (GtkXText *xtext, int max_lines);
-void gtk_xtext_set_show_marker (GtkXText *xtext, gboolean show_marker);
-void gtk_xtext_set_show_separator (GtkXText *xtext, gboolean show_separator);
-void gtk_xtext_set_thin_separator (GtkXText *xtext, gboolean thin_separator);
+void gtk_xtext_set_indent (GtkXText &xtext, bool indent);
+void gtk_xtext_set_max_indent (GtkXText &xtext, int max_auto_indent);
+void gtk_xtext_set_max_lines (GtkXText &xtext, int max_lines);
+void gtk_xtext_set_show_marker (GtkXText &xtext, bool show_marker);
+void gtk_xtext_set_show_separator (GtkXText &xtext, bool show_separator);
+void gtk_xtext_set_thin_separator (GtkXText &xtext, bool thin_separator);
 void gtk_xtext_set_time_stamp (xtext_buffer *buf, gboolean timestamp);
-void gtk_xtext_set_urlcheck_function (GtkXText *xtext, int (*urlcheck_function) (GtkWidget *, char *));
-void gtk_xtext_set_wordwrap (GtkXText *xtext, gboolean word_wrap);
+void gtk_xtext_set_urlcheck_function (GtkXText &xtext, int (*urlcheck_function) (GtkWidget *, char *));
+void gtk_xtext_set_wordwrap (GtkXText &xtext, bool word_wrap);
 
-xtext_buffer *gtk_xtext_buffer_new (GtkXText *xtext);
+xtext_buffer *gtk_xtext_buffer_new (GtkXText &xtext);
 void gtk_xtext_buffer_free (xtext_buffer *buf);
-void gtk_xtext_buffer_show (GtkXText *xtext, xtext_buffer *buf, int render);
+void gtk_xtext_buffer_show (GtkXText &xtext, xtext_buffer *buf, int render);
 void gtk_xtext_copy_selection (GtkXText *xtext);
 GType gtk_xtext_get_type (void);
 

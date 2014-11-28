@@ -1265,7 +1265,7 @@ menu_search_prev (GtkWidget *wid)
 static void
 menu_resetmarker (GtkWidget * wid, gpointer none)
 {
-	gtk_xtext_reset_marker_pos (GTK_XTEXT (current_sess->gui->xtext));
+	gtk_xtext_reset_marker_pos (*GTK_XTEXT (current_sess->gui->xtext));
 }
 
 static void
@@ -1278,7 +1278,7 @@ menu_movetomarker (GtkWidget *wid, gpointer none)
 		PrintText (current_sess, _("Marker line disabled."));
 	else
 	{
-		reason = static_cast<marker_reset_reason>(gtk_xtext_moveto_marker_pos (GTK_XTEXT (current_sess->gui->xtext)));
+		reason = static_cast<marker_reset_reason>(gtk_xtext_moveto_marker_pos (*GTK_XTEXT (current_sess->gui->xtext)));
 		switch (reason) {
 		case MARKER_WAS_NEVER_SET:
 			str = _("Marker line never set."); break;
@@ -1321,7 +1321,7 @@ savebuffer_req_done (session *sess, char *file)
 	fh = g_open (file, O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh != -1)
 	{
-		gtk_xtext_save (GTK_XTEXT (sess->gui->xtext), fh);
+		gtk_xtext_save (*GTK_XTEXT (sess->gui->xtext), fh);
 		close (fh);
 	}
 }

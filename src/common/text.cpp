@@ -756,10 +756,11 @@ log_write (session &sess, const std::string & text, time_t ts)
 /*           6. This routine measured 3x faster than g_convert :)            */
 
 static unsigned char *
-iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
+iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 {
+	typedef std::basic_ostringstream<unsigned char> utf8ostringstream;
 	unsigned int idx;
-	unsigned char *res, *output;
+	//unsigned char *res, *output;
 	static const unsigned short lowtable[] = /* 74 byte table for 80-a4 */
 	{
 	/* compressed utf-8 table: if the first byte's 0x20 bit is set, it
@@ -804,12 +805,14 @@ iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
 	};
 
 	if (len == -1)
-		len = strlen ((const char*) text);
+		len = std::char_traits<unsigned char>::length(text);
 
 	/* worst case scenario: every byte turns into 3 bytes */
-	res = output = static_cast<unsigned char*>(g_malloc ((len * 3) + 1));
-	if (!output)
-		return NULL;
+	utf8ostringstream output_stream;
+	std::ostream_iterator<unsigned char, unsigned char> output(output_stream);
+	//res = output = static_cast<unsigned char*>(g_malloc ((len * 3) + 1));
+	/*if (!output)
+		return NULL;*/
 
 	while (len)
 	{
@@ -846,10 +849,10 @@ iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
 		text++;
 		len--;
 	}
-	*output = 0;	/* terminate */
-	*bytes_written = output - res;
+	//*output = 0;	/* terminate */
+	*bytes_written = output_stream.tellp();
 
-	return res;
+	return (unsigned char*)g_strdup((const char*)output_stream.str().c_str());
 }
 
 char *
