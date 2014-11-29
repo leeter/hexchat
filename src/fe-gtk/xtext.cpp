@@ -509,7 +509,7 @@ gtk_xtext_adjustment_set (xtext_buffer *buf, int fire_signal)
 
 		if (adj->value > adj->upper - adj->page_size)
 		{
-			buf->scrollbar_down = TRUE;
+			buf->scrollbar_down(true);
 			adj->value = adj->upper - adj->page_size;
 		}
 
@@ -540,9 +540,9 @@ gtk_xtext_adjustment_changed (GtkAdjustment * adj, GtkXText * xtext)
 	if (xtext->buffer->old_value != xtext->adj->value)
 	{
 		if (xtext->adj->value >= xtext->adj->upper - xtext->adj->page_size)
-			xtext->buffer->scrollbar_down = TRUE;
+			xtext->buffer->scrollbar_down(true);
 		else
-			xtext->buffer->scrollbar_down = FALSE;
+			xtext->buffer->scrollbar_down(false);
 
 		if (xtext->adj->value + 1 == xtext->buffer->old_value ||
 			 xtext->adj->value - 1 == xtext->buffer->old_value)	/* clicked an arrow? */
@@ -823,7 +823,7 @@ gtk_xtext_size_allocate (GtkWidget * widget, GtkAllocation * allocation)
 			xtext.buffer->pagetop_ent = NULL;
 			gtk_xtext_adjustment_set (xtext.buffer, FALSE);
 		}
-		if (xtext.buffer->scrollbar_down)
+		if (xtext.buffer->scrollbar_down())
 			gtk_adjustment_set_value (xtext.adj, xtext.adj->upper -
 											  xtext.adj->page_size);
 	}
@@ -1061,7 +1061,7 @@ gtk_xtext_draw_marker (GtkXText & xtext, textentry * ent, int y)
 
 	if (gtk_window_has_toplevel_focus (GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (&xtext)))))
 	{
-		xtext.buffer->marker_seen = TRUE;
+		xtext.buffer->marker_seen = true;
 	}
 }
 
@@ -1771,7 +1771,7 @@ gtk_xtext_motion_notify (GtkWidget * widget, GdkEventMotion * event)
 			if (tmp != xtext.buffer->indent)
 			{
 				gtk_xtext_recalc_widths (xtext.buffer, FALSE);
-				if (xtext.buffer->scrollbar_down)
+				if (xtext.buffer->scrollbar_down())
 					gtk_adjustment_set_value (xtext.adj, xtext.adj->upper -
 													  xtext.adj->page_size);
 				if (!xtext.io_tag)
@@ -2785,7 +2785,7 @@ gtk_xtext_render_str (GtkXText & xtext, int y, textentry * ent,
 	if (!xtext.skip_border_fills && !xtext.dont_render)
 	{
 		/* draw background to the left of the text */
-		if (str == ent->str && indent > MARGIN && xtext.buffer->time_stamp)
+		if (str == ent->str && indent > MARGIN && xtext.buffer->time_stamp())
 		{
 			/* don't overwrite the timestamp */
 			if (indent > xtext.stamp_width)
@@ -3367,7 +3367,7 @@ gtk_xtext_render_line (GtkXText & xtext, textentry * ent, int line,
 	start_subline = subline;
 
 	/* draw the timestamp */
-	if (xtext.auto_indent && xtext.buffer->time_stamp &&
+	if (xtext.auto_indent && xtext.buffer->time_stamp() &&
 		 (!xtext.skip_stamp || xtext.mark_stamp || xtext.force_stamp))
 	{
 		char *time_str;
@@ -4075,7 +4075,7 @@ gtk_xtext_clear (xtext_buffer *buf, int lines)
 			gtk_xtext_search_fini (buf);
 		if (buf->xtext->auto_indent)
 			buf->indent = MARGIN;
-		buf->scrollbar_down = TRUE;
+		buf->scrollbar_down(true);
 		buf->last_ent_start = NULL;
 		buf->last_ent_end = NULL;
 		buf->marker_pos = NULL;
@@ -4564,7 +4564,7 @@ gtk_xtext_render_page_timeout (GtkXText & xtext)
 		xtext.buffer->old_value = 0;
 		adj->value = 0;
 		gtk_xtext_render_page (xtext);
-	} else if (xtext.buffer->scrollbar_down)
+	} else if (xtext.buffer->scrollbar_down())
 	{
 		g_signal_handler_block (xtext.adj, xtext.vc_signal_tag);
 		gtk_xtext_adjustment_set (xtext.buffer, FALSE);
@@ -4659,7 +4659,7 @@ gtk_xtext_append_entry (xtext_buffer *buf, textentry * ent, time_t stamp)
 															buf->xtext);
 		}
 	}
-	if (buf->scrollbar_down)
+	if (buf->scrollbar_down())
 	{
 		buf->old_value = buf->num_lines - buf->xtext->adj->page_size;
 		if (buf->old_value < 0)
@@ -4717,7 +4717,7 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	ent->str_len = left_len + 1 + right_len;
 	ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
 
-	if (buf->time_stamp)
+	if (buf->time_stamp())
 		space = buf->xtext->stamp_width;
 	else
 		space = 0;
@@ -4863,9 +4863,15 @@ gtk_xtext_set_thin_separator (GtkXText &xtext, bool thin_separator)
 }
 
 void
-gtk_xtext_set_time_stamp (xtext_buffer *buf, gboolean time_stamp)
+xtext_buffer::time_stamp(bool time_stamp)
 {
-	buf->time_stamp = time_stamp;
+	this->_time_stamp = time_stamp;
+}
+
+void
+xtext_buffer::scrollbar_down(bool scrollbar_down)
+{
+	this->_scrollbar_down = scrollbar_down;
 }
 
 void
@@ -5000,14 +5006,14 @@ gtk_xtext_buffer_show (GtkXText &xtext, xtext_buffer *buf, int render)
 		{
 			buf->window_width = w;
 			gtk_xtext_calc_lines (buf, FALSE);
-			if (buf->scrollbar_down)
+			if (buf->scrollbar_down())
 				gtk_adjustment_set_value (xtext.adj, xtext.adj->upper -
 												  xtext.adj->page_size);
 		} else if (buf->window_height != h)
 		{
 			buf->window_height = h;
 			buf->pagetop_ent = NULL;
-			if (buf->scrollbar_down)
+			if (buf->scrollbar_down())
 				xtext.adj->value = xtext.adj->upper;
 			gtk_xtext_adjustment_set (buf, FALSE);
 		}
@@ -5025,7 +5031,7 @@ gtk_xtext_buffer_new (GtkXText &xtext)
 	buf = new xtext_buffer();
 	buf->old_value = -1;
 	buf->xtext = &xtext;
-	buf->scrollbar_down = TRUE;
+	buf->scrollbar_down(true);
 	buf->indent = xtext.space_width * 2;
 	dontscroll (buf);
 
@@ -5056,5 +5062,5 @@ gtk_xtext_buffer_free (xtext_buffer *buf)
 		ent = next;
 	}
 
-	free (buf);
+	delete buf;
 }

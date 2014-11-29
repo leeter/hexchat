@@ -106,10 +106,10 @@ struct xtext_buffer {
 	int window_width;				/* window size when last rendered. */
 	int window_height;
 
-	unsigned int time_stamp:1;
-	unsigned int scrollbar_down:1;
-	unsigned int needs_recalc:1;
-	unsigned int marker_seen:1;
+	bool _time_stamp;
+	bool _scrollbar_down;
+	bool needs_recalc;
+	bool marker_seen;
 
 	GList *search_found;		/* list of textentries where search found strings */
 	gchar *search_text;		/* desired text to search for */
@@ -121,6 +121,12 @@ struct xtext_buffer {
 	offsets_t curdata;		/* current offset info, from *curmark */
 	GRegex *search_re;		/* Compiled regular expression */
 	textentry *hintsearch;	/* textentry found for last search */
+public:
+	bool time_stamp() const { return _time_stamp; };
+	void time_stamp(bool timestamp);
+
+	bool scrollbar_down() const { return _scrollbar_down; }
+	void scrollbar_down(bool scrollbar_down);
 };
 
 struct GtkXText
@@ -283,7 +289,6 @@ void gtk_xtext_set_max_lines (GtkXText &xtext, int max_lines);
 void gtk_xtext_set_show_marker (GtkXText &xtext, bool show_marker);
 void gtk_xtext_set_show_separator (GtkXText &xtext, bool show_separator);
 void gtk_xtext_set_thin_separator (GtkXText &xtext, bool thin_separator);
-void gtk_xtext_set_time_stamp (xtext_buffer *buf, gboolean timestamp);
 void gtk_xtext_set_urlcheck_function (GtkXText &xtext, int (*urlcheck_function) (GtkWidget *, char *));
 void gtk_xtext_set_wordwrap (GtkXText &xtext, bool word_wrap);
 
