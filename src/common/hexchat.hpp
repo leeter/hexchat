@@ -391,6 +391,7 @@ struct session
 		SESS_SNOTICES
 	};
 	session(struct server *serv, const char *from, session::session_type type, int focus);
+	~session();
 	/* Per-Channel Alerts */
 	/* use a byte, because we need a pointer to each element */
 	guint8 alert_beep;

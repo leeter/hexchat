@@ -649,6 +649,16 @@ send_quit_or_part (session * killsess)
 	}
 }
 
+session::~session()
+{
+	if (this->type == session::SESS_CHANNEL)
+		userlist_free(*this);
+
+	exec_notify_kill(this);
+	free(this->topic);
+	free(this->current_modes);
+}
+
 void
 session_free (session *killsess)
 {
@@ -689,23 +699,15 @@ session_free (session *killsess)
 
 	sess_list = g_slist_remove (sess_list, killsess);
 
-	if (killsess->type == session::SESS_CHANNEL)
-		userlist_free (*killsess);
-
 	oldidx = killsess->lastact_idx;
 	if (oldidx != LACT_NONE)
 		sess_list_by_lastact[oldidx] = g_list_remove(sess_list_by_lastact[oldidx], killsess);
-
-	exec_notify_kill (killsess);
 
 	log_close (*killsess);
 	scrollback_close (*killsess);
 	chanopt_save (killsess);
 
 	send_quit_or_part (killsess);
-
-		free (killsess->topic);
-		free (killsess->current_modes);
 
 	fe_session_callback (killsess);
 

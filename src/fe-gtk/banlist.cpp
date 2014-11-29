@@ -19,6 +19,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include <functional>
 #include <string>
 #include <sstream>
 #include <cstdio>
@@ -52,14 +53,15 @@ struct mode_info {
 	int code;		/* rfc RPL_foo code, e.g. 367 for RPL_BANLIST */
 	int endcode;	/* rfc RPL_ENDOFfoo code, e.g. 368 for RPL_ENDOFBANLIST */
 	int bit;			/* Mask bit, e.g., 1<<MODE_BAN  */
-	void(*tester)(banlist_info *, int);	/* Function returns true to set bit into checkable */
+	/* Function returns true to set bit into checkable */
+	std::function<void(banlist_info&, int)> tester;
 };
 /*
  * These supports_* routines set capable, readable, writable bits */
-static void supports_bans (banlist_info *, int);
-static void supports_exempt (banlist_info *, int);
-static void supports_invite (banlist_info *, int);
-static void supports_quiet (banlist_info *, int);
+static void supports_bans (banlist_info &, int);
+static void supports_exempt (banlist_info &, int);
+static void supports_invite (banlist_info &, int);
+static void supports_quiet (banlist_info &, int);
 
 static const mode_info modes[MODE_CT] = {
 	{
@@ -123,20 +125,20 @@ get_store (struct session *sess)
 }
 
 static void
-supports_bans (banlist_info *banl, int i)
+supports_bans (banlist_info &banl, int i)
 {
 	int bit = 1<<i;
 
-	banl->capable |= bit;
-	banl->readable |= bit;
-	banl->writeable |= bit;
+	banl.capable |= bit;
+	banl.readable |= bit;
+	banl.writeable |= bit;
 	return;
 }
 
 static void
-supports_exempt (banlist_info *banl, int i)
+supports_exempt (banlist_info &banl, int i)
 {
-	server *serv = banl->sess->server;
+	server *serv = banl.sess->server;
 	int bit = 1<<i;
 
 	if (serv->have_except)
@@ -152,14 +154,14 @@ supports_exempt (banlist_info *banl, int i)
 	return;
 
 yes:
-	banl->capable |= bit;
-	banl->writeable |= bit;
+	banl.capable |= bit;
+	banl.writeable |= bit;
 }
 
 static void
-supports_invite (banlist_info *banl, int i)
+supports_invite (banlist_info &banl, int i)
 {
-	server *serv = banl->sess->server;
+	server *serv = banl.sess->server;
 	int bit = 1<<i;
 
 	if (serv->have_invite)
@@ -175,14 +177,14 @@ supports_invite (banlist_info *banl, int i)
 	return;
 
 yes:
-	banl->capable |= bit;
-	banl->writeable |= bit;
+	banl.capable |= bit;
+	banl.writeable |= bit;
 }
 
 static void
-supports_quiet (banlist_info *banl, int i)
+supports_quiet (banlist_info &banl, int i)
 {
-	server *serv = banl->sess->server;
+	server *serv = banl.sess->server;
 	int bit = 1<<i;
 
 	for (char cm : serv->chanmodes)
@@ -195,9 +197,9 @@ supports_quiet (banlist_info *banl, int i)
 	return;
 
 yes:
-	banl->capable |= bit;
-	banl->readable |= bit;
-	banl->writeable |= bit;
+	banl.capable |= bit;
+	banl.readable |= bit;
+	banl.writeable |= bit;
 }
 }
 
@@ -819,7 +821,7 @@ banlist_opengui (struct session *sess)
 	banl->sess = sess;
 	/* For each mode set its bit in capable/readable/writeable */
 	for (i = 0; i < MODE_CT; i++)
-		modes[i].tester (banl, i);
+		modes[i].tester (*banl, i);
 	/* Force on the checkmark in the "Bans" box */
 	banl->checked = 1<<MODE_BAN;
 
