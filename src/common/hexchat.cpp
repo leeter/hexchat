@@ -645,9 +645,9 @@ send_quit_or_part (session * killsess)
 			{
 				server_sendpart (*killserv, killsess->channel, nullptr);
 			}
+			}
 		}
 	}
-}
 
 session::~session()
 {
@@ -786,7 +786,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -1081,26 +1081,27 @@ main (int argc, char *argv[])
 	 * load_config() must come before fe_args() because fe_args() calls gtk_init() which needs to
 	 * know the language which is set in the config. The code below is copy-pasted from fe_args()
 	 * for the most part. */
-	if (argc >= 3)
+	if (argc >= 2)
 	{
-		for (i = 1; i < argc - 1; i++)
+		for (i = 1; i < argc; i++)
 		{
-			if (strcmp (argv[i], "-d") == 0)
+			if ((strcmp (argv[i], "-d") == 0 || strcmp (argv[i], "--cfgdir") == 0)
+				&& i + 1 < argc)
 			{
-				if (xdir)
+				xdir = strdup (argv[i + 1]);
+			}
+			else if (strncmp (argv[i], "--cfgdir=", 9) == 0)
 				{
-					g_free (xdir);
+				xdir = strdup (argv[i] + 9);
 				}
 
-				xdir = strdup (argv[i + 1]);
-
-				if (!xdir)
-					return -1;
-
+			if (xdir != NULL)
+			{
 				if (xdir[strlen (xdir) - 1] == G_DIR_SEPARATOR)
 				{
 					xdir[strlen (xdir) - 1] = 0;
 				}
+				break;
 			}
 		}
 	}
@@ -1159,7 +1160,7 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
 
