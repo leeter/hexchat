@@ -700,87 +700,92 @@ bool match_with_wildcards(const std::string &text, std::string wildcardPattern, 
 	return regex_match(text, pattern);
 }
 
-int match(const char *mask, const char *string)
+bool
+match(const char *mask, const char *string)
 {
-  register const char *m = mask, *s = string;
-  register char ch;
-  const char *bm, *bs;		/* Will be reg anyway on a decent CPU/compiler */
+	register const char *m = mask, *s = string;
+	register char ch;
+	const char *bm, *bs;		/* Will be reg anyway on a decent CPU/compiler */
 
-  /* Process the "head" of the mask, if any */
-  while ((ch = *m++) && (ch != '*'))
-	switch (ch)
+	/* Process the "head" of the mask, if any */
+	while ((ch = *m++) && (ch != '*'))
 	{
-	  case '\\':
-	if (*m == '?' || *m == '*')
-	  ch = *m++;
-	  default:
-	if (rfc_tolower(*s) != rfc_tolower(ch))
-	  return 0;
-	  case '?':
-	if (!*s++)
-	  return 0;
-	};
-  if (!ch)
-	return !(*s);
+		switch (ch)
+		{
+		case '\\':
+			if (*m == '?' || *m == '*')
+				ch = *m++;
+		default:
+			if (rfc_tolower(*s) != rfc_tolower(ch))
+				return false;
+		case '?':
+			if (!*s++)
+				return false;
+		}
+	}
+	if (!ch)
+		return !(*s);
 
   /* We got a star: quickly find if/where we match the next char */
 got_star:
-  bm = m;			/* Next try rollback here */
-  while ((ch = *m++))
-	switch (ch)
+	bm = m;			/* Next try rollback here */
+	while ((ch = *m++))
 	{
-	  case '?':
-	if (!*s++)
-	  return 0;
-	  case '*':
-	bm = m;
-	continue;		/* while */
-	  case '\\':
-	if (*m == '?' || *m == '*')
-	  ch = *m++;
-	  default:
-	goto break_while;	/* C is structured ? */
-	};
+		switch (ch)
+		{
+		case '?':
+			if (!*s++)
+				return false;
+		case '*':
+			bm = m;
+			continue;		/* while */
+		case '\\':
+			if (*m == '?' || *m == '*')
+				ch = *m++;
+		default:
+			goto break_while;	/* C is structured ? */
+		}
+	}
 break_while:
-  if (!ch)
-	return 1;			/* mask ends with '*', we got it */
-  ch = rfc_tolower(ch);
-  while (rfc_tolower(*s++) != ch)
-	if (!*s)
-	  return 0;
-  bs = s;			/* Next try start from here */
+	if (!ch)
+		return true;			/* mask ends with '*', we got it */
+	ch = rfc_tolower(ch);
+	while (rfc_tolower(*s++) != ch)
+		if (!*s)
+			return false;
+	bs = s;			/* Next try start from here */
 
-  /* Check the rest of the "chunk" */
-  while ((ch = *m++))
-  {
-	switch (ch)
+	/* Check the rest of the "chunk" */
+	while ((ch = *m++))
 	{
-	  case '*':
-	goto got_star;
-	  case '\\':
-	if (*m == '?' || *m == '*')
-	  ch = *m++;
-	  default:
-	if (rfc_tolower(*s) != rfc_tolower(ch))
+		switch (ch)
+		{
+		case '*':
+			goto got_star;
+		case '\\':
+			if (*m == '?' || *m == '*')
+				ch = *m++;
+		default:
+			if (rfc_tolower(*s) != rfc_tolower(ch))
+			{
+				if (!*s)
+					return false;
+				m = bm;
+				s = bs;
+				goto got_star;
+			}
+		case '?':
+			if (!*s++)
+				return false;
+		}
+	}
+	if (*s)
 	{
-	  if (!*s)
-		return 0;
-	  m = bm;
-	  s = bs;
-	  goto got_star;
+		m = bm;
+		s = bs;
+		goto got_star;
 	};
-	  case '?':
-	if (!*s++)
-	  return 0;
-	};
-  };
-  if (*s)
-  {
-	m = bm;
-	s = bs;
-	goto got_star;
-  };
-  return 1;
+	return true;
 }
 
 void

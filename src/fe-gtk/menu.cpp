@@ -1358,7 +1358,7 @@ menu_join_cb (GtkWidget *dialog, gint response, GtkEntry *entry)
 		break;
 
 	case GTK_RESPONSE_HELP:
-		chanlist_opengui (current_sess->server, TRUE);
+		chanlist_opengui (current_sess->server, true);
 		break;
 	}
 
@@ -1418,7 +1418,7 @@ menu_away (GtkCheckMenuItem *item, gpointer none)
 static void
 menu_chanlist (GtkWidget * wid, gpointer none)
 {
-	chanlist_opengui (current_sess->server, FALSE);
+	chanlist_opengui (current_sess->server, false);
 }
 
 static void

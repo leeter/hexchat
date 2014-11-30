@@ -59,9 +59,7 @@ struct chanlistrow
 	guint32 users;
 	/* channel string lives beyond "users" */
 	std::string chan;
-//#define GET_CHAN(row) (((char *)row)+sizeof(chanlistrow))
-}
-;
+};
 
 /* CustomList: this structure contains everything we need for our
  *             model implementation. You can add extra fields to

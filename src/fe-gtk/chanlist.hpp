@@ -20,6 +20,6 @@
 #ifndef HEXCHAT_CHANLIST_H
 #define HEXCHAT_CHANLIST_H
 
-void chanlist_opengui (server *serv, int do_refresh);
+void chanlist_opengui (server *serv, bool do_refresh);
 
 #endif

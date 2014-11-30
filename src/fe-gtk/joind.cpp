@@ -96,7 +96,7 @@ joind_ok_cb (GtkWidget *ok, server *serv)
 	}
 
 	/* channel list */
-	chanlist_opengui (serv, TRUE);
+	chanlist_opengui (serv, true);
 
 xit:
 	prefs.hex_gui_join_dialog = 0;
