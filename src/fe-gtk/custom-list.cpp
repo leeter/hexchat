@@ -395,7 +395,7 @@ custom_list_get_value (GtkTreeModel * tree_model,
 	switch (column)
 	{
 	case CUSTOM_LIST_COL_NAME:
-		g_value_set_static_string (value, GET_CHAN (record));
+		g_value_set_static_string (value, record->chan.c_str());
 		break;
 
 	case CUSTOM_LIST_COL_USERS:
@@ -403,7 +403,7 @@ custom_list_get_value (GtkTreeModel * tree_model,
 		break;
 
 	case CUSTOM_LIST_COL_TOPIC:
-		g_value_set_static_string (value, record->topic);
+		g_value_set_static_string (value, record->topic.c_str());
 		break;
 	}
 }
@@ -661,10 +661,10 @@ custom_list_qsort_compare_func (chanlistrow ** a, chanlistrow ** b,
 
 	if (custom_list->sort_id == SORT_ID_TOPIC)
 	{
-		return fast_ascii_stricmp ((*a)->topic, (*b)->topic);
+		return (*a)->topic.compare((*b)->topic);
 	}
 
-	return strcmp ((*a)->collation_key, (*b)->collation_key);
+	return (*a)->collation_key.compare((*b)->collation_key);
 }
 
 /*****************************************************************************

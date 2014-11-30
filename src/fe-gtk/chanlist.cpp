@@ -44,6 +44,8 @@
 #include "menu.hpp"
 #include "chanlist.hpp"
 #include "custom-list.hpp"
+namespace
+{
 
 enum
 {
@@ -69,20 +71,20 @@ chanlistrow;
 #define GET_MODEL(xserv) (gtk_tree_view_get_model(GTK_TREE_VIEW(xserv->gui->chanlist_list)))
 
 
-static gboolean
-chanlist_match (server *serv, const char *str)
+static bool
+chanlist_match (const server_gui &gui, const std::string& str)
 {
-	switch (serv->gui->chanlist_search_type)
+	switch (gui.chanlist_search_type)
 	{
 	case 1:
-		return match (gtk_entry_get_text (GTK_ENTRY (serv->gui->chanlist_wild)), str);
+		return match (gtk_entry_get_text (GTK_ENTRY (gui.chanlist_wild)), str.c_str());
 	case 2:
-		if (!serv->gui->have_regex)
-			return 0;
+		if (!gui.have_regex)
+			return false;
 
-		return g_regex_match (serv->gui->chanlist_match_regex, str, static_cast<GRegexMatchFlags>(0), NULL);
+		return g_regex_match (gui.chanlist_match_regex, str.c_str(), static_cast<GRegexMatchFlags>(0), NULL);
 	default:	/* case 0: */
-		return nocasestrstr (str, gtk_entry_get_text (GTK_ENTRY (serv->gui->chanlist_wild))) ? 1 : 0;
+		return nocasestrstr (str.c_str(), gtk_entry_get_text (GTK_ENTRY (gui.chanlist_wild))) ? true : false;
 	}
 }
 
@@ -137,18 +139,13 @@ chanlist_reset_counters (server *serv)
 static void
 chanlist_data_free (server *serv)
 {
-	GSList *rows;
-	chanlistrow *data;
-
 	if (serv->gui->chanlist_data_stored_rows)
 	{
-		for (rows = serv->gui->chanlist_data_stored_rows; rows != NULL;
+		for (GSList * rows = serv->gui->chanlist_data_stored_rows; rows != NULL;
 			  rows = rows->next)
 		{
-			data = static_cast<chanlistrow*>(rows->data);
-			g_free (data->topic);
-			g_free (data->collation_key);
-			free (data);
+			chanlistrow * data = static_cast<chanlistrow*>(rows->data);
+			delete data;
 		}
 
 		g_slist_free (serv->gui->chanlist_data_stored_rows);
@@ -233,8 +230,8 @@ chanlist_place_row_in_gui (server *serv, chanlistrow *next_row, gboolean force)
 		if (serv->gui->chanlist_match_wants_channel ==
 			 serv->gui->chanlist_match_wants_topic)
 		{
-			if (!chanlist_match (serv, GET_CHAN (next_row))
-				 && !chanlist_match (serv, next_row->topic))
+			if (!chanlist_match (*serv->gui, next_row->chan)
+				&& !chanlist_match(*serv->gui, next_row->topic))
 			{
 				serv->gui->chanlist_caption_is_stale = TRUE;
 				return;
@@ -243,7 +240,7 @@ chanlist_place_row_in_gui (server *serv, chanlistrow *next_row, gboolean force)
 
 		else if (serv->gui->chanlist_match_wants_channel)
 		{
-			if (!chanlist_match (serv, GET_CHAN (next_row)))
+			if (!chanlist_match(*serv->gui, next_row->chan))
 			{
 				serv->gui->chanlist_caption_is_stale = TRUE;
 				return;
@@ -252,7 +249,7 @@ chanlist_place_row_in_gui (server *serv, chanlistrow *next_row, gboolean force)
 
 		else if (serv->gui->chanlist_match_wants_topic)
 		{
-			if (!chanlist_match (serv, next_row->topic))
+			if (!chanlist_match(*serv->gui, next_row->topic))
 			{
 				serv->gui->chanlist_caption_is_stale = TRUE;
 				return;
@@ -358,6 +355,7 @@ chanlist_build_gui_list (server *serv)
 
 	custom_list_resort ((CustomList *)GET_MODEL (serv));
 }
+}// end anonymous namespace
 
 /**
  * Accepts incoming channel data from inbound.c, allocates new space for a
@@ -366,16 +364,13 @@ chanlist_build_gui_list (server *serv)
 void
 fe_add_chan_list (server *serv, char *chan, char *users, char *topic)
 {
-	chanlistrow *next_row;
-	int len = strlen (chan) + 1;
+	auto len = strlen (chan) + 1;
 
-	/* we allocate the struct and channel string in one go */
-	next_row = static_cast<chanlistrow*>(malloc(sizeof(chanlistrow) + len));
-	memcpy (((char *)next_row) + sizeof (chanlistrow), chan, len);
-	next_row->topic = strip_color (topic, -1, STRIP_ALL);
-	next_row->collation_key = g_utf8_collate_key (chan, len-1);
-	if (!(next_row->collation_key))
-		next_row->collation_key = g_strdup (chan);
+	chanlistrow * next_row = new chanlistrow;
+	std::unique_ptr<gchar, glib_deleter> new_topic(strip_color(topic, -1, STRIP_ALL));
+	next_row->topic = new_topic ? new_topic.get() : "";
+	std::unique_ptr<gchar, glib_deleter> collation_key(g_utf8_collate_key(chan, len - 1));
+	next_row->collation_key = collation_key ? collation_key.get() : chan;
 	next_row->users = atoi (users);
 
 	/* add this row to the data */
@@ -394,6 +389,9 @@ fe_chan_list_end (server *serv)
 	gtk_widget_set_sensitive (serv->gui->chanlist_refresh, TRUE);
 	custom_list_resort ((CustomList *)GET_MODEL (serv));
 }
+
+namespace
+{
 
 static void
 chanlist_search_pressed (GtkButton *, server *serv)
@@ -703,6 +701,8 @@ chanlist_combo_cb (GtkWidget *combo, server *serv)
 {
 	serv->gui->chanlist_search_type = gtk_combo_box_get_active (GTK_COMBO_BOX (combo));
 }
+
+} // end anonymous namespace
 
 void
 chanlist_opengui (server *serv, int do_refresh)

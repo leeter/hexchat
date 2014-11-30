@@ -497,6 +497,15 @@ struct popup
 	char *name;
 };
 
+struct glib_deleter
+{
+	void operator()(gpointer ptr)
+	{
+		if (ptr)
+			g_free(ptr);
+	}
+};
+
 /* CL: get a random int in the range [0..n-1]. DON'T use rand() % n, it gives terrible results. */
 int RAND_INT(int n); 
 

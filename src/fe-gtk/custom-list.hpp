@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_CUSTOM_LIST_HPP
 #define HEXCHAT_CUSTOM_LIST_HPP
 
+#include <string>
 #include <gtk/gtk.h>
 GType custom_list_get_type (void);
 
@@ -52,12 +53,13 @@ enum
 
 struct chanlistrow
 {
-	char *topic;
-	char *collation_key;
+	std::string topic;
+	std::string collation_key;
 	guint32 pos;						  /* pos within the array */
 	guint32 users;
 	/* channel string lives beyond "users" */
-#define GET_CHAN(row) (((char *)row)+sizeof(chanlistrow))
+	std::string chan;
+//#define GET_CHAN(row) (((char *)row)+sizeof(chanlistrow))
 }
 ;
 
