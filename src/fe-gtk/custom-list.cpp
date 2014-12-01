@@ -17,8 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
+#include <new>
 #include <vector>
 #include "custom-list.hpp"
 
@@ -644,12 +647,12 @@ fast_ascii_stricmp (const char *s1, const char *s2)
 }
 
 static gint
-custom_list_qsort_compare_func (chanlistrow ** a, chanlistrow ** b,
+custom_list_qsort_compare_func (const chanlistrow ** a, const chanlistrow ** b,
 										  CustomList * custom_list)
 {
 	if (custom_list->sort_order == GTK_SORT_DESCENDING)
 	{
-		chanlistrow **tmp = a;
+		const chanlistrow **tmp = a;
 		a = b;
 		b = tmp;
 	}
@@ -717,23 +720,27 @@ custom_list_append (CustomList * custom_list, chanlistrow * newrecord)
 void
 custom_list_resort (CustomList * custom_list)
 {
-	GtkTreePath *path;
-	gint i;
-
 	if (custom_list->num_rows < 2)
 		return;
 
 	/* resort */
-	g_qsort_with_data (custom_list->rows,
+	std::sort(
+		custom_list->rows,
+		custom_list->rows + custom_list->num_rows,
+		[custom_list](const chanlistrow * a, const chanlistrow * b){
+		return custom_list_qsort_compare_func(&a, &b, custom_list) < 0;
+		}
+	);
+	/*g_qsort_with_data (custom_list->rows,
 							 custom_list->num_rows,
 							 sizeof (chanlistrow *),
 							 (GCompareDataFunc) custom_list_qsort_compare_func,
-							 custom_list);
+							 custom_list);*/
 
 	/* let other objects know about the new order */
 	std::vector<gint> neworder(custom_list->num_rows);
 
-	for (i = custom_list->num_rows - 1; i >= 0; i--)
+	for (int i = custom_list->num_rows - 1; i >= 0; i--)
 	{
 		/* Note that the API reference might be wrong about
 		 * this, see bug number 124790 on bugs.gnome.org.
@@ -744,10 +751,11 @@ custom_list_resort (CustomList * custom_list)
 		(custom_list->rows[i])->pos = i;
 	}
 
-	path = gtk_tree_path_new ();
-	gtk_tree_model_rows_reordered (GTK_TREE_MODEL (custom_list), path, NULL,
+	std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> path(gtk_tree_path_new(), gtk_tree_path_free);
+	if (!path)
+		throw std::bad_alloc();
+	gtk_tree_model_rows_reordered (GTK_TREE_MODEL (custom_list), path.get(), NULL,
 											 &neworder[0]);
-	gtk_tree_path_free (path);
 }
 
 void
