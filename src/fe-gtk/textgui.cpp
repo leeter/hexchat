@@ -80,18 +80,18 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 
 			if (timet == 0)
 				timet = time (0);
-			
+
 			stamp_size = get_stamp_str (prefs.hex_stamp_text_format, timet, &stamp);
 			std::vector<unsigned char> new_text(len + stamp_size + 1);
 			std::copy_n(stamp, stamp_size, new_text.begin());
 			g_free (stamp);
 			std::copy_n(text, len, new_text.begin() + stamp_size);
-			gtk_xtext_append (xtbuf, new_text.data(), len + stamp_size);
+			gtk_xtext_append (xtbuf, new_text.data(), len + stamp_size, timet);
 		} else
-			gtk_xtext_append (xtbuf, text, len);
+			gtk_xtext_append (xtbuf, text, len, timet);
 		return;
 	}
-	
+
 	tab = (unsigned char*)strchr ((char*)text, '\t');
 	if (tab && tab < (text + len))
 	{
