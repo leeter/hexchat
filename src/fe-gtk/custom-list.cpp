@@ -687,7 +687,6 @@ void
 custom_list_append (CustomList * custom_list, chanlistrow * newrecord)
 {
 	GtkTreeIter iter;
-	GtkTreePath *path;
 	gulong newsize;
 	guint pos;
 
@@ -709,12 +708,13 @@ custom_list_append (CustomList * custom_list, chanlistrow * newrecord)
 	 *  (e.g. tree row references) that we have inserted
 	 *  a new row, and where it was inserted */
 
-	path = gtk_tree_path_new ();
-	gtk_tree_path_append_index (path, newrecord->pos);
+	std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> path(gtk_tree_path_new(), gtk_tree_path_free);
+	if (!path)
+		throw std::bad_alloc();
+	gtk_tree_path_append_index (path.get(), newrecord->pos);
 /*  custom_list_get_iter(GTK_TREE_MODEL(custom_list), &iter, path);*/
 	iter.user_data = newrecord;
-	gtk_tree_model_row_inserted (GTK_TREE_MODEL (custom_list), path, &iter);
-	gtk_tree_path_free (path);
+	gtk_tree_model_row_inserted (GTK_TREE_MODEL (custom_list), path.get(), &iter);
 }
 
 void
