@@ -493,8 +493,8 @@ struct commands
 
 struct popup
 {
-	char *cmd;
-	char *name;
+	std::string cmd;
+	std::string name;
 };
 
 struct glib_deleter

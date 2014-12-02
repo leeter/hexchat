@@ -2241,7 +2241,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		while (list)
 		{
 			pop = static_cast<popup*>(list->data);
-			show_help_line (sess, &hl, pop->name, pop->cmd);
+			show_help_line (sess, &hl, pop->name.c_str(), pop->cmd.c_str());
 			list = list->next;
 		}
 		strcat (&buf[0], "\n");
@@ -4093,9 +4093,9 @@ usercommand_show_help (session *sess, const char *name)
 	while (list)
 	{
 		pop = (struct popup *) list->data;
-		if (!g_ascii_strcasecmp (pop->name, name))
+		if (!g_ascii_strcasecmp (pop->name.c_str(), name))
 		{
-			snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop->cmd);
+			snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop->cmd.c_str());
 			PrintText (sess, buf);
 
 			found = TRUE;
@@ -4459,7 +4459,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 }
 
 static void
-user_command (session * sess, char *tbuf, char *cmd, char *word[],
+user_command (session * sess, char *tbuf, const char *cmd, char *word[],
 				  char *word_eol[])
 {
 	if (!auto_insert (tbuf, 2048, (const unsigned char*)cmd, word, word_eol, "", sess->channel, "",
@@ -4741,9 +4741,9 @@ handle_command (session *sess, char *cmd, int check_spch)
 	while (list)
 	{
 		pop = (struct popup *) list->data;
-		if (!g_ascii_strcasecmp (pop->name, word[1]))
+		if (!g_ascii_strcasecmp (pop->name.c_str(), word[1]))
 		{
-			user_command (sess, tbuf, pop->cmd, word, word_eol);
+			user_command (sess, tbuf, pop->cmd.c_str(), word, word_eol);
 			user_cmd = TRUE;
 		}
 		list = list->next;

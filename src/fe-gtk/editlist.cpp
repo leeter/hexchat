@@ -145,14 +145,14 @@ static void
 editlist_load (GtkListStore *store, GSList *list)
 {
 	struct popup *pop;
-	gchar *name, *cmd;
+	const gchar *name, *cmd;
 	GtkTreeIter iter;
 
 	while (list)
 	{
 		pop = (struct popup *) list->data;
-		name = pop->name;
-		cmd = pop->cmd;
+		name = pop->name.c_str();
+		cmd = pop->cmd.c_str();
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,

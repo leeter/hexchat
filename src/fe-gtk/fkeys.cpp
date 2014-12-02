@@ -16,13 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <string.h>
+#include <cstring>
 #include <fcntl.h>
-#include <ctype.h>
+#include <cctype>
 
 #ifdef WIN32
 #include <io.h>
@@ -1375,7 +1376,9 @@ chanlist_double_list (GSList *inlist)
 static int
 double_cmd_cb (struct popup *pop, GList **list)
 {
-	*list = g_list_prepend(*list, pop->name);
+	// TODO: THIS is not particularly safe... but is safe in this instance because it's not modified
+	// we should still fix it to use a muteable pointer or better yet... another data structure
+	*list = g_list_prepend(*list, (gpointer) pop->name.c_str());
 	return TRUE;
 }
 
@@ -1785,9 +1788,9 @@ replace_handle (GtkWidget *t)
 	while (list)
 	{
 		pop = (struct popup *) list->data;
-		if (strcmp (pop->name, word) == 0)
+		if (pop->name == word)
 		{
-			memcpy (outbuf, text, xlen);
+			std::copy_n(text, xlen, std::begin(outbuf));
 			outbuf[xlen] = 0;
 			if (postfix_pnt == NULL)
 				snprintf (word, sizeof (word), "%s", pop->cmd);

@@ -67,25 +67,10 @@ const char * const languages[LANGUAGES_LENGTH] = {
 void
 list_addentry (GSList ** list, const char *cmd, const char *name)
 {
-	struct popup *pop;
-	size_t name_len;
-	size_t cmd_len = 1;
-
+	struct popup *pop = new popup;
+	pop->name = name;
 	if (cmd)
-		cmd_len = strlen (cmd) + 1;
-	name_len = strlen (name) + 1;
-
-	pop = static_cast<popup*>(malloc (sizeof (struct popup) + cmd_len + name_len));
-	if (!pop)
-		return;
-	pop->name = (char *) pop + sizeof (struct popup);
-	pop->cmd = pop->name + name_len;
-
-	std::copy_n(name, name_len, pop->name);
-	if (cmd)
-		std::copy_n(cmd, cmd_len, pop->cmd);
-	else
-		pop->cmd[0] = 0;
+		pop->cmd = cmd;
 
 	*list = g_slist_append (*list, pop);
 }
@@ -160,16 +145,15 @@ list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 void
 list_free (GSList ** list)
 {
-	void *data;
 	while (*list)
 	{
-		data = (void *) (*list)->data;
+		popup *data = (popup *) (*list)->data;
 		*list = g_slist_remove(*list, data);
-		free (data);
+		delete data;
 	}
 }
 
-int
+bool
 list_delentry (GSList ** list, char *name)
 {
 	struct popup *pop;
@@ -178,15 +162,15 @@ list_delentry (GSList ** list, char *name)
 	while (alist)
 	{
 		pop = (struct popup *) alist->data;
-		if (!g_ascii_strcasecmp (name, pop->name))
+		if (!g_ascii_strcasecmp (name, pop->name.c_str()))
 		{
 			*list = g_slist_remove (*list, pop);
-			free (pop);
-			return 1;
+			delete pop;
+			return true;
 		}
 		alist = alist->next;
 	}
-	return 0;
+	return false;
 }
 
 char *
@@ -1152,7 +1136,7 @@ set_list (session * sess, char *tbuf)
 }
 
 int
-cfg_get_bool (char *var)
+cfg_get_bool (const char *var)
 {
 	int i = 0;
 

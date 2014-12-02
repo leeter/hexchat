@@ -205,7 +205,7 @@ userlist_button_cb (GtkWidget * button, const char *cmd)
 /* a popup-menu-item has been selected */
 
 static void
-popup_menu_cb (GtkWidget * item, char *cmd)
+popup_menu_cb (GtkWidget * item, const std::string *cmd)
 {
 	char *nick;
 
@@ -215,18 +215,18 @@ popup_menu_cb (GtkWidget * item, char *cmd)
 	if (!nick)	/* userlist popup menu */
 	{
 		/* treat it just like a userlist button */
-		userlist_button_cb (NULL, cmd);
+		userlist_button_cb (NULL, cmd->c_str());
 		return;
 	}
 
 	if (!current_sess)	/* for url grabber window */
-		nick_command_parse (static_cast<session*>(sess_list->data), cmd, nick, nick);
+		nick_command_parse (static_cast<session*>(sess_list->data), *cmd, nick, nick);
 	else
-		nick_command_parse (current_sess, cmd, nick, nick);
+		nick_command_parse (current_sess, *cmd, nick, nick);
 }
 
 GtkWidget *
-menu_toggle_item (char *label, GtkWidget *menu, GCallback callback, void *userdata,
+menu_toggle_item (const char *label, GtkWidget *menu, GCallback callback, void *userdata,
 						int state)
 {
 	GtkWidget *item;
@@ -242,7 +242,7 @@ menu_toggle_item (char *label, GtkWidget *menu, GCallback callback, void *userda
 }
 
 GtkWidget *
-menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
+menu_quick_item (const std::string *cmd, char *label, GtkWidget * menu, int flags,
 					  gpointer userdata, char *icon)
 {
 	GtkWidget *img, *item;
@@ -297,7 +297,7 @@ menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
 	g_object_set_data (G_OBJECT (item), "u", userdata);
 	if (cmd)
 		g_signal_connect (G_OBJECT (item), "activate",
-								G_CALLBACK (popup_menu_cb), cmd);
+								G_CALLBACK (popup_menu_cb), (gpointer) cmd);
 	if (flags & XCMENU_SHADED)
 		gtk_widget_set_sensitive (GTK_WIDGET (item), FALSE);
 	gtk_widget_show_all (item);
@@ -381,7 +381,7 @@ toggle_cb (GtkWidget *item, char *pref_name)
 }
 
 static int
-is_in_path (char *cmd)
+is_in_path (const char *cmd)
 {
 	char *prog = g_strdup (cmd + 1);	/* 1st char is "!" */
 	char *path, *orig;
@@ -415,11 +415,11 @@ is_in_path (char *cmd)
 /* syntax: "LABEL~ICON~STUFF~ADDED~LATER~" */
 
 static void
-menu_extract_icon (char *name, char **label, char **icon)
+menu_extract_icon (const std::string & name, char **label, char **icon)
 {
-	char *p = name;
-	char *start = NULL;
-	char *end = NULL;
+	const char *p = name.c_str();
+	const char *start = NULL;
+	const char *end = NULL;
 
 	while (*p)
 	{
@@ -442,12 +442,12 @@ menu_extract_icon (char *name, char **label, char **icon)
 
 	if (start && start != end)
 	{
-		*label = g_strndup (name, (start - name) - 1);
+		*label = g_strndup (name.c_str(), (start - name.c_str()) - 1);
 		*icon = g_strndup (start, (end - start) - 1);
 	}
 	else
 	{
-		*label = g_strdup (name);
+		*label = g_strdup (name.c_str());
 		*icon = NULL;
 	}
 }
@@ -466,18 +466,18 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 	{
 		pop = (struct popup *) list->data;
 
-		if (!g_ascii_strncasecmp (pop->name, "SUB", 3))
+		if (!g_ascii_strncasecmp (pop->name.c_str(), "SUB", 3))
 		{
 			childcount = 0;
-			tempmenu = menu_quick_sub (pop->cmd, tempmenu, &subitem, XCMENU_DOLIST|XCMENU_MNEMONIC, -1);
+			tempmenu = menu_quick_sub (pop->cmd.c_str(), tempmenu, &subitem, XCMENU_DOLIST|XCMENU_MNEMONIC, -1);
 
-		} else if (!g_ascii_strncasecmp (pop->name, "TOGGLE", 6))
+		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "TOGGLE", 6))
 		{
 			childcount++;
-			menu_toggle_item (pop->name + 7, tempmenu, G_CALLBACK(toggle_cb), pop->cmd,
-									cfg_get_bool (pop->cmd));
+			menu_toggle_item (pop->name.c_str() + 7, tempmenu, G_CALLBACK(toggle_cb), (void*)pop->cmd.c_str(),
+									cfg_get_bool (pop->cmd.c_str()));
 
-		} else if (!g_ascii_strncasecmp (pop->name, "ENDSUB", 6))
+		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "ENDSUB", 6))
 		{
 			/* empty sub menu due to no programs in PATH? */
 			if (check_path && childcount < 1)
@@ -488,7 +488,7 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 				tempmenu = menu_quick_endsub ();
 			/* If we get here and tempmenu equals menu that means we havent got any submenus to exit from */
 
-		} else if (!g_ascii_strncasecmp (pop->name, "SEP", 3))
+		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "SEP", 3))
 		{
 			menu_quick_item (0, 0, tempmenu, XCMENU_SHADED, 0, 0);
 
@@ -497,7 +497,7 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 			char *icon, *label;
 
 			/* default command in hexchat.c */
-			if (pop->cmd[0] == 'n' && !strcmp (pop->cmd, "notify -n ASK %s"))
+			if (pop->cmd[0] == 'n' && pop->cmd == "notify -n ASK %s")
 			{
 				/* don't create this item if already in notify list */
 				if (!target || notify_is_in_list (*(current_sess->server), target))
@@ -511,12 +511,12 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 
 			if (!check_path || pop->cmd[0] != '!')
 			{
-				menu_quick_item (pop->cmd, label, tempmenu, 0, target, icon);
+				menu_quick_item (&pop->cmd, label, tempmenu, 0, target, icon);
 			/* check if the program is in path, if not, leave it out! */
-			} else if (is_in_path (pop->cmd))
+			} else if (is_in_path (pop->cmd.c_str()))
 			{
 				childcount++;
-				menu_quick_item (pop->cmd, label, tempmenu, 0, target, icon);
+				menu_quick_item (&pop->cmd, label, tempmenu, 0, target, icon);
 			}
 
 			g_free (label);
@@ -2095,7 +2095,8 @@ menu_add_item (GtkWidget *menu, menu_entry *me, char *target)
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		item = menu_quick_item (me->cmd, me->label, menu, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, target, me->icon);
+		std::string temp(me->cmd);
+		item = menu_quick_item (&temp, me->label, menu, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, target, me->icon);
 		menu_reorder (GTK_MENU (menu), item, me->pos);
 	}
 	return item;

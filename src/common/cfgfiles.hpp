@@ -38,7 +38,7 @@ namespace config
 	const ::std::string& config_dir();
 }
 char *cfg_get_str (char *cfg, const char *var, char *dest, int dest_len);
-int cfg_get_bool (char *var);
+int cfg_get_bool (const char *var);
 int cfg_get_int_with_result (char *cfg, const char *var, int *result);
 int cfg_get_int (char *cfg, char *var);
 int cfg_put_int (int fh, int value, const char *var);
@@ -53,7 +53,7 @@ int load_config (void);
 int save_config (void);
 void list_free (GSList ** list);
 void list_loadconf (const char *file, GSList ** list, const char *defaultconf);
-int list_delentry (GSList ** list, char *name);
+bool list_delentry (GSList ** list, char *name);
 void list_addentry (GSList ** list, const char *cmd, const char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);

@@ -1750,7 +1750,7 @@ mg_create_userlistbuttons (GtkWidget *box)
 		pop = static_cast<popup*>(list->data);
 		if (pop->cmd[0])
 		{
-			mg_userlist_button (tab, pop->name, pop->cmd, a, a + 1, b, b + 1);
+			mg_userlist_button (tab, pop->name.c_str(), pop->cmd.c_str(), a, a + 1, b, b + 1);
 			a++;
 			if (a == 2)
 			{
@@ -2112,7 +2112,7 @@ mg_create_link_buttons (GtkWidget *box, gpointer userdata)
 }*/
 
 static void
-mg_dialog_button_cb (GtkWidget *wid, char *cmd)
+mg_dialog_button_cb (GtkWidget *wid, const char *cmd)
 {
 	/* the longest cmd is 12, and the longest nickname is 64 */
 	char buf[128];
@@ -2140,14 +2140,14 @@ mg_dialog_button_cb (GtkWidget *wid, char *cmd)
 }
 
 static void
-mg_dialog_button (GtkWidget *box, char *name, char *cmd)
+mg_dialog_button (GtkWidget *box, const char *name, const char *cmd)
 {
 	GtkWidget *wid;
 
 	wid = gtk_button_new_with_label (name);
 	gtk_box_pack_start (GTK_BOX (box), wid, FALSE, FALSE, 0);
 	g_signal_connect (G_OBJECT (wid), "clicked",
-							G_CALLBACK (mg_dialog_button_cb), cmd);
+							G_CALLBACK (mg_dialog_button_cb), (gpointer)cmd);
 	gtk_widget_set_size_request (wid, -1, 0);
 }
 
@@ -2161,7 +2161,7 @@ mg_create_dialogbuttons (GtkWidget *box)
 	{
 		pop = static_cast<popup*>(list->data);
 		if (pop->cmd[0])
-			mg_dialog_button (box, pop->name, pop->cmd);
+			mg_dialog_button (box, pop->name.c_str(), pop->cmd.c_str());
 		list = list->next;
 	}
 }
