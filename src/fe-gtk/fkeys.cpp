@@ -1793,9 +1793,9 @@ replace_handle (GtkWidget *t)
 			std::copy_n(text, xlen, std::begin(outbuf));
 			outbuf[xlen] = 0;
 			if (postfix_pnt == NULL)
-				snprintf (word, sizeof (word), "%s", pop->cmd);
+				snprintf (word, sizeof (word), "%s", pop->cmd.c_str());
 			else
-				snprintf (word, sizeof (word), "%s%s", pop->cmd, postfix);
+				snprintf (word, sizeof (word), "%s%s", pop->cmd.c_str(), postfix);
 			strcat (outbuf, word);
 			SPELL_ENTRY_SET_TEXT (t, outbuf);
 			SPELL_ENTRY_SET_POS (t, -1);
