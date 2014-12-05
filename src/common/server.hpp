@@ -25,6 +25,7 @@ extern GSList *serv_list;
 #include <utility>
 #include <unordered_map>
 #include <chrono>
+#include <boost/chrono.hpp>
 #include <tcpfwd.hpp>
 
 struct server
@@ -160,7 +161,7 @@ public:
 
 	/*time_t connect_time;*/				/* when did it connect? */
 	unsigned long lag_sent;   /* we are still waiting for this ping response*/
-	std::chrono::monotonic_clock::time_point ping_recv;					/* when we last got a ping reply */
+	boost::chrono::steady_clock::time_point ping_recv;					/* when we last got a ping reply */
 	time_t away_time;					/* when we were marked away */
 
 	boost::optional<std::string> encoding;					/* NULL for system */

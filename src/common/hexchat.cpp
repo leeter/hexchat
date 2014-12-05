@@ -272,12 +272,12 @@ lagcheck_update (void)
 void
 lag_check (void)
 {
-	using namespace std;
+	using namespace boost;
 	server *serv;
 	GSList *list = serv_list;
 	unsigned long tim;
 	char tbuf[128];
-	auto now = chrono::monotonic_clock::now();
+	auto now = chrono::steady_clock::now();
 
 	tim = make_ping_time ();
 
