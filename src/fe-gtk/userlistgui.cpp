@@ -521,7 +521,7 @@ userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
 		auto nicks = userlist_selection_list (widget);
 		if (!nicks.empty())
 		{
-			menu_nickmenu (current_sess, event, nicks[0].c_str(), nicks.size());
+			menu_nickmenu (current_sess, event, nicks[0], nicks.size());
 			return TRUE;
 		}
 
@@ -529,13 +529,13 @@ userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
 		if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (widget),
 			 event->x, event->y, &path, 0, 0, 0))
 		{
+			std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> raii_path(path, gtk_tree_path_free);
 			gtk_tree_selection_unselect_all (sel);
 			gtk_tree_selection_select_path (sel, path);
-			gtk_tree_path_free (path);
 			nicks = userlist_selection_list (widget);
 			if (!nicks.empty())
 			{
-				menu_nickmenu (current_sess, event, nicks[0].c_str(), nicks.size());
+				menu_nickmenu (current_sess, event, nicks[0], nicks.size());
 			}
 		} else
 		{

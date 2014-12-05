@@ -711,6 +711,8 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 	if (str_copy)
 		free (str_copy);
 	str_copy = strdup (nick.c_str());
+	if (!str_copy)
+		std::terminate();
 
 	submenu_list = 0;	/* first time through, might not be 0 */
 

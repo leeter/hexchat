@@ -116,9 +116,7 @@ struct tree
 tree *
 tree_new (tree_cmp_func *cmp, void *data)
 {
-	tree *t = new(::std::nothrow)tree(cmp, data);
-	if (!t)
-		return nullptr;
+	tree *t = new tree(cmp, data);
 	return t;
 }
 
