@@ -2,9 +2,9 @@ AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wext
 
 noinst_LIBRARIES = libhexchatdbus.a
 libhexchatdbus_a_SOURCES =			\
-	dbus-plugin.cpp				\
+	dbus-plugin.c				\
 	dbus-plugin.h				\
-	dbus-client.c				\
+	dbus-client.cpp				\
 	dbus-client.h
 
 EXTRA_DIST =				\
