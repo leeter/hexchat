@@ -201,7 +201,7 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	memcpy (out, text, len + 1);
 	out[len] = '\n';
 	out[len + 1] = 0;
-	check_special_chars (out, TRUE);
+	check_special_chars (out, true);
 
 	PrintTextRaw (xtext->buffer, (unsigned char*)out, 0, 0);
 	free (out);
@@ -325,7 +325,7 @@ pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 		std::string out(_(pntevts_text[n]));
 		out.push_back('\n');
 		out.push_back(0);
-		check_special_chars (&out[0], TRUE);
+		check_special_chars (&out[0], true);
 		PrintTextRaw (GTK_XTEXT (twid)->buffer, (unsigned char*)&out[0], 0, 0);
 	}
 }

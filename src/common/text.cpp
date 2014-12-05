@@ -1919,7 +1919,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	len = strlen (input);
 	i = static_cast<char*>(malloc (len + 1));
 	std::copy_n(input, len + 1, i);
-	check_special_chars (i, TRUE);
+	check_special_chars (i, true);
 
 	len = strlen (i);
 

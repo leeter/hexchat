@@ -50,9 +50,9 @@ static void
 	std::string confs(conf);
 	confs.push_back(0);
 	/* process %C %B etc */
-	check_special_chars(&confs[0], TRUE);
+	check_special_chars(&confs[0], true);
 	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
-		sess->server->get_network(TRUE), "", "", nick, "");
+		sess->server->get_network(true), "", "", nick, "");
 	handle_command(sess, tbuf, FALSE);
 }
 

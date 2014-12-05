@@ -33,7 +33,7 @@ char *command_insert_vars (session *sess, char *cmd);
 int handle_command (session *sess, char *cmd, int check_spch);
 void process_data_init (char *buf, char *cmd, char *word[], char *word_eol[], gboolean handle_quotes, gboolean allow_escape_quotes);
 void handle_multiline (session *sess, char *cmd, int history, int nocommand);
-void check_special_chars (char *cmd, int do_ascii);
+void check_special_chars (char *cmd, bool do_ascii);
 void notc_msg (session *sess);
 void server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason);
 void server_sendquit (session * sess);

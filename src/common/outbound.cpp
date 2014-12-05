@@ -165,7 +165,7 @@ server_sendquit (session * sess)
 	if (!sess->quitreason)
 	{
 		std::string colrea = prefs.hex_irc_quit_reason;
-		check_special_chars (&colrea[0], FALSE);
+		check_special_chars (&colrea[0], true);
 		std::string rea = random_line(colrea);
 		sess->server->p_quit (rea);
 	} else
@@ -4299,7 +4299,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 }
 
 void
-check_special_chars (char *cmd, int do_ascii) /* check for %X */
+check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 {
 	int occur = 0;
 	int len = strlen (cmd);
@@ -4321,8 +4321,8 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 			occur++;
 			if (	do_ascii &&
 					j + 3 < len &&
-					(std::isdigit<unsigned char> (cmd[j + 1], locale) && std::isdigit<unsigned char> (cmd[j + 2], locale) &&
-					std::isdigit<unsigned char> ( cmd[j + 3], locale)))
+					(std::isdigit(cmd[j + 1], locale) && std::isdigit(cmd[j + 2], locale) &&
+					std::isdigit(cmd[j + 3], locale)))
 			{
 				tbuf[0] = cmd[j + 1];
 				tbuf[1] = cmd[j + 2];

@@ -155,7 +155,7 @@ inbound_make_idtext (server &serv, char *idtext, int max, int id)
 			safe_strcpy (idtext, prefs.hex_irc_id_ntext, max);
 		}
 		/* convert codes like %C,%U to the proper ones */
-		check_special_chars (idtext, TRUE);
+		check_special_chars (idtext, true);
 	}
 }
 
