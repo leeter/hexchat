@@ -40,6 +40,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/chrono.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -1152,9 +1153,9 @@ util_exec (const char *cmd)
 unsigned long
 make_ping_time (void)
 {
-	auto now = std::chrono::monotonic_clock::now();
-	auto seconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-	auto usec = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+	auto now = boost::chrono::steady_clock::now();
+	auto seconds = boost::chrono::duration_cast<boost::chrono::seconds>(now.time_since_epoch()).count();
+	auto usec = boost::chrono::duration_cast<boost::chrono::microseconds>(now.time_since_epoch()).count();
 	return static_cast<unsigned long>((seconds - 50000ll) * 1000ll + usec / 1000ll);
 }
 
