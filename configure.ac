@@ -165,6 +165,7 @@ AC_ARG_WITH(theme-manager,
 		theme_manager=$withval, theme_manager=no)
 
 BOOST_REQUIRE([1.48])
+BOOST_CHRONO
 BOOST_IOSTREAMS
 BOOST_FILESYSTEM
 BOOST_SIGNALS2
