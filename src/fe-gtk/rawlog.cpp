@@ -62,7 +62,7 @@ rawlog_save (server *serv, char *file)
 										 0600, XOF_DOMODE | XOF_FULLPATH);
 		if (fh != -1)
 		{
-			gtk_xtext_save (*GTK_XTEXT (serv->gui->rawlog_textlist), fh);
+			gtk_xtext_save (GTK_XTEXT (serv->gui->rawlog_textlist), fh);
 			close (fh);
 		}
 	}
@@ -124,7 +124,7 @@ open_rawlog (struct server *serv)
 
 	serv->gui->rawlog_textlist = gtk_xtext_new (colors, false);
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), serv->gui->rawlog_textlist);
-	gtk_xtext_set_font (*GTK_XTEXT (serv->gui->rawlog_textlist), prefs.hex_text_font);
+	gtk_xtext_set_font (GTK_XTEXT (serv->gui->rawlog_textlist), prefs.hex_text_font);
 	GTK_XTEXT (serv->gui->rawlog_textlist)->ignore_hidden = true;
 
 	bbox = gtk_hbutton_box_new ();

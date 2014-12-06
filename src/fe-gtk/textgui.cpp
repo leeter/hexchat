@@ -461,7 +461,7 @@ pevent_dialog_show ()
 	gtk_widget_set_sensitive (pevent_dialog_twid, FALSE);
 	gtk_widget_set_size_request (pevent_dialog_twid, -1, 75);
 	gtk_container_add (GTK_CONTAINER (wid), pevent_dialog_twid);
-	gtk_xtext_set_font (*GTK_XTEXT (pevent_dialog_twid), prefs.hex_text_font);
+	gtk_xtext_set_font (GTK_XTEXT (pevent_dialog_twid), prefs.hex_text_font);
 
 	hbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbox), GTK_BUTTONBOX_SPREAD);

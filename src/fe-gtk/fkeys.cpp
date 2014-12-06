@@ -813,7 +813,7 @@ key_dialog_show ()
 	view = key_dialog_treeview_new (vbox);
 	xtext = gtk_xtext_new (colors, false);
 	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
-	gtk_xtext_set_font (*GTK_XTEXT (xtext), prefs.hex_text_font);
+	gtk_xtext_set_font (GTK_XTEXT (xtext), prefs.hex_text_font);
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);
 	g_object_set_data (G_OBJECT (key_dialog), "xtext", xtext);
