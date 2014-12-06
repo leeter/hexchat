@@ -25,6 +25,8 @@
 
 struct User
 {
+	User();
+	~User();
 	char nick[NICKLEN];
 	char *hostname;
 	char *realname;
@@ -33,12 +35,12 @@ struct User
 	time_t lasttalk;
 	unsigned int access;	/* axs bit field */
 	char prefix[2]; /* @ + % */
-	unsigned int op:1;
-	unsigned int hop:1;
-	unsigned int voice:1;
-	unsigned int me:1;
-	unsigned int away:1;
-	unsigned int selected:1;
+	bool op;
+	bool hop;
+	bool voice;
+	bool me;
+	bool away;
+	bool selected;
 };
 struct server;
 struct session;
@@ -48,7 +50,7 @@ const int USERACCESS_SIZE = 12;
 bool userlist_add_hostname (session *sess, const char nick[],
 									const char hostname[], const char realname[],
 									const char servername[], const char account[], unsigned int away);
-void userlist_set_away (session *sess, const char nick[], unsigned int away);
+void userlist_set_away (session *sess, const char nick[], bool away);
 void userlist_set_account (session *sess, const char nick[], const char account[]);
 struct User *userlist_find (session *sess, const char name[]);
 struct User *userlist_find_global (server *serv, const char name[]);

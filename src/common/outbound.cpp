@@ -71,7 +71,6 @@
 #include "hexchatc.hpp"
 #include "servlist.hpp"
 #include "server.hpp"
-#include "tree.hpp"
 #include "outbound.hpp"
 #include "chanopt.hpp"
 #include "dcc.hpp"
@@ -1010,43 +1009,33 @@ struct multidata
 };
 
 static int
-mdehop_cb (struct User *user, multidata *data)
-{
-	if (user->hop && !user->me)
-	{
-		data->nicks.push_back(user->nick);
-	}
-	return TRUE;
-}
-
-static int
 cmd_mdehop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	multidata data;
-
-	tree_foreach (static_cast<tree*>(sess->usertree), (tree_traverse_func *)mdehop_cb, &data);
-	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '-', 'h', 0);
-
-	return TRUE;
-}
-
-static int
-mdeop_cb (struct User *user, multidata *data)
-{
-	if (user->op && !user->me)
+	std::vector<char*> nicks;
+	for (auto & user : sess->usertree)
 	{
-		data->nicks.push_back(user->nick);
+		if (user->hop && !user->me)
+		{
+			nicks.push_back(user->nick);
+		}
 	}
+	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '-', 'h', 0);
+
 	return TRUE;
 }
 
 static int
 cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	multidata data;
-
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mdeop_cb, &data);
-	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '-', 'o', 0);
+	std::vector<char*> nicks;
+	for (auto & user : sess->usertree)
+	{
+		if (user->op && !user->me)
+		{
+			nicks.push_back(user->nick);
+		}
+	}
+	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '-', 'o', 0);
 
 	return TRUE;
 }
@@ -1364,31 +1353,19 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-mkick_cb (struct User *user, multidata *data)
-{
-	if (!user->op && !user->me)
-		data->sess->server->p_kick (data->sess->channel, user->nick, data->reason ? data->reason : "");
-	return TRUE;
-}
-
-static int
-mkickops_cb (struct User *user, multidata *data)
-{
-	if (user->op && !user->me)
-		data->sess->server->p_kick(data->sess->channel, user->nick, data->reason ? data->reason : "");
-	return TRUE;
-}
-
-static int
 cmd_mkick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	multidata data;
-
-	data.sess = sess;
-	data.reason = word_eol[2];
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mkickops_cb, &data);
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mkick_cb, &data);
-
+	const std::string reason = word_eol[2] ? word_eol[2] : std::string();
+	for (auto & user : sess->usertree)
+	{
+		if (user->op && !user->me)
+			sess->server->p_kick(sess->channel, user->nick, reason);
+	}
+	for (auto & user : sess->usertree)
+	{
+		if (!user->op && !user->me)
+			sess->server->p_kick(sess->channel, user->nick, reason);
+	}
 	return TRUE;
 }
 
@@ -2720,22 +2697,18 @@ cmd_mode (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-mop_cb (struct User *user, multidata *data)
-{
-	if (!user->op)
-	{
-		data->nicks.push_back(user->nick);
-	}
-	return TRUE;
-}
-
-static int
 cmd_mop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	multidata data;
+	std::vector<char*> nicks;
+	for (auto & user : sess->usertree)
+	{
+		if (!user->op)
+		{
+			nicks.push_back(user->nick);
+		}
+	}
 
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)mop_cb, &data);
-	send_channel_modes (sess, tbuf, &data.nicks[0], 0, data.nicks.size(), '+', 'o', 0);
+	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '+', 'o', 0);
 
 	return TRUE;
 }
@@ -3703,22 +3676,6 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-userlist_cb (struct User *user, session *sess)
-{
-	time_t lt;
-
-	if (!user->lasttalk)
-		lt = 0;
-	else
-		lt = time (0) - user->lasttalk;
-	PrintTextf (sess,
-				"\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%ld\n",
-				user->nick, user->hostname, user->op, user->voice, user->away, (long)lt);
-
-	return TRUE;
-}
-
-static int
 cmd_uselect (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	int idx = 2;
@@ -3744,29 +3701,18 @@ static int
 cmd_userlist (struct session *sess, char *tbuf, char *word[],
 				  char *word_eol[])
 {
-	tree_foreach (static_cast<tree*>(sess->usertree), (tree_traverse_func *)userlist_cb, sess);
-	return TRUE;
-}
-
-static int
-wallchop_cb (struct User *user, multidata *data)
-{
-	if (user->op)
+	for (auto & user : sess->usertree)
 	{
-		if (data->i)
-			strcat (data->tbuf, ",");
-		strcat (data->tbuf, user->nick);
-		data->i++;
-	}
-	if (data->i == 5)
-	{
-		data->i = 0;
-		sprintf (data->tbuf + strlen (data->tbuf),
-					" :[@%s] %s", data->sess->channel, data->reason);
-		data->sess->server->p_raw (data->tbuf);
-		strcpy (data->tbuf, "NOTICE ");
-	}
+		time_t lt;
 
+		if (!user->lasttalk)
+			lt = 0;
+		else
+			lt = time(0) - user->lasttalk;
+		PrintTextf(sess,
+			"\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%ld\n",
+			user->nick, user->hostname, user->op, user->voice, user->away, (long)lt);
+	}
 	return TRUE;
 }
 
@@ -3776,18 +3722,32 @@ cmd_wallchop (struct session *sess, char *tbuf, char *word[],
 {
 	if (!(*word_eol[2]))
 		return FALSE;
-   
-	multidata data;
 
 	strcpy (tbuf, "NOTICE ");
 
-	data.reason = word_eol[2];
-	data.tbuf = tbuf;
-	data.i = 0;
-	data.sess = sess;
-	tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func*)wallchop_cb, &data);
+	const char * reason = word_eol[2];
+	int i = 0;
 
-	if (data.i)
+	for (auto & user : sess->usertree)
+	{
+		if (user->op)
+		{
+			if (i)
+				strcat(tbuf, ",");
+			strcat(tbuf, user->nick);
+			i++;
+		}
+		if (i == 5)
+		{
+			i = 0;
+			sprintf(tbuf + strlen(tbuf),
+				" :[@%s] %s", sess->channel, reason);
+			sess->server->p_raw(tbuf);
+			strcpy(tbuf, "NOTICE ");
+		}
+	}
+
+	if (i)
 	{
 		sprintf (tbuf + strlen (tbuf),
 					" :[@%s] %s", sess->channel, word_eol[2]);
@@ -4382,39 +4342,6 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 		std::copy(buf.cbegin(), buf.cend(), cmd);
 }
 
-struct nickdata
-{
-	char *nick;
-	int len;
-	struct User *best;
-	int bestlen;
-	char *space;
-	char *tbuf;
-};
-
-static int
-nick_comp_cb (struct User *user, nickdata *data)
-{
-	int lenu;
-
-	if (!rfc_ncasecmp (user->nick, data->nick, data->len))
-	{
-		lenu = strlen (user->nick);
-		if (lenu == data->len)
-		{
-			snprintf (data->tbuf, TBUFSIZE, "%s%s", user->nick, data->space);
-			data->len = -1;
-			return FALSE;
-		} else if (lenu < data->bestlen)
-		{
-			data->bestlen = lenu;
-			data->best = user;
-		}
-	}
-
-	return TRUE;
-}
-
 static void
 perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 {
@@ -4427,25 +4354,39 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 			if (len < NICKLEN)
 			{
 				char nick[NICKLEN];
-				nickdata data;
 
 				std::copy_n(cmd, len, std::begin(nick));
 				nick[len] = 0;
 
-				data.nick = nick;
-				data.len = len;
-				data.bestlen = INT_MAX;
-				data.best = NULL;
-				data.tbuf = tbuf;
-				data.space = space - 1;
-				tree_foreach(static_cast<tree*>(sess->usertree), (tree_traverse_func *)nick_comp_cb, &data);
+				int bestlen = INT_MAX;
+				User * best = NULL;
+				for (auto & user : sess->usertree)
+				{
+					int lenu;
 
-				if (data.len == -1)
+					if (!rfc_ncasecmp(user->nick, nick, len))
+					{
+						lenu = strlen(user->nick);
+						if (lenu == len)
+						{
+							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick, space);
+							len = -1;
+							break;
+						}
+						else if (lenu < bestlen)
+						{
+							bestlen = lenu;
+							best = user.get();
+						}
+					}
+				}
+
+				if (len == -1)
 					return;
 
-				if (data.best)
+				if (best)
 				{
-					snprintf (tbuf, TBUFSIZE, "%s%s", data.best->nick, space - 1);
+					snprintf (tbuf, TBUFSIZE, "%s%s", best->nick, space - 1);
 					return;
 				}
 			}

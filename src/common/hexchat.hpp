@@ -405,8 +405,8 @@ struct session
 	guint8 text_strip;
 
 	struct server *server;
-	void *usertree_alpha;			/* pure alphabetical tree */
-	void *usertree;					/* ordered with Ops first */
+	std::vector<struct User*> usertree_alpha;			/* pure alphabetical tree */
+	std::vector<std::unique_ptr<struct User>> usertree;		/* ordered with Ops first */
 	struct User *me;					/* points to myself in the usertree */
 	char channel[CHANLEN];
 	char waitchannel[CHANLEN];		  /* waiting to join channel (/join sent) */

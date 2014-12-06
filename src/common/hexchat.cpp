@@ -482,8 +482,6 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	text_strip(SET_DEFAULT),
 
 	lastact_idx(LACT_NONE),
-	usertree_alpha(nullptr),
-	usertree(nullptr),
 	me(nullptr),
 	channel(),
 	waitchannel(),

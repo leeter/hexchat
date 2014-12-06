@@ -1084,7 +1084,7 @@ inbound_away (server &serv, char *nick, char *msg,
 	{
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
-			userlist_set_away (sess, nick, TRUE);
+			userlist_set_away (sess, nick, true);
 		list = list->next;
 	}
 }
@@ -1102,7 +1102,7 @@ inbound_away_notify (const server &serv, char *nick, char *reason,
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 		{
-			userlist_set_away (sess, nick, reason ? TRUE : FALSE);
+			userlist_set_away (sess, nick, reason ? true : false);
 			if (sess == serv.front_session && notify_is_in_list (serv, nick))
 			{
 				if (reason)
@@ -1391,7 +1391,7 @@ inbound_login_start (session *sess, char *nick, char *servname,
 }
 
 static void
-inbound_set_all_away_status (const server &serv, const char *nick, unsigned int status)
+inbound_set_all_away_status (const server &serv, const char *nick, bool away)
 {
 	GSList *list;
 	session *sess;
@@ -1401,7 +1401,7 @@ inbound_set_all_away_status (const server &serv, const char *nick, unsigned int 
 	{
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
-			userlist_set_away (sess, nick, status);
+			userlist_set_away (sess, nick, away);
 		list = list->next;
 	}
 }
@@ -1413,7 +1413,7 @@ inbound_uaway (server &serv, const message_tags_data *tags_data)
 	serv.away_time = time (nullptr);
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, 1);
+	inbound_set_all_away_status (serv, serv.nick, true);
 }
 
 void
@@ -1423,7 +1423,7 @@ inbound_uback (server &serv, const message_tags_data *tags_data)
 	serv.reconnect_away = false;
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, 0);
+	inbound_set_all_away_status (serv, serv.nick, false);
 }
 
 void
@@ -1446,7 +1446,7 @@ inbound_user_info_start (session *sess, const char *nick,
 								 const message_tags_data *tags_data)
 {
 	/* set away to FALSE now, 301 may turn it back on */
-	inbound_set_all_away_status (*(sess->server), nick, 0);
+	inbound_set_all_away_status (*(sess->server), nick, false);
 }
 
 /* reporting new information found about this user. chan may be NULL.

@@ -22,7 +22,6 @@ This is used for quick userlist insertion and lookup. It's not really
 a tree, but it could be :)
 */
 
-#include <new>
 #include <vector>
 #include <algorithm>
 
