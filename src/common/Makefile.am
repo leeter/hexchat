@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+include $(top_srcdir)/m4/clang-analyze.am
+
 noinst_LIBRARIES = libhexchatcommon.a
 
 AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../libirc
@@ -85,6 +87,12 @@ marshal.h: $(srcdir)/marshalers.list
 marshal.c: $(srcdir)/marshalers.list
 	$(AM_V_GEN) $(GLIB_GENMARSHAL) --prefix=_hexchat_marshal --body $< > $@
 
+
+if DO_STATIC_ANALYSIS
+analyze_plists = $(libhexchatcommon_a_SOURCES:%.c=%.plist)
+all-local: $(analyze_plists)
+MOSTLYCLEANFILES = $(analyze_plists)
+endif
 
 BUILT_SOURCES = textenums.h textevents.h marshal.c marshal.h
 

@@ -1,3 +1,6 @@
+
+include $(top_srcdir)/m4/clang-analyze.am
+
 localedir = $(datadir)/locale
 
 bin_PROGRAMS = hexchat
@@ -37,3 +40,9 @@ hexchat_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_L
 
 resources.c: $(top_srcdir)/data/hexchat.gresource.xml $(shell $(GLIB_COMPILE_RESOURCES) --sourcedir=$(top_srcdir)/data --generate-dependencies $(top_srcdir)/data/hexchat.gresource.xml)
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(top_srcdir)/data --generate-source $<
+
+if DO_STATIC_ANALYSIS
+analyze_plists = $(hexchat_SOURCES:%.c=%.plist)
+all-local: $(analyze_plists)
+MOSTLYCLEANFILES = $(analyze_plists)
+endif
