@@ -1865,7 +1865,11 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 				if (mutable_argument.size() > dstsize - output_index - 4)
 					mutable_argument = mutable_argument.substr(0, dstsize - output_index - 4);
 					//current_argument[dstsize - output_index - 4] = 0;	/* Avoid buffer overflow */
-				if (stripcolor_args & ARG_FLAG(arg_idx + 1)) len = strip_color2(mutable_argument.c_str(), -1, &dst[output_index], STRIP_ALL);
+				if (stripcolor_args & ARG_FLAG(arg_idx + 1)){ 
+					auto result = strip_color2(mutable_argument, STRIP_ALL);
+					std::copy(result.cbegin(), result.cend(), &dst[output_index]);
+					len = result.size();
+				}
 				else len = strip_hidden_attribute(mutable_argument, &dst[output_index]);
 				output_index += len;
 			}

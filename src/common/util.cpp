@@ -34,8 +34,10 @@
 #include <cstring>
 #include <ctime>
 #include <functional>
+#include <iterator>
 #include <locale>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 
 #include <sys/types.h>
@@ -289,40 +291,38 @@ expand_homedir (char *file)
 gchar *
 strip_color(const char *text, int len, strip_flags flags)
 {
-	char *new_str;
 
 	if (len == -1)
 		len = strlen (text);
 
-	new_str = static_cast<char*>(g_malloc(len + 2));
-	strip_color2 (text, len, new_str, flags);
+	auto new_str = strip_color2 (std::string(text, len), flags);
 
 	if (flags & STRIP_ESCMARKUP)
 	{
-		char *esc = g_markup_escape_text (new_str, -1);
-		g_free (new_str);
+		char *esc = g_markup_escape_text (new_str.c_str(), -1);
 		return esc;
 	}
 
-	return new_str;
+	return g_strdup(new_str.c_str());
 }
 
-/* CL: strip_color2 strips src and writes the output at dst; pass the same pointer
-	in both arguments to strip in place. */
-int
-strip_color2 (const char *src, int len, char *dst, strip_flags flags)
+
+std::string 
+strip_color2(const std::string & src, strip_flags flags)
 {
 	int rcol = 0, bgcol = 0;
-	char *start = dst;
-
-	if (len == -1) len = strlen (src);
+	auto src_itr = src.cbegin();
+	int len = src.size();
+	std::ostringstream dst_stream;
+	std::ostream_iterator<char> dst_itr(dst_stream);
+	std::locale locale;
 	while (len-- > 0)
 	{
-		if (rcol > 0 && (isdigit ((unsigned char)*src) ||
-			(*src == ',' && isdigit ((unsigned char)src[1]) && !bgcol)))
+		if (rcol > 0 && (std::isdigit (*src_itr, locale) ||
+			(*src_itr == ',' && std::isdigit(src_itr[1], locale) && !bgcol)))
 		{
-			if (src[1] != ',') rcol--;
-			if (*src == ',')
+			if (src_itr[1] != ',') rcol--;
+			if (*src_itr == ',')
 			{
 				rcol = 2;
 				bgcol = 1;
@@ -330,7 +330,7 @@ strip_color2 (const char *src, int len, char *dst, strip_flags flags)
 		} else
 		{
 			rcol = bgcol = 0;
-			switch (*src)
+			switch (*src_itr)
 			{
 			case '\003':			  /*ATTR_COLOR: */
 				if (!(flags & STRIP_COLOR)) goto pass_char;
@@ -349,14 +349,13 @@ strip_color2 (const char *src, int len, char *dst, strip_flags flags)
 				break;
 			default:
 			pass_char:
-				*dst++ = *src;
+				*dst_itr++ = *src_itr;
 			}
 		}
-		src++;
+		src_itr++;
 	}
-	*dst = 0;
 
-	return (int) (dst - start);
+	return dst_stream.str();
 }
 
 int
