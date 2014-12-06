@@ -59,7 +59,7 @@ static bool match_path (const char *word, int *start, int *end);
 static int
 url_free (char *url, void *data)
 {
-	free (url);
+	delete[] url;
 	return TRUE;
 }
 } // end anonymous namespace
@@ -132,7 +132,7 @@ url_add (const char *urltext, int len)
 		return;
 	}
 
-	data = static_cast<char*>(malloc (len + 1));
+	data = new char[len + 1];
 	if (!data)
 	{
 		return;
