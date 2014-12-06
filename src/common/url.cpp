@@ -21,6 +21,8 @@
 #include <cstring>
 #include <cctype>
 #include <memory>
+#include <string>
+#include <sstream>
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"
@@ -31,6 +33,7 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#include <boost/regex.hpp>
 
 void *url_tree = NULL;
 GTree *url_btree = NULL;
@@ -575,53 +578,41 @@ static const GRegex *
 re_url (void)
 {
 	static std::unique_ptr<GRegex, g_regex_deleter> url_ret;
-	GString *grist_gstr;
-	char *grist;
-	int i;
 
 	if (url_ret) return url_ret.get();
 
-	grist_gstr = g_string_new (NULL);
-
-	for (i = 0; uri[i].scheme; i++)
+	static const boost::regex esc("[.^$|()\\[\\]{}*+?\\\\]");
+	static const std::string rep("\\\\$&");
+	std::ostringstream url_regex_stream;
+	for (int i = 0; uri[i].scheme; i++)
 	{
 		if (i)
-			g_string_append (grist_gstr, "|");
+			url_regex_stream << '|';
 
-		g_string_append (grist_gstr, "(");
-		g_string_append_printf (grist_gstr, "%s:", uri[i].scheme);
+		url_regex_stream << '(' << uri[i].scheme << ':';
 
 		if (uri[i].flags & URI_AUTHORITY)
-			g_string_append (grist_gstr, "//");
+			url_regex_stream << "//";
 
 		if (uri[i].flags & URI_USERINFO)
-			g_string_append (grist_gstr, USERINFO);
+			url_regex_stream << USERINFO;
 		else if (uri[i].flags & URI_OPT_USERINFO)
-			g_string_append (grist_gstr, USERINFO "?");
+			url_regex_stream << USERINFO "?";
 
 		if (uri[i].flags & URI_AUTHORITY)
-			g_string_append (grist_gstr, HOST_URL_OPT_TLD OPT_PORT);
+			url_regex_stream << HOST_URL_OPT_TLD OPT_PORT;
 		
 		if (uri[i].flags & URI_PATH)
 		{
-			char *sep_escaped;
+			std::string to_escape(uri[i].path_sep);
+			std::string escaped(boost::regex_replace(to_escape, esc, rep, boost::match_default | boost::format_perl));
 			
-			sep_escaped = g_regex_escape_string (uri[i].path_sep, 
-								 strlen(uri[i].path_sep));
-
-			g_string_append_printf(grist_gstr, "(" "%s" PATH ")?",
-						   sep_escaped);
-
-			g_free(sep_escaped);
+			url_regex_stream << '(' << escaped << PATH ")";
 		}
-
-		g_string_append(grist_gstr, ")");
+		url_regex_stream << ')';
 	}
 
-	grist = g_string_free (grist_gstr, FALSE);
-
-	url_ret = make_re (grist);
-	g_free (grist);
+	url_ret = make_re (url_regex_stream.str().c_str());
 
 	return url_ret.get();
 }
