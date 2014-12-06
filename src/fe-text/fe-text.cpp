@@ -753,7 +753,7 @@ fe_server_callback (struct server *serv)
     delete serv->gui;
 }
 void
-fe_url_add (const char *text)
+fe_url_add (const std::string &)
 {
 }
 void

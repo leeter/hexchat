@@ -102,7 +102,7 @@ int fe_dcc_open_chat_win (int passive);
 void fe_clear_channel (session &sess);
 void fe_session_callback (struct session *sess);
 void fe_server_callback (struct server *serv);
-void fe_url_add (const char *text);
+void fe_url_add (const std::string & text);
 void fe_pluginlist_update (void);
 void fe_buttons_update (struct session *sess);
 void fe_dlgbuttons_update (struct session *sess);

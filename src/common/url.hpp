@@ -22,15 +22,17 @@
 
 extern void *url_tree;
 
-#define WORD_URL     1
-#define WORD_CHANNEL 2
-#define WORD_HOST    3
-#define WORD_HOST6   4
-#define WORD_EMAIL   5
-#define WORD_NICK    6
-/* anything >0 will be displayed as a link by gtk_xtext_motion_notify() */
-#define WORD_DIALOG  -1
-#define WORD_PATH    -2
+enum word_types{
+	WORD_URL     = 1,
+	WORD_CHANNEL = 2,
+	WORD_HOST    = 3,
+	WORD_HOST6   = 4,
+	WORD_EMAIL   = 5,
+	WORD_NICK    = 6,
+	/* anything >0 will be displayed as a link by gtk_xtext_motion_notify() */
+	WORD_DIALOG  = -1,
+	WORD_PATH    = -2
+};
 
 void url_clear (void);
 void url_save_tree (const char *fname, const char *mode, gboolean fullpath);

@@ -158,7 +158,7 @@ populate_cb(char *urltext, gpointer userdata)
 }
 
 void
-fe_url_add (const char *urltext)
+fe_url_add (const std::string & urltext)
 {
 	GtkListStore *store;
 	GtkTreeIter iter;
@@ -170,7 +170,7 @@ fe_url_add (const char *urltext)
 												   "model"));
 		gtk_list_store_prepend (store, &iter);
 		gtk_list_store_set (store, &iter,
-							URL_COLUMN, urltext,
+							URL_COLUMN, urltext.c_str(),
 							-1);
 
 		/* remove any overflow */

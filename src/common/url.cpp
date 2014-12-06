@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <memory>
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"
@@ -33,7 +34,8 @@
 
 void *url_tree = NULL;
 GTree *url_btree = NULL;
-static gboolean regex_match (const GRegex *re, const char *word,
+namespace{
+static bool regex_match (const GRegex *re, const char *word,
 							 int *start, int *end);
 static const GRegex *re_url (void);
 static const GRegex *re_url_no_scheme (void);
@@ -43,13 +45,13 @@ static const GRegex *re_email (void);
 static const GRegex *re_nick (void);
 static const GRegex *re_channel (void);
 static const GRegex *re_path (void);
-static gboolean match_nick (const char *word, int *start, int *end);
-static gboolean match_channel (const char *word, int *start, int *end);
-static gboolean match_email (const char *word, int *start, int *end);
-static gboolean match_url (const char *word, int *start, int *end);
-static gboolean match_host (const char *word, int *start, int *end);
-static gboolean match_host6 (const char *word, int *start, int *end);
-static gboolean match_path (const char *word, int *start, int *end);
+static bool match_nick (const char *word, int *start, int *end);
+static bool match_channel (const char *word, int *start, int *end);
+static bool match_email (const char *word, int *start, int *end);
+static bool match_url (const char *word, int *start, int *end);
+static bool match_host (const char *word, int *start, int *end);
+static bool match_host6 (const char *word, int *start, int *end);
+static bool match_path (const char *word, int *start, int *end);
 
 static int
 url_free (char *url, void *data)
@@ -57,6 +59,7 @@ url_free (char *url, void *data)
 	free (url);
 	return TRUE;
 }
+} // end anonymous namespace
 
 void
 url_clear (void)
@@ -91,6 +94,7 @@ url_save_tree (const char *fname, const char *mode, gboolean fullpath)
 	fclose (fd);
 }
 
+namespace {
 static void
 url_save_node (char* url)
 {
@@ -197,6 +201,7 @@ url_add (const char *urltext, int len)
 static int laststart = 0;
 static int lastend = 0;
 static int lasttype = 0;
+} // end anonymous namespace
 
 #define NICKPRE "~+!@%&"
 #define CHANPRE "#&!+"
@@ -205,7 +210,7 @@ int
 url_check_word (const char *word)
 {
 	struct {
-		gboolean (*match) (const char *word, int *start, int *end);
+		bool (*match) (const char *word, int *start, int *end);
 		int type;
 	} m[] = {
 	   { match_url,     WORD_URL },
@@ -231,39 +236,36 @@ url_check_word (const char *word)
 	return 0;
 }
 
-static gboolean
+namespace{
+static bool
 match_nick (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
 	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
-	char *str;
 
 	if (!regex_match (re_nick (), word, start, end))
-		return FALSE;
+		return false;
 
 	/* ignore matches with prefixes that the server doesn't use */
 	if (strchr (NICKPRE, word[*start])
 		&& nick_prefixes.find_first_of(word[*start]) == std::string::npos)
-		return FALSE;
+		return false;
 	
 	/* nick prefix is not part of the matched word */
 	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos)
 		(*start)++;
 
-	str = g_strndup (&word[*start], *end - *start);
+	std::unique_ptr<char, glib_deleter> str(g_strndup (&word[*start], *end - *start));
 
-	if (!userlist_find (current_sess, str))
+	if (!userlist_find (current_sess, str.get()))
 	{
-		g_free (str);
-		return FALSE;
+		return false;
 	}
 
-	g_free (str);
-
-	return TRUE;
+	return true;
 }
 
-static gboolean
+static bool
 match_channel (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
@@ -271,55 +273,55 @@ match_channel (const char *word, int *start, int *end)
 	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
 
 	if (!regex_match (re_channel (), word, start, end))
-		return FALSE;
+		return false;
 
 	/* Check for +#channel (for example whois output) */
 	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos
 		&& chan_prefixes.find_first_of(word[*start + 1]) != std::string::npos)
 	{
 		(*start)++;
-		return TRUE;
+		return true;
 	}
 	/* Or just #channel */
 	else if (chan_prefixes.find_first_of(word[*start]) != std::string::npos)
-		return TRUE;
+		return true;
 	
-	return FALSE;
+	return false;
 }
 
-static gboolean
+static bool
 match_email (const char *word, int *start, int *end)
 {
 	return regex_match (re_email (), word, start, end);
 }
 
-static gboolean
+static bool
 match_url (const char *word, int *start, int *end)
 {
 	if (regex_match (re_url (), word, start, end))
-		return TRUE;
+		return true;
 
 	return regex_match (re_url_no_scheme (), word, start, end);
 }
 
-static gboolean
+static bool
 match_host (const char *word, int *start, int *end)
 {
 	return regex_match (re_host (), word, start, end);
 }
 
-static gboolean
+static bool
 match_host6 (const char *word, int *start, int *end)
 {
 	return regex_match (re_host6 (), word, start, end);
 }
 
-static gboolean
+static bool
 match_path (const char *word, int *start, int *end)
 {
 	return regex_match (re_path (), word, start, end);
 }
-
+}// end anonymous namespace
 /* List of IRC commands for which contents (and thus possible URLs)
  * are visible to the user.  NOTE:  Trailing blank required in each. */
 static char *commands[] = {
@@ -330,7 +332,13 @@ static char *commands[] = {
 	"372 "		/* RPL_MOTD */
 };
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
+//#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
+
+template<typename T, size_t N>
+BOOST_CONSTEXPR inline size_t array_size(const T(&buf)[N])
+{
+	return N;
+}
 
 void
 url_check_line (const char *buf, int len)
@@ -349,7 +357,7 @@ url_check_line (const char *buf, int len)
 		po++;
 	}
 	/* Allow only commands from the above list */
-	for (i = 0; i < ARRAY_SIZE (commands); i++)
+	for (i = 0; i < array_size(commands); i++)
 	{
 		char *cmd = commands[i];
 		int len = strlen (cmd);
@@ -360,7 +368,7 @@ url_check_line (const char *buf, int len)
 			break;
 		}
 	}
-	if (i == ARRAY_SIZE (commands))
+	if (i == array_size(commands))
 		return;
 
 	/* Skip past the channel name or user nick */
@@ -370,6 +378,7 @@ url_check_line (const char *buf, int len)
 	po++;
 
 	g_regex_match(re_url(), po, static_cast<GRegexMatchFlags>(0), &gmi);
+	std::unique_ptr<GMatchInfo, decltype(&g_match_info_free)> match_info(gmi, g_match_info_free);
 	while (g_match_info_matches(gmi))
 	{
 		int start, end;
@@ -378,9 +387,8 @@ url_check_line (const char *buf, int len)
 		while (end > start && (po[end - 1] == '\r' || po[end - 1] == '\n'))
 			end--;
 		url_add(po + start, end - start);
-		g_match_info_next(gmi, NULL);
+		g_match_info_next(gmi, nullptr);
 	}
-	g_match_info_free(gmi);
 }
 
 int
@@ -391,28 +399,36 @@ url_last (int *lstart, int *lend)
 	return lasttype;
 }
 
-static gboolean
+namespace{
+
+	struct g_regex_deleter
+	{
+		void operator()(GRegex * re)
+		{
+			if (re)
+				g_regex_unref(re);
+		}
+	};
+
+static bool
 regex_match (const GRegex *re, const char *word, int *start, int *end)
 {
 	GMatchInfo *gmi;
 
 	g_regex_match (re, word, static_cast<GRegexMatchFlags>(0), &gmi);
-	
+	std::unique_ptr<GMatchInfo, decltype(&g_match_info_free)> match_info(gmi, g_match_info_free);
 	if (!g_match_info_matches (gmi))
 	{
-		g_match_info_free (gmi);
-		return FALSE;
+		return false;
 	}
 	
 	while (g_match_info_matches (gmi))
 	{
 		g_match_info_fetch_pos (gmi, 0, start, end);
-		g_match_info_next (gmi, NULL);
+		g_match_info_next (gmi, nullptr);
 	}
 	
-	g_match_info_free (gmi);
-	
-	return TRUE;
+	return true;
 }
 
 /*	Miscellaneous description --- */
@@ -429,13 +445,11 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 #define PORT "(:[1-9][0-9]{0,4})"
 #define OPT_PORT "(" PORT ")?"
 
-static GRegex *
+static std::unique_ptr<GRegex, g_regex_deleter>
 make_re (const char *grist)
 {
-	GRegex *ret;
 	GError *err = NULL;
-
-	ret = g_regex_new(grist, static_cast<GRegexCompileFlags>(G_REGEX_CASELESS | G_REGEX_OPTIMIZE), static_cast<GRegexMatchFlags>(0), &err);
+	std::unique_ptr<GRegex, g_regex_deleter> ret(g_regex_new(grist, static_cast<GRegexCompileFlags>(G_REGEX_CASELESS | G_REGEX_OPTIMIZE), static_cast<GRegexMatchFlags>(0), &err));
 
 	return ret;
 }
@@ -445,25 +459,25 @@ make_re (const char *grist)
 static const GRegex *
 re_host (void)
 {
-	static GRegex *host_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> host_ret;
 
-	if (host_ret) return host_ret;
+	if (host_ret) return host_ret.get();
 
 	host_ret = make_re ("(" "(" HOST_URL PORT ")|(" HOST ")" ")");
 	
-	return host_ret;
+	return host_ret.get();
 }
 
 static const GRegex *
 re_host6 (void)
 {
-	static GRegex *host6_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> host6_ret;
 
-	if (host6_ret) return host6_ret;
+	if (host6_ret) return host6_ret.get();
 
 	host6_ret = make_re ("(" "(" IPV6ADDR ")|(" "\\[" IPV6ADDR "\\]" PORT ")" ")");
 
-	return host6_ret;
+	return host6_ret.get();
 }
 
 /*	URL description --- */
@@ -491,10 +505,12 @@ re_host6 (void)
  * URI_PATH - http://example.org:80/foo/bar
  *                                 ^^^^^^^^
  */
-#define URI_AUTHORITY     (1 << 0)
-#define URI_OPT_USERINFO  (1 << 1)
-#define URI_USERINFO      (1 << 2)
-#define URI_PATH          (1 << 3)
+enum uri_flags{
+	URI_AUTHORITY    = (1 << 0),
+	URI_OPT_USERINFO = (1 << 1),
+	URI_USERINFO     = (1 << 2),
+	URI_PATH         = (1 << 3)
+};
 
 struct
 {
@@ -546,24 +562,24 @@ struct
 static const GRegex *
 re_url_no_scheme (void)
 {
-	static GRegex *url_ret = NULL;
+	static std::unique_ptr<GRegex, g_regex_deleter> url_ret;
 
-	if (url_ret) return url_ret;
+	if (url_ret) return url_ret.get();
 
 	url_ret = make_re ("(" HOST_URL OPT_PORT "/" "(" PATH ")?" ")");
 
-	return url_ret;
+	return url_ret.get();
 }
 
 static const GRegex *
 re_url (void)
 {
-	static GRegex *url_ret = NULL;
+	static std::unique_ptr<GRegex, g_regex_deleter> url_ret;
 	GString *grist_gstr;
 	char *grist;
 	int i;
 
-	if (url_ret) return url_ret;
+	if (url_ret) return url_ret.get();
 
 	grist_gstr = g_string_new (NULL);
 
@@ -607,7 +623,7 @@ re_url (void)
 	url_ret = make_re (grist);
 	g_free (grist);
 
-	return url_ret;
+	return url_ret.get();
 }
 
 /*	EMAIL description --- */
@@ -616,13 +632,13 @@ re_url (void)
 static const GRegex *
 re_email (void)
 {
-	static GRegex *email_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> email_ret;
 
-	if (email_ret) return email_ret;
+	if (email_ret) return email_ret.get();
 
 	email_ret = make_re ("(" EMAIL ")");
 
-	return email_ret;
+	return email_ret.get();
 }
 
 /*	NICK description --- */
@@ -647,13 +663,13 @@ re_email (void)
 static const GRegex *
 re_nick (void)
 {
-	static GRegex *nick_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> nick_ret;
 
-	if (nick_ret) return nick_ret;
+	if (nick_ret) return nick_ret.get();
 
 	nick_ret = make_re ("(" NICK ")");
 
-	return nick_ret;
+	return nick_ret.get();
 }
 
 /*	CHANNEL description --- */
@@ -662,13 +678,13 @@ re_nick (void)
 static const GRegex *
 re_channel (void)
 {
-	static GRegex *channel_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> channel_ret;
 
-	if (channel_ret) return channel_ret;
+	if (channel_ret) return channel_ret.get();
 
 	channel_ret = make_re ("(" CHANNEL ")");
 
-	return channel_ret;
+	return channel_ret.get();
 }
 
 /*	PATH description --- */
@@ -683,11 +699,13 @@ re_channel (void)
 static const GRegex *
 re_path (void)
 {
-	static GRegex *path_ret;
+	static std::unique_ptr<GRegex, g_regex_deleter> path_ret;
 
-	if (path_ret) return path_ret;
+	if (path_ret) return path_ret.get();
 
 	path_ret = make_re ("(" FS_PATH ")");
 
-	return path_ret;
+	return path_ret.get();
 }
+
+}// end anonymous namespace
