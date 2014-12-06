@@ -549,18 +549,11 @@ new_ircwindow (server *serv, const char *name, ::session::session_type type, int
 			sess = session_new(serv, name, session::SESS_SERVER, focus);
 		else
 			sess = session_new(serv, name, session::SESS_CHANNEL, focus);
-		if (!sess)
-		{
-			server_free(serv);
-			return nullptr;
-		}
 		serv->server_session = sess;
 		serv->front_session = sess;
 		break;
 	case session::SESS_DIALOG:
 		sess = session_new (serv, name, type, focus);
-		if (!sess)
-			return nullptr;
 		log_open_or_close (sess);
 		break;
 	default:
@@ -568,8 +561,6 @@ new_ircwindow (server *serv, const char *name, ::session::session_type type, int
 	case SESS_NOTICES:
 	case SESS_SNOTICES:*/
 		sess = session_new (serv, name, type, focus);
-		if (!sess)
-			return nullptr;
 		break;
 	}
 
