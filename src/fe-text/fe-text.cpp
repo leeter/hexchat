@@ -921,7 +921,7 @@ fe_flash_window (struct session *sess)
 }
 void fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
-				 int flags)
+				 fe_file_flags flags)
 {
 }
 void fe_tray_set_flash (const char *filename1, const char *filename2, int timeout){}
@@ -931,7 +931,7 @@ void fe_tray_set_tooltip (const char *text){}
 void fe_tray_set_balloon (const char *title, const char *text){}
 void fe_userlist_update (session *sess, struct User *user){}
 void
-fe_open_chan_list (server *serv, const char *filter, int do_refresh)
+fe_open_chan_list (server *serv, const char *filter, bool)
 {
 	serv->p_list_channels (filter, 1);
 }

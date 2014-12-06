@@ -2506,7 +2506,7 @@ cmd_lastlog (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static int
 cmd_list (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	fe_open_chan_list (sess->server, word_eol[2] ? word_eol[2] : "", TRUE);
+	fe_open_chan_list (sess->server, word_eol[2] ? word_eol[2] : "", true);
 
 	return TRUE;
 }
@@ -4302,10 +4302,9 @@ void
 check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 {
 	int occur = 0;
-	int len = strlen (cmd);
-	char *utf;
+	auto len = strlen (cmd);
 	char tbuf[4];
-	int i = 0, j = 0;
+	size_t i = 0, j = 0;
 	gsize utf_len;
 
 	if (!len)
@@ -4329,11 +4328,10 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 				tbuf[2] = cmd[j + 3];
 				tbuf[3] = 0;
 				buf[i] = atoi (tbuf);
-				utf = g_locale_to_utf8 (&buf[0] + i, 1, 0, &utf_len, 0);
+				std::unique_ptr<gchar, glib_deleter> utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
 				if (utf)
 				{
-					std::copy_n(utf, utf_len, buf.begin() + i);
-					g_free (utf);
+					std::copy_n(utf.get(), utf_len, buf.begin() + i);
 					i += (utf_len - 1);
 				}
 				j += 3;
@@ -4420,13 +4418,12 @@ nick_comp_cb (struct User *user, nickdata *data)
 static void
 perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 {
-	int len;
 	char *space = strchr (cmd, ' ');
 	if (space && space != cmd)
 	{
 		if (space[-1] == prefs.hex_completion_suffix[0] && space - 1 != cmd)
 		{
-			len = space - cmd - 1;
+			auto len = space - cmd - 1;
 			if (len < NICKLEN)
 			{
 				char nick[NICKLEN];
@@ -4503,7 +4500,7 @@ handle_say (session *sess, char *text, int check_spch)
 		newcmd = static_cast<char*>(malloc(newcmdlen = len + NICKLEN + 1));
 
 	if (check_spch && prefs.hex_input_perc_color)
-		check_special_chars (text, prefs.hex_input_perc_ascii);
+		check_special_chars (text, !!prefs.hex_input_perc_ascii);
 
 	/* Python relies on this */
 	word[PDIWORDS] = NULL;
@@ -4722,7 +4719,7 @@ handle_command (session *sess, char *cmd, int check_spch)
 
 	if (check_spch && prefs.hex_input_perc_color)
 	{
-		check_special_chars (cmd, prefs.hex_input_perc_ascii);
+		check_special_chars (cmd, !!prefs.hex_input_perc_ascii);
 	}
 
 	if (plugin_emit_command (sess, word[1], word, word_eol))

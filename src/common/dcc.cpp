@@ -180,8 +180,8 @@ dcc_calc_cps (::dcc::DCC *dcc)
 
 		posdiff = pos - dcc->lastcpspos;
 		oldcps = dcc->cps;
-		dcc->cps = ((double) posdiff / timediff) * (timediff / startdiff) +
-			(double) dcc->cps * (1.0 - (timediff / startdiff));
+		dcc->cps = static_cast<int>(((double) posdiff / timediff) * (timediff / startdiff) +
+			(double) dcc->cps * (1.0 - (timediff / startdiff)));
 
 		*cpssum += dcc->cps - oldcps;
 	}

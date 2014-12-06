@@ -1895,7 +1895,7 @@ void
 server::connect (char *hostname, int port, bool no_login)
 {
 	int read_des[2] = { 0 };
-	unsigned int pid;
+	//unsigned int pid;
 	session *sess = this->server_session;
 	boost::asio::io_service io_service;
 	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);

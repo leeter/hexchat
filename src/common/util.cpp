@@ -1383,30 +1383,23 @@ copy_file (const char *dl_src, const char *dl_dest, int permissions)
 
 /* Takes care of moving a file from a temporary download location to a completed location. */
 void
-move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccpermissions)
+move_file (const std::string& src_dir, const std::string & dst_dir, const std::string& fname, int dccpermissions)
 {
-	//char *src;
-	//char *dst;
-	int res, i;
-
 	/* if dcc_dir and dcc_completed_dir are the same then we are done */
-	if (0 == strcmp (src_dir, dst_dir) ||
-		 0 == dst_dir[0])
+	if (src_dir == dst_dir || dst_dir.empty())
 		return;			/* Already in "completed dir" */
 
 	auto file_name = boost::filesystem::path(fname);
 	auto src = boost::filesystem::path(src_dir) / file_name;
 	auto dst_dir_path = boost::filesystem::path(dst_dir);
 	auto dst = dst_dir_path / file_name;
-	//src = g_build_filename (src_dir, fname, NULL);
-	//dst = g_build_filename (dst_dir, fname, NULL);
 
 	/* already exists in completed dir? Append a number */
 	if (boost::filesystem::exists(dst))
 	{
-		for (i = 0; ; i++)
+		for (int i = 0; ; i++)
 		{
-			dst = (dst_dir_path / file_name).replace_extension(std::to_string(i));// g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s.%d", dst_dir, fname, i);
+			dst = (dst_dir_path / file_name).replace_extension(std::to_string(i));
 			if (!boost::filesystem::exists(dst))
 				break;
 		}
@@ -1415,7 +1408,6 @@ move_file (const char *src_dir, const char *dst_dir, const char *fname, int dccp
 	/* first try a simple rename move */
 	boost::system::error_code ec;
 	boost::filesystem::rename(src, dst, ec);
-	//res = g_rename (src, dst);
 
 	if (ec && (ec.value() == boost::system::errc::cross_device_link || ec.value() == boost::system::errc::operation_not_permitted))
 	{

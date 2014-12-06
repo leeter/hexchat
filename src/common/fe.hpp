@@ -121,17 +121,20 @@ void fe_serverlist_open (session *sess);
 void fe_get_bool (char *title, char *prompt, GSourceFunc callback, void *userdata);
 void fe_get_str(char *prompt, char *def, GSourceFunc callback, void *ud);
 void fe_get_int(char *prompt, int def, GSourceFunc callback, void *ud);
-#define FRF_WRITE 1				/* save file */
-#define FRF_MULTIPLE 2			/* multi-select */
-#define FRF_RECENTLYUSED 4		/* let gtk decide start dir instead of our config */
-#define FRF_CHOOSEFOLDER 8		/* choosing a folder only */
-#define FRF_FILTERISINITIAL 16	/* filter is initial directory */
-#define FRF_NOASKOVERWRITE 32	/* don't ask to overwrite existing files */
-#define FRF_EXTENSIONS 64		/* specify file extensions to be displayed */
-#define FRF_MIMETYPES 128		/* specify file mimetypes to be displayed */
+typedef int fe_file_flags;
+enum fe_file_flag_types{
+	FRF_WRITE = 1,				/* save file */
+	FRF_MULTIPLE = 2,			/* multi-select */
+	FRF_RECENTLYUSED = 4,		/* let gtk decide start dir instead of our config */
+	FRF_CHOOSEFOLDER = 8,		/* choosing a folder only */
+	FRF_FILTERISINITIAL = 16,	/* filter is initial directory */
+	FRF_NOASKOVERWRITE = 32,	/* don't ask to overwrite existing files */
+	FRF_EXTENSIONS = 64,		/* specify file extensions to be displayed */
+	FRF_MIMETYPES = 128		/* specify file mimetypes to be displayed */
+};
 void fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
-				 int flags);
+				 fe_file_flags flags);
 typedef enum {
 	FE_GUI_HIDE,
 	FE_GUI_SHOW,
@@ -165,18 +168,18 @@ void fe_server_event (server *serv, int type, int arg);
 void fe_tray_set_flash (const char *filename1, const char *filename2, int timeout);
 /* pass NULL filename for default HexChat icon */
 void fe_tray_set_file (const char *filename);
-typedef enum
+enum feicon
 {
 	FE_ICON_NORMAL = 0,
 	FE_ICON_MESSAGE = 2,
 	FE_ICON_HIGHLIGHT = 5,
 	FE_ICON_PRIVMSG = 8,
 	FE_ICON_FILEOFFER = 11
-} feicon;
+};
 void fe_tray_set_icon (feicon icon);
 void fe_tray_set_tooltip (const char *text);
 void fe_tray_set_balloon (const char *title, const char *text);
-void fe_open_chan_list (server *serv, const char *filter, int do_refresh);
+void fe_open_chan_list (server *serv, const char *filter, bool do_refresh);
 const char *fe_get_default_font ();
 
 #endif

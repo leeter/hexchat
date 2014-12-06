@@ -1150,7 +1150,7 @@ fe_server_event (server *serv, int type, int arg)
 void
 fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
-				 int flags)
+				 fe_file_flags flags)
 				
 {
 	/* OK: Call callback once per file, then once more with file=NULL. */
@@ -1159,7 +1159,7 @@ fe_get_file (const char *title, char *initial,
 }
 
 void
-fe_open_chan_list (server *serv, const char*, int do_refresh)
+fe_open_chan_list (server *serv, const char*, bool do_refresh)
 {
 	chanlist_opengui (serv, do_refresh);
 }

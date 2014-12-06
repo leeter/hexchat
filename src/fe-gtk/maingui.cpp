@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cctype>
+#include <exception>
 
 #include <gdk/gdkkeysyms.h>
 
@@ -1718,7 +1719,7 @@ mg_add_chan (session *sess)
 	if (sess->res->buffer == NULL)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (*GTK_XTEXT (sess->gui->xtext));
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(prefs.hex_stamp_text);
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(!!prefs.hex_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 }
@@ -2308,14 +2309,14 @@ mg_update_xtext (GtkWidget *wid)
 	gtk_xtext_set_palette (xtext, colors);
 	gtk_xtext_set_max_lines (xtext, prefs.hex_text_max_lines);
 	gtk_xtext_set_background (xtext, channelwin_pix);
-	gtk_xtext_set_wordwrap (xtext, prefs.hex_text_wordwrap);
-	gtk_xtext_set_show_marker (xtext, prefs.hex_text_show_marker);
-	gtk_xtext_set_show_separator (xtext, prefs.hex_text_indent ? prefs.hex_text_show_sep : 0);
-	gtk_xtext_set_indent (xtext, prefs.hex_text_indent);
+	gtk_xtext_set_wordwrap (xtext, !!prefs.hex_text_wordwrap);
+	gtk_xtext_set_show_marker (xtext, !!prefs.hex_text_show_marker);
+	gtk_xtext_set_show_separator (xtext, prefs.hex_text_indent ? !!prefs.hex_text_show_sep : false);
+	gtk_xtext_set_indent (xtext, !!prefs.hex_text_indent);
 	if (!gtk_xtext_set_font (xtext, prefs.hex_text_font))
 	{
 		fe_message ("Failed to open any font. I'm out of here!", FE_MSG_WAIT | FE_MSG_ERROR);
-		exit (1);
+		std::terminate();
 	}
 
 	gtk_xtext_refresh (xtext);
@@ -2348,7 +2349,7 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	gui->xtext = gtk_xtext_new (colors, true);
 	GtkXText & xtext = *GTK_XTEXT(gui->xtext);
 	gtk_xtext_set_max_indent (xtext, prefs.hex_text_max_indent);
-	gtk_xtext_set_thin_separator (xtext, prefs.hex_text_thin_sep);
+	gtk_xtext_set_thin_separator (xtext, !!prefs.hex_text_thin_sep);
 	gtk_xtext_set_urlcheck_function (xtext, mg_word_check);
 	gtk_xtext_set_max_lines (xtext, prefs.hex_text_max_lines);
 	gtk_container_add(GTK_CONTAINER(frame), gui->xtext);
@@ -3166,7 +3167,7 @@ mg_create_topwindow (session *sess)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (*GTK_XTEXT (sess->gui->xtext));
 		gtk_xtext_buffer_show(*GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), TRUE);
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(prefs.hex_stamp_text);
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(!!prefs.hex_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 
@@ -3313,7 +3314,7 @@ mg_apply_setup (void)
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(prefs.hex_stamp_text);
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp(!!prefs.hex_stamp_text);
 		((xtext_buffer *)sess->res->buffer)->needs_recalc = TRUE;
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);
