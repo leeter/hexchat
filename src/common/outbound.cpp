@@ -1910,38 +1910,29 @@ cmd_gate (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return FALSE;
 }
 
-typedef struct
+struct getvalinfo
 {
-	char *cmd;
+	std::string cmd;
 	session *sess;
-} getvalinfo;
+};
 
 static void
 get_bool_cb (int val, getvalinfo *info)
 {
 	char buf[512];
-
+	std::unique_ptr<getvalinfo> info_ptr(info);
 	snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
 	if (is_session (info->sess))
 		handle_command (info->sess, buf, FALSE);
-
-	free (info->cmd);
-	free (info);
 }
 
 static int
 cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	getvalinfo *info;
-
 	if (!word[4][0])
 		return FALSE;
 
-	info = static_cast<getvalinfo*>(malloc (sizeof (*info)));
-	if (!info)
-		throw std::bad_alloc();
-	info->cmd = strdup (word[2]);
-	info->sess = sess;
+	getvalinfo * info = new getvalinfo{ word[2], sess };
 
 	fe_get_bool(word[3], word_eol[4], (GSourceFunc)get_bool_cb, info);
 
