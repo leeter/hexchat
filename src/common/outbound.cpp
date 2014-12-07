@@ -1543,7 +1543,7 @@ exec_handle_colors (char *buf, int len)
 		return;
 	
 	std::string nbuf(len + 1, '\0');
-
+	std::locale locale;
 	while (i < len)
 	{
 		switch (buf[i])
@@ -1619,7 +1619,7 @@ cont:				esc = false;
 					k = 0;
 				} else
 				{
-					if (std::isdigit<unsigned char> (buf[i], std::locale()) && k < (sizeof (numb) - 1))
+					if (std::isdigit (buf[i], locale) && k < (sizeof (numb) - 1))
 					{
 						numb[k] = buf[i];
 						k++;
