@@ -68,11 +68,11 @@ namespace{
 		{
 			for (int pos = 0; pos < USERACCESS_SIZE; pos++)
 			{
-				if ((access1&(1 << pos)) && (access2&(1 << pos)))
+				if ((access1 & (1 << pos)) && (access2 & (1 << pos)))
 					break;
-				if ((access1&(1 << pos)) && !(access2&(1 << pos)))
+				if ((access1 & (1 << pos)) && !(access2 & (1 << pos)))
 					return -1;
-				if (!(access1&(1 << pos)) && (access2&(1 << pos)))
+				if (!(access1 & (1 << pos)) && (access2 & (1 << pos)))
 					return 1;
 			}
 		}
@@ -106,7 +106,7 @@ namespace{
 
 
 	static int
-		userlist_resort(session & sess, const char* nick)
+		userlist_resort(session & sess, const char nick[])
 	{
 		std::sort(
 			sess.usertree.begin(),
@@ -428,7 +428,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 
 	notify_set_online (*sess->server, name + prefix_chars, tags_data);
 
-	std::unique_ptr<User> user(new User());// static_cast<User*>(calloc(1, sizeof(struct User)));
+	std::unique_ptr<User> user(new User());
 
 	user->access = acc;
 
@@ -442,7 +442,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	safe_strcpy (user->nick, name + prefix_chars, NICKLEN);
 	/* is it me? */
 	if (!sess->server->p_cmp (user->nick, sess->server->nick))
-		user->me = TRUE;
+		user->me = true;
 	/* extended join info */
 	if (sess->server->have_extjoin)
 	{

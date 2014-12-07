@@ -35,7 +35,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
-#include <climits>
 #include <cerrno>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
@@ -86,7 +85,7 @@ namespace notify{
 namespace dcc = hexchat::dcc;
 namespace fe_notify = hexchat::fe::notify;
 namespace bio = boost::iostreams;
-#define TBUFSIZE 4096
+static const size_t TBUFSIZE = 4096;
 
 static void help (session *sess, char *tbuf, const char *helpcmd, int quiet);
 static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
@@ -492,7 +491,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		{
 			auto lastdot = fullhost.find_last_of('.');
 			if (lastdot == std::string::npos)
-				return NULL;				  /* can't happen? */
+				return nullptr;				  /* can't happen? */
 
 			domain = fullhost.substr(0, lastdot);
 			buf << mode << " " << p2 << " *!";
@@ -4358,8 +4357,8 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 				std::copy_n(cmd, len, std::begin(nick));
 				nick[len] = 0;
 
-				int bestlen = INT_MAX;
-				User * best = NULL;
+				int bestlen = std::numeric_limits<int>::max();
+				User * best = nullptr;
 				for (auto & user : sess->usertree)
 				{
 					int lenu;
