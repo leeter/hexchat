@@ -998,15 +998,6 @@ cmd_deop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	}
 }
 
-struct multidata
-{
-	std::vector<char*> nicks;
-	int i;
-	session *sess;
-	char *reason;
-	char *tbuf;
-};
-
 static int
 cmd_mdehop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
@@ -1909,6 +1900,7 @@ cmd_gate (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	}
 	return FALSE;
 }
+namespace{
 
 struct getvalinfo
 {
@@ -1921,7 +1913,7 @@ get_bool_cb (int val, getvalinfo *info)
 {
 	char buf[512];
 	std::unique_ptr<getvalinfo> info_ptr(info);
-	snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
+	snprintf (buf, sizeof (buf), "%s %d", info->cmd.c_str(), val);
 	if (is_session (info->sess))
 		handle_command (info->sess, buf, FALSE);
 }
@@ -1932,7 +1924,7 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	getvalinfo * info = new getvalinfo{ word[2], sess };
+	getvalinfo * info = new getvalinfo{ std::string(word[2]), sess };
 
 	fe_get_bool(word[3], word_eol[4], (GSourceFunc)get_bool_cb, info);
 
@@ -1943,31 +1935,22 @@ static void
 get_int_cb (int cancel, int val, getvalinfo *info)
 {
 	char buf[512];
-
+	std::unique_ptr<getvalinfo> info_ptr(info);
 	if (!cancel)
 	{
-		snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
+		snprintf (buf, sizeof (buf), "%s %d", info->cmd.c_str(), val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);
 	}
-
-	free (info->cmd);
-	free (info);
 }
 
 static int
 cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	getvalinfo *info;
-
 	if (!word[4][0])
 		return FALSE;
 
-	info = static_cast<getvalinfo*>(malloc(sizeof(*info)));
-	if (!info)
-		throw std::bad_alloc();
-	info->cmd = strdup (word[3]);
-	info->sess = sess;
+	getvalinfo* info = new getvalinfo{ std::string(word[3]), sess };
 
 	fe_get_int(word[4], atoi(word[2]), (GSourceFunc)get_int_cb, info);
 
@@ -2029,31 +2012,22 @@ static void
 get_str_cb (int cancel, char *val, getvalinfo *info)
 {
 	char buf[512];
-
+	std::unique_ptr<getvalinfo> info_ptr(info);
 	if (!cancel)
 	{
-		snprintf (buf, sizeof (buf), "%s %s", info->cmd, val);
+		snprintf (buf, sizeof (buf), "%s %s", info->cmd.c_str(), val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);
 	}
-
-	free (info->cmd);
-	free (info);
 }
 
 static int
 cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	getvalinfo *info;
-
 	if (!word[4][0])
 		return FALSE;
 
-	info = static_cast<getvalinfo*>(malloc(sizeof(*info)));
-	if (!info)
-		throw std::bad_alloc();
-	info->cmd = strdup (word[3]);
-	info->sess = sess;
+	getvalinfo* info = new getvalinfo{ std::string(word[3]), sess };
 
 	fe_get_str(word[4], word[2], (GSourceFunc)get_str_cb, info);
 
@@ -2098,12 +2072,12 @@ cmd_gui (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-typedef struct
+struct help_list
 {
 	int longfmt;
 	int i, t;
 	char *buf;
-} help_list;
+};
 
 static void
 show_help_line (session *sess, help_list *hl, const char *name, const char *usage)
@@ -2477,6 +2451,7 @@ cmd_list (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	return TRUE;
 }
+}// end anonymous namespace
 
 gboolean
 load_perform_file (session *sess, char *file)
