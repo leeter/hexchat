@@ -499,18 +499,17 @@ fe_input_add(int sok, int flags, GIOFunc func, void *data)
 	return tag;
 }
 
-void
-fe_set_topic (session *sess, char *topic, char *stripped_topic)
+void fe_set_topic (session *sess, const std::string & topic, const std::string& stripped_topic)
 {
 	if (!sess->gui->is_tab || sess == current_tab)
 	{
 		if (prefs.hex_text_stripcolor_topic)
 		{
-			gtk_entry_set_text (GTK_ENTRY (sess->gui->topic_entry), stripped_topic);
+			gtk_entry_set_text (GTK_ENTRY (sess->gui->topic_entry), stripped_topic.c_str());
 		}
 		else
 		{
-			gtk_entry_set_text (GTK_ENTRY (sess->gui->topic_entry), topic);
+			gtk_entry_set_text (GTK_ENTRY (sess->gui->topic_entry), topic.c_str());
 		}
 		mg_set_topic_tip (sess);
 	}
@@ -523,11 +522,11 @@ fe_set_topic (session *sess, char *topic, char *stripped_topic)
 
 		if (prefs.hex_text_stripcolor_topic)
 		{
-			sess->res->topic_text = strdup (stripped_topic);
+			sess->res->topic_text = strdup (stripped_topic.c_str());
 		}
 		else
 		{
-			sess->res->topic_text = strdup (topic);
+			sess->res->topic_text = strdup (topic.c_str());
 		}
 	}
 }

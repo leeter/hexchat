@@ -80,7 +80,7 @@ void inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 							 char *text, char fromme, int id, 
 							 const message_tags_data *tags_data);
 void clear_channel (session &sess);
-void set_topic (session *sess, char *topic, char *stripped_topic);
+void set_topic (session *sess, const std::string& topic, const std::string &stripped_topic);
 void inbound_privmsg (server &serv, char *from, char *ip, char *text, int id, 
 							 const message_tags_data *tags_data);
 void inbound_action (session *sess, const std::string & chan, char *from, char *ip,
@@ -99,7 +99,7 @@ void inbound_cap_list (server &serv, char *nick, char *extensions,
 void inbound_sasl_authenticate (server & serv, char *data);
 int inbound_sasl_error (server &serv);
 void inbound_sasl_supportedmechs (server &serv, char *list);
-void do_dns (session *sess, char *nick, char *host,
+void do_dns (session *sess, const char nick[], const char host[],
 				 const message_tags_data *tags_data);
 gboolean alert_match_word (const char *word, const char *masks);
 gboolean alert_match_text (char *text, char *masks);

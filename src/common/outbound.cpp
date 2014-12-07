@@ -446,7 +446,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		else
 			p2 = "";
 
-		mask = user->hostname;
+		mask = user->hostname.get();
 
 		auto at = mask.find_first_of('@'); /* FIXME: utf8 */	
 		if (at == std::string::npos)
@@ -748,7 +748,8 @@ cmd_country (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			return TRUE;
 		}
 
-		sprintf (tbuf, "%s = %s\n", code, country (code));
+		std::string code_buf(code);
+		sprintf (tbuf, "%s = %s\n", code, country (&code_buf));
 		PrintText (sess, tbuf);
 		return TRUE;
 	}
@@ -1399,7 +1400,7 @@ cmd_dns (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			if (user->hostname)
 			{
-				do_dns (sess, user->nick, user->hostname, &no_tags);
+				do_dns (sess, user->nick, user->hostname->c_str(), &no_tags);
 			} else
 			{
 				sess->server->p_get_ip (nick);
@@ -2541,7 +2542,7 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 char *
 split_up_text(struct session *sess, char *text, int cmd_length, char *split_text)
 {
-	unsigned int max, space_offset;
+	size_t max, space_offset;
 	char *space;
 
 	/* maximum allowed text */
@@ -2552,7 +2553,7 @@ split_up_text(struct session *sess, char *text, int cmd_length, char *split_text
 	max -= strlen (sess->server->nick);
 	max -= strlen (sess->channel);
 	if (sess->me && sess->me->hostname)
-		max -= strlen (sess->me->hostname);
+		max -= sess->me->hostname->size();
 	else
 	{
 		max -= 9;	/* username */

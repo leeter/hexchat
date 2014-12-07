@@ -3529,7 +3529,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 		mg_create_topwindow (sess);
 		fe_set_title (*sess);
 		if (user && user->hostname)
-			set_topic (sess, user->hostname, user->hostname);
+			set_topic (sess, *user->hostname, *user->hostname);
 		return;
 	}
 
@@ -3550,7 +3550,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	}
 
 	if (user && user->hostname)
-		set_topic (sess, user->hostname, user->hostname);
+		set_topic (sess, *user->hostname, *user->hostname);
 
 	mg_add_chan (sess);
 

@@ -614,8 +614,7 @@ void
 fe_add_rawlog (struct server *serv, const char *text, size_t len, int outbound)
 {
 }
-void
-fe_set_topic (struct session *sess, char *topic, char *stripped_topic)
+void fe_set_topic(session *, const std::string &, const std::string&)
 {
 }
 void

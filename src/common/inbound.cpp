@@ -84,11 +84,11 @@ clear_channel (session &sess)
 }
 
 void
-set_topic (session *sess, char *topic, char *stripped_topic)
+set_topic (session *sess, const std::string & topic, const std::string & stripped_topic)
 {
 	if (sess->topic)
 		free (sess->topic);
-	sess->topic = strdup (stripped_topic);
+	sess->topic = strdup (stripped_topic.c_str());
 	fe_set_topic (sess, topic, stripped_topic);
 }
 
@@ -1325,20 +1325,24 @@ dns_name_callback (GObject *obj, GAsyncResult *result, gpointer user_data)
 }
 
 void
-do_dns (session *sess, char *nick, char *host,
+do_dns (session *sess, const char *nick, const char *host,
 		const message_tags_data *tags_data)
 {
 	GResolver *res = g_resolver_get_default ();
 	GInetAddress *addr;
-	char *po;
+	const char *po;
 
 	po = strrchr (host, '@');
 	if (po)
 		host = po + 1;
 
 	if (nick)
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_RESOLVINGUSER, sess, nick, host, nullptr, nullptr, 0,
-								tags_data->timestamp);
+	{
+		std::string mutable_nick(nick);
+		std::string mutable_host(host);
+		EMIT_SIGNAL_TIMESTAMP(XP_TE_RESOLVINGUSER, sess, &mutable_nick[0], &mutable_host[0], nullptr, nullptr, 0,
+			tags_data->timestamp);
+	}
 
 	PrintTextf (sess, _("Looking up %s..."), host);
 

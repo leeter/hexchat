@@ -34,14 +34,13 @@
 User::~User()
 {
 	free(this->realname);
-	free(this->hostname);
+	//free(this->hostname);
 	free(this->servername);
 	free(this->account);
 }
 
 User::User()
 	:nick(),
-	hostname(),
 	realname(),
 	servername(),
 	account(),
@@ -205,7 +204,7 @@ userlist_add_hostname (struct session *sess, const char nick[], const char hostn
 		{
 			if (prefs.hex_gui_ulist_show_hosts)
 				do_rehash = true;
-			user->hostname = strdup (hostname);
+			user->hostname = hostname;
 		}
 		if (!user->realname && realname && *realname)
 			user->realname = strdup (realname);

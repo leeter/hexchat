@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <cstring>
+#include <stdexcept>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -117,7 +118,8 @@ nick_command (session * sess, char *cmd)
 void
 nick_command_parse (session *sess, const std::string & cmd, const std::string& nick, const std::string& allnick)
 {
-	const char *host = _("Host unknown");
+	// use string_ref when available
+	std::string host(_("Host unknown"));
 	const char *account = _("Account unknown");
 	struct User *user;
 	int len;
@@ -134,7 +136,12 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 		if (user)
 		{
 			if (user->hostname)
-				host = strchr (user->hostname, '@') + 1;
+			{
+				auto at_idx = user->hostname->find_first_of('@');
+				if (at_idx == std::string::npos)
+					throw std::runtime_error("invalid user hostname");
+				host = user->hostname->substr(at_idx + 1);
+			}
 			if (user->account)
 				account = user->account;
 		}
@@ -145,7 +152,7 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 	std::string buf(len, '\0');
 
 	auto_insert (&buf[0], len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
-		sess->server->get_network(true), host,
+		sess->server->get_network(true), host.c_str(),
 					 sess->server->nick, nick.c_str(), account);
 
 	nick_command(sess, &buf[0]);
@@ -611,11 +618,11 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							user->realname ? user->realname : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("User:"),
-				 user->hostname ? user->hostname : unknown);
+				 user->hostname ? user->hostname->c_str() : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
-							user->hostname ? user->hostname : unknown);
+							(gpointer)(user->hostname ? user->hostname->c_str() : unknown));
 	
 	snprintf (buf, sizeof (buf), fmt, _("Account:"),
 				 user->account ? user->account : unknown);
@@ -624,7 +631,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->account ? user->account : unknown);
 
-	users_country = country(user->hostname);
+	users_country = user->hostname ? country(user->hostname.get_ptr()) : nullptr;
 	if (users_country)
 	{
 		snprintf (buf, sizeof (buf), fmt, _ ("Country:"), users_country);

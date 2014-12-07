@@ -24,6 +24,8 @@
 #include <ctime>
 #include <locale>
 #include <memory>
+#include <string>
+#include <boost/optional.hpp>
 #include "proto-irc.hpp"
 
 struct User
@@ -31,7 +33,7 @@ struct User
 	User();
 	~User();
 	char nick[NICKLEN];
-	char *hostname;
+	boost::optional<std::string> hostname;
 	char *realname;
 	char *servername;
 	char *account;
