@@ -176,7 +176,7 @@ notify_find (server &serv, const std::string& nick)
 			continue;
 		}
 
-		if (!serv.p_cmp (notify->name.c_str(), nick.c_str()))
+		if (!serv.compare(notify->name, nick))
 			return servnot;
 
 		list = list->next;
@@ -631,7 +631,7 @@ notify_is_in_list (const server &serv, const std::string & name)
 	while (list)
 	{
 		notify = (struct notify *) list->data;
-		if (!serv.p_cmp (notify->name.c_str(), name.c_str()))
+		if (!serv.compare(notify->name, name))
 			return true;
 		list = list->next;
 	}

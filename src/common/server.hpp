@@ -25,6 +25,7 @@ extern GSList *serv_list;
 #include <utility>
 #include <unordered_map>
 #include <chrono>
+#include <locale>
 #include <boost/chrono.hpp>
 #include <tcpfwd.hpp>
 
@@ -34,7 +35,7 @@ private:
 	void reset_to_defaults();
 	int death_timer;
 	std::unordered_map<std::string, std::pair<bool, std::string> > away_map;
-
+	std::locale locale_;
 	friend server *server_new(void);
 public:
 	enum class cleanup_result{
@@ -47,6 +48,9 @@ public:
 	server();
 	// explict due to use of unique_ptr
 	~server();
+public:
+	void imbue(const std::locale&);
+public:
 	/*  server control operations (in server*.c) */
 	void connect(char *hostname, int port, bool no_login);
 	void disconnect(struct session *, bool sendquit, int err);
@@ -88,6 +92,7 @@ public:
 	/*	void (*p_set_away)(struct server *);*/
 	bool p_raw(const std::string & raw);
 	int(*p_cmp)(const char *s1, const char *s2);
+	int compare(const std::string & lhs, const std::string & rhs) const;
 
 	void set_name(const std::string& name);
 	void set_encoding(const char* new_encoding);

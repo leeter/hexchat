@@ -2055,6 +2055,18 @@ void
 server_fill_her_up (server &serv)
 {
 	serv.p_cmp = rfc_casecmp;	/* can be changed by 005 in modes.c */
+	serv.imbue(rfc_locale(std::locale()));
+}
+
+void server::imbue(const std::locale& other)
+{
+	this->locale_ = other;
+}
+
+int server::compare(const std::string &lhs, const std::string &rhs) const
+{
+	auto& collate = std::use_facet<std::collate<char>>(locale_);
+	return collate.compare(lhs.c_str(), lhs.c_str() + lhs.size(), rhs.c_str(), rhs.c_str() + rhs.size());
 }
 
 void

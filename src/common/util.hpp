@@ -33,6 +33,7 @@
 #ifndef HEXCHAT_UTIL_HPP
 #define HEXCHAT_UTIL_HPP
 
+#include <locale>
 #include <cstddef>
 #include <functional>
 #include <string>
@@ -41,6 +42,8 @@
 
 extern const unsigned char rfc_tolowertab[];
 
+std::locale rfc_locale(const std::locale& locale);
+
 char *expand_homedir (char *file);
 void path_part (char *file, char *path, int pathlen);
 bool match (const char *mask, const char *string);
@@ -48,7 +51,7 @@ bool match_with_wildcards(const std::string &text, std::string wildcardPattern, 
 char *file_part (char *file);
 void for_files (const char *dirname, const char *mask, const std::function<void (char* file)>& callback);
 int rfc_casecmp (const char *, const char *);
-int rfc_ncasecmp (char *, char *, int);
+int rfc_ncasecmp (const char *, const char *, size_t);
 int buf_get_line (char *, char **, int *, int len);
 char *nocasestrstr (const char *text, const char *tofind);
 const char *country (const char *);

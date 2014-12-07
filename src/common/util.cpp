@@ -27,6 +27,7 @@
 
 #define _FILE_OFFSET_BITS 64
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <cstdint>
@@ -1190,10 +1191,10 @@ rfc_casecmp (const char *s1, const char *s2)
 }
 
 int
-rfc_ncasecmp (char *str1, char *str2, int n)
+rfc_ncasecmp (const char *str1, const char *str2, size_t n)
 {
-	register unsigned char *s1 = (unsigned char *) str1;
-	register unsigned char *s2 = (unsigned char *) str2;
+	register const unsigned char *s1 = (unsigned char *) str1;
+	register const unsigned char *s2 = (unsigned char *) str2;
 	register int res;
 
 	while ((res = rfc_tolower (*s1) - rfc_tolower (*s2)) == 0)
@@ -1205,6 +1206,26 @@ rfc_ncasecmp (char *str1, char *str2, int n)
 			return 0;
 	}
 	return (res);
+}
+
+namespace
+{
+	struct rfc_collate : public std::collate < char >
+	{
+	protected:
+		int do_compare(const char * low1, const char * high1,
+			const char * low2, const char* high2) const
+		{
+			auto len = std::min(high1 - low1, high2 - low2);
+			return rfc_ncasecmp(low1, low2, len);
+		}
+	};
+
+} // end anonymous namespace
+
+std::locale rfc_locale(const std::locale& locale)
+{
+	return std::locale(locale, new rfc_collate);
 }
 
 const unsigned char rfc_tolowertab[] =

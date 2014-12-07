@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NOMINMAX
+#include <algorithm>
+#include <locale>
 #include <string>
 #include <cstring>
 #include <cstdlib>
@@ -760,6 +763,20 @@ handle_mode (server & serv, char *word[], char *word_eol[],
 	mode_print_grouped (sess, nick, mr, tags_data);
 }
 
+namespace
+{
+	struct ascii_strcasecmp : public std::collate < char >
+	{
+	protected:
+		int do_compare(const char * low1, const char * high1,
+			const char * low2, const char* high2) const
+		{
+			auto len = std::min(high1 - low1, high2 - low2);
+			return g_ascii_strncasecmp(low1, low2, len);
+		}
+	};
+}
+
 /* handle the 005 numeric */
 
 void
@@ -816,8 +833,11 @@ inbound_005 (server & serv, char *word[], const message_tags_data *tags_data)
 
 		} else if (strncmp (word[w], "CASEMAPPING=", 12) == 0)
 		{
-			if (strcmp (word[w] + 12, "ascii") == 0)	/* bahamut */
+			if (strcmp(word[w] + 12, "ascii") == 0)	/* bahamut */
+			{
 				serv.p_cmp = (int(*)(const char*, const char*))g_ascii_strcasecmp;
+				serv.imbue(std::locale(std::locale(), new ascii_strcasecmp));
+			}
 		} else if (strncmp (word[w], "CHARSET=", 8) == 0)
 		{
 			if (g_ascii_strncasecmp (word[w] + 8, "UTF-8", 5) == 0)
