@@ -339,8 +339,7 @@ server_inline (server *serv, char *line, size_t len)
 			size_t conv_len; /* tells g_convert how much of line to convert */
 			gsize utf_len;
 			gsize read_len;
-			GError *err;
-			gboolean retry;
+			bool retry;
 
 			conv_line = static_cast<char*>(g_malloc (len + 1));
 			memcpy (conv_line, line, len);
@@ -354,20 +353,20 @@ server_inline (server *serv, char *line, size_t len)
 
 			do
 			{
-				err = nullptr;
-				retry = FALSE;
+				GError *err = nullptr;
+				retry = false;
 				utf_line_allocated = g_convert_with_fallback (conv_line, conv_len, "UTF-8", encoding, "?", &read_len, &utf_len, &err);
 				if (err != nullptr)
 				{
+					std::unique_ptr<GError, decltype(&g_error_free)> err_ptr(err, g_error_free);
 					if (err->code == G_CONVERT_ERROR_ILLEGAL_SEQUENCE && conv_len > (read_len + 1))
 					{
 						/* Make our best bet by removing the erroneous char.
 						   This will work for casual 8-bit strings with non-standard chars. */
 						memmove (conv_line + read_len, conv_line + read_len + 1, conv_len - read_len -1);
 						conv_len--;
-						retry = TRUE;
+						retry = true;
 					}
-					g_error_free (err);
 				}
 			} while (retry);
 
