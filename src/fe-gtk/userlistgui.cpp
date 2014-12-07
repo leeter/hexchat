@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <utility>
 
 #include "fe-gtk.hpp"
 
@@ -40,6 +41,7 @@
 #include "pixmaps.hpp"
 #include "userlistgui.hpp"
 #include "fkeys.hpp"
+#include "gtk_helpers.hpp"
 
 enum
 {
@@ -228,14 +230,12 @@ fe_userlist_set_selected (struct session *sess)
 	}
 }
 
-static GtkTreeIter *
-find_row (GtkTreeView *treeview, GtkTreeModel *model, struct User *user,
-			 int *selected)
+static std::pair<GtkTreeIterPtr, bool> find_row (GtkTreeView *treeview, GtkTreeModel *model, struct User *user)
 {
-	static GtkTreeIter iter;
-	struct User *row_user;
+	GtkTreeIter iter;
+	User *row_user;
 
-	*selected = FALSE;
+	bool selected = false;
 	if (gtk_tree_model_get_iter_first (model, &iter))
 	{
 		do
@@ -245,16 +245,19 @@ find_row (GtkTreeView *treeview, GtkTreeModel *model, struct User *user,
 			{
 				if (gtk_tree_view_get_model (treeview) == model)
 				{
-					if (gtk_tree_selection_iter_is_selected (gtk_tree_view_get_selection (treeview), &iter))
-						*selected = TRUE;
+					if (gtk_tree_selection_iter_is_selected(gtk_tree_view_get_selection(treeview), &iter))
+					{
+						selected = true;
+					}
 				}
-				return &iter;
+				;
+				return std::make_pair(GtkTreeIterPtr(gtk_tree_iter_copy(&iter)), selected);
 			}
 		}
 		while (gtk_tree_model_iter_next (model, &iter));
 	}
 
-	return NULL;
+	return std::pair<GtkTreeIterPtr, bool>(nullptr, selected); //  std::make_pair<GtkTreeIter*, bool>(nullptr, selected);
 }
 
 void
@@ -270,23 +273,21 @@ userlist_get_value (GtkWidget *treeview)
 	return gtk_adjustment_get_value (gtk_tree_view_get_vadjustment (GTK_TREE_VIEW (treeview)));
 }
 
-int
+bool
 fe_userlist_remove (session *sess, struct User *user)
 {
-	GtkTreeIter *iter;
 /*	GtkAdjustment *adj;
 	gfloat val, end;*/
-	int sel;
 
-	iter = find_row (GTK_TREE_VIEW (sess->gui->user_tree),
-						  static_cast<GtkTreeModel*>(sess->res->user_model), user, &sel);
-	if (!iter)
-		return 0;
+	auto result = find_row (GTK_TREE_VIEW (sess->gui->user_tree),
+						  static_cast<GtkTreeModel*>(sess->res->user_model), user);
+	if (!result.first)
+		return false;
 
 /*	adj = gtk_tree_view_get_vadjustment (GTK_TREE_VIEW (sess->gui->user_tree));
 	val = adj->value;*/
 
-	gtk_list_store_remove (static_cast<GtkListStore*>(sess->res->user_model), iter);
+	gtk_list_store_remove (static_cast<GtkListStore*>(sess->res->user_model), result.first.get());
 
 	/* is it the front-most tab? */
 /*	if (gtk_tree_view_get_model (GTK_TREE_VIEW (sess->gui->user_tree))
@@ -298,19 +299,17 @@ fe_userlist_remove (session *sess, struct User *user)
 		gtk_adjustment_set_value (adj, val);
 	}*/
 
-	return sel;
+	return result.second;
 }
 
 void
 fe_userlist_rehash (session *sess, struct User *user)
 {
-	GtkTreeIter *iter;
-	int sel;
 	int nick_color = 0;
 
-	iter = find_row (GTK_TREE_VIEW (sess->gui->user_tree),
-			static_cast<GtkTreeModel*>(sess->res->user_model), user, &sel);
-	if (!iter)
+	auto result = find_row (GTK_TREE_VIEW (sess->gui->user_tree),
+			static_cast<GtkTreeModel*>(sess->res->user_model), user);
+	if (!result.first)
 		return;
 
 	if (prefs.hex_away_track && user->away)
@@ -318,14 +317,14 @@ fe_userlist_rehash (session *sess, struct User *user)
 	else if (prefs.hex_gui_ulist_color)
 		nick_color = text_color_of(user->nick);
 
-	gtk_list_store_set (GTK_LIST_STORE (sess->res->user_model), iter,
+	gtk_list_store_set (GTK_LIST_STORE (sess->res->user_model), result.first.get(),
 							  COL_HOST, user->hostname,
 							  COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
 							  -1);
 }
 
 void
-fe_userlist_insert (session *sess, struct User *newuser, int row, int sel)
+fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 {
 	GtkTreeModel *model = static_cast<GtkTreeModel*>(sess->res->user_model);
 	GdkPixbuf *pix = get_user_icon (sess->server, newuser);

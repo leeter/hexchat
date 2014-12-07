@@ -87,8 +87,8 @@ void fe_progressbar_start (struct session *sess);
 void fe_progressbar_end (struct server *serv);
 void fe_print_text (session &sess, char *text, time_t stamp,
 					gboolean no_activity);
-void fe_userlist_insert (struct session *sess, struct User *newuser, int row, int sel);
-int fe_userlist_remove (struct session *sess, struct User *user);
+void fe_userlist_insert (struct session *sess, struct User *newuser, int row, bool sel);
+bool fe_userlist_remove (struct session *sess, struct User *user);
 void fe_userlist_rehash (struct session *sess, struct User *user);
 void fe_userlist_update (struct session *sess, struct User *user);
 void fe_userlist_move (struct session *sess, struct User *user, int new_row);

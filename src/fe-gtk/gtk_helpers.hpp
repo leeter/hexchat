@@ -18,6 +18,7 @@
 
 #ifndef HEXCHAT_GTK_HELPERS_HPP
 #define HEXCHAT_GTK_HELPERS_HPP
+#include <memory>
 #include <gtk/gtk.h>
 inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b)
 {
@@ -33,5 +34,16 @@ inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
 {
 	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
 }
+
+struct gtk_tree_iter_deleter
+{
+	void operator()(GtkTreeIter * itr)
+	{
+		if (itr)
+			gtk_tree_iter_free(itr);
+	}
+};
+
+typedef std::unique_ptr<GtkTreeIter, gtk_tree_iter_deleter> GtkTreeIterPtr;
 
 #endif
