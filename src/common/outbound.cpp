@@ -25,6 +25,7 @@
 #define NOMINMAX
 #endif
 #include <algorithm>
+#include <initializer_list>
 #include <istream>
 #include <limits>
 #include <locale>
@@ -1924,7 +1925,7 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	getvalinfo * info = new getvalinfo{ std::string(word[2]), sess };
+	getvalinfo * info = new getvalinfo{ { word[2] }, sess };
 
 	fe_get_bool(word[3], word_eol[4], (GSourceFunc)get_bool_cb, info);
 
@@ -1950,7 +1951,7 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	getvalinfo* info = new getvalinfo{ std::string(word[3]), sess };
+	getvalinfo* info = new getvalinfo{ { word[3] }, sess };
 
 	fe_get_int(word[4], atoi(word[2]), (GSourceFunc)get_int_cb, info);
 
@@ -2027,7 +2028,7 @@ cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	getvalinfo* info = new getvalinfo{ std::string(word[3]), sess };
+	getvalinfo* info = new getvalinfo{ { word[3] }, sess };
 
 	fe_get_str(word[4], word[2], (GSourceFunc)get_str_cb, info);
 
