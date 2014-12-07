@@ -56,11 +56,6 @@ User::User()
 	selected()
 {}
 
-/*
- insert name in appropriate place in linked list. Returns row number or:
-  -1: duplicate
-*/
-
 namespace{
 
 	static int
@@ -138,7 +133,10 @@ namespace{
 		return std::distance(sess.usertree.cbegin(), result);
 	}
 
-
+	/*
+	insert name in appropriate place in linked list. Returns row number or:
+	-1: duplicate
+	*/
 	static int
 		userlist_insertname(session *sess, std::unique_ptr<User> newuser)
 	{
