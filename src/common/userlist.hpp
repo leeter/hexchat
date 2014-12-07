@@ -20,7 +20,10 @@
 #ifndef HEXCHAT_USERLIST_HPP
 #define HEXCHAT_USERLIST_HPP
 
+#include <cstddef>
 #include <ctime>
+#include <locale>
+#include <memory>
 #include "proto-irc.hpp"
 
 struct User
@@ -44,7 +47,24 @@ struct User
 };
 struct server;
 struct session;
+class userlist
+{
+	typedef std::size_t size_type;
+	class userlist_impl;
+	std::unique_ptr<userlist_impl> impl_;
+public:
+	userlist();
+	~userlist();
+public:
+	size_type ops() const;
+	size_type hops() const;
+	size_type total() const;
+	size_type voices() const;
 
+public:
+	void imbue(const std::locale & locale);
+	void add();
+};
 const int USERACCESS_SIZE = 12;
 
 bool userlist_add_hostname (session *sess, const char nick[],

@@ -475,7 +475,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	if (user_ref->me)
 		sess->me = user_ref;
 
-	fe_userlist_insert(sess, user_ref, row, FALSE);
+	fe_userlist_insert(sess, user_ref, row, false);
 	fe_userlist_numbers (*sess);
 }
 
@@ -502,4 +502,112 @@ userlist_double_list(session *sess)
 	for (auto & user : sess->usertree_alpha)
 		list = g_list_prepend(list, user);
 	return list;
+}
+
+class userlist::userlist_impl
+{
+	size_type ops_;								/* num. of ops in channel */
+	size_type hops_;						  /* num. of half-oped users */
+	size_type voices_;							/* num. of voiced people */
+	// ordered with Ops first
+	std::vector<std::unique_ptr<User>> users_;
+	// pure alphabetical tree
+	std::vector<User*> users_alpha_;
+	std::locale locale_;
+public:
+	userlist_impl()
+		:ops_(0),
+		hops_(0),
+		voices_(0)
+	{}
+public:
+	size_type total() const
+	{
+		return users_.size();
+	}
+	size_type ops() const
+	{
+		return ops_;
+	}
+	size_type voices() const
+	{
+		return voices_;
+	}
+	size_type hops() const
+	{
+		return hops_;
+	}
+public:
+	void imbue(const std::locale & locale)
+	{
+		this->locale_ = locale;
+	}
+
+	void sort()
+	{
+		/*std::sort(
+			this->users_.begin(),
+			this->users_.end(),
+			[&sess](const std::unique_ptr<User> &a, const std::unique_ptr<User> &b)
+		{
+			return nick_cmp(*a, *b, *sess.server) < 0;
+		});
+
+		std::sort(
+			this->users_alpha_.begin(),
+			this->users_alpha_.end(),
+			[&sess](const User* a, const User* b){
+			return sess.server->p_cmp(a->nick, b->nick) < 0;
+		});*/
+	}
+
+	std::pair<bool, size_type> insert(std::unique_ptr<User> user)
+	{
+		auto result = std::find_if(
+			this->users_.cbegin(),
+			this->users_.cend(),
+			[&user, this](const std::unique_ptr<User>& a){
+				return locale_(std::string(a->nick), std::string(user->nick));
+			});
+		if (result != this->users_.cend())
+		{
+			return std::make_pair(false, 0);
+		}
+
+		const char* nick = user->nick;
+		this->users_.emplace_back(std::move(user));
+		this->users_alpha_.emplace_back(this->users_.back().get());
+
+
+		return std::make_pair(true, this->users_.size());
+		//return userlist_resort(*sess, nick);
+	}
+	 
+};
+
+userlist::userlist()
+	:impl_(new userlist::userlist_impl)
+{}
+
+userlist::~userlist()
+{}
+
+userlist::size_type userlist::ops() const
+{
+	return impl_->ops();
+}
+
+userlist::size_type userlist::total() const
+{
+	return impl_->total();
+}
+
+userlist::size_type userlist::hops() const
+{
+	return impl_->hops();
+}
+
+userlist::size_type userlist::voices() const
+{
+	return impl_->voices();
 }
