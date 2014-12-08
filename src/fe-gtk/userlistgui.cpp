@@ -352,7 +352,7 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 	gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, row,
 									COL_PIX, pix,
 									COL_NICK, nick,
-									COL_HOST, newuser->hostname,
+									COL_HOST, newuser->hostname ? newuser->hostname->c_str() : nullptr,
 									COL_USER, newuser,
 									COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
 								  -1);
