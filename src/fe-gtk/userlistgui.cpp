@@ -318,7 +318,7 @@ fe_userlist_rehash (session *sess, struct User *user)
 		nick_color = text_color_of(user->nick);
 
 	gtk_list_store_set (GTK_LIST_STORE (sess->res->user_model), result.first.get(),
-							  COL_HOST, user->hostname,
+							  COL_HOST, user->hostname ? user->hostname->c_str() : nullptr,
 							  COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
 							  -1);
 }
