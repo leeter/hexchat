@@ -176,14 +176,14 @@ server_sendquit (session * sess)
 
 void
 process_data_init (char *buf, char *cmd, char *word[],
-						 char *word_eol[], gboolean handle_quotes,
-						 gboolean allow_escape_quotes)
+						 char *word_eol[], bool handle_quotes,
+						 bool allow_escape_quotes)
 {
 	int wordcount = 2;
-	int space = FALSE;
-	int quote = FALSE;
-	int j = 0;
-	int len;
+	bool space{ false };
+	bool quote{ false };
+	size_t j = 0;
+	size_t len;
 
 	word[0] = "\000\000";
 	word_eol[0] = "\000\000";
@@ -213,10 +213,10 @@ process_data_init (char *buf, char *cmd, char *word[],
 			}
 			if (quote)
 			{
-				quote = FALSE;
-				space = FALSE;
+				quote = false;
+				space = false;
 			} else
-				quote = TRUE;
+				quote = true;
 			cmd++;
 			break;
 		case ' ':
@@ -234,14 +234,14 @@ process_data_init (char *buf, char *cmd, char *word[],
 						wordcount++;
 					}
 
-					space = TRUE;
+					space = true;
 				}
 				cmd++;
 				break;
 			}
 		default:
 def:
-			space = FALSE;
+			space = false;
 			len = g_utf8_skip[((unsigned char *)cmd)[0]];
 			if (len == 1)
 			{
@@ -4421,7 +4421,7 @@ handle_say (session *sess, char *text, int check_spch)
 	word_eol[PDIWORDS] = NULL;
 
 	/* split the text into words and word_eol */
-	process_data_init (pdibuf, text, word, word_eol, TRUE, FALSE);
+	process_data_init (pdibuf, text, word, word_eol, true, false);
 
 	/* a command of "" can be hooked for non-commands */
 	if (plugin_emit_command (sess, "", word, word_eol))
@@ -4573,7 +4573,7 @@ command_insert_vars (session *sess, char *cmd)
 /* handle a command, without the '/' prefix */
 
 int
-handle_command (session *sess, char *cmd, int check_spch)
+handle_command (session *sess, char *cmd, bool check_spch)
 {
 	struct popup *pop;
 	int user_cmd = FALSE;

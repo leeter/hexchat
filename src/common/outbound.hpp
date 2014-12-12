@@ -30,8 +30,8 @@ extern GSList *menu_list;
 int auto_insert (char *dest, int destlen, const unsigned char *src, char *word[], char *word_eol[],
 				 const char *a, const char *c, const char *d, const char *e, const char *h,const char *n, const char *s, const char *u);
 char *command_insert_vars (session *sess, char *cmd);
-int handle_command (session *sess, char *cmd, int check_spch);
-void process_data_init (char *buf, char *cmd, char *word[], char *word_eol[], gboolean handle_quotes, gboolean allow_escape_quotes);
+int handle_command (session *sess, char *cmd, bool check_spch);
+void process_data_init (char *buf, char *cmd, char *word[], char *word_eol[], bool handle_quotes, bool allow_escape_quotes);
 void handle_multiline (session *sess, char *cmd, int history, int nocommand);
 void check_special_chars (char *cmd, bool do_ascii);
 void notc_msg (session *sess);
