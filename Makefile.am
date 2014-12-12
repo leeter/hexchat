@@ -6,4 +6,4 @@ SUBDIRS = po src plugins data
 
 EXTRA_DIST = autogen.sh data
 
-AM_CPPFLAGS = -Wall -Wextra -pedantic -Werror -std=c++0x
+AM_CPPFLAGS = -Wall -Wextra -pedantic -Werror -std=c++0x -D_FORTIFY_SOURCE=2

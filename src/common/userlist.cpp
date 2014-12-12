@@ -368,7 +368,7 @@ userlist_change (struct session *sess, const char oldname[], const char newname[
 		return false;
 
 
-	safe_strcpy(user->get()->nick, newname, NICKLEN);
+	safe_strcpy(user->get()->nick, newname);
 	User* user_ref = user->get();
 	int pos = userlist_resort(*sess, user_ref->nick);
 	fe_userlist_move(sess, user_ref, pos);
@@ -438,7 +438,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	/* add it to our linked list */
 	if (hostname)
 		user->hostname = strdup (hostname);
-	safe_strcpy (user->nick, name + prefix_chars, NICKLEN);
+	safe_strcpy (user->nick, name + prefix_chars);
 	/* is it me? */
 	if (!sess->server->p_cmp (user->nick, sess->server->nick))
 		user->me = true;

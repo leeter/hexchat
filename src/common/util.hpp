@@ -87,6 +87,11 @@ int token_foreach (char *str, char sep, int (*callback) (char *str, void *ud), v
 guint32 str_hash (const char *key);
 guint32 str_ihash (const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, std::size_t bytes_left);
+template<size_t N>
+void safe_strcpy(char(&dest)[N], const char src[])
+{
+	safe_strcpy(dest, src, N);
+}
 void canonalize_key (char *key);
 bool portable_mode ();
 bool unity_mode ();

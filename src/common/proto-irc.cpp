@@ -1085,13 +1085,13 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 	ex = strchr (word[1], '!');
 	if (!ex)							  /* no '!', must be a server message */
 	{
-		safe_strcpy (ip, word[1], sizeof (ip));
-		safe_strcpy (nick, word[1], sizeof (nick));
+		safe_strcpy (ip, word[1]);
+		safe_strcpy (nick, word[1]);
 	} else
 	{
-		safe_strcpy (ip, ex + 1, sizeof (ip));
+		safe_strcpy (ip, ex + 1);
 		ex[0] = 0;
-		safe_strcpy (nick, word[1], sizeof (nick));
+		safe_strcpy (nick, word[1]);
 		ex[0] = '!';
 	}
 

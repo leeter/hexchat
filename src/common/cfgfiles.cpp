@@ -864,34 +864,36 @@ load_default_config(void)
 #else
 	if (g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD))
 	{
-		strcpy (prefs.hex_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD));
+		safe_strcpy (prefs.hex_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD));
 	}
 	else
 	{
-		strcpy (prefs.hex_dcc_dir, g_build_filename (g_get_home_dir (), "Downloads", NULL));
+		boost::filesystem::path home_dir = boost::filesystem::path(g_get_home_dir()) / "Downloads";
+		safe_strcpy (prefs.hex_dcc_dir, home_dir.string().c_str());
 	}
 #endif
+	
 	strcpy (prefs.hex_gui_ulist_doubleclick, "QUERY %s");
 	strcpy (prefs.hex_input_command_char, "/");
-	strcpy (prefs.hex_irc_logmask, g_build_filename ("%n", "%c.log", NULL));
-	strcpy (prefs.hex_irc_nick1, username);
-	strcpy (prefs.hex_irc_nick2, username);
+	strcpy (prefs.hex_irc_logmask, "%n" G_DIR_SEPARATOR_S "%c.log");
+	safe_strcpy (prefs.hex_irc_nick1, username);
+	safe_strcpy (prefs.hex_irc_nick2, username);
 	strcat (prefs.hex_irc_nick2, "_");
-	strcpy (prefs.hex_irc_nick3, username);
+	safe_strcpy (prefs.hex_irc_nick3, username);
 	strcat (prefs.hex_irc_nick3, "__");
-	strcpy (prefs.hex_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
-	strcpy (prefs.hex_irc_part_reason, _("Leaving"));
-	strcpy (prefs.hex_irc_quit_reason, prefs.hex_irc_part_reason);
-	strcpy (prefs.hex_irc_real_name, realname);
-	strcpy (prefs.hex_irc_user_name, username);
+	safe_strcpy (prefs.hex_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
+	safe_strcpy (prefs.hex_irc_part_reason, _("Leaving"));
+	safe_strcpy (prefs.hex_irc_quit_reason, prefs.hex_irc_part_reason);
+	safe_strcpy (prefs.hex_irc_real_name, realname);
+	safe_strcpy (prefs.hex_irc_user_name, username);
 	strcpy (prefs.hex_stamp_log_format, "%b %d %H:%M:%S ");
 	strcpy (prefs.hex_stamp_text_format, "[%H:%M:%S] ");
 
 	font = fe_get_default_font ();
 	if (font)
 	{
-		strcpy (prefs.hex_text_font, font);
-		strcpy (prefs.hex_text_font_main, font);
+		safe_strcpy (prefs.hex_text_font, font);
+		safe_strcpy (prefs.hex_text_font_main, font);
 	}
 	else
 	{
@@ -899,7 +901,7 @@ load_default_config(void)
 		strcpy (prefs.hex_text_font_main, DEF_FONT.c_str());
 	}
 
-	strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.c_str());
+	safe_strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.c_str());
 	langs = get_default_spell_languages ();
 	strcpy (prefs.hex_text_spell_langs, langs);
 

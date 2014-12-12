@@ -2391,7 +2391,7 @@ sound_load ()
 	{
 		if (strncmp (buf, "event=", 6) == 0)
 		{
-			safe_strcpy (evt, buf + 6, sizeof (evt));
+			safe_strcpy (evt, buf + 6);
 		}
 		else if (strncmp (buf, "sound=", 6) == 0)
 		{

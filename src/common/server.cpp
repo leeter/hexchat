@@ -1900,7 +1900,7 @@ server::connect (char *hostname, int port, bool no_login)
 	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
 	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
 	this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
-	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str(), sizeof(this->servername)); });
+	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str()); });
 	this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
 	this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
 	this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
@@ -2283,7 +2283,7 @@ server::set_name (const std::string& name)
 	/* strncpy parameters must NOT overlap */
 	if (name != this->servername)
 	{
-		safe_strcpy (this->servername, name.c_str(), sizeof (this->servername));
+		safe_strcpy (this->servername, name.c_str());
 	}
 
 	while (list)
@@ -2298,11 +2298,11 @@ server::set_name (const std::string& name)
 	{
 		if (this->network)
 		{
-			safe_strcpy (this->server_session->channel, this->network->name, CHANLEN);
+			safe_strcpy (this->server_session->channel, this->network->name);
 		} else
 		{
-			safe_strcpy (this->server_session->channel, name.c_str(), CHANLEN);
-}
+			safe_strcpy (this->server_session->channel, name.c_str());
+		}
 		fe_set_channel (this->server_session);
 	}
 }
