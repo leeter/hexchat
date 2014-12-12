@@ -72,7 +72,7 @@ sysinfo_print_error (const char* msg)
 		hexchat_printf (ph, "%s\t%s", name, msg);
 	}
 	error_printed++;
-
+	
 }
 
 static int
@@ -86,6 +86,7 @@ print_summary (int announce, char* format)
 	char os_host[bsize];
 	char os_user[bsize];
 	char os_kernel[bsize];
+	char *free_space;
 	unsigned long long mem_total;
 	unsigned long long mem_free;
 	unsigned int count;
@@ -123,7 +124,7 @@ print_summary (int announce, char* format)
 
 	format_output ("Distro", buffer, format);
 	strcat (sysinfo, "\017 ");
-	strncat (sysinfo, buffer, bsize - strlen (sysinfo));
+	strncat (sysinfo, buffer, bsize - strlen (sysinfo));	
 
 	/* BEGIN CPU PARSING */
 	if (xs_parse_cpu (cpu_model, cpu_vendor, &cpu_freq, cpu_cache, &count) != 0)
@@ -158,8 +159,10 @@ print_summary (int announce, char* format)
 		return HEXCHAT_EAT_ALL;
 	}
 
-	snprintf (buffer, bsize, "%s", pretty_freespace ("Physical", &mem_free, &mem_total));
-	format_output ("RAM", buffer, format);
+	free_space = pretty_freespace ("Physical", &mem_free, &mem_total);
+	snprintf (buffer, bsize, "%s", free_space);
+	free (free_space);
+	format_output ("RAM", buffer, format);	
 	strcat (sysinfo, "\017 ");
 	strncat (sysinfo, buffer, bsize - strlen (sysinfo));
 
@@ -270,7 +273,7 @@ print_os (int announce, char* format)
 
 	snprintf (buffer, bsize, "%s@%s, %s", user, host, kernel);
 	format_output ("OS", buffer, format);
-
+	
 	if (announce)
 	{
 		hexchat_commandf (ph, "SAY %s", buffer);
@@ -375,7 +378,7 @@ print_ram (int announce, char* format)
 
 	snprintf (string, bsize, "%s - %s", pretty_freespace ("Physical", &mem_free, &mem_total), pretty_freespace ("Swap", &swap_free, &swap_total));
 	format_output ("RAM", string, format);
-
+	
 	if (announce)
 	{
 		hexchat_commandf (ph, "SAY %s", string);
@@ -384,7 +387,7 @@ print_ram (int announce, char* format)
 	{
 		hexchat_printf (ph, "%s", string);
 	}
-
+	
 	return HEXCHAT_EAT_ALL;
 }
 
@@ -582,7 +585,7 @@ netdata_cb (const char * const word[], const char * const word_eol[], void *user
 	char format[bsize];
 	unsigned long long bytes_recv;
 	unsigned long long bytes_sent;
-
+	
 	if (*word[2] == '\0')
 	{
 		hexchat_printf (ph, "%s\tYou must specify a network device (e.g. /NETDATA eth0)!", name);
@@ -597,7 +600,7 @@ netdata_cb (const char * const word[], const char * const word_eol[], void *user
 
 	bytes_recv /= 1024;
 	bytes_sent /= 1024;
-
+	
 	snprintf (netdata, bsize, "%s: %.1f MB Received, %.1f MB Sent", word[2], (double)bytes_recv/1024.0, (double)bytes_sent/1024.0);
 	hexchat_pluginpref_get_str (ph, "format", format);
 	format_output ("Netdata", netdata, format);
@@ -610,7 +613,7 @@ netdata_cb (const char * const word[], const char * const word_eol[], void *user
 	{
 		hexchat_printf (ph, "%s", netdata);
 	}
-
+	
 	return HEXCHAT_EAT_ALL;
 }
 

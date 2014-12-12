@@ -182,8 +182,8 @@ xit:
 		if (pl->version)
 			free (pl->version);
 	}
-	free ((char *)pl->filename);
-	
+		free ((char *)pl->filename);
+
 	plugin_list = g_slist_remove (plugin_list, pl);
 
 	delete pl;
@@ -1159,7 +1159,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 			return sess->server->last_away_reason.c_str();
 		return NULL;
 
-	case 0x2c0b7d03: /* channel */
+  	case 0x2c0b7d03: /* channel */
 		return sess->channel;
 
 	case 0x2c0d614c: /* charset */
@@ -1799,7 +1799,7 @@ hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char
 		g_free (confname);
 		g_free (confname_tmp);
 		if (fpIn)
-			fclose(fpIn);
+			fclose (fpIn);
 		return 0;
 	}
 	else if (fpIn == NULL)	/* no previous config file, no parsing */
@@ -1952,11 +1952,11 @@ hexchat_pluginpref_get_str_real (hexchat_plugin *pl, const char *var, char *dest
 	g_free (unescaped_value);
 	g_free (cfg);
 	return 1;
-	}
+}
 
 int
 hexchat_pluginpref_get_str (hexchat_plugin *pl, const char *var, char *dest)
-	{
+{
 	/* All users of this must ensure dest is >= 512... */
 	return hexchat_pluginpref_get_str_real (pl, var, dest, 512);
 }
@@ -1996,11 +1996,11 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 {
 	char confname[64];
 
-	{
+		{
 		std::unique_ptr<gchar, decltype(&::g_free)> token(g_strdup(pl->name), &::g_free);
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
-	}
+		}
 
 	if (!io::fs::exists(confname)) /* no existing config file, no parsing */
 		return 0;

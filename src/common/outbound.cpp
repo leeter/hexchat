@@ -110,12 +110,12 @@ random_line (const std::string & file_name)
 {
 	if (!file_name.empty() || !boost::filesystem::native(file_name))
 		return file_name;
-	
+
 	boost::iostreams::file_descriptor fd;
 	try
 	{
 		fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
-	} 
+	}
 	catch (const boost::exception&)
 	{
 		return file_name;
@@ -399,13 +399,13 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		else
 		{
 			reason = random_line(prefs.hex_away_reason);
-		}
+	}
 	}
 	sess->server->p_set_away (reason);
 
 	if (sess->server->last_away_reason != reason)
 	{
-		sess->server->last_away_reason = reason;
+			sess->server->last_away_reason = reason;
 	}
 
 	if (!sess->server->connected)
@@ -455,7 +455,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		auto submask = mask.substr(0, at);
 		std::ostringstream username;
 		if (mask[0] == '~' || mask[0] == '+' ||
-			mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
+		    mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
 		{
 			/* the ident is prefixed with something, we replace that sign with an * */
 			submask.erase(0, 1);
@@ -559,7 +559,7 @@ ban (session * sess, char *tbuf, char *mask, char *bantypestr, int deop)
 	std::string banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
 	server *serv = sess->server;
 	serv->p_mode(sess->channel, banmask);
-}
+	}
 
 static int
 cmd_ban (struct session *sess, char *tbuf, char *word[], char *word_eol[])
@@ -1006,11 +1006,11 @@ cmd_mdehop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	std::vector<char*> nicks;
 	for (auto & user : sess->usertree)
 	{
-		if (user->hop && !user->me)
-		{
+	if (user->hop && !user->me)
+	{
 			nicks.push_back(user->nick);
-		}
 	}
+}
 	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '-', 'h', 0);
 
 	return TRUE;
@@ -1022,11 +1022,11 @@ cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	std::vector<char*> nicks;
 	for (auto & user : sess->usertree)
 	{
-		if (user->op && !user->me)
-		{
+	if (user->op && !user->me)
+	{
 			nicks.push_back(user->nick);
-		}
 	}
+}
 	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '-', 'o', 0);
 
 	return TRUE;
@@ -1351,12 +1351,12 @@ cmd_mkick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	const std::string reason = word_eol[2] ? word_eol[2] : std::string();
 	for (auto & user : sess->usertree)
-	{
-		if (user->op && !user->me)
+{
+	if (user->op && !user->me)
 			sess->server->p_kick(sess->channel, user->nick, reason);
-	}
+}
 	for (auto & user : sess->usertree)
-	{
+{
 		if (!user->op && !user->me)
 			sess->server->p_kick(sess->channel, user->nick, reason);
 	}
@@ -1536,7 +1536,7 @@ exec_handle_colors (char *buf, int len)
 	/* any escape codes in this text? */
 	if (strchr (buf, 27) == 0)
 		return;
-	
+
 	std::string nbuf(len + 1, '\0');
 	std::locale locale;
 	while (i < len)
@@ -1971,7 +1971,7 @@ get_file_cb (char *cmd, char *file)
 	char buf[1024 + 128];
 
 	/* execute the command once per file, then once more with
-	  no args */
+      no args */
 	if (file)
 	{
 		snprintf (buf, sizeof (buf), "%s %s", cmd, file);
@@ -2250,7 +2250,7 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 			mask = word[2];
 			if (strchr (mask, '?') == NULL &&
-				strchr (mask, '*') == NULL)
+			    strchr (mask, '*') == NULL)
 			{
 				mask = tbuf;
 				snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
@@ -2676,12 +2676,12 @@ cmd_mop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	std::vector<char*> nicks;
 	for (auto & user : sess->usertree)
+{
+	if (!user->op)
 	{
-		if (!user->op)
-		{
 			nicks.push_back(user->nick);
-		}
 	}
+}
 
 	send_channel_modes (sess, tbuf, &nicks[0], 0, nicks.size(), '+', 'o', 0);
 
@@ -4247,73 +4247,73 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 
 	std::string buf(len + 1, '\0');
 	std::locale locale;
-	while (cmd[j])
-	{
-		switch (cmd[j])
+		while (cmd[j])
 		{
-		case '%':
-			occur++;
-			if (	do_ascii &&
-					j + 3 < len &&
+			switch (cmd[j])
+			{
+			case '%':
+				occur++;
+				if (	do_ascii &&
+						j + 3 < len &&
 					(std::isdigit(cmd[j + 1], locale) && std::isdigit(cmd[j + 2], locale) &&
 					std::isdigit(cmd[j + 3], locale)))
-			{
-				tbuf[0] = cmd[j + 1];
-				tbuf[1] = cmd[j + 2];
-				tbuf[2] = cmd[j + 3];
-				tbuf[3] = 0;
-				buf[i] = atoi (tbuf);
+				{
+					tbuf[0] = cmd[j + 1];
+					tbuf[1] = cmd[j + 2];
+					tbuf[2] = cmd[j + 3];
+					tbuf[3] = 0;
+					buf[i] = atoi (tbuf);
 				std::unique_ptr<gchar, glib_deleter> utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
-				if (utf)
-				{
+					if (utf)
+					{
 					std::copy_n(utf.get(), utf_len, buf.begin() + i);
-					i += (utf_len - 1);
-				}
-				j += 3;
-			} else
-			{
-				switch (cmd[j + 1])
+						i += (utf_len - 1);
+					}
+					j += 3;
+				} else
 				{
-				case 'R':
-					buf[i] = '\026';
+					switch (cmd[j + 1])
+					{
+					case 'R':
+						buf[i] = '\026';
+						break;
+					case 'U':
+						buf[i] = '\037';
+						break;
+					case 'B':
+						buf[i] = '\002';
+						break;
+					case 'I':
+						buf[i] = '\035';
+						break;
+					case 'C':
+						buf[i] = '\003';
+						break;
+					case 'O':
+						buf[i] = '\017';
+						break;
+					case 'H':	/* CL: invisible text code */
+						buf[i] = HIDDEN_CHAR;
+						break;
+					case '%':
+						buf[i] = '%';
+						break;
+					default:
+						buf[i] = '%';
+						j--;
+						break;
+					}
+					j++;
 					break;
-				case 'U':
-					buf[i] = '\037';
-					break;
-				case 'B':
-					buf[i] = '\002';
-					break;
-				case 'I':
-					buf[i] = '\035';
-					break;
-				case 'C':
-					buf[i] = '\003';
-					break;
-				case 'O':
-					buf[i] = '\017';
-					break;
-				case 'H':	/* CL: invisible text code */
-					buf[i] = HIDDEN_CHAR;
-					break;
-				case '%':
-					buf[i] = '%';
-					break;
-				default:
-					buf[i] = '%';
-					j--;
-					break;
+			default:
+					buf[i] = cmd[j];
 				}
-				j++;
-				break;
-		default:
-				buf[i] = cmd[j];
 			}
+			j++;
+			i++;
 		}
-		j++;
-		i++;
-	}
-	buf[i] = 0;
-	if (occur)
+		buf[i] = 0;
+		if (occur)
 		std::copy(buf.cbegin(), buf.cend(), cmd);
 }
 

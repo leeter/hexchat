@@ -397,7 +397,7 @@ static void
 mkdir_p (char *filename)
 {
 	char *dirname;
-	
+
 	dirname = g_path_get_dirname (filename);
 
 	g_mkdir_with_parents (dirname, 0700);
@@ -685,7 +685,7 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 	}
 
 	if (loc)
-		g_free (loc);
+	g_free (loc);
 
 	return len;
 }
@@ -924,7 +924,7 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 	fe_print_text(*sess, &buf[0], timestamp, FALSE);
 
 	if (conv)
-		g_free (conv);
+	g_free (conv);
 }
 
 void
@@ -1850,7 +1850,7 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 			if (arg_idx > numargs)
 			{
 				fprintf(stderr,
-					"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
+							"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
 					arg_idx, numargs, display_evt);
 				break;
 			}
@@ -1873,7 +1873,7 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 				else len = strip_hidden_attribute(mutable_argument, &dst[output_index]);
 				output_index += len;
 			}
-		}
+			}
 			break;
 		case 2:
 			dst[output_index++] = '\n';
@@ -1992,11 +1992,11 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 
 		 a_len_error:
 			fe_message ("String ends in $a", FE_MSG_WARN);
-			free(i);
+			free (i);
 			return 1;
 		 a_range_error:
 			fe_message ("$a value is greater than 255", FE_MSG_WARN);
-			free(i);
+			free (i);
 			return 1;
 		}
 		if (d == 't')
@@ -2020,6 +2020,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		{
 			snprintf (o, sizeof (o), "Error, invalid argument $%c\n", d);
 			fe_message (o, FE_MSG_WARN);
+			free (i);
 			return 1;
 		}
 		d -= '0';
@@ -2087,7 +2088,8 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	if (output)
 		*output = obuf;
 	else
-		free(obuf);
+		free (obuf);
+
 	return 0;
 }
 

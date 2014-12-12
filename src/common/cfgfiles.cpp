@@ -304,7 +304,7 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
-		
+
 		wchar_t* roaming_path_wide = nullptr;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
@@ -448,7 +448,7 @@ struct prefs vars[] =
 	{"gui_tab_dots", P_OFFINT (hex_gui_tab_dots), TYPE_BOOL},
 	{"gui_tab_icons", P_OFFINT (hex_gui_tab_icons), TYPE_BOOL},
 	{"gui_tab_layout", P_OFFINT (hex_gui_tab_layout), TYPE_INT},
-	{ "gui_tab_middleclose", P_OFFINT(hex_gui_tab_middleclose), TYPE_BOOL },
+	{"gui_tab_middleclose", P_OFFINT (hex_gui_tab_middleclose), TYPE_BOOL},
 	{"gui_tab_newtofront", P_OFFINT (hex_gui_tab_newtofront), TYPE_INT},
 	{"gui_tab_pos", P_OFFINT (hex_gui_tab_pos), TYPE_INT},
 	{"gui_tab_scrollchans", P_OFFINT (hex_gui_tab_scrollchans), TYPE_BOOL},
@@ -877,17 +877,17 @@ load_default_config(void)
 	
 	strcpy (prefs.hex_gui_ulist_doubleclick, "QUERY %s");
 	strcpy (prefs.hex_input_command_char, "/");
-	strcpy (prefs.hex_irc_logmask, "%n" G_DIR_SEPARATOR_S "%c.log");
-	safe_strcpy (prefs.hex_irc_nick1, username);
-	safe_strcpy (prefs.hex_irc_nick2, username);
-	strcat (prefs.hex_irc_nick2, "_");
-	safe_strcpy (prefs.hex_irc_nick3, username);
-	strcat (prefs.hex_irc_nick3, "__");
-	safe_strcpy (prefs.hex_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
-	safe_strcpy (prefs.hex_irc_part_reason, _("Leaving"));
-	safe_strcpy (prefs.hex_irc_quit_reason, prefs.hex_irc_part_reason);
-	safe_strcpy (prefs.hex_irc_real_name, realname);
-	safe_strcpy (prefs.hex_irc_user_name, username);
+	strcpy (prefs.hex_irc_logmask, "%n"G_DIR_SEPARATOR_S"%c.log");
+	safe_strcpy (prefs.hex_irc_nick1, username, sizeof(prefs.hex_irc_nick1));
+	safe_strcpy (prefs.hex_irc_nick2, username, sizeof(prefs.hex_irc_nick2));
+	g_strlcat (prefs.hex_irc_nick2, "_", sizeof(prefs.hex_irc_nick2));
+	safe_strcpy (prefs.hex_irc_nick3, username, sizeof(prefs.hex_irc_nick3));
+	g_strlcat (prefs.hex_irc_nick3, "__", sizeof(prefs.hex_irc_nick3));
+	strcpy (prefs.hex_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
+	safe_strcpy (prefs.hex_irc_part_reason, _("Leaving"), sizeof(prefs.hex_irc_part_reason));
+	safe_strcpy (prefs.hex_irc_quit_reason, prefs.hex_irc_part_reason, sizeof(prefs.hex_irc_quit_reason));
+	safe_strcpy (prefs.hex_irc_real_name, realname, sizeof(prefs.hex_irc_real_name));
+	safe_strcpy (prefs.hex_irc_user_name, username, sizeof(prefs.hex_irc_user_name));
 	strcpy (prefs.hex_stamp_log_format, "%b %d %H:%M:%S ");
 	strcpy (prefs.hex_stamp_text_format, "[%H:%M:%S] ");
 
@@ -905,7 +905,7 @@ load_default_config(void)
 
 	safe_strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.c_str());
 	langs = get_default_spell_languages ();
-	strcpy (prefs.hex_text_spell_langs, langs);
+	safe_strcpy (prefs.hex_text_spell_langs, langs, sizeof(prefs.hex_text_spell_langs));
 
 
 	/* private variables */
@@ -980,7 +980,7 @@ load_config (void)
 		{
 		case TYPE_STR:
 			cfg_get_str (cfg, vars[i].name, (char *) &prefs + vars[i].offset,
-					 vars[i].len);
+				     vars[i].len);
 			break;
 		case TYPE_BOOL:
 		case TYPE_INT:

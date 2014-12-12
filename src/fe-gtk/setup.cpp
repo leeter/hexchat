@@ -316,7 +316,7 @@ static const setting tabs_settings[] =
 	{ST_TOGGLE, N_("Show icons in the channel tree"), P_OFFINTNL(hex_gui_tab_icons), 0, 0, 0},
 	{ST_TOGGLE, N_("Show dotted lines in the channel tree"), P_OFFINTNL(hex_gui_tab_dots), 0, 0, 0},
 	{ST_TOGGLE, N_("Scroll mouse-wheel to change tabs"), P_OFFINTNL (hex_gui_tab_scrollchans), 0, 0, 0},
-	{ST_TOGGLE, N_("Middle click to close tab"), P_OFFINTNL (hex_gui_tab_middleclose), 0, 0, 0 },
+	{ST_TOGGLE, N_("Middle click to close tab"), P_OFFINTNL(hex_gui_tab_middleclose), 0, 0, 0},
 	{ST_TOGGLE, N_("Smaller text"), P_OFFINTNL(hex_gui_tab_small), 0, 0, 0},
 	{ST_MENU,	N_("Focus new tabs:"), P_OFFINTNL(hex_gui_tab_newtofront), 0, focusnewtabsmenu, 0},
 	{ST_MENU,	N_("Placement of notices:"), P_OFFINTNL(hex_irc_notice_pos), 0, noticeposmenu, 0},
@@ -1189,7 +1189,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	/* only http and Socks5 can auth */
 	if ( (set->offset == P_OFFSETNL(hex_net_proxy_pass) ||
 			set->offset == P_OFFSETNL(hex_net_proxy_user)) &&
-		 (setup_prefs.hex_net_proxy_type != 4 && setup_prefs.hex_net_proxy_type != 3 && setup_prefs.hex_net_proxy_type != 5) )
+	     (setup_prefs.hex_net_proxy_type != 4 && setup_prefs.hex_net_proxy_type != 3 && setup_prefs.hex_net_proxy_type != 5) )
 		gtk_widget_set_sensitive (wid, FALSE);
 
 	if (set->type == ST_ENTRY)
@@ -1942,7 +1942,7 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (tree),
-								-1, _("Categories"), renderer, "text", 0, NULL);
+							    -1, _("Categories"), renderer, "text", 0, NULL);
 	gtk_tree_view_expand_all (GTK_TREE_VIEW (tree));
 
 	frame = gtk_frame_new (NULL);

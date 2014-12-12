@@ -743,7 +743,7 @@ servlist_edit_cb (GtkWidget *but, gpointer none)
 	servlist_channels_populate (selected_net, edit_trees[CHANNEL_TREE]);
 	servlist_commands_populate (selected_net, edit_trees[CMD_TREE]);
 	g_signal_connect (G_OBJECT (edit_win), "delete_event",
-							G_CALLBACK (servlist_editwin_delete_cb), 0);
+						 	G_CALLBACK (servlist_editwin_delete_cb), 0);
 	g_signal_connect (G_OBJECT (edit_win), "configure_event",
 							G_CALLBACK (servlist_edit_configure_cb), 0);
 	gtk_widget_show (edit_win);
@@ -1138,7 +1138,7 @@ servlist_connect_cb (GtkWidget *button, gpointer userdata)
 		return;
 	}
 
-	if (!is_session (servlist_sess))
+ 	if (!is_session (servlist_sess))
 		servlist_sess = NULL;	/* open a new one */
 
 	{
@@ -1766,8 +1766,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 							G_CALLBACK (servlist_editserver_cb), model);
 	gtk_tree_view_insert_column_with_attributes (
 								GTK_TREE_VIEW (treeview_servers), -1,
-								0, renderer,
-								"text", 0,
+						 		0, renderer,
+						 		"text", 0,
 								"editable", 1,
 								NULL);
 
@@ -1789,8 +1789,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 							G_CALLBACK (servlist_editchannel_cb), model);
 	gtk_tree_view_insert_column_with_attributes (
 								GTK_TREE_VIEW (treeview_channels), -1,
-								_("Channel"), renderer,
-								"text", 0,
+						 		_("Channel"), renderer,
+						 		"text", 0,
 								"editable", 2,
 								NULL);
 
@@ -1799,8 +1799,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 							G_CALLBACK (servlist_editkey_cb), model);
 	gtk_tree_view_insert_column_with_attributes (
 								GTK_TREE_VIEW (treeview_channels), -1,
-								_("Key (Password)"), renderer,
-								"text", 1,
+						 		_("Key (Password)"), renderer,
+						 		"text", 1,
 								"editable", 2,
 								NULL);
 
@@ -1827,8 +1827,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 							G_CALLBACK (servlist_editcommand_cb), model);
 	gtk_tree_view_insert_column_with_attributes (
 								GTK_TREE_VIEW (treeview_commands), -1,
-								0, renderer,
-								"text", 0,
+						 		0, renderer,
+						 		"text", 0,
 								"editable", 1,
 								NULL);
 
@@ -2104,8 +2104,8 @@ servlist_open_networks (void)
 							G_CALLBACK (servlist_celledit_cb), model);
 	gtk_tree_view_insert_column_with_attributes (
 								GTK_TREE_VIEW (treeview_networks), -1,
-								0, renderer,
-								"text", 0,
+						 		0, renderer,
+						 		"text", 0,
 								"editable", 1,
 								"weight", 2,
 								NULL);
@@ -2233,7 +2233,7 @@ fe_serverlist_open (session *sess)
 	servlist_networks_populate (networks_tree, network_list);
 
 	g_signal_connect (G_OBJECT (serverlist_win), "delete_event",
-							G_CALLBACK (servlist_delete_cb), 0);
+						 	G_CALLBACK (servlist_delete_cb), 0);
 	g_signal_connect (G_OBJECT (serverlist_win), "configure_event",
 							G_CALLBACK (servlist_configure_cb), 0);
 	g_signal_connect (G_OBJECT (gtk_tree_view_get_selection (GTK_TREE_VIEW (networks_tree))),
