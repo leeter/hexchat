@@ -1150,8 +1150,8 @@ menu_del (char *path, char *label)
 	return 0;
 }
 
-static char
-menu_is_mainmenu_root (char *path, gint16 *offset)
+static bool
+menu_is_mainmenu_root (const char path[], gint16 &offset)
 {
 	static const char *menus[] = {"\x4$TAB","\x5$TRAY","\x4$URL","\x5$NICK","\x5$CHAN"};
 	int i;
@@ -1160,13 +1160,15 @@ menu_is_mainmenu_root (char *path, gint16 *offset)
 	{
 		if (!strncmp (path, menus[i] + 1, menus[i][0]))
 		{
-			*offset = menus[i][0] + 1;	/* number of bytes to offset the root */
-			return 0;	/* is not main menu */
+			offset = menus[i][0];	/* number of bytes to offset the root */
+			if (path[offset] != '\0')
+				offset += 1;
+			return false;	/* is not main menu */
 		}
 	}
 
-	*offset = 0;
-	return 1;	/* is main menu */
+	offset = 0;
+	return true;	/* is main menu */
 }
 
 static void
@@ -1190,7 +1192,7 @@ menu_add (char *path, char *label, char *cmd, char *ucmd, int pos, int state, in
 		throw std::bad_alloc();
 	me->pos = pos;
 	me->modifier = mod;
-	me->is_main = menu_is_mainmenu_root (path, &me->root_offset);
+	me->is_main = menu_is_mainmenu_root (path, me->root_offset);
 	me->state = state;
 	me->markup = markup;
 	me->enable = enable;

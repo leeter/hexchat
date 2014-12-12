@@ -30,7 +30,7 @@ struct menu_entry
 	gint16 modifier;	/* keybinding */
 	gint16 root_offset;	/* bytes to offset ->path */
 
-	char is_main;	/* is part of the Main menu? (not a popup) */
+	bool is_main;	/* is part of the Main menu? (not a popup) */
 	char state;	/* state of toggle items */
 	char markup;	/* use pango markup? */
 	char enable;	/* enabled? sensitivity */
