@@ -467,7 +467,7 @@ irc_init (session *sess)
 	load_perform_file (sess, "startup.txt");
 }
 
-session::session(struct server *serv, const char *from, ::session::session_type type, int focus)
+session::session(struct server *serv, const char *from, ::session::session_type type)
 	:server(serv),
 	logfd(-1),
 	scrollfd(-1),
@@ -523,9 +523,7 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 static session *
 session_new (server *serv, const char *from, int type, int focus)
 {
-	session *sess;
-
-	sess = new session(serv, from, type, focus);
+	session *sess = new session(serv, from, type);
 
 	sess_list = g_slist_prepend (sess_list, sess);
 
