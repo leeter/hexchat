@@ -45,6 +45,7 @@
 #include "../common/text.hpp"
 #include "../common/plugin.h"
 #include "../common/typedef.h"
+#include "../common/server.hpp"
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
 #include "menu.hpp"
@@ -1437,31 +1438,43 @@ static glong offset_to_len(const char str[], glong offset)
 	return g_utf8_offset_to_pointer(str, offset) - str;
 }
 
+namespace{
+	struct g_completion_deleter
+	{
+		void operator()(GCompletion * comp)
+		{
+			g_completion_free(comp);
+		}
+	};
+	typedef std::unique_ptr<GCompletion, g_completion_deleter> GCompletionPtr;
+}
+
 static int
-key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
-							struct session *sess)
+key_action_tab_comp(GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
+struct session *sess)
 {
-	int len = 0, elen = 0, i = 0, cursor_pos, ent_start = 0, comp = 0, found = 0,
-		prefix_len, skip_len = 0, is_nick, is_cmd = 0;
+	int len = 0, elen = 0, i = 0, cursor_pos, ent_start = 0, comp = 0,
+		prefix_len, skip_len = 0;
+	bool found = false, is_nick = false, is_cmd = false, has_nick_prefix = false;
 	char ent[CHANLEN], *postfix = NULL, *result, *ch;
 	GList *list = NULL, *tmp_list = NULL;
 	const char *text;
-	GCompletion *gcomp = NULL;
 	std::string buf;
+	GCompletionPtr gcomp;
 	/* force the IM Context to reset */
-	SPELL_ENTRY_SET_EDITABLE (t, FALSE);
-	SPELL_ENTRY_SET_EDITABLE (t, TRUE);
+	SPELL_ENTRY_SET_EDITABLE(t, FALSE);
+	SPELL_ENTRY_SET_EDITABLE(t, TRUE);
 
-	text = SPELL_ENTRY_GET_TEXT (t);
+	text = SPELL_ENTRY_GET_TEXT(t);
 	if (text[0] == 0)
 		return 1;
 
-	len = g_utf8_strlen (text, -1); /* must be null terminated */
+	len = g_utf8_strlen(text, -1); /* must be null terminated */
 
-	cursor_pos = SPELL_ENTRY_GET_POS (t);
+	cursor_pos = SPELL_ENTRY_GET_POS(t);
 
 	/* handle "nick: " or "nick " or "#channel "*/
-	ch = g_utf8_find_prev_char(text, g_utf8_offset_to_pointer(text,cursor_pos));
+	ch = g_utf8_find_prev_char(text, g_utf8_offset_to_pointer(text, cursor_pos));
 	if (ch && ch[0] == ' ')
 	{
 		skip_len++;
@@ -1470,9 +1483,9 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			return 2;
 
 		cursor_pos = g_utf8_pointer_to_offset(text, ch);
-		if (cursor_pos && (g_utf8_get_char_validated(ch, -1) == ':' || 
-					g_utf8_get_char_validated(ch, -1) == ',' ||
-					g_utf8_get_char_validated (ch, -1) == g_utf8_get_char_validated (prefs.hex_completion_suffix, -1)))
+		if (cursor_pos && (g_utf8_get_char_validated(ch, -1) == ':' ||
+			g_utf8_get_char_validated(ch, -1) == ',' ||
+			g_utf8_get_char_validated(ch, -1) == g_utf8_get_char_validated(prefs.hex_completion_suffix, -1)))
 		{
 			skip_len++;
 		}
@@ -1481,12 +1494,12 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 	}
 
 	comp = skip_len;
-	
+
 	/* store the text following the cursor for reinsertion later */
 	if ((cursor_pos + skip_len) < len)
 		postfix = g_utf8_offset_to_pointer(text, cursor_pos + skip_len);
 
-	for (ent_start = cursor_pos; ; --ent_start)
+	for (ent_start = cursor_pos;; --ent_start)
 	{
 		if (ent_start == 0)
 			break;
@@ -1498,15 +1511,22 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 	if (ent_start == 0 && text[0] == prefs.hex_input_command_char[0])
 	{
 		ent_start++;
-		is_cmd = 1;
+		is_cmd = true;
+	}
+	else if (sess->server->chantypes.find_first_of(text[ent_start]) == std::string::npos)
+	{
+		is_nick = true;
+		if (sess->server->nick_prefixes.find_first_of(text[ent_start]) != std::string::npos)
+		{
+			has_nick_prefix = true;
+		}
+		++ent_start;
 	}
 	
 	prefix_len = ent_start;
 	elen = cursor_pos - ent_start;
 
 	g_utf8_strncpy (ent, g_utf8_offset_to_pointer (text, prefix_len), elen);
-
-	is_nick = (ent[0] == '#' || ent[0] == '&' || is_cmd) ? 0 : 1;
 	
 	if (sess->type == session::SESS_DIALOG && is_nick)
 	{
@@ -1514,7 +1534,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 		if (rfc_ncasecmp (sess->channel, ent, elen) == 0)
 		{
 			result =  sess->channel;
-			is_nick = 0;
+			is_nick = false;
 		}
 		else
 			return 2;
@@ -1523,14 +1543,14 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 	{
 		if (is_nick)
 		{
-			gcomp = g_completion_new((GCompletionFunc)gcomp_nick_func);
+			gcomp.reset(g_completion_new((GCompletionFunc)gcomp_nick_func));
 			tmp_list = userlist_double_list(sess); /* create a temp list so we can free the memory */
 			if (prefs.hex_completion_sort == 1)	/* sort in last-talk order? */
 				tmp_list = g_list_sort (tmp_list, (GCompareFunc)talked_recent_cmp);
 		}
 		else
 		{
-			gcomp = g_completion_new (NULL);
+			gcomp.reset(g_completion_new (NULL));
 			if (is_cmd)
 			{
 				tmp_list = cmdlist_double_list (command_list);
@@ -1544,10 +1564,10 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 				tmp_list = chanlist_double_list (sess_list);
 		}
 		tmp_list = g_list_reverse(tmp_list); /* make the comp entries turn up in the right order */
-		g_completion_set_compare (gcomp, (GCompletionStrncmpFunc)rfc_ncasecmp);
+		g_completion_set_compare (gcomp.get(), (GCompletionStrncmpFunc)rfc_ncasecmp);
 		if (tmp_list)
 		{
-			g_completion_add_items (gcomp, tmp_list);
+			g_completion_add_items (gcomp.get(), tmp_list);
 			g_list_free (tmp_list);
 		}
 
@@ -1556,12 +1576,11 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			key_action_tab_clean ();
 			comp = 0;
 		}
-	
-		list = g_completion_complete_utf8 (gcomp, comp ? old_gcomp.data : ent, &result);
+
+		list = g_completion_complete_utf8 (gcomp.get(), comp ? old_gcomp.data : ent, &result);
 		
 		if (result == NULL) /* No matches found */
 		{
-			g_completion_free(gcomp);
 			return 2;
 		}
 
@@ -1571,7 +1590,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			{
 				if(rfc_ncasecmp(static_cast<char*>(list->data), ent, elen) == 0)
 				{
-					found = 1;
+					found = true;
 					break;
 				}
 				list = list->next;
@@ -1599,7 +1618,6 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			else
 			{
 				g_free(result);
-				g_completion_free(gcomp);
 				return 2;
 			}
 		}
@@ -1653,7 +1671,6 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 						list = list->next;
 					}
 					PrintText (sess, buf);
-					g_completion_free(gcomp);
 					return 2;
 				}
 				/* Only one matching entry */
@@ -1670,7 +1687,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 		if (prefix_len)
 			buf.append(text, prefix_len);
 		buf.append(result); /* make sure nicksuffix and space fits */
-		if (!prefix_len && is_nick)
+		if ((!prefix_len || has_nick_prefix) && is_nick)
 			buf.append(&prefs.hex_completion_suffix[0]); // TODO: validate UTF8
 		buf.push_back(' ');
 		cursor_pos = buf.size();
@@ -1679,8 +1696,6 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 		SPELL_ENTRY_SET_TEXT (t, buf.c_str());
 		SPELL_ENTRY_SET_POS (t, len_to_offset(buf.c_str(), cursor_pos));
 	}
-	if (gcomp)
-		g_completion_free(gcomp);
 	return 2;
 }
 #undef COMP_BUF
