@@ -4,7 +4,7 @@ include $(top_srcdir)/m4/clang-analyze.am
 
 noinst_LIBRARIES = libhexchatcommon.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../libirc
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../libirc -D_FORTIFY_SOURCE=2
 
 EXTRA_DIST = \
 	base64.hpp \
