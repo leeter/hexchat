@@ -1053,14 +1053,14 @@ menu_free (menu_entry *me)
 
 /* strings equal? but ignore underscores */
 
-int
-menu_streq (const char *s1, const char *s2, int def)
+
+bool menu_streq (const char s1[], const char s2[], bool def)
 {
 	/* for separators */
 	if (s1 == NULL && s2 == NULL)
-		return 0;
+		return false;
 	if (s1 == NULL || s2 == NULL)
-		return 1;
+		return true;
 	while (*s1)
 	{
 		if (*s1 == '_')
@@ -1068,17 +1068,16 @@ menu_streq (const char *s1, const char *s2, int def)
 		if (*s2 == '_')
 			s2++;
 		if (*s1 != *s2)
-			return 1;
+			return true;
 		s1++;
 		s2++;
 	}
 	if (!*s2)
-		return 0;
+		return false;
 	return def;
 }
 
-static menu_entry *
-menu_entry_find (char *path, char *label)
+static menu_entry *menu_entry_find (const char path[], const char label[])
 {
 	GSList *list;
 	menu_entry *me;
@@ -1098,7 +1097,7 @@ menu_entry_find (char *path, char *label)
 }
 
 static void
-menu_del_children (char *path, char *label)
+menu_del_children (const char path[], const char label[])
 {
 	GSList *list, *next;
 	menu_entry *me;
@@ -1116,7 +1115,7 @@ menu_del_children (char *path, char *label)
 	{
 		me = static_cast<menu_entry*>(list->data);
 		next = list->next;
-		if (!menu_streq (buf, me->path, 0))
+		if (!menu_streq (buf, me->path, false))
 		{
 			menu_list = g_slist_remove (menu_list, me);
 			menu_free (me);
@@ -1125,8 +1124,7 @@ menu_del_children (char *path, char *label)
 	}
 }
 
-static int
-menu_del (char *path, char *label)
+static bool menu_del (const char path[], const char label[])
 {
 	GSList *list;
 	menu_entry *me;
@@ -1135,19 +1133,19 @@ menu_del (char *path, char *label)
 	while (list)
 	{
 		me = static_cast<menu_entry*>(list->data);
-		if (!menu_streq (me->label, label, 1) && !menu_streq (me->path, path, 1))
+		if (!menu_streq (me->label, label, true) && !menu_streq (me->path, path, true))
 		{
 			menu_list = g_slist_remove (menu_list, me);
 			fe_menu_del (me);
 			menu_free (me);
 			/* delete this item's children, if any */
 			menu_del_children (path, label);
-			return 1;
+			return true;
 		}
 		list = list->next;
 	}
 
-	return 0;
+	return false;
 }
 
 static bool
@@ -1172,7 +1170,7 @@ menu_is_mainmenu_root (const char path[], gint16 &offset)
 }
 
 static void
-menu_add (char *path, char *label, char *cmd, char *ucmd, int pos, int state, int markup, int enable, int mod, int key, char *group, char *icon)
+menu_add (const char path[], const char label[], const char cmd[], const char ucmd[], int pos, int state, int markup, int enable, int mod, int key, const char group[], const char icon[])
 {
 	menu_entry *me;
 
@@ -1216,13 +1214,13 @@ menu_add (char *path, char *label, char *cmd, char *ucmd, int pos, int state, in
 		me->icon = strdup (icon);
 
 	menu_list = g_slist_append (menu_list, me);
-	label = fe_menu_add (me);
-	if (label)
+	char* menu_label = fe_menu_add (me);
+	if (menu_label)
 	{
 		/* FE has given us a stripped label */
 		free (me->label);
-		me->label = strdup (label);
-		g_free (label); /* this is from pango */
+		me->label = strdup(menu_label);
+		g_free(menu_label); /* this is from pango */
 	}
 }
 
@@ -2017,7 +2015,7 @@ cmd_getfile (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static void
-get_str_cb (int cancel, char *val, getvalinfo *info)
+get_str_cb (int cancel, const char val[], getvalinfo *info)
 {
 	char buf[512];
 	std::unique_ptr<getvalinfo> info_ptr(info);

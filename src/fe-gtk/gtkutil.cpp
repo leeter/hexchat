@@ -298,12 +298,11 @@ gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad)
 static void
 gtkutil_get_str_response (GtkDialog *dialog, gint arg1, gpointer entry)
 {
-	void (*callback) (int cancel, char *text, void *user_data);
-	char *text;
+	void (*callback) (int cancel, const char text[], void *user_data);
 	void *user_data;
 
-	text = (char *) gtk_entry_get_text (GTK_ENTRY (entry));
-	callback = reinterpret_cast<void(*)(int, char *, void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
+	const char* text = gtk_entry_get_text (GTK_ENTRY (entry));
+	callback = reinterpret_cast<void(*)(int, const char [], void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
 	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
 
 	switch (arg1)

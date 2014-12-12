@@ -1899,7 +1899,7 @@ menu_find_item (GtkWidget *menu, char *name)
 			labeltext = static_cast<const char*>(g_object_get_data (G_OBJECT (item), "name"));
 			if (!labeltext)
 				labeltext = gtk_label_get_text (GTK_LABEL (child));
-			if (!menu_streq (labeltext, name, 1))
+			if (!menu_streq (labeltext, name, true))
 				return item;
 		} else if (name == NULL)
 		{
