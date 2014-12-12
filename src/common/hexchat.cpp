@@ -775,7 +775,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -1149,7 +1149,7 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
 

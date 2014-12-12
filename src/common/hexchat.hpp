@@ -509,7 +509,4 @@ struct glib_deleter
 /* CL: get a random int in the range [0..n-1]. DON'T use rand() % n, it gives terrible results. */
 int RAND_INT(int n); 
 
-#define hexchat_filename_from_utf8 g_filename_from_utf8
-#define hexchat_filename_to_utf8 g_filename_to_utf8
-
 #endif
