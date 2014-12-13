@@ -1524,14 +1524,14 @@ static short escconv[] =
 {  1,4,3,5,2,10,6,1, 1,7,9,8,12,11,13,1 };
 
 static void
-exec_handle_colors (const char *buf, int len)
+exec_handle_colors (std::string & buf, int len)
 {
 	char numb[16] = { 0 };
 	int i = 0, j = 0, k = 0, firstn = 0, col, colf = 0, colb = 0;
 	bool esc = false, backc = false, bold = false;
 
 	/* any escape codes in this text? */
-	if (strchr (buf, 27) == 0)
+	if (buf.find_first_of(27) == std::string::npos)
 		return;
 
 	std::string nbuf(len + 1, '\0');
@@ -1627,7 +1627,7 @@ norm:			nbuf[j] = buf[i];
 	}
 
 	nbuf[j] = 0;
-	std::copy_n (nbuf.cbegin(), j + 1, buf);
+	std::copy_n (nbuf.cbegin(), j + 1, buf.begin());
 }
 
 #ifndef HAVE_MEMRCHR
@@ -1672,7 +1672,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 		kill(s->childpid, SIGKILL);
 		if (len) {
 			buf[len] = '\0';
-			exec_handle_colors(buf.c_str(), len);
+			exec_handle_colors(buf, len);
 			if (s->tochannel)
 			{
 				/* must turn off auto-completion temporarily */
@@ -1707,7 +1707,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 	}
 
 	if (len) {
-		exec_handle_colors (&buf[0], len);
+		exec_handle_colors (buf, len);
 		if (s->tochannel)
 			handle_multiline (s->sess, &buf[0], FALSE, TRUE);
 		else
@@ -4387,12 +4387,6 @@ handle_say (session *sess, char *text, int check_spch)
 	dcc::DCC *dcc;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
-	char pdibuf_static[1024];
-	char newcmd_static[1024];
-	char *pdibuf = pdibuf_static;
-	char *newcmd = newcmd_static;
-	int len;
-	int newcmdlen = sizeof newcmd_static;
 	message_tags_data no_tags = message_tags_data();
 
 	if (strcmp (sess->channel, "(lastlog)") == 0)
@@ -4401,12 +4395,10 @@ handle_say (session *sess, char *text, int check_spch)
 		return;
 	}
 
-	len = strlen (text);
-	if (len >= sizeof pdibuf_static)
-		pdibuf = static_cast<char*>(malloc(len + 1));
+	auto len = strlen(text);
+	std::string pdibuf(len + 1, '\0');
 
-	if (len + NICKLEN >= newcmdlen)
-		newcmd = static_cast<char*>(malloc(newcmdlen = len + NICKLEN + 1));
+	std::string newcmd(len + NICKLEN + 1, '\0');
 
 	if (check_spch && prefs.hex_input_perc_color)
 		check_special_chars (text, !!prefs.hex_input_perc_ascii);
@@ -4416,39 +4408,38 @@ handle_say (session *sess, char *text, int check_spch)
 	word_eol[PDIWORDS] = NULL;
 
 	/* split the text into words and word_eol */
-	process_data_init (pdibuf, text, word, word_eol, true, false);
+	process_data_init (&pdibuf[0], text, word, word_eol, true, false);
 
 	/* a command of "" can be hooked for non-commands */
-	if (plugin_emit_command (sess, "", word, word_eol))
-		goto xit;
+	if (plugin_emit_command(sess, "", word, word_eol))
+		return;
 
 	/* incase a plugin did /close */
-	if (!is_session (sess))
-		goto xit;
+	if (!is_session(sess))
+		return;
 
 	if (!sess->channel[0] || sess->type == session::SESS_SERVER || sess->type == session::SESS_NOTICES || sess->type == session::SESS_SNOTICES)
 	{
 		notj_msg (sess);
-		goto xit;
+		return;
 	}
 
 	if (prefs.hex_completion_auto)
-		perform_nick_completion (sess, text, newcmd);
+		perform_nick_completion (sess, text, &newcmd[0]);
 	else
-		safe_strcpy (newcmd, text, newcmdlen);
+		safe_strcpy (&newcmd[0], text, newcmd.size());
 
-	text = newcmd;
 
 	if (sess->type == session::SESS_DIALOG)
 	{
 		/* try it via dcc, if possible */
-		dcc = dcc::dcc_write_chat (sess->channel, text);
+		dcc = dcc::dcc_write_chat (sess->channel, &newcmd[0]);
 		if (dcc)
 		{
 			inbound_chanmsg (*sess->server, NULL, sess->channel,
-								  sess->server->nick, text, TRUE, FALSE, &no_tags);
+				sess->server->nick, &newcmd[0], TRUE, FALSE, &no_tags);
 			set_topic (sess, net_ip (dcc->addr), net_ip (dcc->addr));
-			goto xit;
+			return;
 		}
 	}
 
@@ -4456,34 +4447,27 @@ handle_say (session *sess, char *text, int check_spch)
 	{
 		char *split_text = NULL;
 		int cmd_length = 13; /* " PRIVMSG ", " ", :, \r, \n */
-		int offset = 0;
+		size_t offset = 0;
 
-		while ((split_text = split_up_text (sess, text + offset, cmd_length, split_text)))
+		while ((split_text = split_up_text(sess, &newcmd[0] + offset, cmd_length, split_text)))
 		{
 			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
-								  split_text, TRUE, FALSE, &no_tags);
+								  split_text, true, false, &no_tags);
 			sess->server->p_message (sess->channel, split_text);
 			
 			if (*split_text)
-				offset += strlen(split_text);
+				offset += std::strlen(split_text);
 			
 			g_free(split_text);
 		}
 
 		inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
-							  text + offset, TRUE, FALSE, &no_tags);
-		sess->server->p_message (sess->channel, text + offset);
+			&newcmd[0] + offset, true, false, &no_tags);
+		sess->server->p_message(sess->channel, &newcmd[0] + offset);
 	} else
 	{
 		notc_msg (sess);
 	}
-
-xit:
-	if (pdibuf != pdibuf_static)
-		free (pdibuf);
-
-	if (newcmd != newcmd_static)
-		free (newcmd);
 }
 
 namespace
