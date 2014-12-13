@@ -1696,7 +1696,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 
 	auto rest_pos = buf.find_last_of('\n');// static_cast<char*>(memrchr(buf, '\n', len));
 	auto rest = buf.begin();
-	if (res_pos != std::string::npos)
+	if (rest_pos != std::string::npos)
 		rest += rest_pos + 1;
 
 	if (*rest) {
@@ -4546,17 +4546,12 @@ int
 handle_command (session *sess, char *cmd, bool check_spch)
 {
 	struct popup *pop;
-	int user_cmd = FALSE;
+	bool user_cmd = false;
 	GSList *list;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
 	static int command_level = 0;
 	struct commands *int_cmd;
-	char pdibuf_static[1024];
-	char tbuf_static[TBUFSIZE];
-	char *pdibuf;
-	char *tbuf;
-	int len;
 	int ret = TRUE;
 
 	if (command_level > 99)
@@ -4567,27 +4562,13 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	command_level++;
 	/* anything below MUST DEC command_level before returning */
 
-	len = strlen (cmd);
-	if (len >= sizeof (pdibuf_static))
-	{
-		pdibuf = static_cast<char*>(malloc(len + 1));
-	}
-	else
-	{
-		pdibuf = pdibuf_static;
-	}
+	auto len = strlen (cmd);
+	std::string pdibuf(len + 1, '\0');
 
-	if ((len * 2) >= sizeof (tbuf_static))
-	{
-		tbuf = static_cast<char*>(malloc((len * 2) + 1));
-	}
-	else
-	{
-		tbuf = tbuf_static;
-	}
+	std::string tbuf((len * 2) + 1, '\0');
 
 	/* split the text into words and word_eol */
-	process_data_init (pdibuf, cmd, word, word_eol, TRUE, TRUE);
+	process_data_init (&pdibuf[0], cmd, word, word_eol, true, true);
 
 	/* ensure an empty string at index 32 for cmd_deop etc */
 	/* (internal use only, plugins can still only read 1-31). */
@@ -4598,7 +4579,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	/* redo it without quotes processing, for some commands like /JOIN */
 	if (int_cmd && !int_cmd->handle_quotes)
 	{
-		process_data_init (pdibuf, cmd, word, word_eol, FALSE, FALSE);
+		process_data_init (&pdibuf[0], cmd, word, word_eol, false, false);
 	}
 
 	if (check_spch && prefs.hex_input_perc_color)
@@ -4608,13 +4589,15 @@ handle_command (session *sess, char *cmd, bool check_spch)
 
 	if (plugin_emit_command (sess, word[1], word, word_eol))
 	{
-		goto xit;
+		command_level--;
+		return ret;
 	}
 
 	/* incase a plugin did /close */
 	if (!is_session (sess))
 	{
-		goto xit;
+		command_level--;
+		return ret;
 	}
 
 	/* first see if it's a userCommand */
@@ -4624,15 +4607,16 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		pop = (struct popup *) list->data;
 		if (!g_ascii_strcasecmp (pop->name.c_str(), word[1]))
 		{
-			user_command (sess, tbuf, pop->cmd.c_str(), word, word_eol);
-			user_cmd = TRUE;
+			user_command (sess, &tbuf[0], pop->cmd.c_str(), word, word_eol);
+			user_cmd = true;
 		}
 		list = list->next;
 	}
 
 	if (user_cmd)
 	{
-		goto xit;
+		command_level--;
+		return ret;
 	}
 
 	/* now check internal commands */
@@ -4650,14 +4634,14 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		}
 		else
 		{
-			switch (int_cmd->callback (sess, tbuf, word, word_eol))
+			switch (int_cmd->callback (sess, &tbuf[0], word, word_eol))
 			{
 				case FALSE:
-					help (sess, tbuf, int_cmd->name, TRUE);
+					help(sess, &tbuf[0], int_cmd->name, TRUE);
 					break;
 				case 2:
 					ret = FALSE;
-					goto xit;
+					return ret;
 			}
 		}
 	}
@@ -4674,18 +4658,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		}
 	}
 
-xit:
 	command_level--;
-
-	if (pdibuf != pdibuf_static)
-	{
-		free (pdibuf);
-	}
-
-	if (tbuf != tbuf_static)
-	{
-		free (tbuf);
-	}
 
 	return ret;
 }
