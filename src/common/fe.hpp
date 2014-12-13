@@ -20,15 +20,16 @@
 #ifndef HEXCHAT_FE_HPP
 #define HEXCHAT_FE_HPP
 
+#include <cstdint>
 #include <string>
 #include "userlist.hpp"
 
 /* for storage of /menu entries */
 struct menu_entry
 {
-	gint32 pos;	/* position */
-	gint16 modifier;	/* keybinding */
-	gint16 root_offset;	/* bytes to offset ->path */
+	std::int32_t pos;	/* position */
+	std::int16_t modifier;	/* keybinding */
+	std::int16_t root_offset;	/* bytes to offset ->path */
 
 	bool is_main;	/* is part of the Main menu? (not a popup) */
 	char state;	/* state of toggle items */
@@ -54,17 +55,24 @@ void fe_timeout_remove (int tag);
 void fe_new_window (struct session *sess, int focus);
 void fe_new_server (struct server *serv);
 void fe_add_rawlog (struct server *serv, const char *text, size_t len, int outbound);
-#define FE_MSG_WAIT 1
-#define FE_MSG_INFO 2
-#define FE_MSG_WARN 4
-#define FE_MSG_ERROR 8
-#define FE_MSG_MARKUP 16
+enum fe_msg
+{
+	FE_MSG_WAIT = 1,
+	FE_MSG_INFO = 2,
+	FE_MSG_WARN = 4,
+	FE_MSG_ERROR = 8,
+	FE_MSG_MARKUP = 16
+};
 void fe_message (const std::string & msg, int flags);
-#define FIA_READ 1
-#define FIA_WRITE 2
-#define FIA_EX 4
-#define FIA_FD 8
-int fe_input_add(int sok, int flags, GIOFunc func, void *data);
+typedef int fia_flags;
+enum fia : fia_flags
+{
+	FIA_READ = 1,
+	FIA_WRITE = 2,
+	FIA_EX = 4,
+	FIA_FD = 8
+};
+int fe_input_add(int sok, fia_flags flags, GIOFunc func, void *data);
 void fe_input_remove (int tag);
 void fe_idle_add(GSourceFunc func, void *data);
 void fe_set_topic (session *sess, const std::string& topic, const std::string & stripped_topic);
