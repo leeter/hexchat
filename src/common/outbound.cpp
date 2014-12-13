@@ -38,6 +38,8 @@
 #include <cctype>
 #include <cerrno>
 #include <stdexcept>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/scope_exit.hpp>
@@ -4491,83 +4493,74 @@ xit:
 		free (newcmd);
 }
 
-char *
-command_insert_vars (session *sess, char *cmd)
+namespace
 {
-	int pos;
-	GString *expanded;
+	class replace_formatter
+	{
+		const ircnet * net;
+	public:
+		replace_formatter(ircnet * net)
+			:net(net){}
+
+		template<typename FindResultT>
+		std::string operator()(const FindResultT& Match)
+		{
+			const std::string & temp = Match.str();
+			switch (temp.back()){
+			case 'n':
+				if (net->nick)
+				{
+					return net->nick;
+				}
+				else
+				{
+					return prefs.hex_irc_nick1;
+				}
+			case 'p':
+				if (net->pass)
+				{
+					return net->pass;
+				}
+			case 'r':
+				if (net->real)
+				{
+					return net->real;
+				}
+				else
+				{
+					return prefs.hex_irc_real_name;
+				}
+			case 'u':
+				if (net->user)
+				{
+					return net->user;
+				}
+				else
+				{
+					return prefs.hex_irc_user_name;
+				}
+			default:
+				return temp;
+			}
+		}
+	};
+
+}// end anonymous namespace
+
+std::string command_insert_vars (session *sess,  const std::string& cmd)
+{
 	ircnet *mynet = sess->server->network;
+	static const boost::regex replacevals("%(n|p|r|u)");
 
 	if (!mynet)										/* shouldn't really happen */
 	{
-		return g_strdup (cmd);						/* the return value will be freed so we must srtdup() it */
+		return cmd;
 	}
 
-	expanded = g_string_new (NULL);
-
-	while (strchr (cmd, '%') != NULL)
-	{
-		pos = (int) (strchr (cmd, '%') - cmd);		/* offset to the first '%' */
-		g_string_append_len (expanded, cmd, pos);	/* copy contents till the '%' */
-		cmd += pos + 1;								/* jump to the char after the '%' */
-
-		switch (cmd[0])
-		{
-			case 'n':
-				if (mynet->nick)
-				{
-					g_string_append (expanded, mynet->nick);
-				}
-				else
-				{
-					g_string_append (expanded, prefs.hex_irc_nick1);
-				}
-				cmd++;
-				break;
-
-			case 'p':
-				if (mynet->pass)
-				{
-					g_string_append (expanded, mynet->pass);
-				}
-				cmd++;
-				break;
-
-			case 'r':
-				if (mynet->real)
-				{
-					g_string_append (expanded, mynet->real);
-				}
-				else
-				{
-					g_string_append (expanded, prefs.hex_irc_real_name);
-				}
-				cmd++;
-				break;
-
-			case 'u':
-				if (mynet->user)
-				{
-					g_string_append (expanded, mynet->user);
-				}
-				else
-				{
-					g_string_append (expanded, prefs.hex_irc_user_name);
-				}
-				cmd++;
-				break;
-
-			default:								/* unsupported character? copy it along with the '%'! */
-				cmd--;
-				g_string_append_len (expanded, cmd, 2);
-				cmd += 2;
-				break;
-		}
-	}
-
-	g_string_append (expanded, cmd);				/* copy any remaining string after the last '%' */
-
-	return g_string_free (expanded, FALSE);
+	std::ostringstream expanded;
+	std::ostream_iterator<char> out(expanded);
+	boost::regex_replace(out, cmd.cbegin(), cmd.cend(), replacevals, replace_formatter(mynet));
+	return expanded.str();
 }
 
 /* handle a command, without the '/' prefix */
