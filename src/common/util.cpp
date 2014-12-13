@@ -47,6 +47,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
+#include <boost/format.hpp>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -1582,26 +1583,24 @@ unity_mode (void)
 }
 
 #ifdef USE_OPENSSL
-static char *
-str_sha256hash (const char *string)
+static std::string str_sha256hash (const std::string & string)
 {
-	int i;
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	char buf[SHA256_DIGEST_LENGTH * 2 + 1];		/* 64 digit hash + '\0' */
 	SHA256_CTX sha256;
 
 	SHA256_Init (&sha256);
-	SHA256_Update (&sha256, string, strlen (string));
+	SHA256_Update (&sha256, string.c_str(), string.size());
 	SHA256_Final (hash, &sha256);
 
-	for (i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	for (auto & i : hash)// int i = 0; i < SHA256_DIGEST_LENGTH; i++)
 	{
 		sprintf (buf + (i * 2), "%02x", hash[i]);
 	}
 
 	buf[SHA256_DIGEST_LENGTH * 2] = 0;
 
-	return g_strdup (buf);
+	return buf;
 }
 
 /**
@@ -1619,43 +1618,41 @@ str_sha256hash (const char *string)
  * <a href="http://www.askyb.com/cpp/openssl-hmac-hasing-example-in-cpp/">example 1</a>,
  * <a href="http://stackoverflow.com/questions/242665/understanding-engine-initialization-in-openssl">example 2</a>.
  */
-char *
-challengeauth_response (char *username, char *password, char *challenge)
+std::string challengeauth_response(const std::string & username, const std::string &password, const std::string &challenge)
 {
-	int i;
-	char *user;
-	char *pass;
-	char *passhash;
-	char *key;
-	char *keyhash;
-	unsigned char *digest;
-	GString *buf = g_string_new_len (NULL, SHA256_DIGEST_LENGTH * 2);
-
-	user = g_strdup (username);
-	*user = rfc_tolower (*username);			/* convert username to lowercase as per the RFC */
-
-	pass = g_strndup (password, 10);			/* truncate to 10 characters */
-	passhash = str_sha256hash (pass);
-	g_free (pass);
-
-	key = g_strdup_printf ("%s:%s", user, passhash);
-	g_free (user);
-	g_free (passhash);
-
-	keyhash = str_sha256hash (key);
-	g_free (key);
-
-	digest = HMAC (EVP_sha256 (), keyhash, strlen (keyhash), (unsigned char *) challenge, strlen (challenge), NULL, NULL);
-	g_free (keyhash);
-
-	for (i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	std::string user(username);
+	for (auto & c : user)
 	{
-		g_string_append_printf (buf, "%02x", (unsigned int) digest[i]);
+		c = rfc_tolower(c);			/* convert username to lowercase as per the RFC */
 	}
 
-	digest = (unsigned char *) g_string_free (buf, FALSE);
+	std::string pass(password);
+	pass.resize(10, '\0'); /* truncate to 10 characters */
+	auto passhash = str_sha256hash (pass.c_str());
 
-	return (char *) digest;
+	std::unique_ptr<gchar, glib_deleter> key(g_strdup_printf ("%s:%s", user.c_str(), passhash.c_str()));
+
+	auto keyhash = str_sha256hash (key.get());
+
+	std::vector<unsigned char> digest(EVP_MAX_MD_SIZE);
+
+	unsigned int digest_len = digest.size();
+	HMAC (
+		EVP_sha256 (),
+		keyhash.c_str(),
+		keyhash.size(),
+		(const unsigned char *) challenge.c_str(),
+		challenge.size(),
+		&digest[0],
+		&digest_len);
+
+	std::ostringstream buf;
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
+	{
+		buf << boost::format("%02x") % (unsigned int)digest[i];
+	}
+
+	return buf.str();
 }
 #endif
 
@@ -1742,10 +1739,8 @@ strftime_validated (char *dest, size_t destsize, const char *format, const struc
 gsize
 strftime_utf8 (char *dest, gsize destsize, const char *format, time_t time)
 {
-	gsize result;
-	GDate* date = g_date_new ();
-	g_date_set_time_t (date, time);
-	result = g_date_strftime (dest, destsize, format, date);
-	g_date_free (date);
+	std::unique_ptr<GDate, decltype(&g_date_free)>date(g_date_new (), g_date_free);
+	g_date_set_time_t (date.get(), time);
+	auto result = g_date_strftime (dest, destsize, format, date.get());
 	return result;
 }

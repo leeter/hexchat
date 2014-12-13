@@ -1996,11 +1996,11 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 {
 	char confname[64];
 
-		{
-		std::unique_ptr<gchar, decltype(&::g_free)> token(g_strdup(pl->name), &::g_free);
+	{
+		std::unique_ptr<gchar, glib_deleter> token(g_strdup(pl->name));
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
-		}
+	}
 
 	if (!io::fs::exists(confname)) /* no existing config file, no parsing */
 		return 0;
