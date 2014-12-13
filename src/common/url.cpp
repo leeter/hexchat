@@ -133,10 +133,6 @@ url_add (const char *urltext, int len)
 	}
 
 	data = new char[len + 1];
-	if (!data)
-	{
-		return;
-	}
 	memcpy (data, urltext, len);
 	data[len] = 0;
 
@@ -159,7 +155,7 @@ url_add (const char *urltext, int len)
 	/* the URL is saved already, only continue if we need the URL grabber too */
 	if (!prefs.hex_url_grabber)
 	{
-		free (data);
+		delete[] data;
 		return;
 	}
 
@@ -171,7 +167,7 @@ url_add (const char *urltext, int len)
 
 	if (url_find (data))
 	{
-		free (data);
+		delete[] data;
 		return;
 	}
 
@@ -188,7 +184,7 @@ url_add (const char *urltext, int len)
 
 			pos = static_cast<char*>(tree_remove_at_pos(static_cast<tree*>(url_tree), 0));
 			g_tree_remove (url_btree, pos);
-			free (pos);
+			delete [] pos;
 		}
 	}
 
