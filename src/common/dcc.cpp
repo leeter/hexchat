@@ -380,7 +380,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	size_t len;
 	gsize utf_len;
 	char portbuf[32];
-	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+	message_tags_data no_tags = message_tags_data();
 
 	len = strlen(line);
 	if (dcc->serv->using_cp1255)

@@ -1540,7 +1540,7 @@ server::p_inline (char *buf, int len)
 	char *word_eol[PDIWORDS+1];
 	char pdibuf_static[522]; /* 1 line can potentially be 512*6 in utf8 */
 	char *pdibuf = pdibuf_static;
-	message_tags_data tags_data = MESSAGE_TAGS_DATA_INIT;
+	message_tags_data tags_data = message_tags_data();
 
 	/* need more than 522? fall back to malloc */
 	if (len >= sizeof (pdibuf_static))

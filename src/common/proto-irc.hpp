@@ -25,11 +25,6 @@
 #include <ctime>
 #include "hexchat.hpp"
 
-#define MESSAGE_TAGS_DATA_INIT			\
-	{									\
-		(time_t)0, /* timestamp */		\
-	}
-
 /* Message tag information that might be passed along with a server message
  *
  * See http://ircv3.atheme.org/specification/capability-negotiation-3.1

@@ -1390,7 +1390,7 @@ cmd_dns (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
 	struct User *user;
-	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+	message_tags_data no_tags = message_tags_data();
 
 	if (*nick)
 	{
@@ -1700,14 +1700,14 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 		rest += rest_pos + 1;
 
 	if (*rest) {
-		s->linebuf.resize(len - (rest - buf.begin());
+		s->linebuf.resize(len - (rest - buf.begin()));
 		std::copy_n(rest, s->linebuf.size(), s->linebuf.begin());
 		 *rest = '\0';
 		len -= s->linebuf.size(); /* possibly 0 */
 	}
 
 	if (len) {
-		exec_handle_colors (buf, len);
+		exec_handle_colors (&buf[0], len);
 		if (s->tochannel)
 			handle_multiline (s->sess, &buf[0], FALSE, TRUE);
 		else
@@ -2597,7 +2597,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	char *split_text = NULL;
 	int cmd_length = 22; /* " PRIVMSG ", " ", :, \001ACTION, " ", \001, \r, \n */
 	int offset = 0;
-	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+	message_tags_data no_tags = message_tags_data();
 
 	if (!(*act))
 		return FALSE;
@@ -2737,7 +2737,7 @@ cmd_msg (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				newsess = find_channel (*(sess->server), nick);
 			if (newsess)
 			{
-				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+				message_tags_data no_tags = message_tags_data();
 
 				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 				{
@@ -2815,7 +2815,7 @@ cmd_nick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			sess->server->p_change_nick (nick);
 		else
 		{
-			message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+			message_tags_data no_tags = message_tags_data();
 			inbound_newnick (*(sess->server), sess->server->nick, nick, TRUE,
 								  &no_tags);
 		}
@@ -2888,7 +2888,7 @@ cmd_notify (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		}
 	} else
 	{
-		message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+		message_tags_data no_tags = message_tags_data();
 		notify_showlist (sess, &no_tags);
 	}
 	return TRUE;
@@ -2983,7 +2983,7 @@ cmd_query (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 		if (*msg)
 		{
-			message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+			message_tags_data no_tags = message_tags_data();
 
 			if (!sess->server->connected)
 			{
@@ -3739,7 +3739,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 			sess = static_cast<session*>(list->data);
 			if (sess->type == session::SESS_CHANNEL)
 			{
-				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+				message_tags_data no_tags = message_tags_data();
 
 				inbound_chanmsg (*sess->server, NULL, sess->channel,
 									  sess->server->nick, word_eol[2], TRUE, FALSE, 
@@ -4393,7 +4393,7 @@ handle_say (session *sess, char *text, int check_spch)
 	char *newcmd = newcmd_static;
 	int len;
 	int newcmdlen = sizeof newcmd_static;
-	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
+	message_tags_data no_tags = message_tags_data();
 
 	if (strcmp (sess->channel, "(lastlog)") == 0)
 	{
