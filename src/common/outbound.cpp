@@ -1170,7 +1170,7 @@ menu_is_mainmenu_root (const char path[], gint16 &offset)
 }
 
 static void
-menu_add (const char path[], const char label[], const char cmd[], const char ucmd[], int pos, int state, int markup, int enable, int mod, int key, const char group[], const char icon[])
+menu_add (const char path[], const char label[], const char cmd[], const char ucmd[], int pos, int state, bool markup, bool enable, int mod, int key, const char group[], const char icon[])
 {
 	menu_entry *me;
 
@@ -1231,9 +1231,9 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int len;
 	int pos = 0xffff;
 	int state = 0;
-	int toggle = FALSE;
-	int enable = TRUE;
-	int markup = FALSE;
+	bool toggle = false;
+	bool enable = true;
+	bool markup = false;
 	int key = 0;
 	int mod = 0;
 	char *label;
@@ -1246,7 +1246,7 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	/* -eX enabled or not? */
 	if (word[idx][0] == '-' && word[idx][1] == 'e')
 	{
-		enable = atoi (word[idx] + 2);
+		enable = !!atoi (word[idx] + 2);
 		idx++;
 	}
 

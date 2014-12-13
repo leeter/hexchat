@@ -32,8 +32,8 @@ struct menu_entry
 
 	bool is_main;	/* is part of the Main menu? (not a popup) */
 	char state;	/* state of toggle items */
-	char markup;	/* use pango markup? */
-	char enable;	/* enabled? sensitivity */
+	bool markup;	/* use pango markup? */
+	bool enable;	/* enabled? sensitivity */
 
 	int key;
 	char *path;
