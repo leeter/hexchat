@@ -571,6 +571,13 @@ new_ircwindow (server *serv, const char *name, ::session::session_type type, int
 	return sess;
 }
 
+nbexec::nbexec(session *sess)
+	:myfd(),
+	childpid(),
+	tochannel(),						/* making this int keeps the struct 4-byte aligned */
+	iotag(),
+	sess(sess){}
+
 static void
 exec_notify_kill (session * sess)
 {
@@ -584,8 +591,7 @@ exec_notify_kill (session * sess)
 		waitpid (re->childpid, nullptr, WNOHANG);
 		fe_input_remove (re->iotag);
 		close (re->myfd);
-			free(re->linebuf);
-		free (re);
+		delete re;
 	}
 #endif
 }

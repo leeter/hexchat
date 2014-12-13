@@ -1036,21 +1036,20 @@ cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 GSList *menu_list = NULL;
 
+menu_entry::~menu_entry()
+{
+	free(this->path);
+	free(this->label);
+	free(this->cmd);
+	free(this->ucmd);
+	free(this->group);
+	free(this->icon);
+}
+
 static void
 menu_free (menu_entry *me)
-{
-	free (me->path);
-	if (me->label)
-		free (me->label);
-	if (me->cmd)
-		free (me->cmd);
-	if (me->ucmd)
-		free (me->ucmd);
-	if (me->group)
-		free (me->group);
-	if (me->icon)
-		free (me->icon);
-	free (me);
+{	
+	delete me;
 }
 
 /* strings equal? but ignore underscores */
@@ -1187,9 +1186,7 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 		return;
 	}
 
-	me = static_cast<menu_entry*>(malloc(sizeof(menu_entry)));
-	if (!me)
-		throw std::bad_alloc();
+	me = new menu_entry;
 	me->pos = pos;
 	me->modifier = mod;
 	me->is_main = menu_is_mainmenu_root (path, me->root_offset);
@@ -1527,7 +1524,7 @@ static short escconv[] =
 {  1,4,3,5,2,10,6,1, 1,7,9,8,12,11,13,1 };
 
 static void
-exec_handle_colors (char *buf, int len)
+exec_handle_colors (const char *buf, int len)
 {
 	char numb[16] = { 0 };
 	int i = 0, j = 0, k = 0, firstn = 0, col, colf = 0, colb = 0;
@@ -1649,21 +1646,24 @@ memrchr (const void *block, int c, size_t size)
 static gboolean
 exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 {
-	char *buf, *readpos, *rest;
-	int rd, len;
+	char *readpos;
+	int rd;
 	int sok = s->myfd;
+	std::string buf;
 
-	len = s->buffill;
-	if (len) {
+	auto len = s->linebuf.size();
+	if (!s->linebuf.empty()) {
 		/* append new data to buffered incomplete line */
-		buf = static_cast<char*>(malloc(len + 2050));
-		std::copy_n(s->linebuf, len, buf);
-		readpos = buf + len;
-		free(s->linebuf);
-		s->linebuf = NULL;
+		buf = s->linebuf;
+		buf.resize(len + 2050);
+		readpos = &buf[0] + len;
+		s->linebuf.erase();
 	}
 	else
-		readpos = buf = static_cast<char*>(calloc(sizeof(char), 2050));
+	{
+		buf.resize(2050, '\0');
+		readpos = &buf[0];
+	}
 
 	rd = read (sok, readpos, 2048);
 	if (rd < 1)
@@ -1672,53 +1672,47 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 		kill(s->childpid, SIGKILL);
 		if (len) {
 			buf[len] = '\0';
-			exec_handle_colors(buf, len);
+			exec_handle_colors(buf.c_str(), len);
 			if (s->tochannel)
 			{
 				/* must turn off auto-completion temporarily */
 				unsigned int old = prefs.hex_completion_auto;
 				prefs.hex_completion_auto = 0;
-				handle_multiline (s->sess, buf, FALSE, TRUE);
+				handle_multiline (s->sess, &buf[0], FALSE, TRUE);
 				prefs.hex_completion_auto = old;
 			}
 			else
 				PrintText (s->sess, buf);
 		}
-		free(buf);
 		waitpid (s->childpid, NULL, 0);
 		s->sess->running_exec = NULL;
 		fe_input_remove (s->iotag);
 		close (sok);
-		free (s);
+		delete s;
 		return TRUE;
 	}
 	len += rd;
 	buf[len] = '\0';
 
-	rest = static_cast<char*>(memrchr(buf, '\n', len));
-	if (rest)
-		rest++;
-	else
-		rest = buf;
+	auto rest_pos = buf.find_last_of('\n');// static_cast<char*>(memrchr(buf, '\n', len));
+	auto rest = buf.begin();
+	if (res_pos != std::string::npos)
+		rest += rest_pos + 1;
+
 	if (*rest) {
-		s->buffill = len - (rest - buf); /* = strlen(rest) */
-		s->linebuf = static_cast<char*>(malloc(s->buffill + 1));
-		std::copy_n(rest, s->buffill, s->linebuf);
-		*rest = '\0';
-		len -= s->buffill; /* possibly 0 */
+		s->linebuf.resize(len - (rest - buf.begin());
+		std::copy_n(rest, s->linebuf.size(), s->linebuf.begin());
+		 *rest = '\0';
+		len -= s->linebuf.size(); /* possibly 0 */
 	}
-	else
-		s->buffill = 0;
 
 	if (len) {
 		exec_handle_colors (buf, len);
 		if (s->tochannel)
-			handle_multiline (s->sess, buf, FALSE, TRUE);
+			handle_multiline (s->sess, &buf[0], FALSE, TRUE);
 		else
 			PrintText (s->sess, buf);
 	}
-
-	free(buf);
 	return TRUE;
 }
 
@@ -1780,10 +1774,9 @@ cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			return FALSE;
 		}
 #endif
-		s = (struct nbexec *) calloc (1, sizeof (struct nbexec));
+		s = new nbexec(sess);
 		s->myfd = fds[0];
 		s->tochannel = tochannel;
-		s->sess = sess;
 
 		pid = fork ();
 		if (pid == 0)
@@ -1827,7 +1820,7 @@ cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			PrintText (sess, "Error in fork(2)\n");
 			close(fds[0]);
 			close(fds[1]);
-			free (s);
+			delete s;
 		} else
 		{
 			/* Parent path */

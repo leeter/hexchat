@@ -102,15 +102,15 @@ const std::size_t CHANLEN = 300;
 const std::size_t PDIWORDS = 32;
 const std::size_t USERNAMELEN = 10;
 const char HIDDEN_CHAR = 8;			/* invisible character for xtext */
-
+struct session;
 struct nbexec
 {
+	nbexec(session *);
 	int myfd;
 	int childpid;
 	int tochannel;						/* making this int keeps the struct 4-byte aligned */
 	int iotag;
-	char *linebuf;
-	int buffill;
+	std::string linebuf;
 	struct session *sess;
 };
 
@@ -503,8 +503,7 @@ struct glib_deleter
 {
 	void operator()(gpointer ptr)
 	{
-		if (ptr)
-			g_free(ptr);
+		g_free(ptr);
 	}
 };
 

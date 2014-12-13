@@ -27,6 +27,7 @@
 /* for storage of /menu entries */
 struct menu_entry
 {
+	~menu_entry();
 	std::int32_t pos;	/* position */
 	std::int16_t modifier;	/* keybinding */
 	std::int16_t root_offset;	/* bytes to offset ->path */
