@@ -21,7 +21,7 @@
 #define HEXCHAT_CTCP_HPP
 
 void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
-						char *word[], char *word_eol[], int id,
+						char *word[], char *word_eol[], bool id,
 						const message_tags_data *tags_data);
 
 #endif

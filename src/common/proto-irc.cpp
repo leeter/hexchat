@@ -1267,7 +1267,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			{
 				char *to = word[3];
 				int len;
-				int id = FALSE;	/* identified */
+				bool id = false;	/* identified */
 				if (*to)
 				{
 					/* Handle limited channel messages, for now no special event */
@@ -1282,7 +1282,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					{
 						if (*text == '+')
 						{
-							id = TRUE;
+							id = true;
 							text++;
 						} else if (*text == '-')
 							text++;
@@ -1296,7 +1296,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 							flood_check(nick, ip, serv, sess, flood_check_type::CTCP);
 						if (g_ascii_strncasecmp (text, "DCC ", 4) == 0)
 							/* redo this with handle_quotes TRUE */
-							process_data_init (word[1], word_eol[1], word, word_eol, TRUE, FALSE);
+							process_data_init (word[1], word_eol[1], word, word_eol, true, false);
 						ctcp_handle (sess, to, nick, ip, text, word, word_eol, id,
 										 tags_data);
 					} else
@@ -1305,7 +1305,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 						{
 							if (ignore_check(word[1], ignore::IG_CHAN))
 								return;
-							inbound_chanmsg (serv, NULL, to, nick, text, FALSE, id,
+							inbound_chanmsg (serv, NULL, to, nick, text, false, id,
 												  tags_data);
 						} else
 						{

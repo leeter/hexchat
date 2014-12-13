@@ -77,14 +77,14 @@ void inbound_login_start (session *sess, char *nick, char *servname,
 void inbound_login_end (session *sess, char *text,
 								const message_tags_data *tags_data);
 void inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
-							 char *text, char fromme, int id, 
+							 char *text, bool fromme, bool id, 
 							 const message_tags_data *tags_data);
 void clear_channel (session &sess);
 void set_topic (session *sess, const std::string& topic, const std::string &stripped_topic);
-void inbound_privmsg (server &serv, char *from, char *ip, char *text, int id, 
+void inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id, 
 							 const message_tags_data *tags_data);
 void inbound_action (session *sess, const std::string & chan, char *from, char *ip,
-							char *text, int fromme, int id,
+							char *text, bool fromme, bool id,
 							const message_tags_data *tags_data);
 void inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 							 const message_tags_data *tags_data);

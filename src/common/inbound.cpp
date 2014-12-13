@@ -141,7 +141,7 @@ inbound_open_dialog (server &serv, const char *from,
 }
 
 static void
-inbound_make_idtext (server &serv, char *idtext, int max, int id)
+inbound_make_idtext (server &serv, char *idtext, int max, bool id)
 {
 	idtext[0] = 0;
 	if (serv.have_idmsg || serv.have_accnotify)
@@ -159,7 +159,7 @@ inbound_make_idtext (server &serv, char *idtext, int max, int id)
 }
 
 void
-inbound_privmsg (server &serv, char *from, char *ip, char *text, int id,
+inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 					  const message_tags_data *tags_data)
 {
 	session *sess;
@@ -337,7 +337,7 @@ is_hilight (char *from, char *text, session *sess, server &serv)
 
 void
 inbound_action (session *sess, const std::string& chan, char *from, char *ip, char *text,
-					 int fromme, int id, const message_tags_data *tags_data)
+					 bool fromme, bool id, const message_tags_data *tags_data)
 {
 	session *def = sess;
 	if (!sess->server)
@@ -385,12 +385,12 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 	{
 		if (fromme)
 		{
-			sess->msg_said = FALSE;
-			sess->new_data = TRUE;
+			sess->msg_said = false;
+			sess->new_data = true;
 		} else
 		{
-			sess->msg_said = TRUE;
-			sess->new_data = FALSE;
+			sess->msg_said = true;
+			sess->new_data = false;
 		}
 		lastact_update (sess);
 	}
@@ -401,9 +401,9 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 		nickchar[0] = user->prefix[0];
 		user->lasttalk = time (0);
 		if (user->account)
-			id = TRUE;
+			id = true;
 		if (user->me)
-			fromme = TRUE;
+			fromme = true;
 	}
 
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
@@ -434,7 +434,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 
 void
 inbound_chanmsg (server &serv, session *sess, char *chan, char *from, 
-					  char *text, char fromme, int id, 
+					  char *text, bool fromme, bool id, 
 					  const message_tags_data *tags_data)
 {
 	struct User *user;
@@ -459,8 +459,8 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 
 	if (sess != current_tab)
 	{
-		sess->msg_said = TRUE;
-		sess->new_data = FALSE;
+		sess->msg_said = true;
+		sess->new_data = false;
 		lastact_update (sess);
 	}
 
@@ -468,11 +468,11 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 	if (user)
 	{
 		if (user->account)
-			id = TRUE;
+			id = true;
 		nickchar[0] = user->prefix[0];
 		user->lasttalk = time (0);
 		if (user->me)
-			fromme = TRUE;
+			fromme = true;
 	}
 
 	if (fromme)
