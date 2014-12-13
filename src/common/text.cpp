@@ -810,9 +810,6 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 	/* worst case scenario: every byte turns into 3 bytes */
 	utf8ostringstream output_stream;
 	std::ostream_iterator<unsigned char, unsigned char> output(output_stream);
-	//res = output = static_cast<unsigned char*>(g_malloc ((len * 3) + 1));
-	/*if (!output)
-		return NULL;*/
 
 	while (len)
 	{
@@ -1636,14 +1633,12 @@ pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 		len = strlen (text) + 1;
 		if (pntevts_text[penum])
 			free (pntevts_text[penum]);
-		pntevts_text[penum] = static_cast<char*>(malloc (len));
+		pntevts_text[penum] = new char[len];
 		std::copy_n(text, len, pntevts_text[penum]);
 	}
 
-	if (text)
-		free (text);
-	if (snd)
-		free (snd);
+	delete[] text;
+	delete[] snd;
 	*i_text = NULL;
 	*i_snd = NULL;
 	*i_penum = 0;
@@ -1917,29 +1912,29 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 {
 	struct pevt_stage1 *s = NULL, *base = NULL, *last = NULL, *next;
 	int clen;
-	char o[4096], d, *obuf, *i;
-	int output_index, input_index, max = -1, len, x;
+	char o[4096], d, *obuf;
+	int output_index, max = -1, x;
 
-	len = strlen (input);
-	i = static_cast<char*>(malloc (len + 1));
-	std::copy_n(input, len + 1, i);
-	check_special_chars (i, true);
+	auto len = strlen (input);
+	std::string buf(input, len + 1);
+	check_special_chars (&buf[0], true);
 
-	len = strlen (i);
+	len = strlen (buf.c_str());
 
-	clen = output_index = input_index = 0;
-
+	clen = output_index = 0;
+	auto input_itr = buf.cbegin();
+	auto end = buf.cbegin() + len;
 	for (;;)
 	{
-		if (input_index == len)
+		if (input_itr == end)
 			break;
-		d = i[input_index++];
+		d = *input_itr++;// buf[input_index++];
 		if (d != '$')
 		{
 			o[output_index++] = d;
 			continue;
 		}
-		if (i[input_index] == '$')
+		if (*input_itr == '$')
 		{
 			o[output_index++] = '$';
 			continue;
@@ -1961,28 +1956,28 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 			memcpy (&(s->data[1 + sizeof (int)]), o, output_index);
 			output_index = 0;
 		}
-		if (input_index == len)
+		if (input_itr == end)
 		{
 			fe_message ("String ends with a $", FE_MSG_WARN);
 			return 1;
 		}
-		d = i[input_index++];
+		d = *input_itr++;
 		if (d == 'a')
 		{								  /* Hex value */
 			x = 0;
-			if (input_index == len)
+			if (input_itr == end)
 				goto a_len_error;
-			d = i[input_index++];
+			d = *input_itr++;
 			d -= '0';
 			x = d * 100;
-			if (input_index == len)
+			if (input_itr == end)
 				goto a_len_error;
-			d = i[input_index++];
+			d = *input_itr++;
 			d -= '0';
 			x += d * 10;
-			if (input_index == len)
+			if (input_itr == end)
 				goto a_len_error;
-			d = i[input_index++];
+			d = *input_itr++;
 			d -= '0';
 			x += d;
 			if (x > 255)
@@ -1992,11 +1987,9 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 
 		 a_len_error:
 			fe_message ("String ends in $a", FE_MSG_WARN);
-			free (i);
 			return 1;
 		 a_range_error:
 			fe_message ("$a value is greater than 255", FE_MSG_WARN);
-			free (i);
 			return 1;
 		}
 		if (d == 't')
@@ -2020,7 +2013,6 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		{
 			snprintf (o, sizeof (o), "Error, invalid argument $%c\n", d);
 			fe_message (o, FE_MSG_WARN);
-			free (i);
 			return 1;
 		}
 		d -= '0';
@@ -2080,8 +2072,6 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		free (s);
 		s = next;
 	}
-
-	free (i);
 
 	if (max_arg)
 		*max_arg = max;
