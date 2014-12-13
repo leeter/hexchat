@@ -205,13 +205,13 @@ public:
 	bool using_cp1255;	/* encoding is CP1255/WINDOWS-1255? */
 	bool using_irc;		/* encoding is "IRC" (CP1252/UTF-8 hybrid)? */
 	bool use_who;			/* whether to use WHO command to get dcc_ip */
-	unsigned int sasl_mech;			/* mechanism for sasl auth */
 	bool sent_saslauth;	/* have sent AUTHENICATE yet */
 	bool sent_capend;	/* have sent CAP END yet */
 #ifdef USE_OPENSSL
 	bool use_ssl;				  /* is server SSL capable? */
 	bool accept_invalid_cert;/* ignore result of server's cert. verify */
 #endif
+	int sasl_mech;			/* mechanism for sasl auth */
 };
 /* eventually need to keep the tcp_* functions isolated to server.c */
 int tcp_send_len (server &serv, const char *buf, size_t len);

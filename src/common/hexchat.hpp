@@ -469,10 +469,13 @@ struct msproxy_state_t
 };
 
 /* SASL Mechanisms */
-#define MECH_PLAIN 0
-#define MECH_BLOWFISH 1
-#define MECH_AES 2
-#define MECH_EXTERNAL 3
+enum sasl_mech
+{
+	MECH_PLAIN = 0,
+	MECH_BLOWFISH,
+	MECH_AES,
+	MECH_EXTERNAL
+};
 
 struct ircnet;
 struct favchannel;
