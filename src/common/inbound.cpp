@@ -68,8 +68,7 @@ clear_channel (session &sess)
 
 	log_close (sess);
 
-	free(sess.current_modes);
-	sess.current_modes = nullptr;
+	sess.current_modes.erase();
 
 	if (sess.mode_timeout_tag)
 	{

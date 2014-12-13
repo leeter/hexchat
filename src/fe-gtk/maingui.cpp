@@ -411,7 +411,7 @@ fe_set_title (session &sess)
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
 						 sess.server->nick, sess.server->get_network(true),
-						 sess.channel, sess.current_modes ? sess.current_modes : "");
+						 sess.channel, sess.current_modes.c_str());
 		}
 		else
 		{

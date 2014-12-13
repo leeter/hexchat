@@ -489,7 +489,6 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 
 	quitreason(nullptr),
 	topic(nullptr),
-	current_modes(nullptr),
 
 	lastlog_sess(nullptr),
 	running_exec(nullptr),
@@ -643,7 +642,6 @@ session::~session()
 
 	exec_notify_kill(this);
 	free(this->topic);
-	free(this->current_modes);
 }
 
 void

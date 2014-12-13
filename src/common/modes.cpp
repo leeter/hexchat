@@ -237,25 +237,26 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 	if (!sess->server)
 		throw std::runtime_error("Invalid Server Reference");
 	server &serv = *sess->server;
-	GString *current = g_string_new(sess->current_modes);
+	// deliberate copy for exception safety
+	std::string current(sess->current_modes);
 	gint mode_pos = -1;
-	gchar *current_char = current->str;
-	gint modes_length;
+	auto current_char = current.begin();
+	std::string::size_type modes_length;
 	gint argument_num = 0;
 	gint argument_offset = 0;
 	gint argument_length = 0;
 	int i = 0;
-	gchar *arguments_start;
+	//gchar *arguments_start;
 
 	/* find out if the mode currently exists */
-	arguments_start = g_strstr_len(current->str	, -1, " ");
-	if (arguments_start) {
-		modes_length = arguments_start - current->str;
+	auto arguments_start = current.find_first_of(' ');
+	if (arguments_start != std::string::npos) {
+		modes_length = arguments_start;
 	}
 	else {
-		modes_length = current->len;
+		modes_length = current.size();
 		/* set this to the end of the modes */
-		arguments_start = current->str + current->len;
+		arguments_start = current.size();
 	}
 
 	while (mode_pos == -1 && i < modes_length)
@@ -275,7 +276,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 	 * (including leading space) */
 	if (mode_pos != -1 && mode_has_arg(serv, '+', mode))
 	{
-		current_char = current->str;
+		current_char = current.begin();
 
 		i = 0;
 		while (i <= mode_pos)
@@ -287,7 +288,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 		}
 
 		/* check through arguments for where to start */
-		current_char = arguments_start;
+		current_char = current.begin() + arguments_start;
 		i = 0;
 		while (i < argument_num && *current_char != '\0')
 		{
@@ -296,7 +297,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 			if (i != argument_num)
 				current_char++;
 		}
-		argument_offset = current_char - current->str;
+		argument_offset = current_char - current.begin();
 
 		/* how long the existing argument is for this key
 		 * important for malloc and strncpy */
@@ -322,41 +323,38 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 			if (mode_has_arg(serv, sign, mode))
 			{
 				/* leave the old space there */
-				current = g_string_erase(current, argument_offset+1, argument_length-1);
-				current = g_string_insert(current, argument_offset+1, arg);
+				current.erase(argument_offset + 1, argument_length - 1);
+				current.insert(argument_offset + 1, arg);
 
-				free(sess->current_modes);
-				sess->current_modes = g_string_free(current, FALSE);
+				sess->current_modes = std::move(current);
 			}
 		}
 		/* mode wasn't there before */
 		else
 		{
 			/* insert the new mode character */
-			current = g_string_insert_c(current, modes_length, mode);
+			current.insert(modes_length, 1, mode);
 
 			/* add the argument, with space if there is one */
 			if (mode_has_arg(serv, sign, mode))
 			{
-				current = g_string_append_c(current, ' ');
-				current = g_string_append(current, arg);
+				current.push_back(' ');
+				current.append(arg);
 			}
 
-			free(sess->current_modes);
-			sess->current_modes = g_string_free(current, FALSE);
+			sess->current_modes = std::move(current);
 		}
 	}
 	else if (sign == '-' && mode_pos != -1)
 	{
 		/* remove the argument first if it has one*/
 		if (mode_has_arg(serv, '+', mode))
-			current = g_string_erase(current, argument_offset, argument_length);
+			current.erase(argument_offset, argument_length);
 
 		/* remove the mode character */
-		current = g_string_erase(current, mode_pos, 1);
+		current.erase(mode_pos, 1);
 
-		free(sess->current_modes);
-		sess->current_modes = g_string_free(current, FALSE);
+		sess->current_modes = std::move(current);
 	}
 }
 
@@ -698,8 +696,7 @@ handle_mode (server & serv, char *word[], char *word_eol[],
 
 	if (numeric_324 && !using_front_tab)
 	{
-		free (sess->current_modes);
-		sess->current_modes = strdup (word_eol[offset+1]);
+		sess->current_modes = word_eol[offset+1];
 	}
 
 	sign = *modes;

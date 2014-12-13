@@ -1181,7 +1181,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return fe_get_inputbox_contents (sess);
 
 	case 0x633fb30:	/* modes */
-		return sess->current_modes;
+		return sess->current_modes.c_str();
 
 	case 0x6de15a2e:	/* network */
 		return sess->server->get_network(false);

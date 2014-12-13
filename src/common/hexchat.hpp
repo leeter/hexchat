@@ -431,7 +431,7 @@ struct session
 
 	char *quitreason;
 	char *topic;
-	char *current_modes;					/* free() me */
+	std::string current_modes;
 
 	int mode_timeout_tag;
 
