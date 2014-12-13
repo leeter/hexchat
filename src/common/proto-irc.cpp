@@ -721,7 +721,7 @@ process_numeric (session * sess, int n,
 		fe_update_mode_buttons (sess, 'm', '-');
 		fe_update_mode_buttons (sess, 'l', '-');
 		fe_update_mode_buttons (sess, 'k', '-');
-		handle_mode (serv, word, word_eol, "", TRUE, tags_data);
+		handle_mode (serv, word, word_eol, "", /*numeric_324*/ true, tags_data);
 		break;
 
 	case 328: /* channel url */
@@ -1149,7 +1149,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			return;
 
 		case WORDL('M','O','D','E'):
-			handle_mode (serv, word, word_eol, nick, FALSE, tags_data);	/* modes.c */
+			handle_mode (serv, word, word_eol, nick, /*numeric_324*/ false, tags_data);	/* modes.c */
 			return;
 
 		case WORDL('N','I','C','K'):

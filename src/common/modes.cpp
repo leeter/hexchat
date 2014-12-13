@@ -52,7 +52,7 @@ static int is_prefix_char (const server * serv, char c);
 static void record_chan_mode (session *sess, char sign, char mode, char *arg);
 static char *mode_cat (char *str, const char *addition);
 static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
-										  char *chan, char *arg, int quiet, int is_324,
+										  char *chan, char *arg, bool quiet, bool is_324,
 										  const message_tags_data *tags_data);
 static bool mode_has_arg(const server & serv, char sign, char mode);
 static void mode_print_grouped (session *sess, char *nick, mode_run &mr,
@@ -373,7 +373,7 @@ mode_cat(const std::string& str, const std::string& addition)
 
 static void
 handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
-						  char *chan, char *arg, int quiet, int is_324,
+						  char *chan, char *arg, bool quiet, bool is_324,
 						  const message_tags_data *tags_data)
 {
 	session *sess;
@@ -649,7 +649,7 @@ mode_print_grouped (session *sess, char *nick, mode_run &mr,
 
 void
 handle_mode (server & serv, char *word[], char *word_eol[],
-				 char *nick, int numeric_324, const message_tags_data *tags_data)
+				 char *nick, bool numeric_324, const message_tags_data *tags_data)
 {
 	session *sess;
 	char *chan;
@@ -847,19 +847,19 @@ inbound_005 (server & serv, char *word[], const message_tags_data *tags_data)
 			tcp_send (serv, "PROTOCTL NAMESX\r\n");
 		} else if (strcmp (word[w], "WHOX") == 0)
 		{
-			serv.have_whox = TRUE;
+			serv.have_whox = true;
 		} else if (strcmp (word[w], "EXCEPTS") == 0)
 		{
-			serv.have_except = TRUE;
+			serv.have_except = true;
 		} else if (strcmp (word[w], "INVEX") == 0)
 		{
 			/* supports mode letter +I, default channel invite */
-			serv.have_invite = TRUE;
+			serv.have_invite = true;
 		} else if (strncmp (word[w], "ELIST=", 6) == 0)
 		{
 			/* supports LIST >< min/max user counts? */
 			if (strchr (word[w] + 6, 'U') || strchr (word[w] + 6, 'u'))
-				serv.use_listargs = TRUE;
+				serv.use_listargs = true;
 		}
 
 		w++;

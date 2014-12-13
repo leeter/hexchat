@@ -63,8 +63,8 @@ clear_channel (session &sess)
 	if (sess.channel[0])
 		strcpy (sess.waitchannel, sess.channel);
 	sess.channel[0] = 0;
-	sess.doing_who = FALSE;
-	sess.done_away_check = FALSE;
+	sess.doing_who = false;
+	sess.done_away_check = false;
 
 	log_close (sess);
 
