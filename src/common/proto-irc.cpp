@@ -1538,13 +1538,9 @@ server::p_inline (char *buf, int len)
 	char *type, *text;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
-	char pdibuf_static[522]; /* 1 line can potentially be 512*6 in utf8 */
-	char *pdibuf = pdibuf_static;
 	message_tags_data tags_data = message_tags_data();
 
-	/* need more than 522? fall back to malloc */
-	if (len >= sizeof (pdibuf_static))
-		pdibuf = static_cast<char*>(malloc (len + 1));
+	std::string pdibuf(len, '\0');
 
 	sess = this->front_session;
 
@@ -1554,11 +1550,11 @@ server::p_inline (char *buf, int len)
 
 	if (*buf == '@')
 	{
-		char *tags = buf + 1; /* skip the '@' */
+		const char *tags = buf + 1; /* skip the '@' */
 		char *sep = strchr (buf, ' ');
 
 		if (!sep)
-			goto xit;
+			return;
 		
 		*sep = '\0';
 		buf = sep + 1;
@@ -1569,7 +1565,7 @@ server::p_inline (char *buf, int len)
 	url_check_line (buf, len);
 
 	/* split line into words and words_to_end_of_line */
-	process_data_init (pdibuf, buf, word, word_eol, FALSE, FALSE);
+	process_data_init (&pdibuf[0], buf, word, word_eol, false, false);
 
 	if (buf[0] == ':')
 	{
@@ -1587,9 +1583,11 @@ server::p_inline (char *buf, int len)
 		word[0] = type;
 		word_eol[1] = buf;	/* keep the ":" for plugins */
 
-		if (plugin_emit_server (sess, type, word, word_eol,
-								tags_data.timestamp))
-			goto xit;
+		if (plugin_emit_server(sess, type, word, word_eol,
+			tags_data.timestamp))
+		{
+			return;
+		}
 
 		word[1]++;
 		word_eol[1] = buf + 1;	/* but not for HexChat internally */
@@ -1598,19 +1596,22 @@ server::p_inline (char *buf, int len)
 	{
 		word[0] = type = word[1];
 
-		if (plugin_emit_server (sess, type, word, word_eol,
-								tags_data.timestamp))
-			goto xit;
+		if (plugin_emit_server(sess, type, word, word_eol,
+			tags_data.timestamp))
+		{
+			return;
+		}
 	}
 
 	if (buf[0] != ':')
 	{
 		process_named_servermsg (sess, buf, word[0], word_eol, &tags_data);
-		goto xit;
+		return;
 	}
 
 	/* see if the second word is a numeric */
-	if (isdigit ((unsigned char) word[2][0]))
+	std::locale locale;
+	if (std::isdigit (word[2][0], locale))
 	{
 		text = word_eol[4];
 		if (*text == ':')
@@ -1621,8 +1622,4 @@ server::p_inline (char *buf, int len)
 	{
 		process_named_msg (sess, type, word, word_eol, &tags_data);
 	}
-
-xit:
-	if (pdibuf != pdibuf_static)
-		free (pdibuf);
 }

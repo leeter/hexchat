@@ -1518,9 +1518,12 @@ struct session *sess)
 		is_nick = true;
 		if (sess->server->nick_prefixes.find_first_of(text[ent_start]) != std::string::npos)
 		{
-			has_nick_prefix = true;
+			if (ent_start == 0)
+			{
+				has_nick_prefix = true;
+			}
+			++ent_start;
 		}
-		++ent_start;
 	}
 	
 	prefix_len = ent_start;
@@ -1637,11 +1640,11 @@ struct session *sess)
 				/* bash style completion */
 				if (g_list_next(list) != NULL)
 				{
+					buf.reserve(std::max(COMP_BUF, len + NICKLEN));
 					if (strlen (result) > elen) /* the largest common prefix is larger than nick, change the data */
 					{
-						buf.reserve(std::max(COMP_BUF, len + NICKLEN));
 						if (prefix_len)
-							buf.append(text, prefix_len);
+							buf.append(text, offset_to_len(text, prefix_len));
 						buf.append(result);
 						cursor_pos = buf.size();
 						g_free(result);
@@ -1652,10 +1655,12 @@ struct session *sess)
 						}
 						SPELL_ENTRY_SET_TEXT (t, buf.c_str());
 						SPELL_ENTRY_SET_POS (t, len_to_offset(buf.c_str(), cursor_pos));
+						buf.erase();
 						buf[0] = 0;
 					}
 					else
 						g_free(result);
+
 					while (list)
 					{
 						len = buf.size();	/* current buffer */
@@ -1663,8 +1668,7 @@ struct session *sess)
 						if (len + elen + 2 >= COMP_BUF) /* +2 is space + null */
 						{
 							PrintText (sess, buf);
-							buf[0] = 0;
-							len = 0;
+							buf.erase();
 						}
 						buf.append(static_cast<char*>(list->data));
 						buf.push_back(' ');
