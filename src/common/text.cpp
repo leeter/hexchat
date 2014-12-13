@@ -55,13 +55,6 @@
 #include <canberra.h>
 #endif
 
-struct pevt_stage1
-{
-	int len;
-	char *data;
-	struct pevt_stage1 *next;
-};
-
 #ifdef USE_LIBCANBERRA
 static ca_context *ca_con;
 #endif
@@ -1593,18 +1586,18 @@ pevent_make_pntevts ()
 	{
 		if (pntevts[i] != NULL)
 			free (pntevts[i]);
-		if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
+		if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
 		{
 			snprintf (out, sizeof (out),
 						 _("Error parsing event %s.\nLoading default."), te[i].name);
 			fe_message (out, FE_MSG_WARN);
-			free (pntevts_text[i]);
+			delete[] pntevts_text[i];
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
 				pntevts_text[i] = strdup (te[i].def);
 			else
 				pntevts_text[i] = strdup (_(te[i].def));
-			if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
+			if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
 			{
 				fprintf (stderr,
 							"HexChat CRITICAL *** default event text failed to build!\n");
@@ -1907,10 +1900,20 @@ display_event (session *sess, int event, char **args,
 		PrintTextTimeStamp (sess, buf, timestamp);
 }
 
-int
-pevt_build_string (const char *input, char **output, int *max_arg)
+namespace
 {
-	struct pevt_stage1 *s = NULL, *base = NULL, *last = NULL, *next;
+	struct pevt_stage1
+	{
+		int len;
+		char *data;
+		struct pevt_stage1 *next;
+	};
+} // end anonymous namespace
+
+int
+pevt_build_string (const char *input, char* &output, int *max_arg)
+{
+	std::vector<std::vector<char>> events;
 	int clen;
 	char o[4096], d, *obuf;
 	int output_index, max = -1, x;
@@ -1928,7 +1931,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	{
 		if (input_itr == end)
 			break;
-		d = *input_itr++;// buf[input_index++];
+		d = *input_itr++;
 		if (d != '$')
 		{
 			o[output_index++] = d;
@@ -1941,20 +1944,13 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		}
 		if (output_index > 0)
 		{
-			s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
-			if (base == NULL)
-				base = s;
-			if (last != NULL)
-				last->next = s;
-			last = s;
-			s->next = NULL;
-			s->data = static_cast<char*>(malloc (output_index + sizeof (int) + 1));
-			s->len = output_index + sizeof (int) + 1;
+			std::vector<char> evt(output_index + sizeof(int) + 1);
 			clen += output_index + sizeof (int) + 1;
-			s->data[0] = 0;
-			memcpy (&(s->data[1]), &output_index, sizeof (int));
-			memcpy (&(s->data[1 + sizeof (int)]), o, output_index);
+			evt[0] = 0;
+			memcpy (&(evt[1]), &output_index, sizeof (int));
+			memcpy (&(evt[1 + sizeof (int)]), o, output_index);
 			output_index = 0;
+			events.emplace_back(std::move(evt));
 		}
 		if (input_itr == end)
 		{
@@ -1994,19 +1990,9 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		}
 		if (d == 't')
 		{
-			/* Tab - if tabnicks is set then write '\t' else ' ' */
-			s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
-			if (base == NULL)
-				base = s;
-			if (last != NULL)
-				last->next = s;
-			last = s;
-			s->next = NULL;
-			s->data = static_cast<char*>(malloc(1));
-			s->len = 1;
+			std::vector<char> evt { 3 };
+			events.emplace_back(std::move(evt));
 			clen += 1;
-			s->data[0] = 3;
-
 			continue;
 		}
 		if (d < '1' || d > '9')
@@ -2018,68 +2004,37 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		d -= '0';
 		if (max < d)
 			max = d;
-		s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
-		if (base == NULL)
-			base = s;
-		if (last != NULL)
-			last->next = s;
-		last = s;
-		s->next = NULL;
-		s->data = static_cast<char*>(malloc(2));
-		s->len = 2;
+		std::vector<char> evt{ 1, static_cast<char>(d - 1)  };
 		clen += 2;
-		s->data[0] = 1;
-		s->data[1] = d - 1;
+		events.emplace_back(std::move(evt));
 	}
 	if (output_index > 0)
 	{
-		s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
-		if (base == NULL)
-			base = s;
-		if (last != NULL)
-			last->next = s;
-		last = s;
-		s->next = NULL;
-		s->data = static_cast<char*>(malloc(output_index + sizeof(int) + 1));
-		s->len = output_index + sizeof (int) + 1;
+		std::vector<char> evt(output_index + sizeof(int) + 1);
 		clen += output_index + sizeof (int) + 1;
-		s->data[0] = 0;
-		memcpy (&(s->data[1]), &output_index, sizeof (int));
-		memcpy (&(s->data[1 + sizeof (int)]), o, output_index);
+		evt[0] = 0;
+		memcpy (&(evt[1]), &output_index, sizeof (int));
+		memcpy (&(evt[1 + sizeof (int)]), o, output_index);
 		output_index = 0;
+		events.emplace_back(std::move(evt));
 	}
-	s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
-	if (base == NULL)
-		base = s;
-	if (last != NULL)
-		last->next = s;
-	last = s;
-	s->next = NULL;
-	s->data = static_cast<char*>(malloc(1));
-	s->len = 1;
+
+	std::vector<char>evt{ 2 };
+	events.emplace_back(std::move(evt));
 	clen += 1;
-	s->data[0] = 2;
 
 	output_index = 0;
-	s = base;
-	obuf = static_cast<char*>(malloc(clen));
-	while (s)
+	obuf = new char[clen];
+	for (const auto& evt : events)
 	{
-		next = s->next;
-		std::copy_n(s->data, s->len, &obuf[output_index]);
-		output_index += s->len;
-		free (s->data);
-		free (s);
-		s = next;
+		std::copy(evt.cbegin(), evt.cend(), &obuf[output_index]);
+		output_index += evt.size();
 	}
 
 	if (max_arg)
 		*max_arg = max;
-	if (output)
-		*output = obuf;
-	else
-		free (obuf);
 
+	output = obuf;
 	return 0;
 }
 

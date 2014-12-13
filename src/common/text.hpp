@@ -50,7 +50,7 @@ void log_close (session &sess);
 void log_open_or_close (session *sess);
 void load_text_events (void);
 void pevent_save (char *fn);
-int pevt_build_string (const char *input, char **output, int *max_arg);
+int pevt_build_string (const char *input, char *&output, int *max_arg);
 int pevent_load (const char *filename);
 void pevent_make_pntevts (void);
 int text_color_of (const std::string& name);

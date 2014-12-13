@@ -166,14 +166,14 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	text = new_text;
 	len = strlen (new_text);
 
-	if (pevt_build_string (text, &out, &m) != 0)
+	if (pevt_build_string (text, out, &m) != 0)
 	{
 		fe_message (_("There was an error parsing the string"), FE_MSG_ERROR);
 		return;
 	}
 	if (m > (te[sig].num_args & 0x7f))
 	{
-		free (out);
+		delete[] out;
 		out = static_cast<char*>(malloc (4096));
 		snprintf (out, 4096,
 					_("This signal is only passed %d args, $%d is invalid"),
