@@ -20,7 +20,8 @@
 #ifndef HEXCHAT_URL_HPP
 #define HEXCHAT_URL_HPP
 
-extern void *url_tree;
+#include <string>
+#include <set>
 
 enum word_types{
 	WORD_URL     = 1,
@@ -39,5 +40,6 @@ void url_save_tree (const char *fname, const char *mode, gboolean fullpath);
 int url_last (int *, int *);
 int url_check_word (const char *word);
 void url_check_line (const char *buf, int len);
+std::set<std::string>& urlset();
 
 #endif

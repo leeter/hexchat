@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <set>
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"
@@ -35,8 +36,6 @@
 #endif
 #include <boost/regex.hpp>
 
-void *url_tree = NULL;
-GTree *url_btree = NULL;
 namespace{
 static bool regex_match (const GRegex *re, const char *word,
 							 int *start, int *end);
@@ -64,14 +63,17 @@ url_free (char *url, void *data)
 }
 } // end anonymous namespace
 
+
+std::set<std::string>& urlset()
+{
+	static std::set<std::string> urls;
+	return urls;
+}
+
 void
 url_clear (void)
 {
-	tree_foreach (static_cast<tree*>(url_tree), (tree_traverse_func *)url_free, NULL);
-	tree_destroy (static_cast<tree*>(url_tree));
-	url_tree = NULL;
-	g_tree_destroy (url_btree);
-	url_btree = NULL;
+	urlset().clear();
 }
 
 static int
@@ -93,13 +95,17 @@ url_save_tree (const char *fname, const char *mode, gboolean fullpath)
 	if (fd == NULL)
 		return;
 
-	tree_foreach (static_cast<tree*>(url_tree), (tree_traverse_func *)url_save_cb, fd);
+	for (const auto & url : urlset())
+	{
+		fprintf(fd, "%s\n", url.c_str());
+	}
+
 	fclose (fd);
 }
 
 namespace {
 static void
-url_save_node (char* url)
+url_save_node (const std::string & url)
 {
 	FILE *fd;
 
@@ -110,20 +116,13 @@ url_save_node (char* url)
 		return;
 	}
 
-	fprintf (fd, "%s\n", url);
+	fprintf (fd, "%s\n", url.c_str());
 	fclose (fd);	
-}
-
-static int
-url_find (char *urltext)
-{
-	return (g_tree_lookup_extended (url_btree, urltext, NULL, NULL));
 }
 
 static void
 url_add (const char *urltext, int len)
 {
-	char *data;
 	int size;
 
 	/* we don't need any URLs if we have neither URL grabbing nor URL logging enabled */
@@ -132,19 +131,16 @@ url_add (const char *urltext, int len)
 		return;
 	}
 
-	data = new char[len + 1];
-	memcpy (data, urltext, len);
-	data[len] = 0;
+	std::string data(urltext, len - 1);
 
-	if (data[len - 1] == '.')	/* chop trailing dot */
+	if (data.back() == '.')	/* chop trailing dot */
 	{
-		len--;
-		data[len] = 0;
+		data.pop_back();
 	}
 	/* chop trailing ) but only if there's no counterpart */
-	if (data[len - 1] == ')' && strchr (data, '(') == NULL)
+	if (data.back() == ')' && data.find_first_of('(') == std::string::npos)
 	{
-		data[len - 1] = 0;
+		data.pop_back();
 	}
 
 	if (prefs.hex_url_logging)
@@ -155,23 +151,15 @@ url_add (const char *urltext, int len)
 	/* the URL is saved already, only continue if we need the URL grabber too */
 	if (!prefs.hex_url_grabber)
 	{
-		delete[] data;
 		return;
 	}
 
-	if (!url_tree)
+	if (urlset().find(data) != urlset().cend())
 	{
-		url_tree = tree_new ((tree_cmp_func *)strcasecmp, NULL);
-		url_btree = g_tree_new ((GCompareFunc)strcasecmp);
-	}
-
-	if (url_find (data))
-	{
-		delete[] data;
 		return;
 	}
 
-	size = tree_size (static_cast<tree*>(url_tree));
+	size = urlset().size();
 	/* 0 is unlimited */
 	if (prefs.hex_url_grabber_limit > 0 && size >= prefs.hex_url_grabber_limit)
 	{
@@ -180,16 +168,11 @@ url_add (const char *urltext, int len)
 		size -= prefs.hex_url_grabber_limit;
 		for(; size > 0; size--)
 		{
-			char *pos;
-
-			pos = static_cast<char*>(tree_remove_at_pos(static_cast<tree*>(url_tree), 0));
-			g_tree_remove (url_btree, pos);
-			delete [] pos;
+			urlset().erase(urlset().cbegin());
 		}
 	}
 
-	tree_append(static_cast<tree*>(url_tree), data);
-	g_tree_insert(url_btree, data, GINT_TO_POINTER(tree_size(static_cast<tree*>(url_tree))-1));
+	urlset().insert(data);
 	fe_url_add (data);
 }
 

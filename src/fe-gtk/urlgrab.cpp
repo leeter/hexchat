@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <string>
 
 #include "fe-gtk.hpp"
 
@@ -149,12 +151,6 @@ url_button_save (void)
 							url_save_callback, NULL, NULL, NULL, FRF_WRITE);
 }
 
-static int
-populate_cb(char *urltext, gpointer userdata)
-{
-	fe_url_add(urltext);
-	return TRUE;
-}
 }
 
 void
@@ -222,7 +218,7 @@ url_opengui ()
 	gtk_widget_show (urlgrabberwindow);
 
 	if (prefs.hex_url_grabber)
-		tree_foreach (static_cast<tree*>(url_tree), (tree_traverse_func *)populate_cb, NULL);
+		std::for_each(urlset().cbegin(), urlset().cend(), fe_url_add);
 	else
 	{
 		gtk_list_store_clear (GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view))));
