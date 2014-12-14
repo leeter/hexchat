@@ -35,15 +35,19 @@ inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
 	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-struct gtk_tree_iter_deleter
-{
-	void operator()(GtkTreeIter * itr)
-	{
-		if (itr)
-			gtk_tree_iter_free(itr);
-	}
-};
+#define CUSTOM_PTR_DELETER(type, del) \
+	struct type##deleter \
+	{\
+		void operator()(type * ptr)\
+		{\
+			del##(ptr); \
+		}\
+	};
 
-typedef std::unique_ptr<GtkTreeIter, gtk_tree_iter_deleter> GtkTreeIterPtr;
+#define CUSTOM_PTR(type, del) CUSTOM_PTR_DELETER(type, del) \
+typedef std::unique_ptr<type, type##deleter> type ## Ptr;
+
+CUSTOM_PTR(GtkTreeIter, gtk_tree_iter_free)
+CUSTOM_PTR(GtkTreePath, gtk_tree_path_free)
 
 #endif

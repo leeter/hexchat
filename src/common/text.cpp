@@ -1566,13 +1566,13 @@ pevent_load_defaults ()
 	for (i = 0; i < NUM_XP; i++)
 	{
 		if (pntevts_text[i])
-			free (pntevts_text[i]);
+			delete[] pntevts_text[i];
 
 		/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 		if (te[i].num_args & 128)
-			pntevts_text[i] = strdup (te[i].def);
+			pntevts_text[i] = new_strdup (te[i].def);
 		else
-			pntevts_text[i] = strdup (_(te[i].def));
+			pntevts_text[i] = new_strdup (_(te[i].def));
 	}
 }
 
@@ -1594,9 +1594,9 @@ pevent_make_pntevts ()
 			delete[] pntevts_text[i];
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
-				pntevts_text[i] = strdup (te[i].def);
+				pntevts_text[i] = new_strdup (te[i].def);
 			else
-				pntevts_text[i] = strdup (_(te[i].def));
+				pntevts_text[i] = new_strdup (_(te[i].def));
 			if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
 			{
 				fprintf (stderr,
@@ -1618,16 +1618,13 @@ pevent_make_pntevts ()
 static void
 pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 {
-	int penum = *i_penum, len;
+	int penum = *i_penum;
 	char *text = *i_text, *snd = *i_snd;
 
 	if (penum != -1 && text != NULL)
 	{
-		len = strlen (text) + 1;
-		if (pntevts_text[penum])
-			free (pntevts_text[penum]);
-		pntevts_text[penum] = new char[len];
-		std::copy_n(text, len, pntevts_text[penum]);
+		delete[] (pntevts_text[penum]);
+		pntevts_text[penum] = new_strdup(text);
 	}
 
 	delete[] text;
@@ -1771,9 +1768,9 @@ pevent_check_all_loaded ()
 			   gtkutil_simpledialog(out); */
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
-				pntevts_text[i] = strdup (te[i].def);
+				pntevts_text[i] = new_strdup (te[i].def);
 			else
-				pntevts_text[i] = strdup (_(te[i].def));
+				pntevts_text[i] = new_strdup (_(te[i].def));
 		}
 	}
 }

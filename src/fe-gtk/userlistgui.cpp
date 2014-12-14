@@ -329,7 +329,6 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 	GtkTreeModel *model = static_cast<GtkTreeModel*>(sess->res->user_model);
 	GdkPixbuf *pix = get_user_icon (sess->server, newuser);
 	GtkTreeIter iter;
-	char *nick;
 	int nick_color = 0;
 
 	if (prefs.hex_away_track && newuser->away)
@@ -337,30 +336,21 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 	else if (prefs.hex_gui_ulist_color)
 		nick_color = text_color_of(newuser->nick);
 
-	nick = newuser->nick;
+	std::string nick(newuser->nick);
 	if (!prefs.hex_gui_ulist_icons)
-	{
-		nick = static_cast<char*>(malloc (strlen (newuser->nick) + 2));
-		nick[0] = newuser->prefix[0];
-		if (!nick[0] || nick[0] == ' ')
-			strcpy (nick, newuser->nick);
-		else
-			strcpy (nick + 1, newuser->nick);
+	{		
+		if (newuser->prefix[0] || newuser->prefix[0] != ' ')
+			nick.insert(nick.begin(), newuser->prefix[0]);
 		pix = NULL;
 	}
 
 	gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, row,
 									COL_PIX, pix,
-									COL_NICK, nick,
+									COL_NICK, nick.c_str(),
 									COL_HOST, newuser->hostname ? newuser->hostname->c_str() : nullptr,
 									COL_USER, newuser,
 									COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
 								  -1);
-
-	if (!prefs.hex_gui_ulist_icons)
-	{
-		free (nick);
-	}
 
 	/* is it me? */
 	if (newuser->me && sess->gui->nick_box)

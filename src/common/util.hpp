@@ -102,4 +102,13 @@ std::string challengeauth_response(const std::string & username, const std::stri
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
 size_t strftime_utf8 (char *dest, size_t destsize, const char *format, time_t time);
 
+char* new_strdup(const char in[]);
+char* new_strdup(const char in[], std::size_t len);
+
+template<size_t N>
+char* new_strdup(const char(&in)[N])
+{
+	return new_strdup(in, N - 1);
+}
+
 #endif

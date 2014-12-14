@@ -1574,6 +1574,18 @@ unity_mode (void)
 	return false;
 }
 
+char* new_strdup(const char in[], std::size_t len)
+{
+	std::unique_ptr<char[]> new_str(new char[len + 1]());
+	std::copy_n(in, len, new_str.get());
+	return new_str.release();
+}
+
+char* new_strdup(const char in[])
+{
+	return new_strdup(in, std::strlen(in));
+}
+
 #ifdef USE_OPENSSL
 static std::string str_sha256hash (const std::string & string)
 {
