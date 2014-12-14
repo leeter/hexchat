@@ -3313,12 +3313,12 @@ namespace{
 		gtk_xtext_render_stamp(GtkXText * xtext, textentry * ent,
 		char *text, int len, int line, int win_width)
 	{
-		textentry tmp_ent;
+		
 		int jo, ji, hs;
 		int xsize, y, emphasis;
 
 		/* trashing ent here, so make a backup first */
-		memcpy(&tmp_ent, ent, sizeof(tmp_ent));
+		textentry tmp_ent = *ent;
 		jo = xtext->jump_out_offset;	/* back these up */
 		ji = xtext->jump_in_offset;
 		hs = xtext->hilight_start;
@@ -3348,7 +3348,7 @@ namespace{
 			win_width, 2, line, TRUE, &xsize, &emphasis);
 
 		/* restore everything back to how it was */
-		memcpy(ent, &tmp_ent, sizeof(tmp_ent));
+		*ent = tmp_ent;
 		xtext->jump_out_offset = jo;
 		xtext->jump_in_offset = ji;
 		xtext->hilight_start = hs;
