@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <locale>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -158,7 +159,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 	int reverse = 0, under = 0, bold = 0,
 		comma, k, i = 0, j = 0, len = strlen (text);
 	std::string newtext(len + 1024, '\0');
-
+	std::locale locale;
 	if (prefs.hex_stamp_text)
 	{
 		newtext[0] = 0;
@@ -176,7 +177,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 		{
 		case 3:
 			i++;
-			if (!isdigit (text[i]))
+			if (!std::isdigit (text[i], locale))
 			{
 				newtext[j] = 27;
 				j++;
@@ -332,6 +333,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 		newtext[0] = 0;
 		j += timecat (&newtext[0], stamp);
 	}
+	std::locale locale;
 	while (i < len)
 	{
 		if (dotime && text[i] != 0)
@@ -344,7 +346,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 		{
 		case 3:
 			i++;
-			if (!isdigit (text[i]))
+			if (!std::isdigit (text[i], locale))
 			{
 				goto endloop;
 			}

@@ -37,6 +37,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
+#include <locale>
 
 #include "../../config.h"
 #include "../common/hexchat.hpp"
@@ -2428,13 +2429,14 @@ namespace{
 		c.off1 = 0;
 		c.len1 = 0;
 		c.emph = 0;
+		std::locale locale;
 		while (len > 0)
 		{
 			mbl = charlen(text);
 			if (mbl > len)
 				goto bad_utf8;
 
-			if (rcol > 0 && (isdigit(*text) || (*text == ',' && isdigit(text[1]) && !bgcol)))
+			if (rcol > 0 && (std::isdigit(*text, locale) || (*text == ',' && std::isdigit(text[1], locale) && !bgcol)))
 			{
 				if (text[1] != ',') rcol--;
 				if (*text == ',')
@@ -2813,7 +2815,7 @@ namespace{
 
 		if (xtext->jump_in_offset > 0 && offset < xtext->jump_in_offset)
 			xtext->dont_render2 = TRUE;
-
+		std::locale locale;
 		while (i < len)
 		{
 
@@ -2830,8 +2832,8 @@ namespace{
 				xtext->in_hilight = TRUE;
 			}
 
-			if ((xtext->parsing_color && isdigit(str[i]) && xtext->nc < 2) ||
-				(xtext->parsing_color && str[i] == ',' && isdigit(str[i + 1]) && xtext->nc < 3 && !xtext->parsing_backcolor))
+			if ((xtext->parsing_color && std::isdigit(str[i], locale) && xtext->nc < 2) ||
+				(xtext->parsing_color && str[i] == ',' && std::isdigit(str[i + 1], locale) && xtext->nc < 3 && !xtext->parsing_backcolor))
 			{
 				pstr++;
 				if (str[i] == ',')
@@ -3165,6 +3167,7 @@ namespace{
 		int limit_offset = 0;
 		int emphasis = 0;
 		GSList *lp;
+		std::locale locale;
 
 		/* single liners */
 		if (win_width >= ent->str_width + ent->indent)
@@ -3191,10 +3194,10 @@ namespace{
 				break;
 			}
 		}
-
+		
 		while (1)
 		{
-			if (rcol > 0 && (isdigit(*str) || (*str == ',' && isdigit(str[1]) && !bgcol)))
+			if (rcol > 0 && (std::isdigit(*str, locale) || (*str == ',' && std::isdigit(str[1], locale) && !bgcol)))
 			{
 				if (str[1] != ',') rcol--;
 				if (*str == ',')
