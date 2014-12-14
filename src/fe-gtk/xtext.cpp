@@ -2832,8 +2832,8 @@ namespace{
 				xtext->in_hilight = TRUE;
 			}
 
-			if ((xtext->parsing_color && std::isdigit(str[i], locale) && xtext->nc < 2) ||
-				(xtext->parsing_color && str[i] == ',' && std::isdigit(str[i + 1], locale) && xtext->nc < 3 && !xtext->parsing_backcolor))
+			if ((xtext->parsing_color && std::isdigit<char>(str[i], locale) && xtext->nc < 2) ||
+				(xtext->parsing_color && str[i] == ',' && std::isdigit<char>(str[i + 1], locale) && xtext->nc < 3 && !xtext->parsing_backcolor))
 			{
 				pstr++;
 				if (str[i] == ',')
