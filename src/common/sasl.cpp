@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <boost/format.hpp>
 
 #include <glib.h>
 
@@ -203,31 +204,21 @@ namespace auth
 	namespace sasl
 	{
 
-char *
-encode_sasl_pass_plain(const char *user, const char *pass)
+std::string encode_sasl_pass_plain(const std::string &user, const std::string &pass)
 {
-	int authlen;
-	char *buffer;
-	char *encoded;
-
-	/* we can't call strlen() directly on buffer thanks to the atrocious \0 characters it requires */
-	authlen = strlen(user) * 2 + 2 + strlen(pass);
-	buffer = g_strdup_printf("%s%c%s%c%s", user, '\0', user, '\0', pass);
-	encoded = g_base64_encode((unsigned char*)buffer, authlen);
-	g_free(buffer);
-
-	return encoded;
+	std::ostringstream response;
+	response << boost::format("%s%c%s%c%s") % user % '\0' % user % '\0' % pass;
+	return util::transforms::encode_base64(response.str());
 }
 
-char *
-encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data)
+std::string encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data)
 {
 	auto pass_len = pass.size() + (8 - (pass.size() % 8));
 	auto user_len = user.size();
 
 	dh_setup setup;
 	if (!parse_dh(data, setup))
-		return nullptr;
+		return{};
 
 	BF_KEY key;
 	BF_set_key(&key, setup.key_size(), setup.secret());
@@ -261,95 +252,74 @@ encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, con
 	/* pass */
 	std::copy(encrypted_pass.cbegin(), encrypted_pass.cend(), std::ostream_iterator<unsigned char>(response));
 
-	auto encoded = util::transforms::encode_base64(response.str());
-
-	return g_strdup(encoded.c_str());
+	return util::transforms::encode_base64(response.str());
 }
 
-char *
-encode_sasl_pass_aes(char *user, char *pass, char *data)
+std::string encode_sasl_pass_aes(const std::string & user, const std::string& pass, const std::string & data)
 {
 	AES_KEY key;
-	char *response = NULL;
-	char *out_ptr, *ret = NULL;
-	unsigned char *ptr;
-	unsigned char *encrypted_userpass, *plain_userpass;
+	//unsigned char *encrypted_userpass, *plain_userpass;
 	int length;
-	guint16 size16;
 	unsigned char iv[16], iv_copy[16];
-	int user_len = strlen(user) + 1;
-	int pass_len = strlen(pass) + 1;
-	int len = user_len + pass_len;
-	int padlen = 16 - (len % 16);
-	int userpass_len = len + padlen;
+	auto user_len = user.size() + 1;
+	auto pass_len = pass.size() + 1;
+	auto len = user_len + pass_len;
+	auto padlen = 16 - (len % 16);
+	auto userpass_len = len + padlen;
 
 	dh_setup setup;
 	if (!parse_dh(data, setup))
-		return NULL;
+		return{};
 
-	encrypted_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*encrypted_userpass)));
-	plain_userpass = static_cast<unsigned char*>(calloc(userpass_len, sizeof(*plain_userpass)));
-	if (!encrypted_userpass || !plain_userpass)
-	{
-		free(encrypted_userpass);
-		free(plain_userpass);
-		return NULL;
-	}
+	std::vector<unsigned char> encrypted_userpass(userpass_len);
+	std::vector<unsigned char> plain_userpass(userpass_len);
 
 	/* create message */
 	/* format of: <username>\0<password>\0<padding> */
-	ptr = plain_userpass;
-	std::copy_n(user, user_len, ptr);
+	auto ptr = plain_userpass.begin();
+	std::copy(user.cbegin(), user.cend(), ptr);
 	ptr += user_len;
-	std::copy_n(pass, pass_len, ptr);
+	std::copy(pass.cbegin(), pass.cend(), ptr);
 	ptr += pass_len;
 	if (padlen)
 	{
 		/* Padding */
 		unsigned char randbytes[16];
 		if (!RAND_bytes(randbytes, padlen))
-			goto end;
+			return{};
 		std::copy_n(std::begin(randbytes), padlen, ptr);
 	}
 
 	if (!RAND_bytes(iv, sizeof(iv)))
-		goto end;
+		return{};
 
 	std::copy(std::begin(iv), std::end(iv), std::begin(iv_copy));
 
 	/* Encrypt */
 	AES_set_encrypt_key(setup.secret(), setup.key_size() * 8, &key);
-	AES_cbc_encrypt(plain_userpass, encrypted_userpass, userpass_len, &key, iv_copy, AES_ENCRYPT);
+	AES_cbc_encrypt(plain_userpass.data(), &encrypted_userpass[0], userpass_len, &key, iv_copy, AES_ENCRYPT);
 
 	/* Create response */
 	/* format of:  <size pubkey><pubkey><iv (always 16 bytes)><ciphertext> */
 	length = 2 + setup.key_size() + sizeof(iv) + userpass_len;
-	response = (char*)malloc(length);
-	out_ptr = response;
-
+	std::ostringstream response;
+	
 	/* our key */
-	size16 = htons((guint16)setup.key_size());
-	memcpy(out_ptr, &size16, sizeof(size16));
-	out_ptr += 2;
-	BN_bn2bin(setup.dh()->pub_key, (guchar*)out_ptr);
-	out_ptr += setup.key_size();
+	std::uint16_t size16 = htons((std::uint16_t)setup.key_size());
+	response.write(reinterpret_cast<const char*>(&size16), sizeof(size16));
+	std::vector<unsigned char> buffer(setup.key_size());
+	BN_bn2bin(setup.dh()->pub_key, (guchar*)&buffer[0]);
+	std::ostream_iterator<unsigned char> out(response);
+	std::copy(buffer.cbegin(), buffer.cend(), out);
+
 
 	/* iv */
-	std::copy_n(iv, sizeof(iv), out_ptr);
-	out_ptr += sizeof(iv);
+	std::copy(std::begin(iv), std::end(iv), out);
 
 	/* userpass */
-	std::copy_n(encrypted_userpass, userpass_len, out_ptr);
+	std::copy(encrypted_userpass.cbegin(), encrypted_userpass.cend(), out);
 
-	ret = g_base64_encode((const guchar*)response, length);
-
-end:
-	free(plain_userpass);
-	free(encrypted_userpass);
-	if (response)
-		free(response);
-
-	return ret;
+	return util::transforms::encode_base64(response.str());
 }
 
 	} // namespace sasl

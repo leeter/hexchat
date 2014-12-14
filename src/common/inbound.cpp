@@ -1867,7 +1867,7 @@ void
 inbound_sasl_authenticate (server &serv, char *data)
 {
 		ircnet *net = (ircnet*)serv.network;
-		char *user, *pass = nullptr;
+		char *user;
 		const char *mech = sasl_mechanisms[serv.sasl_mech];
 
 		/* Got a list of supported mechanisms from inspircd */
@@ -1882,6 +1882,7 @@ inbound_sasl_authenticate (server &serv, char *data)
 		else
 			user = prefs.hex_irc_user_name;
 
+		std::string pass;
 		switch (serv.sasl_mech)
 		{
 		case MECH_PLAIN:
@@ -1895,12 +1896,12 @@ inbound_sasl_authenticate (server &serv, char *data)
 			pass = auth::sasl::encode_sasl_pass_aes (user, serv.password, data);
 			break;
 		case MECH_EXTERNAL:
-			pass = g_strdup ("+");
+			pass = "+";
 			break;
 #endif
 		}
 
-		if (pass == nullptr)
+		if (pass.empty())
 		{
 			/* something went wrong abort */
 			serv.sent_saslauth = TRUE; /* prevent trying PLAIN */
@@ -1909,8 +1910,7 @@ inbound_sasl_authenticate (server &serv, char *data)
 		}
 
 		serv.sent_saslauth = TRUE;
-		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass);
-		g_free (pass);
+		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass.c_str());
 
 		
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SASLAUTH, serv.server_session, user, (char*)mech,

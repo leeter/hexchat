@@ -27,9 +27,9 @@ namespace auth
 {
 	namespace sasl
 	{
-		char *encode_sasl_pass_plain(const char *user, const char *pass);
-		char *encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data);
-		char *encode_sasl_pass_aes(char *user, char *pass, char *data);
+		std::string encode_sasl_pass_plain(const std::string &user, const std::string &pass);
+		std::string encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data);
+		std::string encode_sasl_pass_aes(const std::string & user, const std::string& pass, const std::string & data);
 	}
 }
 
