@@ -22,6 +22,8 @@
 #include <atomic>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
+#include <string>
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
@@ -66,7 +68,7 @@ struct chanview
 	void (*func_move_family) (chan *, int delta);
 	void (*func_focus) (chan *);
 	void (*func_set_color) (chan *, PangoAttrList *);
-	void (*func_rename) (chan *, char *);
+	void (*func_rename) (chan *, const char[]);
 	gboolean (*func_is_collapsed) (chan *);
 	chan *(*func_get_parent) (chan *);
 	void (*func_cleanup) (chanview *);
@@ -870,7 +872,7 @@ cv_tabs_set_color(chan *ch, PangoAttrList *list)
 }
 
 static void
-cv_tabs_rename(chan *ch, char *name)
+cv_tabs_rename(chan *ch, const char name[])
 {
 	PangoAttrList *attr;
 	GtkWidget *tab = static_cast<GtkWidget*>(ch->impl);
@@ -1239,13 +1241,13 @@ cv_tree_cleanup(chanview *cv)
 }
 
 static void
-cv_tree_set_color(chan *ch, PangoAttrList *list)
+cv_tree_set_color(chan *, PangoAttrList *)
 {
 	/* nothing to do, it's already set in the store */
 }
 
 static void
-cv_tree_rename(chan *ch, char *name)
+cv_tree_rename(chan *, const char[])
 {
 	/* nothing to do, it's already renamed in the store */
 }
@@ -1285,18 +1287,17 @@ cv_tree_is_collapsed(chan *ch)
 
 /* ==== ABSTRACT CHANVIEW ==== */
 
-static char *
-truncate_tab_name (char *name, int max)
+static std::string
+truncate_tab_name (const std::string & name, int max)
 {
-	char *buf;
-
-	if (max > 2 && g_utf8_strlen (name, -1) > max)
+	if (max > 2 && g_utf8_strlen (name.c_str(), -1) > max)
 	{
 		/* truncate long channel names */
-		buf = static_cast<char*>(malloc (strlen (name) + 4));
-		strcpy (buf, name);
-		g_utf8_offset_to_pointer (buf, max)[0] = 0;
-		strcat (buf, "..");
+		std::string buf(name);
+		buf.reserve(name.size() + 4);
+		const char* offset = g_utf8_offset_to_pointer (buf.c_str(), max);
+		buf.erase(buf.begin() + std::distance(offset, buf.c_str()), buf.end());
+		buf.append("..");
 		return buf;
 	}
 
@@ -1575,15 +1576,9 @@ chanview_add_real (chanview *cv, const char *name, void *family, void *userdata,
 chan *
 chanview_add (chanview *cv, char *name, void *family, void *userdata, gboolean allow_closure, int tag, GdkPixbuf *icon)
 {
-	char *new_name;
-	chan *ret;
+	auto new_name = truncate_tab_name (name, cv->trunc_len);
 
-	new_name = truncate_tab_name (name, cv->trunc_len);
-
-	ret = chanview_add_real (cv, new_name, family, userdata, allow_closure, tag, icon, NULL, NULL);
-
-	if (new_name != name)
-		free (new_name);
+	auto ret = chanview_add_real (cv, new_name.c_str(), family, userdata, allow_closure, tag, icon, NULL, NULL);
 
 	return ret;
 }
@@ -1665,16 +1660,11 @@ chan_set_color (chan *ch, PangoAttrList *list)
 void
 chan_rename (chan *ch, char *name, int trunc_len)
 {
-	char *new_name;
+	auto new_name = truncate_tab_name (name, trunc_len);
 
-	new_name = truncate_tab_name (name, trunc_len);
-
-	gtk_tree_store_set (ch->cv->store, &ch->iter, COL_NAME, new_name, -1);
-	ch->cv->func_rename (ch, new_name);
+	gtk_tree_store_set (ch->cv->store, &ch->iter, COL_NAME, new_name.c_str(), -1);
+	ch->cv->func_rename (ch, new_name.c_str());
 	ch->cv->trunc_len = trunc_len;
-
-	if (new_name != name)
-		free (new_name);
 }
 
 /* this thing is overly complicated */
