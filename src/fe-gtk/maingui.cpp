@@ -1095,7 +1095,7 @@ mg_tab_close (session *sess)
 	GSList *list;
 	int i;
 
-	if (chan_remove(static_cast<chan *>(sess->res->tab), FALSE))
+	if (chan_remove(static_cast<chan *>(sess->res->tab), false))
 		mg_ircdestroy (sess);
 	else
 	{
@@ -1313,7 +1313,7 @@ static int
 mg_chan_remove (chan *ch)
 {
 	/* remove the tab from chanview */
-	chan_remove (ch, TRUE);
+	chan_remove (ch, true);
 	/* any tabs left? */
 	if (chanview_get_size(static_cast<chanview*>(mg_gui->chanview)) < 1)
 	{

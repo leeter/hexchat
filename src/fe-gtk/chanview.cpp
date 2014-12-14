@@ -1756,16 +1756,17 @@ cv_find_chan_by_number (chanview *cv, int num)
 static void
 chan_emancipate_children (chan *ch)
 {
-	char *name;
-	chan *childch;
 	GtkTreeIter childiter;
 	PangoAttrList *attr;
 
 	while (gtk_tree_model_iter_children (GTK_TREE_MODEL (ch->cv->store), &childiter, &ch->iter))
 	{
+		char *name;
+		chan *childch;
 		/* remove and re-add all the children, but avoid using "ch" as parent */
 		gtk_tree_model_get (GTK_TREE_MODEL (ch->cv->store), &childiter,
 								  COL_NAME, &name, COL_CHAN, &childch, COL_ATTR, &attr, -1);
+		std::unique_ptr<gchar, glib_deleter> name_ptr(name);
 		ch->cv->func_remove (childch);
 		gtk_tree_store_remove (ch->cv->store, &childiter);
 		ch->cv->size--;
@@ -1775,25 +1776,23 @@ chan_emancipate_children (chan *ch)
 			childch->cv->func_set_color (childch, attr);
 			pango_attr_list_unref (attr);
 		}
-		g_free (name);
 	}
 }
 
-gboolean
-chan_remove (chan *ch, gboolean force)
+bool chan_remove (chan *ch, bool force)
 {
 	chan *new_ch;
 	int i, num;
 	extern std::atomic_bool hexchat_is_quitting;
 
 	if (hexchat_is_quitting)	/* avoid lots of looping on exit */
-		return TRUE;
+		return true;
 
 	/* is this ch allowed to be closed while still having children? */
 	if (!force &&
 		 gtk_tree_model_iter_has_child (GTK_TREE_MODEL (ch->cv->store), &ch->iter) &&
 		 !ch->allow_closure)
-		return FALSE;
+		return false;
 
 	chan_emancipate_children (ch);
 	ch->cv->func_remove (ch);
@@ -1828,7 +1827,7 @@ chan_remove (chan *ch, gboolean force)
 	ch->cv->size--;
 	gtk_tree_store_remove (ch->cv->store, &ch->iter);
 	delete ch;
-	return TRUE;
+	return true;
 }
 
 gboolean

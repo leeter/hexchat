@@ -44,7 +44,7 @@ void chan_move (chan *ch, int delta);
 void chan_move_family (chan *ch, int delta);
 void chan_set_color (chan *ch, PangoAttrList *list);
 void chan_rename (chan *ch, char *new_name, int trunc_len);
-gboolean chan_remove (chan *ch, gboolean force);
+bool chan_remove (chan *ch, bool force);
 gboolean chan_is_collapsed (chan *ch);
 chan * chan_get_parent (chan *ch);
 
