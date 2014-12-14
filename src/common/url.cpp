@@ -28,7 +28,6 @@
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
-#include "tree.hpp"
 #include "server.hpp"
 #include "url.hpp"
 #ifdef HAVE_STRINGS_H

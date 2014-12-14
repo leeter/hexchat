@@ -43,7 +43,6 @@
     <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
     <ClInclude Include="textevents.h" />
-    <ClInclude Include="tree.hpp" />
     <ClInclude Include="typedef.h" />
     <ClInclude Include="url.hpp" />
     <ClInclude Include="userlist.hpp" />
@@ -81,7 +80,6 @@
     <ClCompile Include="servlist.cpp" />
     <ClCompile Include="ssl.cpp" />
     <ClCompile Include="text.cpp" />
-    <ClCompile Include="tree.cpp" />
     <ClCompile Include="url.cpp" />
     <ClCompile Include="userlist.cpp" />
     <ClCompile Include="util.cpp" />

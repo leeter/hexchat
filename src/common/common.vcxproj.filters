@@ -74,12 +74,6 @@
     <ClInclude Include="util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="text.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tree.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hexchat.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -134,6 +128,9 @@
     <ClInclude Include="sasl.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="text.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">
@@ -146,9 +143,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ctcp.cpp">
