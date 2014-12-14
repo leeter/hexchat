@@ -25,6 +25,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <cctype>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -46,6 +47,7 @@
 #include "../common/plugin.h"
 #include "../common/typedef.h"
 #include "../common/server.hpp"
+#include "../common/filesystem.hpp"
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
 #include "menu.hpp"
@@ -73,7 +75,7 @@ void key_action_tab_clean (void);
  */
 
 /* Remember that the *number* of actions is this *plus* 1 --AGL */
-#define KEY_MAX_ACTIONS 14
+enum{ KEY_MAX_ACTIONS = 14 };
 
 struct key_binding
 {
@@ -222,13 +224,11 @@ key_init ()
 }
 
 static inline int
-key_get_action_from_string (char *text)
+key_get_action_from_string (const std::string & text)
 {
-	int i;
-
-	for (i = 0; i < KEY_MAX_ACTIONS + 1; i++)
+	for (int i = 0; i < KEY_MAX_ACTIONS + 1; i++)
 	{
-		if (strcmp (key_actions[i].name, text) == 0)
+		if (text == key_actions[i].name)
 		{
 			return i;
 		}
@@ -884,38 +884,31 @@ key_save_kbs (void)
 	return 0;
 }
 
-#define KBSTATE_MOD 0
-#define KBSTATE_KEY 1
-#define KBSTATE_ACT 2
-#define KBSTATE_DT1 3
-#define KBSTATE_DT2 4
-
-#define STRIP_WHITESPACE \
-	while (buf[0] == ' ' || buf[0] == '\t') \
-		buf++; \
-		len = strlen (buf); \
-	while (buf[len] == ' ' || buf[len] == '\t') \
-	{ \
-		buf[len] = 0; \
-		len--; \
-	} \
-
-static inline int
-key_load_kbs_helper_mod (char *buf, GdkModifierType *out)
+enum class kbstate
 {
-	int n, len, mod = 0;
+	MOD = 0,
+	KEY = 1,
+	ACT = 2,
+	DT1 = 3,
+	DT2 = 4,
+};
 
+static bool key_load_kbs_helper_mod (const std::string & inbuf, GdkModifierType &out)
+{
 	/* First strip off the fluff */
-	STRIP_WHITESPACE
+	std::string buf(inbuf);
+	boost::trim(buf);
 
-	if (strcmp (buf, "None") == 0)
+	if (buf == "None")
 	{
-		*out = GdkModifierType();
-		return 0;
+		out = GdkModifierType();
+		return false;
 	}
-	for (n = 0; n < len; n++)
+
+	int mod = 0;
+	for (auto a : buf)
 	{
-		switch (buf[n])
+		switch (a)
 		{
 		case 'C':
 			mod |= GDK_CONTROL_MASK;
@@ -927,137 +920,131 @@ key_load_kbs_helper_mod (char *buf, GdkModifierType *out)
 			mod |= GDK_SHIFT_MASK;
 			break;
 		default:
-			return 1;
+			return true;
 		}
 	}
 
-	*out = static_cast<GdkModifierType>(mod);
-	return 0;
+	out = static_cast<GdkModifierType>(mod);
+	return false;
 }
 
 static int
 key_load_kbs (void)
 {
-	char *buf = nullptr, *ibuf = nullptr;
-	struct stat st;
+	namespace bio = boost::iostreams;
 	struct key_binding *kb = NULL;
-	int fd, len, state = 0, pnt = 0;
 	guint keyval;
 	GdkModifierType mod = GdkModifierType();
-	off_t size;
-
-	fd = hexchat_open_file ("keybindings.conf", O_RDONLY, 0, 0);
-	if (fd < 0)
+	std::stringstream istream;
+	
+	try
 	{
-		ibuf = strdup (default_kb_cfg);
-		size = strlen (default_kb_cfg);
+		auto fd = io::fs::open_stream("keybindings.conf", std::ios::in, 0, 0);
+		bio::stream_buffer<bio::file_descriptor> buff(fd);
+		std::istream stream(&buff);
+		stream.seekg(std::ios::beg);
+		std::copy(
+			std::istream_iterator<char>(stream),
+			std::istream_iterator<char>(),
+			std::ostream_iterator<char>(istream));
 	}
-	else
+	catch (const boost::exception& ex)
 	{
-		if (fstat (fd, &st) != 0)
-		{
-			close (fd);
-			return 1;
-		}
-
-		ibuf = static_cast<char*>(malloc (st.st_size));
-		read (fd, ibuf, st.st_size);
-		size = st.st_size;
-		close (fd);
+		istream << default_kb_cfg;
 	}
+	istream.seekg(std::ios::beg);
+	istream.seekp(std::ios::beg);
+	
 
 	if (keybind_list)
 	{
 		g_slist_free_full (keybind_list, key_free);
 		keybind_list = NULL;
 	}
-
-	while (buf_get_line (ibuf, &buf, &pnt, size))
-	{		
-		if (buf[0] == '#')
+	kbstate state = kbstate();
+	for(std::string buf; std::getline(istream, buf, '\n');)
+	{	
+		if (buf.empty())
 			continue;
-		if (strlen (buf) == 0)
+		if (buf[0] == '#')
 			continue;
 
 		switch (state)
 		{
-		case KBSTATE_MOD:
+		case kbstate::MOD:
 			kb = (struct key_binding *) g_malloc0 (sizeof (struct key_binding));
 
 			/* New format */
-			if (strncmp (buf, "ACCEL=", 6) == 0)
+			if (boost::starts_with(buf, "ACCEL="))
 			{
-				buf += 6;
+				buf.erase(buf.begin(), buf.begin() + 6);
 
-				gtk_accelerator_parse (buf, &keyval, &mod);
+				gtk_accelerator_parse (buf.c_str(), &keyval, &mod);
 
 
 				kb->keyval = keyval;
 				kb->mod = key_modifier_get_valid (mod);
 
-				state = KBSTATE_ACT; 
+				state = kbstate::ACT;
 				continue;
 			}
 
-			if (key_load_kbs_helper_mod (buf, &mod))
+			if (key_load_kbs_helper_mod (buf, mod))
 				goto corrupt_file;
 
 			kb->mod = mod;
 
-			state = KBSTATE_KEY;
+			state = kbstate::KEY;
 			continue;
 
-		case KBSTATE_KEY:
-			STRIP_WHITESPACE
+		case kbstate::KEY:
+			boost::trim(buf);
 
-			keyval = gdk_keyval_from_name (buf);
+			keyval = gdk_keyval_from_name (buf.c_str());
 			if (keyval == 0)
 			{
-				free (ibuf);
 				return 2;
 			}
 
 			kb->keyval = keyval;
 
-			state = KBSTATE_ACT;
+			state = kbstate::ACT;
 			continue;
 
-		case KBSTATE_ACT:
-			STRIP_WHITESPACE
+		case kbstate::ACT:
+			boost::trim(buf);
 
 			kb->action = key_get_action_from_string (buf);
 
 			if (kb->action == KEY_MAX_ACTIONS + 1)
 			{
-				free (ibuf);
 				return 3;
 			}
 
-			state = KBSTATE_DT1;
+			state = kbstate::DT1;
 			continue;
 
-		case KBSTATE_DT1:
-		case KBSTATE_DT2:
-			if (state == KBSTATE_DT1)
+		case kbstate::DT1:
+		case kbstate::DT2:
+			if (state == kbstate::DT1)
 				kb->data1 = kb->data2 = NULL;
 
 			while (buf[0] == ' ' || buf[0] == '\t')
-				buf++;
+				buf.erase(buf.begin());
 
 			if (buf[0] != 'D')
 			{
-				free (ibuf);
 				return 4;
 			}
 
 			switch (buf[1])
 			{
 			case '1':
-				if (state != KBSTATE_DT1)
+				if (state != kbstate::DT1)
 					goto corrupt_file;
 				break;
 			case '2':
-				if (state != KBSTATE_DT2)
+				if (state != kbstate::DT2)
 					goto corrupt_file;
 				break;
 			default:
@@ -1066,45 +1053,40 @@ key_load_kbs (void)
 
 			if (buf[2] == ':')
 			{
-				len = strlen (buf);
-				/* Add one for the NULL, subtract 3 for the "Dx:" */
-				len++;
-				len -= 3;
-				if (state == KBSTATE_DT1)
+				/* skip 3 for the "Dx:" */
+				if (state == kbstate::DT1)
 				{
-					kb->data1 = static_cast<char*>(g_malloc (len));
-					memcpy (kb->data1, &buf[3], len);
+					kb->data1 = static_cast<char*>(g_malloc (buf.size() - 3));
+					std::copy(buf.cbegin() + 3, buf.cend(), kb->data1);
 				} else
 				{
-					kb->data2 = static_cast<char*>(g_malloc(len));
-					memcpy (kb->data2, &buf[3], len);
+					kb->data2 = static_cast<char*>(g_malloc(buf.size() - 3));
+					std::copy(buf.cbegin() + 3, buf.cend(), kb->data2);
 				}
 			} else if (buf[2] == '!')
 			{
-				if (state == KBSTATE_DT1)
+				if (state == kbstate::DT1)
 					kb->data1 = NULL;
 				else
 					kb->data2 = NULL;
 			}
-			if (state == KBSTATE_DT1)
+			if (state == kbstate::DT1)
 			{
-				state = KBSTATE_DT2;
+				state = kbstate::DT2;
 				continue;
 			} else
 			{
 				keybind_list = g_slist_append (keybind_list, kb);
 
-				state = KBSTATE_MOD;
+				state = kbstate::MOD;
 			}
 
 			continue;
 		}
 	}
-	free (ibuf);
 	return 0;
 
 corrupt_file:
-	free (ibuf);
 	free (kb);
 	return 5;
 }
