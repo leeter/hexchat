@@ -1413,7 +1413,7 @@ chanview_free_ch (chanview *cv, GtkTreeIter *iter)
 	chan *ch;
 
 	gtk_tree_model_get (GTK_TREE_MODEL (cv->store), iter, COL_CHAN, &ch, -1);
-	free (ch);
+	delete ch;
 }
 
 static void
