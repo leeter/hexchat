@@ -323,17 +323,14 @@ scrollback_load (session &sess)
 				text = strchr (buf + 3, ' ');
 				if (text && text[1])
 				{
+					std::string temp;
 					if (prefs.hex_text_stripcolor_replay)
 					{
-						text = strip_color (text + 1, -1, STRIP_COLOR);
+						temp = strip_color (text + 1, STRIP_COLOR);
+						text = &temp[0];
 					}
 
 					fe_print_text (sess, text, stamp, TRUE);
-
-					if (prefs.hex_text_stripcolor_replay)
-					{
-						g_free (text);
-					}
 				}
 				else
 				{
@@ -686,7 +683,6 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 static void
 log_write (session &sess, const std::string & text, time_t ts)
 {
-	char *temp;
 	char *stamp;
 	char *file;
 	int len;
@@ -729,13 +725,11 @@ log_write (session &sess, const std::string & text, time_t ts)
 			g_free (stamp);
 		}
 	}
-	temp = strip_color (text.c_str(), -1, STRIP_ALL);
-	len = strlen (temp);
-	write (sess.logfd, temp, len);
+	auto temp = strip_color (text, STRIP_ALL);
+	write (sess.logfd, temp.c_str(), temp.size());
 	/* lots of scripts/plugins print without a \n at the end */
 	if (temp[len - 1] != '\n')
 		write (sess.logfd, "\n", 1);	/* emulate what xtext would display */
-	g_free (temp);
 }
 
 /* converts a CP1252/ISO-8859-1(5) hybrid to UTF-8                           */

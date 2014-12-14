@@ -183,7 +183,6 @@ fe_tray_set_balloon (const char *title, const char *text)
 #ifdef USE_LIBNOTIFY
 	static int notify_text_strip_flags = STRIP_ALL;
 	NotifyNotification *notification;
-	char *notify_text, *notify_title;
 
 	if (!notify_is_initted())
 	{
@@ -198,17 +197,14 @@ fe_tray_set_balloon (const char *title, const char *text)
 		g_list_free_full (server_caps, g_free);
 	}
 
-	notify_text = strip_color (text, -1, static_cast<strip_flags>(notify_text_strip_flags));
-	notify_title = strip_color (title, -1, STRIP_ALL);
+	auto notify_text = strip_color (text, static_cast<strip_flags>(notify_text_strip_flags));
+	auto notify_title = strip_color (title, STRIP_ALL);
 
-	notification = XC_NOTIFY_NEW (notify_title, notify_text, HEXCHATSHAREDIR "/icons/hicolor/scalable/apps/hexchat.svg", NULL);
+	notification = XC_NOTIFY_NEW (notify_title.c_str(), notify_text.c_str(), HEXCHATSHAREDIR "/icons/hicolor/scalable/apps/hexchat.svg", NULL);
 
 #if NOTIFY_CHECK_VERSION(0,7,0)
 	notify_notification_set_hint (notification, "desktop-entry", g_variant_new_string ("hexchat"));
 #endif
-
-	g_free ((char *)notify_title);
-	g_free ((char *)notify_text);
 
 	notify_notification_set_timeout (notification, prefs.hex_input_balloon_time*1000);
 	notify_notification_show (notification, NULL);

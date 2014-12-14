@@ -65,12 +65,8 @@ enum strip_flags{
 	STRIP_ESCMARKUP = 8,
 	STRIP_ALL = 7
 };
-//#define STRIP_COLOR 1
-//#define STRIP_ATTRIB 2
-//#define STRIP_HIDDEN 4
-//#define STRIP_ESCMARKUP 8
-//#define STRIP_ALL 7
-gchar *strip_color (const char *text, int len, strip_flags flags);
+
+std::string strip_color(const std::string &text, strip_flags flags);
 std::string strip_color2(const std::string & src, strip_flags flags);
 int strip_hidden_attribute (const std::string & src, char *dst);
 char *errorstring (int err);

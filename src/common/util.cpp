@@ -290,22 +290,17 @@ expand_homedir (char *file)
 	return g_strdup (file);
 }
 
-gchar *
-strip_color(const char *text, int len, strip_flags flags)
+std::string strip_color(const std::string &text, strip_flags flags)
 {
-
-	if (len == -1)
-		len = strlen (text);
-
-	auto new_str = strip_color2 (std::string(text, len), flags);
+	auto new_str = strip_color2 (text, flags);
 
 	if (flags & STRIP_ESCMARKUP)
 	{
-		char *esc = g_markup_escape_text (new_str.c_str(), -1);
-		return esc;
+		glib_string esc(g_markup_escape_text (new_str.c_str(), -1));
+		return std::string(esc.get());
 	}
 
-	return g_strdup(new_str.c_str());
+	return new_str;
 }
 
 

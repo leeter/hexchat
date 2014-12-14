@@ -594,7 +594,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 {
 	char buf[512];
 	char unknown[96];
-	char *real, *fmt;
+	char *fmt;
 	const char *users_country;
 	gboolean missing = FALSE;
 	GtkWidget *item;
@@ -605,9 +605,8 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 
 	if (user->realname)
 	{
-		real = strip_color (user->realname, -1, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
-		snprintf (buf, sizeof (buf), fmt, _("Real Name:"), real);
-		g_free (real);
+		auto real = strip_color (user->realname, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
+		snprintf (buf, sizeof (buf), fmt, _("Real Name:"), real.c_str());
 	} else
 	{
 		snprintf (buf, sizeof (buf), fmt, _("Real Name:"), unknown);
@@ -665,9 +664,8 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 		auto away = current_sess->server->get_away_message(user->nick);// server_away_find_message(current_sess->server, user->nick);
 		if (away)
 		{
-			char *msg = strip_color (away->first ? away->second.c_str() : unknown, -1, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
-			snprintf (buf, sizeof (buf), fmt, _("Away Msg:"), msg);
-			g_free (msg);
+			auto msg = strip_color (away->first ? away->second : std::string(unknown), static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
+			snprintf (buf, sizeof (buf), fmt, _("Away Msg:"), msg.c_str());
 			item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 			g_signal_connect (G_OBJECT (item), "activate",
 									G_CALLBACK (copy_to_clipboard_cb), 

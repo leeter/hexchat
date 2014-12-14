@@ -264,7 +264,7 @@ alert_match_text (char *text, char *masks)
 	unsigned char endchar;
 	int res;
 
-	if (masks[0] == 0)
+	if (!masks || masks[0] == 0)
 		return FALSE;
 
 	while (1)
@@ -313,13 +313,12 @@ is_hilight (char *from, char *text, session *sess, server &serv)
 	if (alert_match_word (from, prefs.hex_irc_no_hilight))
 		return false;
 
-	text = strip_color (text, -1, STRIP_ALL);
+	auto temp = strip_color (text, STRIP_ALL);
 
-	if (alert_match_text (text, serv.nick) ||
-		 alert_match_text (text, prefs.hex_irc_extra_hilight) ||
-		 alert_match_word (from, prefs.hex_irc_nick_hilight))
+	if (alert_match_text (&temp[0], serv.nick) ||
+		alert_match_text(&temp[0], prefs.hex_irc_extra_hilight) ||
+		alert_match_word(&temp[0], prefs.hex_irc_nick_hilight))
 	{
-		g_free (text);
 		if (sess != current_tab)
 		{
 			sess->nick_said = TRUE;
@@ -328,8 +327,6 @@ is_hilight (char *from, char *text, session *sess, server &serv)
 		fe_set_hilight (sess);
 		return true;
 	}
-
-	g_free (text);
 	return false;
 }
 
@@ -744,13 +741,11 @@ inbound_topic (server &serv, char *chan, char *topic_text,
 					const message_tags_data *tags_data)
 {
 	session *sess = find_channel (serv, chan);
-	char *stripped_topic;
 
 	if (sess)
 	{
-		stripped_topic = strip_color (topic_text, -1, STRIP_ALL);
+		auto stripped_topic = strip_color (topic_text, STRIP_ALL);
 		set_topic (sess, topic_text, stripped_topic);
-		g_free (stripped_topic);
 	} else
 		sess = serv.server_session;
 
@@ -763,16 +758,14 @@ inbound_topicnew (const server &serv, char *nick, char *chan, char *topic,
 						const message_tags_data *tags_data)
 {
 	session *sess;
-	char *stripped_topic;
 
 	sess = find_channel (serv, chan);
 	if (sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_NEWTOPIC, sess, nick, topic, chan, nullptr, 0,
 									  tags_data->timestamp);
-		stripped_topic = strip_color (topic, -1, STRIP_ALL);
+		auto stripped_topic = strip_color (topic, STRIP_ALL);
 		set_topic (sess, topic, stripped_topic);
-		g_free (stripped_topic);
 	}
 }
 

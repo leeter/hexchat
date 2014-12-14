@@ -360,8 +360,7 @@ fe_add_chan_list (server *serv, char *chan, char *users, char *topic)
 	auto len = strlen (chan) + 1;
 
 	chanlistrow * next_row = new chanlistrow;
-	glib_string new_topic(strip_color(topic, -1, STRIP_ALL));
-	next_row->topic = new_topic ? new_topic.get() : "";
+	next_row->topic = strip_color(topic, STRIP_ALL);
 	glib_string collation_key(g_utf8_collate_key(chan, len - 1));
 	next_row->collation_key = collation_key ? collation_key.get() : chan;
 	next_row->users = atoi (users);
