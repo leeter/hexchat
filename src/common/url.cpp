@@ -134,12 +134,12 @@ url_add (const char *urltext, int len)
 
 	if (data.back() == '.')	/* chop trailing dot */
 	{
-		data.pop_back();
+		data.erase(data.cend() - 1);
 	}
 	/* chop trailing ) but only if there's no counterpart */
 	if (data.back() == ')' && data.find_first_of('(') == std::string::npos)
 	{
-		data.pop_back();
+		data.erase(data.cend() - 1);
 	}
 
 	if (prefs.hex_url_logging)
