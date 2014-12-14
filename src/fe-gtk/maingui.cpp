@@ -3648,7 +3648,7 @@ fe_server_callback (server *serv)
 	if (serv->gui->rawlog_window)
 		mg_close_gen (NULL, serv->gui->rawlog_window);
 
-	free (serv->gui);
+	delete serv->gui;
 }
 
 /* called when a session is being killed */
