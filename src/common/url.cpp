@@ -54,12 +54,6 @@ static bool match_host (const char *word, int *start, int *end);
 static bool match_host6 (const char *word, int *start, int *end);
 static bool match_path (const char *word, int *start, int *end);
 
-static int
-url_free (char *url, void *data)
-{
-	delete[] url;
-	return TRUE;
-}
 } // end anonymous namespace
 
 
@@ -134,12 +128,12 @@ url_add (const char *urltext, int len)
 
 	if (data.back() == '.')	/* chop trailing dot */
 	{
-		data.erase(data.cend() - 1);
+		data.erase(data.end() - 1);
 	}
 	/* chop trailing ) but only if there's no counterpart */
 	if (data.back() == ')' && data.find_first_of('(') == std::string::npos)
 	{
-		data.erase(data.cend() - 1);
+		data.erase(data.end() - 1);
 	}
 
 	if (prefs.hex_url_logging)
