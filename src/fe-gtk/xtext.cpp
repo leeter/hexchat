@@ -2497,7 +2497,11 @@ namespace{
 		if (slpp)
 			*slpp = c.slp;
 		else
-			g_slist_free_full(c.slp, free);
+			g_slist_free_full(c.slp, [](void * p)
+			{
+				offlen_t* ptr = static_cast<offlen_t*>(p);
+				delete ptr;
+			});
 
 		return new_str;
 	}
@@ -4284,7 +4288,11 @@ namespace{
 		}
 
 		/* Common processing --- */
-		g_slist_free_full(slp, free);
+		g_slist_free_full(slp, [](void * p)
+		{
+			offlen_t* ptr = static_cast<offlen_t*>(p);
+			delete ptr;
+		});
 		return gl;
 	}
 
