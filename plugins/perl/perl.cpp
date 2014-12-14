@@ -100,7 +100,7 @@ thread_mbox (char *str)
 static void
 perl_auto_load_from_path (const char *path)
 {
-	WIN32_FIND_DATAW find_data;
+	WIN32_FIND_DATAW find_data = { 0 };
 
 	fs::path base_path{ widen(path) };
 	fs::path search_path = base_path / L"*.pl";
@@ -140,10 +140,10 @@ perl_auto_load_from_path (const char *path)
 		while ((ent = readdir (dir))) {
 			int len = strlen (ent->d_name);
 			if (len > 3 && strcasecmp (".pl", ent->d_name + len - 3) == 0) {
-				char *file = static_cast<char*>( malloc (len + strlen (path) + 2));
+				char *file = static_cast<char*>( g_malloc (len + strlen (path) + 2));
 				sprintf (file, "%s/%s", path, ent->d_name);
 				perl_load_file (file);
-				free (file);
+				g_free (file);
 			}
 		}
 		closedir (dir);
@@ -867,10 +867,7 @@ static XSPROTO (XS_HexChat_hook_server)
 		userdata = ST (3);
 		package = ST (4);
 		data = NULL;
-		data = static_cast<HookData*>( malloc (sizeof (HookData)));
-		if (data == NULL) {
-			XSRETURN_UNDEF;
-		}
+		data = new HookData;
 
 		data->callback = newSVsv (callback);
 		data->userdata = newSVsv (userdata);
@@ -915,7 +912,7 @@ static XSPROTO (XS_HexChat_hook_command)
 		package = ST (5);
 		data = NULL;
 
-		data = static_cast<HookData*>(malloc (sizeof (HookData)));
+		data = new HookData;
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -954,10 +951,7 @@ static XSPROTO (XS_HexChat_hook_print)
 		userdata = ST (3);
 		package = ST (4);
 
-		data = static_cast<HookData*>(malloc (sizeof (HookData)));
-		if (data == NULL) {
-			XSRETURN_UNDEF;
-		}
+		data = new HookData;
 
 		data->callback = newSVsv (callback);
 		data->userdata = newSVsv (userdata);
@@ -991,10 +985,7 @@ static XSPROTO (XS_HexChat_hook_timer)
 		userdata = ST (2);
 		package = ST (3);
 
-		data = static_cast<HookData*>(malloc (sizeof (HookData)));
-		if (data == NULL) {
-			XSRETURN_UNDEF;
-		}
+		data = new HookData;
 
 		data->callback = newSVsv (callback);
 		data->userdata = newSVsv (userdata);
@@ -1044,7 +1035,7 @@ static XSPROTO (XS_HexChat_hook_fd)
 		}
 #endif
 
-		data = static_cast<HookData*>(malloc (sizeof (HookData)));
+		data = new HookData;
 		if (data == NULL) {
 			XSRETURN_UNDEF;
 		}
@@ -1087,7 +1078,7 @@ static XSPROTO (XS_HexChat_unhook)
 				SvREFCNT_dec (userdata->package);
 			}
 
-			free (userdata);
+			delete userdata;
 		}
 		XSRETURN (retCount);
 	}
