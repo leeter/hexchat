@@ -40,7 +40,7 @@ inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
 	{\
 		void operator()(type * ptr)\
 		{\
-			del##(ptr); \
+			del(ptr); \
 		}\
 	};
 
