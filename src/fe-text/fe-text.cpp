@@ -274,7 +274,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 				bold = TRUE;
 				strcpy (&newtext[j], "\033[1m");
 			}
-			j = strlen (newtext);
+			j = strlen (newtext.c_str());
 			break;
 		case '\007':
 			if (!prefs.hex_input_filter_beep)
