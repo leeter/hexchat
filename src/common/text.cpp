@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <boost/format.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -527,8 +528,7 @@ logmask_is_fullpath ()
 	}
 }
 
-static char *
-log_create_pathname (const char *servname, const char *channame, const char *netname)
+static std::string log_create_pathname (const char *servname, const char *channame, const char *netname)
 {
 	char fname[384];
 	char fnametime[384];
@@ -573,7 +573,7 @@ log_create_pathname (const char *servname, const char *channame, const char *net
 	/* create all the subdirectories */
 	mkdir_p (fname);
 
-	return g_strdup(fname);
+	return fname;
 }
 
 static int
@@ -581,19 +581,15 @@ log_open_file (const char *servname, const char *channame, const char *netname)
 {
 	char buf[512];
 	int fd;
-	char *file;
 	time_t currenttime;
 
-	file = log_create_pathname (servname, channame, netname);
-	if (!file)
-		return -1;
+	auto file = log_create_pathname (servname, channame, netname);
 
 #ifdef WIN32
-	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
+	fd = g_open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
 #else
 	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY, 0644);
 #endif
-	g_free (file);
 
 	if (fd == -1)
 		return -1;
@@ -616,14 +612,11 @@ log_open (session &sess)
 
 	if (!log_error && sess.logfd == -1)
 	{
-		char *message;
-		char * path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false));
-		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"), path);
-		g_free(path);
+		auto path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false));
+		std::ostringstream message;
+		message << boost::format(_("* Can't open log file(s) for writing. Check the\npermissions on %s")) % path;
 
-		fe_message (message, FE_MSG_WAIT | FE_MSG_ERROR);
-
-		g_free (message);
+		fe_message (message.str(), FE_MSG_WAIT | FE_MSG_ERROR);
 		log_error = true;
 	}
 }
@@ -684,7 +677,6 @@ static void
 log_write (session &sess, const std::string & text, time_t ts)
 {
 	char *stamp;
-	char *file;
 	int len;
 
 	if (sess.text_logging == SET_DEFAULT)
@@ -702,17 +694,13 @@ log_write (session &sess, const std::string & text, time_t ts)
 		log_open (sess);
 
 	/* change to a different log file? */
-	file = log_create_pathname (sess.server->servername, sess.channel,
+	auto file = log_create_pathname (sess.server->servername, sess.channel,
 		sess.server->get_network(false));
-	if (file)
+	if (g_access(file.c_str(), F_OK) != 0)
 	{
-		if (g_access (file, F_OK) != 0)
-		{
-			close (sess.logfd);
-			sess.logfd = log_open_file (sess.server->servername, sess.channel,
-				sess.server->get_network(false));
-		}
-		g_free (file);
+		close(sess.logfd);
+		sess.logfd = log_open_file(sess.server->servername, sess.channel,
+			sess.server->get_network(false));
 	}
 
 	if (prefs.hex_stamp_log)
@@ -728,7 +716,7 @@ log_write (session &sess, const std::string & text, time_t ts)
 	auto temp = strip_color (text, STRIP_ALL);
 	write (sess.logfd, temp.c_str(), temp.size());
 	/* lots of scripts/plugins print without a \n at the end */
-	if (temp[len - 1] != '\n')
+	if (!temp.empty() && temp.back() != '\n')
 		write (sess.logfd, "\n", 1);	/* emulate what xtext would display */
 }
 
