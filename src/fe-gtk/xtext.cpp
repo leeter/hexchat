@@ -2549,7 +2549,11 @@ namespace{
 			&new_len, &slp, !xtext->ignore_hidden);
 
 		width = backend_get_text_width_slp(xtext, new_buf, slp);
-		g_slist_free_full(slp, free);
+		g_slist_free_full(slp, [](void * p)
+		{
+			offlen_t* ptr = static_cast<offlen_t*>(p);
+			delete ptr;
+		});
 
 		return width;
 	}
