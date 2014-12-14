@@ -69,13 +69,6 @@ url_clear (void)
 	urlset().clear();
 }
 
-static int
-url_save_cb (char *url, FILE *fd)
-{
-	fprintf (fd, "%s\n", url);
-	return TRUE;
-}
-
 void
 url_save_tree (const char *fname, const char *mode, gboolean fullpath)
 {
