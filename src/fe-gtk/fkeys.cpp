@@ -138,7 +138,7 @@ static int key_action_put_history (GtkWidget * wid, GdkEventKey * evt,
 												  char *d1, char *d2,
 												  struct session *sess);
 
-static GSList *keybind_list = NULL;
+static GSList *keybind_list = nullptr;
 
 static const struct key_action key_actions[KEY_MAX_ACTIONS + 1] = {
 
@@ -248,7 +248,7 @@ key_free (gpointer data)
 		g_free (kb->data1);
 	if (kb->data2)
 		g_free (kb->data2);
-	g_free (kb);
+	delete kb;
 }
 
 /* Ok, here are the NOTES
@@ -570,7 +570,7 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 	{
 		do
 		{
-			kb = (struct key_binding *) g_malloc0 (sizeof (struct key_binding));
+			kb = new key_binding();
 
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, ACCEL_COLUMN, &accel,
 															ACTION_COLUMN, &actiontext,
@@ -932,7 +932,6 @@ static int
 key_load_kbs (void)
 {
 	namespace bio = boost::iostreams;
-	struct key_binding *kb = NULL;
 	guint keyval;
 	GdkModifierType mod = GdkModifierType();
 	std::stringstream istream;
@@ -948,7 +947,7 @@ key_load_kbs (void)
 			std::istream_iterator<char>(),
 			std::ostream_iterator<char>(istream));
 	}
-	catch (const boost::exception& ex)
+	catch (const boost::exception&)
 	{
 		istream << default_kb_cfg;
 	}
@@ -959,9 +958,10 @@ key_load_kbs (void)
 	if (keybind_list)
 	{
 		g_slist_free_full (keybind_list, key_free);
-		keybind_list = NULL;
+		keybind_list = nullptr;
 	}
 	kbstate state = kbstate();
+	std::unique_ptr<key_binding> kb;
 	for(std::string buf; std::getline(istream, buf, '\n');)
 	{	
 		if (buf.empty())
@@ -972,7 +972,7 @@ key_load_kbs (void)
 		switch (state)
 		{
 		case kbstate::MOD:
-			kb = (struct key_binding *) g_malloc0 (sizeof (struct key_binding));
+			kb.reset(new key_binding());
 
 			/* New format */
 			if (boost::starts_with(buf, "ACCEL="))
@@ -990,7 +990,7 @@ key_load_kbs (void)
 			}
 
 			if (key_load_kbs_helper_mod (buf, mod))
-				goto corrupt_file;
+				return 5; // corrupt file
 
 			kb->mod = mod;
 
@@ -1027,10 +1027,9 @@ key_load_kbs (void)
 		case kbstate::DT1:
 		case kbstate::DT2:
 			if (state == kbstate::DT1)
-				kb->data1 = kb->data2 = NULL;
+				kb->data1 = kb->data2 = nullptr;
 
-			while (buf[0] == ' ' || buf[0] == '\t')
-				buf.erase(buf.begin());
+			boost::trim_left_if(buf, boost::is_any_of(" \t"));
 
 			if (buf[0] != 'D')
 			{
@@ -1041,26 +1040,26 @@ key_load_kbs (void)
 			{
 			case '1':
 				if (state != kbstate::DT1)
-					goto corrupt_file;
+					return 5;
 				break;
 			case '2':
 				if (state != kbstate::DT2)
-					goto corrupt_file;
+					return 5; // corrupt file
 				break;
 			default:
-				goto corrupt_file;
+				return 5; // corrupt file
 			}
 
 			if (buf[2] == ':')
 			{
-				/* skip 3 for the "Dx:" */
+				/* skip 3 for the "Dx:" and leave one for null terminator */
 				if (state == kbstate::DT1)
 				{
-					kb->data1 = static_cast<char*>(g_malloc (buf.size() - 3));
+					kb->data1 = static_cast<char*>(g_malloc0 (buf.size() - 2));
 					std::copy(buf.cbegin() + 3, buf.cend(), kb->data1);
 				} else
 				{
-					kb->data2 = static_cast<char*>(g_malloc(buf.size() - 3));
+					kb->data2 = static_cast<char*>(g_malloc0(buf.size() - 2));
 					std::copy(buf.cbegin() + 3, buf.cend(), kb->data2);
 				}
 			} else if (buf[2] == '!')
@@ -1076,7 +1075,7 @@ key_load_kbs (void)
 				continue;
 			} else
 			{
-				keybind_list = g_slist_append (keybind_list, kb);
+				keybind_list = g_slist_append (keybind_list, kb.release());
 
 				state = kbstate::MOD;
 			}
@@ -1085,10 +1084,6 @@ key_load_kbs (void)
 		}
 	}
 	return 0;
-
-corrupt_file:
-	free (kb);
-	return 5;
 }
 
 /* ***** Key actions start here *********** */
