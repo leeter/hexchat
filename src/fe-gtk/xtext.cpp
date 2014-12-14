@@ -1744,7 +1744,11 @@ namespace {
 				}
 			}
 		}
-		g_slist_free_full(slp, free);
+		g_slist_free_full(slp, [](void * p)
+		{
+			offlen_t* ptr = static_cast<offlen_t*>(p);
+			delete ptr;
+		});
 
 		return word_type;
 	}
@@ -2379,11 +2383,11 @@ gtk_xtext_get_type(void)
 
 namespace{
 
-	typedef struct chunk_s {
+	struct chunk_t {
 		GSList *slp;
 		int off1, len1, emph;
 		offlen_t meta;
-	} chunk_t;
+	};
 
 	static void
 		xtext_do_chunk(chunk_t *c)
@@ -2393,7 +2397,7 @@ namespace{
 		if (c->len1 == 0)
 			return;
 
-		meta = static_cast<offlen_t*>(malloc(sizeof *meta));
+		meta = new offlen_t;
 		meta->off = c->off1;
 		meta->len = c->len1;
 		meta->emph = c->emph;
@@ -2509,7 +2513,11 @@ namespace{
 
 		if (ent->slp)
 		{
-			g_slist_free_full(ent->slp, free);
+			g_slist_free_full(ent->slp, [](void * p)
+			{
+				offlen_t* ptr = static_cast<offlen_t*>(p);
+				delete ptr;
+			});
 			ent->slp = NULL;
 		}
 
