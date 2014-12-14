@@ -4729,7 +4729,7 @@ time_t stamp)
 	if (right_text[right_len - 1] == '\n')
 		right_len--;
 
-	ent = static_cast<textentry*>(malloc(left_len + right_len + 2 + sizeof(textentry)));
+	ent = static_cast<textentry*>(g_malloc0(left_len + right_len + 2 + sizeof(textentry)));
 	str = (unsigned char *)ent + sizeof(textentry);
 
 	std::copy_n(left_text, left_len, str);
@@ -4784,7 +4784,7 @@ gtk_xtext_append(xtext_buffer *buf, unsigned char *text, int len, time_t stamp)
 	if (len >= sizeof(buf->xtext->scratch_buffer))
 		len = sizeof(buf->xtext->scratch_buffer) - 1;
 
-	ent = static_cast<textentry*>(malloc(len + 1 + sizeof(textentry)));
+	ent = static_cast<textentry*>(g_malloc0(len + 1 + sizeof(textentry)));
 	ent->str = (unsigned char *)ent + sizeof(textentry);
 	ent->str_len = len;
 	if (len)
@@ -5050,9 +5050,7 @@ gtk_xtext_buffer_new(GtkXText *xtext)
 {
 	xtext_buffer *buf;
 
-	buf = static_cast<xtext_buffer *>(calloc(1, sizeof(xtext_buffer)));
-	if (!buf)
-		return NULL;
+	buf = new xtext_buffer();
 	buf->old_value = -1;
 	buf->xtext = xtext;
 	buf->scrollbar_down = TRUE;
@@ -5082,9 +5080,9 @@ gtk_xtext_buffer_free(xtext_buffer *buf)
 	while (ent)
 	{
 		next = ent->next;
-		free(ent);
+		g_free(ent);
 		ent = next;
 	}
 
-	free(buf);
+	delete buf;
 }

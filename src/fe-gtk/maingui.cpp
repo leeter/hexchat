@@ -15,12 +15,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#define NOMINMAX
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
 #include <cctype>
 #include <exception>
+#include <sstream>
+#include <string>
+#include <boost/format.hpp>
 
 #include <gdk/gdkkeysyms.h>
 
@@ -690,17 +693,14 @@ mg_restore_speller (GtkWidget *entry, char **text)
 void
 mg_set_topic_tip (session *sess)
 {
-	char *text;
-
 	switch (sess->type)
 	{
 	case session::SESS_CHANNEL:
-		if (sess->topic)
+		if (!sess->topic.empty())
 		{
-			text = g_strdup_printf (_("Topic for %s is: %s"), sess->channel,
-						 sess->topic);
-			gtk_widget_set_tooltip_text (sess->gui->topic_entry, text);
-			g_free (text);
+			std::ostringstream buf;
+			buf << boost::format(_("Topic for %s is: %s")) % sess->channel % sess->topic;
+			gtk_widget_set_tooltip_text (sess->gui->topic_entry, buf.str().c_str());
 		} else
 			gtk_widget_set_tooltip_text (sess->gui->topic_entry, _("No topic is set"));
 		break;
@@ -742,7 +742,7 @@ mg_userlist_showhide (session *sess, int show)
 	int right_size;
 	GtkAllocation allocation;
 
-	right_size = MAX (prefs.hex_gui_pane_right_size, prefs.hex_gui_pane_right_size_min);
+	right_size = std::max(prefs.hex_gui_pane_right_size, prefs.hex_gui_pane_right_size_min);
 
 	if (show)
 	{
@@ -3504,13 +3504,13 @@ fe_set_channel (session *sess)
 void
 mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 {
-	int first_run = FALSE;
+	bool first_run = false;
 	session_gui *gui;
 	struct User *user = NULL;
 
 	if (!res)
 	{
-		res = static_cast<restore_gui*>(calloc (1, sizeof (restore_gui)));
+		res = new restore_gui();
 	}
 
 	sess->res = res;
@@ -3523,7 +3523,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 
 	if (!tab)
 	{
-		gui = static_cast<session_gui*>(calloc (1, sizeof (session_gui)));
+		gui = new session_gui();
 		gui->is_tab = FALSE;
 		sess->gui = gui;
 		mg_create_topwindow (sess);
@@ -3535,7 +3535,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 
 	if (mg_gui == NULL)
 	{
-		first_run = TRUE;
+		first_run = true;
 		gui = &static_mg_gui;
 		memset (gui, 0, sizeof (session_gui));
 		gui->is_tab = TRUE;

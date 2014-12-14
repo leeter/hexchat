@@ -90,7 +90,7 @@ net_store_new (void)
 {
 	netstore *ns;
 
-	ns = new netstore();// calloc(1, sizeof(netstore));
+	ns = new netstore();
 
 	return ns;
 }

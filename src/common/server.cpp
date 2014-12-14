@@ -2198,8 +2198,7 @@ server_new (void)
 	static int id = 0;
 	server *serv;
 
-	serv = new server;// calloc(1, sizeof(*serv))
-
+	serv = new server;
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up(*serv);
 	serv->id = id++;

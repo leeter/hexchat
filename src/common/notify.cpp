@@ -93,13 +93,10 @@ notify_find_server_entry (struct notify *notify, struct server &serv)
 	if (!notify_do_network (notify, serv))
 		return NULL;
 
-	servnot = static_cast<notify_per_server*>(calloc (1, sizeof (struct notify_per_server)));
-	if (servnot)
-	{
-		servnot->server = &serv;
-		servnot->notify = notify;
-		notify->server_list = g_slist_prepend (notify->server_list, servnot);
-	}
+	servnot = new notify_per_server();
+	servnot->server = &serv;
+	servnot->notify = notify;
+	notify->server_list = g_slist_prepend(notify->server_list, servnot);
 	return servnot;
 }
 
@@ -571,7 +568,7 @@ notify_deluser (const char *name)
 				servnot = (struct notify_per_server *) notify->server_list->data;
 				notify->server_list =
 					g_slist_remove (notify->server_list, servnot);
-				free (servnot);
+				delete servnot;
 			}
 			notify_list = g_slist_remove (notify_list, notify);
 			notify_watch_all (notify, false);

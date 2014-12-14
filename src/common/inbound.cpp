@@ -85,9 +85,7 @@ clear_channel (session &sess)
 void
 set_topic (session *sess, const std::string & topic, const std::string & stripped_topic)
 {
-	if (sess->topic)
-		free (sess->topic);
-	sess->topic = strdup (stripped_topic.c_str());
+	sess->topic = stripped_topic;
 	fe_set_topic (sess, topic, stripped_topic);
 }
 
@@ -186,7 +184,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 		if (ip && ip[0])
 		{
 			if (prefs.hex_irc_logging && sess->logfd != -1 &&
-				(!sess->topic || strcmp(sess->topic, ip)))
+				(sess->topic.empty() || sess->topic != ip))
 			{
 				char tbuf[1024];
 				snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", from, ip);

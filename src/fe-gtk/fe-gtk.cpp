@@ -431,7 +431,7 @@ fe_new_window (session *sess, int focus)
 void
 fe_new_server (struct server *serv)
 {
-	serv->gui = static_cast<server_gui*>(calloc (1, sizeof (struct server_gui)));
+	serv->gui = new server_gui();
 }
 
 void

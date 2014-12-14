@@ -429,8 +429,8 @@ struct session
 	int voices;							/* num. of voiced people */
 	int total;							/* num. of users in channel */
 
-	char *quitreason;
-	char *topic;
+	std::string quitreason;
+	std::string topic;
 	std::string current_modes;
 
 	int mode_timeout_tag;

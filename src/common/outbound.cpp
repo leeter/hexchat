@@ -163,7 +163,7 @@ server_sendpart(server & serv, const std::string& channel, const boost::optional
 void
 server_sendquit (session * sess)
 {
-	if (!sess->quitreason)
+	if (sess->quitreason.empty())
 	{
 		std::string colrea = prefs.hex_irc_quit_reason;
 		check_special_chars (&colrea[0], true);
@@ -1873,7 +1873,7 @@ cmd_quit (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (*word_eol[2])
 		sess->quitreason = word_eol[2];
 	sess->server->disconnect (sess, true, -1);
-	sess->quitreason = NULL;
+	sess->quitreason.erase();
 	return 2;
 }
 

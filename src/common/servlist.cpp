@@ -926,7 +926,7 @@ servlist_server_add (ircnet *net, const char *name)
 {
 	ircserver *serv;
 
-	serv = static_cast<ircserver*>(calloc(1, sizeof(ircserver)));
+	serv = new ircserver();
 	if (!serv)
 		return NULL;
 	serv->hostname = strdup (name);
@@ -941,10 +941,8 @@ servlist_command_add (ircnet *net, const char *cmd)
 {
 	commandentry *entry;
 
-	entry = static_cast<commandentry*>(calloc(1, sizeof(*entry)));
-	if (!entry)
-		return NULL;
-	entry->command = strdup (cmd);
+	entry = new commandentry();
+	entry->command = new_strdup (cmd);
 
 	net->commandlist = g_slist_append (net->commandlist, entry);
 
@@ -997,7 +995,7 @@ servlist_server_remove (ircnet *net, ircserver *serv)
 {
 	free (serv->hostname);
 	net->servlist = g_slist_remove (net->servlist, serv);
-	free(serv);
+	delete serv;
 }
 
 static void
@@ -1015,8 +1013,8 @@ servlist_server_remove_all (ircnet *net)
 void
 servlist_command_free (commandentry *entry)
 {
-	g_free (entry->command);
-	g_free (entry);
+	delete entry->command;
+	delete entry;
 }
 
 void

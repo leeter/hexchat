@@ -202,7 +202,7 @@ plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 {
 	hexchat_plugin *pl;
 
-	pl = new hexchat_plugin();// static_cast<hexchat_plugin*>(calloc(1, sizeof(hexchat_plugin)));
+	pl = new hexchat_plugin();
 	pl->handle = handle;
 	pl->filename = filename;
 	pl->context = ctx;
@@ -805,9 +805,7 @@ plugin_add_hook (hexchat_plugin *pl, int type, int pri, const char *name,
 {
 	hexchat_hook *hook;
 
-	hook = static_cast<hexchat_hook*>(calloc(1, sizeof(hexchat_hook)));
-	if (!hook)
-		return NULL;
+	hook = new hexchat_hook();
 
 	hook->type = type;
 	hook->pri = pri;
@@ -987,14 +985,12 @@ void
 hexchat_printf (hexchat_plugin *ph, const char *format, ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf(g_strdup_vprintf (format, args));
 	va_end (args);
 
-	hexchat_print (ph, buf);
-	g_free (buf);
+	hexchat_print (ph, buf.get());
 }
 
 void
@@ -1201,7 +1197,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return sess->server->servername;
 
 	case 0x696cd2f: /* topic */
-		return sess->topic;
+		return sess->topic.c_str();
 
 	case 0x3419f12d: /* gtkwin_ptr */
 		return (char*)fe_gui_info_ptr (sess, 1);

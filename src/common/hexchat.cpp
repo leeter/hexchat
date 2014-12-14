@@ -647,7 +647,6 @@ session::~session()
 		userlist_free(*this);
 
 	exec_notify_kill(this);
-	free(this->topic);
 }
 
 void
@@ -1079,11 +1078,11 @@ main (int argc, char *argv[])
 			if ((strcmp (argv[i], "-d") == 0 || strcmp (argv[i], "--cfgdir") == 0)
 				&& i + 1 < argc)
 			{
-				xdir = strdup (argv[i + 1]);
+				xdir = new_strdup (argv[i + 1]);
 			}
 			else if (strncmp (argv[i], "--cfgdir=", 9) == 0)
 			{
-				xdir = strdup (argv[i] + 9);
+				xdir = new_strdup (argv[i] + 9);
 			}
 
 			if (xdir != NULL)

@@ -229,19 +229,18 @@ static int
 dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 {
 	struct hostent *h;
-	static char *cache_host = NULL;
+	static std::string cache_host;
 	static guint32 cache_addr;
 
 	/* too lazy to thread this, so we cache results */
-	if (cache_host)
+	if (!cache_host.empty())
 	{
-		if (strcmp (host, cache_host) == 0)
+		if (cache_host == host)
 		{
 			memcpy (&addr->sin_addr, &cache_addr, 4);
 			return TRUE;
 		}
-		free (cache_host);
-		cache_host = NULL;
+		cache_host.erase();
 	}
 
 	h = gethostbyname (host);
@@ -249,7 +248,7 @@ dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 	{
 		memcpy (&addr->sin_addr, h->h_addr, 4);
 		memcpy (&cache_addr, h->h_addr, 4);
-		cache_host = strdup (host);
+		cache_host = host;
 		/* cppcheck-suppress memleak */
 		return TRUE;
 	}
@@ -351,14 +350,11 @@ dcc_close (::dcc::DCC *dcc, int dccstat, int destroy)
 	{
 		dcc_list = g_slist_remove (dcc_list, dcc);
 		::fe::fe_dcc_remove (dcc);
-		if (dcc->proxy)
-			free (dcc->proxy);
-		if (dcc->file)
-			free (dcc->file);
-		if (dcc->destfile)
-			g_free (dcc->destfile);
+		delete dcc->proxy;
+		delete[] dcc->file;
+		g_free (dcc->destfile);
 		free (dcc->nick);
-		free (dcc);
+		delete dcc;
 		return;
 	}
 
@@ -579,7 +575,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 				} while (access(buf, F_OK) == 0);
 
 				old = dcc->destfile;
-				dcc->destfile = g_strdup(buf);
+				dcc->destfile = new_strdup(buf);
 
 				EMIT_SIGNAL(XP_TE_DCCRENAME, dcc->serv->front_session,
 					old, dcc->destfile, NULL, NULL, 0);
@@ -840,7 +836,7 @@ proxy_read_line(::dcc::DCC *dcc)
 		if (!read_proxy(dcc))
 			return FALSE;
 		if (proxy->buffer[proxy->bufferused - 1] == '\n'
-			|| proxy->bufferused == MAX_PROXY_BUFFER)
+			|| proxy->bufferused == hexchat::dcc::MAX_PROXY_BUFFER)
 		{
 			proxy->buffer[proxy->bufferused - 1] = 0;
 			return TRUE;
@@ -854,7 +850,7 @@ dcc_wingate_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DC
 	::dcc::proxy_state *proxy = dcc->proxy;
 	if (proxy->phase == 0)
 	{
-		proxy->buffersize = snprintf((char*)proxy->buffer, MAX_PROXY_BUFFER,
+		proxy->buffersize = snprintf((char*)proxy->buffer, hexchat::dcc::MAX_PROXY_BUFFER,
 			"%s %d\r\n", net_ip(dcc->addr),
 			dcc->port);
 		proxy->bufferused = 0;
@@ -1001,7 +997,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 				return TRUE;
 			}
 
-			memset(proxy->buffer, 0, MAX_PROXY_BUFFER);
+			memset(proxy->buffer, 0, hexchat::dcc::MAX_PROXY_BUFFER);
 
 			/* form the UPA request */
 			len_u = strlen(prefs.hex_net_proxy_user);
@@ -1238,7 +1234,7 @@ dcc_proxy_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	if (!dcc_did_connect(source, condition, dcc))
 		return TRUE;
 
-	dcc->proxy = static_cast< ::dcc::proxy_state*>(calloc(1, sizeof(struct ::dcc::proxy_state)));
+	dcc->proxy = new ::dcc::proxy_state();
 	if (!dcc->proxy)
 	{
 		dcc->dccstat = STAT_FAILED;
@@ -1476,7 +1472,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 
 	dcc->dccstat = STAT_ACTIVE;
 	dcc->lasttime = dcc->starttime = time(0);
-	dcc->fastsend = prefs.hex_dcc_fast_send;
+	dcc->fastsend = !!prefs.hex_dcc_fast_send;
 
 	snprintf(host, sizeof(host), "%s:%d", net_ip(dcc->addr), dcc->port);
 
@@ -1605,9 +1601,7 @@ dcc_send_wild(char *file)
 static ::dcc::DCC *
 new_dcc(void)
 {
-	::dcc::DCC *dcc = static_cast< ::dcc::DCC*>(calloc(1, sizeof(::dcc::DCC)));
-	if (!dcc)
-		return NULL;
+	::dcc::DCC *dcc = new ::dcc::DCC();
 	dcc->sok = -1;
 	dcc->fp = -1;
 	dcc_list = g_slist_prepend(dcc_list, dcc);
@@ -1656,7 +1650,7 @@ dcc_add_chat(session *sess, char *nick, int port, guint32 addr, int pasvid)
 		dcc->addr = addr;
 		dcc->port = port;
 		dcc->pasvid = pasvid;
-		dcc->nick = strdup(nick);
+		dcc->nick = new_strdup(nick);
 		dcc->starttime = time(0);
 
 		EMIT_SIGNAL(XP_TE_DCCCHATOFFER, sess->server->front_session, nick,
@@ -1694,7 +1688,7 @@ dcc_add_file(session *sess, char *file, ::dcc::DCC_SIZE size, int port, char *ni
 	dcc = new_dcc();
 	if (dcc)
 	{
-		dcc->file = strdup(file);
+		dcc->file = new_strdup(file);
 
 		dcc->destfile = static_cast<char*>(g_malloc(strlen(prefs.hex_dcc_dir) + strlen(nick) +
 			strlen(file) + 4));
@@ -1729,7 +1723,7 @@ dcc_add_file(session *sess, char *file, ::dcc::DCC_SIZE size, int port, char *ni
 		dcc->port = port;
 		dcc->pasvid = pasvid;
 		dcc->size = size;
-		dcc->nick = strdup(nick);
+		dcc->nick = new_strdup(nick);
 		dcc->maxcps = prefs.hex_dcc_max_get_cps;
 
 		is_resumable(dcc);
@@ -2154,7 +2148,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 					}
 					file++;
 				}
-				dcc->nick = strdup (to);
+				dcc->nick = new_strdup (to);
 				if (prefs.hex_gui_autoopen_send)
 				{
 					if (fe_dcc_open_send_win (TRUE))	/* already open? add */
@@ -2181,10 +2175,9 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 				}
 				sess->server->p_ctcp (to, outbuf);
 
-				char * mutable_to = strdup(to);
+				std::string mutable_to(to);
 				EMIT_SIGNAL (XP_TE_DCCOFFER, sess, file_part (dcc->file),
-								 mutable_to, dcc->file, NULL, 0);
-				free(mutable_to);
+								 &mutable_to[0], dcc->file, NULL, 0);
 			} else
 			{
 				dcc_close (dcc, 0, TRUE);
@@ -2240,7 +2233,7 @@ dcc_change_nick (const server &serv, const char *oldnick, const char *newnick)
 			{
 				if (dcc->nick)
 					free (dcc->nick);
-				dcc->nick = strdup (newnick);
+				dcc->nick = new_strdup (newnick);
 			}
 		}
 		list = list->next;
@@ -2281,7 +2274,7 @@ void
 dcc_get_with_destfile (::dcc::DCC *dcc, char *file)
 {
 	g_free (dcc->destfile);
-	dcc->destfile = g_strdup (file);	/* utf-8 */
+	dcc->destfile = new_strdup (file);	/* utf-8 */
 
 	/* since destfile changed, must check resumability again */
 	is_resumable (dcc);
@@ -2358,7 +2351,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	dcc->serv = sess->server;
 	dcc->dccstat = STAT_QUEUED;
 	dcc->type = DCC::dcc_type::TYPE_CHATSEND;
-	dcc->nick = strdup (nick);
+	dcc->nick = new_strdup (nick);
 	if (passive || dcc_listen_init (dcc, sess))
 	{
 		if (prefs.hex_gui_autoopen_chat)
