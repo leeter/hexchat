@@ -605,7 +605,7 @@ xit:
 		if (!hook || hook->type == HOOK_DELETED)
 		{
 			hook_list = g_slist_remove (hook_list, hook);
-			free (hook);
+			delete hook;
 		}
 		list = next;
 	}
