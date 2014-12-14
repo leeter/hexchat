@@ -2436,7 +2436,7 @@ namespace{
 			if (mbl > len)
 				goto bad_utf8;
 
-			if (rcol > 0 && (std::isdigit(*text, locale) || (*text == ',' && std::isdigit(text[1], locale) && !bgcol)))
+			if (rcol > 0 && (std::isdigit<char>(*text, locale) || (*text == ',' && std::isdigit<char>(text[1], locale) && !bgcol)))
 			{
 				if (text[1] != ',') rcol--;
 				if (*text == ',')
