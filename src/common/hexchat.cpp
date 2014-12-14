@@ -487,9 +487,6 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	waitchannel(),
 	willjoinchannel(),
 
-	quitreason(nullptr),
-	topic(nullptr),
-
 	lastlog_sess(nullptr),
 	running_exec(nullptr),
 	gui(nullptr),

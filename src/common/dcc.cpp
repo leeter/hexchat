@@ -384,7 +384,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 
 	if (dcc->serv->using_irc) /* using "IRC" encoding (CP1252/UTF-8 hybrid) */
 		utf = NULL;
-	else if (dcc->serv->encoding == NULL)     /* system */
+	else if (dcc->serv->encoding)     /* system */
 		utf = g_locale_to_utf8(line, len, NULL, &utf_len, NULL);
 	else
 		utf = g_convert(line, len, "UTF-8", dcc->serv->encoding->c_str(), 0, &utf_len, 0);
