@@ -3957,7 +3957,11 @@ namespace{
 			gtk_xtext_search_textentry_del(buffer, ent);
 		}
 
-		g_slist_free_full(ent->slp, free);
+		g_slist_free_full(ent->slp, [](void * p)
+		{
+			offlen_t* ptr = static_cast<offlen_t*>(p);
+			delete ptr;
+		});
 		g_slist_free(ent->sublines);
 
 		free(ent);
