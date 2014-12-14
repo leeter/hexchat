@@ -3197,7 +3197,7 @@ namespace{
 		
 		while (1)
 		{
-			if (rcol > 0 && (std::isdigit(*str, locale) || (*str == ',' && std::isdigit(str[1], locale) && !bgcol)))
+			if (rcol > 0 && (std::isdigit<char>(*str, locale) || (*str == ',' && std::isdigit<char>(str[1], locale) && !bgcol)))
 			{
 				if (str[1] != ',') rcol--;
 				if (*str == ',')
