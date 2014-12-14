@@ -635,9 +635,9 @@ const char * get_sys_str (bool with_cpu)
 #endif
 		buffer << un.sysname << ' ' << un.release;
 
-	sys_str = buffer.str();
+	buf = buffer.str();
 
-	return sys_str.c_str();
+	return buf.c_str();
 }
 
 #endif
