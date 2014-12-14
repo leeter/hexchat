@@ -578,13 +578,11 @@ banlist_add_selected_cb (GtkTreeModel *, GtkTreePath *, GtkTreeIter *iter, gpoin
 {
 	GSList **lp = static_cast<GSList**>(data);
 	GSList *list = nullptr;
-	GtkTreeIter *copy;
-
+	
 	if (!lp) return;
 	list = *lp;
-	copy = static_cast<GtkTreeIter*>(g_malloc (sizeof (GtkTreeIter)));
-	g_return_if_fail (copy != nullptr);
-	*copy = *iter;
+	
+	GtkTreeIter *copy = gtk_tree_iter_copy(iter);
 
 	list = g_slist_append (list, copy);
 	*(GSList **)data = list;
