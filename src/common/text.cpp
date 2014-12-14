@@ -588,7 +588,7 @@ log_open_file (const char *servname, const char *channame, const char *netname)
 #ifdef WIN32
 	fd = g_open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
 #else
-	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY, 0644);
+	fd = g_open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 #endif
 
 	if (fd == -1)
