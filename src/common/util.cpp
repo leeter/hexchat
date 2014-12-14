@@ -506,146 +506,138 @@ get_cpu_arch (void)
 	}
 }
 
-char *
-get_sys_str (bool with_cpu)
+const char * get_sys_str (bool with_cpu)
 {
-	static char verbuf[64];
-	static char winver[20];
-	double mhz;
+	static std::string sys_str;
+	if (sys_str.empty())
+		return sys_str.c_str();
+	std::ostringstream buffer("Windows", std::ios::ate);
 
 	if (IsWindows8Point1OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2012 R2");
+			buffer << "Server 2012 R2";
 		}
 		else
 		{
-			strcpy (winver, "8.1");
+			buffer << "8.1";
 		}
 	}
 	else if (IsWindows8OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2012");
+			buffer << "Server 2012";
 		}
 		else
 		{
-			strcpy (winver, "8");
+			buffer << "8";
 		}
 	}
 	else if (IsWindows7SP1OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2008 R2 SP1");
+			buffer << "Server 2008 R2 SP1";
 		}
 		else
 		{
-			strcpy (winver, "7 SP1");
+			buffer << "7 SP1";
 		}
 	}
 	else if (IsWindows7OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2008 R2");
+			buffer << "Server 2008 R2";
 		}
 		else
 		{
-			strcpy (winver, "7");
+			buffer << "7";
 		}
 	}
 	else if (IsWindowsVistaSP2OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2008 SP2");
+			buffer << "Server 2008 SP2";
 		}
 		else
 		{
-			strcpy (winver, "Vista SP2");
+			buffer << "Vista SP2";
 		}
 	}
 	else if (IsWindowsVistaSP1OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2008 SP1");
+			buffer << "Server 2008 SP1";
 		}
 		else
 		{
-			strcpy (winver, "Vista SP1");
+			buffer << "Vista SP1";
 		}
 	}
 	else if (IsWindowsVistaOrGreater ())
 	{
 		if (IsWindowsServer ())
 		{
-			strcpy (winver, "Server 2008");
+			buffer << "Server 2008";
 		}
 		else
 		{
-			strcpy (winver, "Vista");
+			buffer << "Vista";
 		}
 	}
 	else
 	{
-		strcpy (winver, "Unknown");
+		buffer << "Unknown";
 	}
 
-	mhz = get_mhz ();
+	double mhz = get_mhz ();
 	if (mhz && with_cpu)
 	{
 		double cpuspeed = ( mhz > 1000 ) ? mhz / 1000 : mhz;
 		const char *cpuspeedstr = ( mhz > 1000 ) ? "GHz" : "MHz";
-		sprintf (verbuf, "Windows %s [%.2f%s]",	winver, cpuspeed, cpuspeedstr);
+		buffer << boost::format(" [%.2f%s]") % cpuspeed % cpuspeedstr;
 	}
-	else
-	{
-		sprintf (verbuf, "Windows %s", winver);
-	}
+
+	sys_str = buffer.str();
 	
-	return verbuf;
+	return sys_str.c_str();
 }
 
 #else
 
-char *
-get_sys_str (bool with_cpu)
+const char * get_sys_str (bool with_cpu)
 {
-#if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__)
-	double mhz;
-#endif
-	int cpus = 1;
+	static std::string buf;
+	if (buf.empty())
+		return buf.c_str();
+
 	struct utsname un;
-	static char *buf = NULL;
-	if (buf)
-		return buf;
-
-	buf = static_cast<char*>(malloc (128));
-	if(!buf)
-		return nullptr;
-
 	uname (&un);
 
+	std::ostringstream buffer;
 #if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__)
+	double mhz;
+	int cpus = 1;
 	get_cpu_info (&mhz, &cpus);
 	if (mhz && with_cpu)
 	{
 		double cpuspeed = ( mhz > 1000 ) ? mhz / 1000 : mhz;
 		const char *cpuspeedstr = ( mhz > 1000 ) ? "GHz" : "MHz";
-		snprintf (buf, 128,
-					(cpus == 1) ? "%s %s [%s/%.2f%s]" : "%s %s [%s/%.2f%s/SMP]",
-					un.sysname, un.release, un.machine,
-					cpuspeed, cpuspeedstr);
+		buffer << boost::format((cpus == 1) ? "%s %s [%s/%.2f%s]" : "%s %s [%s/%.2f%s/SMP]")
+			% un.sysname % un.release % un.machine % cpuspeed % cpuspeedstr;
 	}
 	else
 #endif
-		snprintf (buf, 128, "%s %s", un.sysname, un.release);
+		buffer << un.sysname << ' ' << un.release;
 
-	return buf;
+	sys_str = buffer.str();
+
+	return sys_str.c_str();
 }
 
 #endif

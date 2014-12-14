@@ -56,7 +56,7 @@ int buf_get_line (char *, char **, int *, int len);
 char *nocasestrstr (const char *text, const char *tofind);
 const char *country (const std::string *);
 void country_search (char *pattern, void *ud, void (*print)(void *, char *, ...));
-char *get_sys_str (bool with_cpu);
+const char *get_sys_str (bool with_cpu);
 void util_exec (const char *cmd);
 enum strip_flags{
 	STRIP_COLOR = 1,
