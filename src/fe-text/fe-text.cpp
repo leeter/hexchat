@@ -153,24 +153,24 @@ void
 fe_print_text (session &sess, char *text, time_t stamp,
 			   gboolean no_activity)
 {
-	int dotime = FALSE;
+	bool dotime = false;
 	char num[8];
 	int reverse = 0, under = 0, bold = 0,
 		comma, k, i = 0, j = 0, len = strlen (text);
-	char *newtext = static_cast<char*>(malloc (len + 1024));
+	std::string newtext(len + 1024, '\0');
 
 	if (prefs.hex_stamp_text)
 	{
 		newtext[0] = 0;
-		j += timecat (newtext, stamp);
+		j += timecat (&newtext[0], stamp);
 	}
 	while (i < len)
 	{
 		if (dotime && text[i] != 0)
 		{
-			dotime = FALSE;
+			dotime = false;
 			newtext[j] = 0;
-			j += timecat (newtext, stamp);
+			j += timecat (&newtext[0], stamp);
 		}
 		switch (text[i])
 		{
@@ -222,7 +222,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 						{
 							sprintf ((char *) &newtext[j], "%dm", mirc + col);
 						}
-						j = strlen (newtext);
+						j = strlen (newtext.c_str());
 					}
 					switch (text[i])
 					{
@@ -250,7 +250,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 				reverse = TRUE;
 				strcpy (&newtext[j], "\033[7m");
 			}
-			j = strlen (newtext);
+			j = strlen (newtext.c_str());
 			break;
 		case '\037':				  /* underline */
 			if (under)
@@ -262,7 +262,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 				under = TRUE;
 				strcpy (&newtext[j], "\033[4m");
 			}
-			j = strlen (newtext);
+			j = strlen (newtext.c_str());
 			break;
 		case '\002':				  /* bold */
 			if (bold)
@@ -298,7 +298,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 			newtext[j] = '\r';
 			j++;
 			if (prefs.hex_stamp_text)
-				dotime = TRUE;
+				dotime = true;
 		default:
 			newtext[j] = text[i];
 			j++;
@@ -313,8 +313,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 		newtext[j++] = '\n';
 
 	newtext[j] = 0;
-	write (STDOUT_FILENO, newtext, j);
-	free (newtext);
+	write (STDOUT_FILENO, newtext.c_str(), j);
 }
 #else
 /* The win32 version for cmd.exe */
