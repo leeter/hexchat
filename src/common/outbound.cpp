@@ -4256,7 +4256,7 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 					tbuf[2] = cmd[j + 3];
 					tbuf[3] = 0;
 					buf[i] = atoi (tbuf);
-				std::unique_ptr<gchar, glib_deleter> utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
+					glib_string utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
 					if (utf)
 					{
 					std::copy_n(utf.get(), utf_len, buf.begin() + i);

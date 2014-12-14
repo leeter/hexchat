@@ -156,14 +156,10 @@ plugingui_load_cb (session *sess, const char *file)
 void
 plugingui_load (void)
 {
-	char *sub_dir;
-
-	sub_dir = g_build_filename (get_xdir(), "addons", NULL);
+	glib_string sub_dir(g_build_filename(get_xdir(), "addons", NULL));
 
 	gtkutil_file_req (_("Select a Plugin or Script to load"), (filereqcallback) plugingui_load_cb, current_sess,
-							sub_dir, "*."G_MODULE_SUFFIX";*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
-
-	g_free (sub_dir);
+							sub_dir.get(), "*." G_MODULE_SUFFIX ";*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 }
 
 static void
@@ -175,7 +171,7 @@ plugingui_loadbutton_cb (GtkWidget *, gpointer)
 static void
 plugingui_unload (GtkWidget *, gpointer)
 {
-	char *modname, *file, *buf;
+	char *modname, *file;
 	GtkTreeView *view;
 	GtkTreeIter iter;
 	
@@ -183,41 +179,37 @@ plugingui_unload (GtkWidget *, gpointer)
 	if (!gtkutil_treeview_get_selected (view, &iter, NAME_COLUMN, &modname,
 										FILE_COLUMN, &file, -1))
 		return;
-
-	if (g_str_has_suffix (file, "."G_MODULE_SUFFIX))
+	glib_string file_ptr(file);
+	glib_string modname_ptr(modname);
+	if (g_str_has_suffix (file, "." G_MODULE_SUFFIX))
 	{
 		if (plugin_kill (modname, FALSE) == 2)
 			fe_message (_("That plugin is refusing to unload.\n"), FE_MSG_ERROR);
 	} else
 	{
 		/* let python.so or perl.so handle it */
-		buf = static_cast<char*>(malloc (strlen (file) + 10));
+		std::string buf(strlen(file) + 10, '\0');
 		if (strchr (file, ' '))
-			sprintf (buf, "UNLOAD \"%s\"", file);
+			snprintf (&buf[0], buf.size(), _("UNLOAD \"%s\""), file);
 		else
-			sprintf (buf, "UNLOAD %s", file);
-		handle_command (current_sess, buf, FALSE);
-		free (buf);
+			snprintf(&buf[0], buf.size(), _("UNLOAD %s"), file);
+		handle_command(current_sess, &buf[0], FALSE);
 	}
-
-	g_free (modname);
-	g_free (file);
 }
 
 static void
 plugingui_reloadbutton_cb (GtkWidget *, GtkTreeView *view)
 {
-	char *file = plugingui_getfilename(view);
+	glib_string file(plugingui_getfilename(view));
 
 	if (file)
 	{
-		std::string buf(strlen(file) + 9, '\0');
-		if (strchr (file, ' '))
-			sprintf (&buf[0], "RELOAD \"%s\"", file);
+		std::string buf(strlen(file.get()) + 9, '\0');
+		if (strchr (file.get(), ' '))
+			snprintf (&buf[0], buf.size(), _("RELOAD \"%s\""), file.get());
 		else
-			sprintf(&buf[0], "RELOAD %s", file);
+			snprintf(&buf[0], buf.size(), _("RELOAD %s"), file.get());
 		handle_command(current_sess, &buf[0], FALSE);
-		g_free (file);
 	}
 }
 

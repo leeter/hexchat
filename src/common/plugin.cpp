@@ -1997,7 +1997,7 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 	char confname[64];
 
 	{
-		std::unique_ptr<gchar, glib_deleter> token(g_strdup(pl->name));
+		glib_string token(g_strdup(pl->name));
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
 	}

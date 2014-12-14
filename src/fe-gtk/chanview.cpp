@@ -1756,7 +1756,7 @@ chan_emancipate_children (chan *ch)
 		/* remove and re-add all the children, but avoid using "ch" as parent */
 		gtk_tree_model_get (GTK_TREE_MODEL (ch->cv->store), &childiter,
 								  COL_NAME, &name, COL_CHAN, &childch, COL_ATTR, &attr, -1);
-		std::unique_ptr<gchar, glib_deleter> name_ptr(name);
+		glib_string name_ptr(name);
 		ch->cv->func_remove (childch);
 		gtk_tree_store_remove (ch->cv->store, &childiter);
 		ch->cv->size--;

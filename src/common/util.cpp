@@ -1622,7 +1622,7 @@ std::string challengeauth_response(const std::string & username, const std::stri
 	pass.resize(10, '\0'); /* truncate to 10 characters */
 	auto passhash = str_sha256hash (pass.c_str());
 
-	std::unique_ptr<gchar, glib_deleter> key(g_strdup_printf ("%s:%s", user.c_str(), passhash.c_str()));
+	glib_string key(g_strdup_printf("%s:%s", user.c_str(), passhash.c_str()));
 
 	auto keyhash = str_sha256hash (key.get());
 
