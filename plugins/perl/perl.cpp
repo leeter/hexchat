@@ -140,10 +140,10 @@ perl_auto_load_from_path (const char *path)
 		while ((ent = readdir (dir))) {
 			int len = strlen (ent->d_name);
 			if (len > 3 && strcasecmp (".pl", ent->d_name + len - 3) == 0) {
-				char *file = static_cast<char*>( g_malloc (len + strlen (path) + 2));
+				char *file = new char[len + strlen (path) + 2];
 				sprintf (file, "%s/%s", path, ent->d_name);
 				perl_load_file (file);
-				g_free (file);
+				delete[] file;
 			}
 		}
 		closedir (dir);
