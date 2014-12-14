@@ -125,7 +125,7 @@ namespace
 
 	static void gtk_xtext_render_page(GtkXText * xtext);
 	static void gtk_xtext_calc_lines(xtext_buffer *buf, int);
-	static char *gtk_xtext_selection_get_text(GtkXText *xtext, int *len_ret);
+	static std::string gtk_xtext_selection_get_text(GtkXText *xtext, int *len_ret);
 	static textentry *gtk_xtext_nth(GtkXText *xtext, int line, int *subline);
 	static void gtk_xtext_adjustment_changed(GtkAdjustment * adj,
 		GtkXText * xtext);
@@ -1870,7 +1870,6 @@ namespace {
 	static void
 		gtk_xtext_set_clip_owner(GtkWidget * xtext, GdkEventButton * event)
 	{
-		char *str;
 		int len;
 
 		if (GTK_XTEXT(xtext)->selection_buffer &&
@@ -1879,18 +1878,13 @@ namespace {
 
 		GTK_XTEXT(xtext)->selection_buffer = GTK_XTEXT(xtext)->buffer;
 
-		str = gtk_xtext_selection_get_text(GTK_XTEXT(xtext), &len);
-		if (str)
+		auto str = gtk_xtext_selection_get_text(GTK_XTEXT(xtext), &len);
+		if (!str.empty())
 		{
-			if (str[0])
-			{
-				gtk_clipboard_set_text(gtk_widget_get_clipboard(xtext, GDK_SELECTION_CLIPBOARD), str, len);
+			gtk_clipboard_set_text(gtk_widget_get_clipboard(xtext, GDK_SELECTION_CLIPBOARD), str.c_str(), len);
 
-				gtk_selection_owner_set(xtext, GDK_SELECTION_PRIMARY, event ? event->time : GDK_CURRENT_TIME);
-				gtk_selection_owner_set(xtext, GDK_SELECTION_SECONDARY, event ? event->time : GDK_CURRENT_TIME);
-			}
-
-			free(str);
+			gtk_selection_owner_set(xtext, GDK_SELECTION_PRIMARY, event ? event->time : GDK_CURRENT_TIME);
+			gtk_selection_owner_set(xtext, GDK_SELECTION_SECONDARY, event ? event->time : GDK_CURRENT_TIME);
 		}
 	}
 } // end anonymous namespace
@@ -2103,20 +2097,17 @@ namespace {
 		return TRUE;
 	}
 
-	static char *
+	static std::string
 		gtk_xtext_selection_get_text(GtkXText *xtext, int *len_ret)
 	{
 		textentry *ent;
-		char *txt;
-		char *pos;
-		char *stripped;
 		int len;
-		int first = TRUE;
+		bool first = true;
 		xtext_buffer *buf;
 
 		buf = xtext->selection_buffer;
 		if (!buf)
-			return NULL;
+			return{};
 
 		/* first find out how much we need to malloc ... */
 		len = 0;
@@ -2145,12 +2136,11 @@ namespace {
 		}
 
 		if (len < 1)
-			return NULL;
+			return{};
 
 		/* now allocate mem and copy buffer */
-		pos = txt = static_cast<char*>(malloc(len));
-		if (!txt)
-			return NULL;
+		std::string txt(len, '\0');
+		auto pos = txt.begin();
 		ent = buf->last_ent_start;
 		while (ent)
 		{
@@ -2161,7 +2151,7 @@ namespace {
 					*pos = '\n';
 					pos++;
 				}
-				first = FALSE;
+				first = false;
 				if (ent->mark_end - ent->mark_start > 0)
 				{
 					/* include timestamp? */
@@ -2169,8 +2159,8 @@ namespace {
 					{
 						char *time_str;
 						int stamp_size = xtext_get_stamp_str(ent->stamp, &time_str);
+						glib_string time_str_ptr(time_str);
 						std::copy_n(time_str, stamp_size, pos);
-						g_free(time_str);
 						pos += stamp_size;
 					}
 
@@ -2183,17 +2173,17 @@ namespace {
 			ent = ent->next;
 		}
 		*pos = 0;
-
+		std::string stripped;
 		if (xtext->color_paste)
 		{
 			/*stripped = gtk_xtext_conv_color (txt, strlen (txt), &len);*/
-			stripped = txt;
-			len = strlen(txt);
+			len = strlen(txt.c_str());
+			stripped = std::move(txt);
 		}
 		else
 		{
-			stripped = (char*)gtk_xtext_strip_color((unsigned char*)txt, strlen(txt), NULL, &len, NULL, FALSE);
-			free(txt);
+			glib_string res((char*)gtk_xtext_strip_color((unsigned char*)&txt[0], strlen(txt.c_str()), NULL, &len, NULL, FALSE));
+			stripped = res.get();
 		}
 
 		*len_ret = len;
@@ -2208,20 +2198,19 @@ namespace {
 		guint info, guint time)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
-		char *stripped;
 		guchar *new_text;
 		int len;
 		gsize glen;
 
-		stripped = gtk_xtext_selection_get_text(xtext, &len);
-		if (!stripped)
+		auto stripped = gtk_xtext_selection_get_text(xtext, &len);
+		if (stripped.empty())
 			return;
 
 		switch (info)
 		{
 		case TARGET_UTF8_STRING:
 			/* it's already in utf8 */
-			gtk_selection_data_set_text(selection_data_ptr, stripped, len);
+			gtk_selection_data_set_text(selection_data_ptr, stripped.c_str(), len);
 			break;
 		case TARGET_TEXT:
 		case TARGET_COMPOUND_TEXT:
@@ -2232,7 +2221,7 @@ namespace {
 			gint format;
 			gint new_length;
 
-			gdk_x11_display_string_to_compound_text(display, stripped, &encoding,
+			gdk_x11_display_string_to_compound_text(display, stripped.c_str(), &encoding,
 				&format, &new_text, &new_length);
 			gtk_selection_data_set(selection_data_ptr, encoding, format,
 				new_text, new_length);
@@ -2242,13 +2231,12 @@ namespace {
 		break;
 #endif
 		default:
-			new_text = (guchar*)g_locale_from_utf8(stripped, len, NULL, &glen, NULL);
+			new_text = (guchar*)g_locale_from_utf8(stripped.c_str(), len, NULL, &glen, NULL);
 			gtk_selection_data_set(selection_data_ptr, GDK_SELECTION_TYPE_STRING,
 				8, new_text, glen);
 			g_free(new_text);
 		}
 
-		free(stripped);
 	}
 
 	static gboolean
@@ -2428,7 +2416,7 @@ namespace{
 		int mbl;	/* multi-byte length */
 
 		if (outbuf == NULL)
-			new_str = static_cast<unsigned char*>(malloc(len + 2));
+			new_str = static_cast<unsigned char*>(g_malloc0(len + 2));
 		else
 			new_str = outbuf;
 
