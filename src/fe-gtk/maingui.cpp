@@ -3685,8 +3685,8 @@ fe_session_callback (session *sess)
 		fe_timeout_remove (sess->gui->bartag);
 
 	if (sess->gui != &static_mg_gui)
-		free (sess->gui);
-	free (sess->res);
+		delete sess->gui;
+	delete sess->res;
 }
 
 /* ===== DRAG AND DROP STUFF ===== */
