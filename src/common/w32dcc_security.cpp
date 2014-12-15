@@ -22,11 +22,14 @@
 #include <string>
 #include <windows.h>
 #include <urlmon.h>
-#include <wrl/client.h>
+#include <comdef.h>
 #include "w32coinitialize.hpp"
 #include "w32dcc_security.hpp"
 
-namespace wrl = Microsoft::WRL;
+namespace
+{
+	_COM_SMARTPTR_TYPEDEF(IZoneIdentifier, __uuidof(IZoneIdentifier));
+}
 
 namespace w32
 {
@@ -38,23 +41,25 @@ namespace w32
 
 			if (FAILED(static_cast<HRESULT>(init)))
 				return false;
-			wrl::ComPtr<IZoneIdentifier> zone_identifer;
-			HRESULT hr = CoCreateInstance(CLSID_PersistentZoneIdentifier, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&zone_identifer));
-			if (FAILED(hr))
-				return false;
-			
-			hr = zone_identifer->SetId(URLZONE_INTRANET);
-			if (FAILED(hr))
-				return false;
+			try
+			{
+				IZoneIdentifierPtr zone_identifer(CLSID_PersistentZoneIdentifier);
+				if (!zone_identifer)
+					return false;
 
-			wrl::ComPtr<IPersistFile> persist_file;
-			hr = zone_identifer.As(&persist_file);
-			if (FAILED(hr))
+				_com_util::CheckError(zone_identifer->SetId(URLZONE_INTRANET));
+				IPersistFilePtr persist_file(zone_identifer);
+				if (!persist_file)
+					return false;
+
+				_com_util::CheckError(persist_file->Save(path.c_str(), TRUE));
+			}
+			catch (const _com_error &)
+			{
 				return false;
+			}
 
-			hr = persist_file->Save(path.c_str(), TRUE);
-
-			return SUCCEEDED(hr);
+			return true;
 		}
 	}
 }
