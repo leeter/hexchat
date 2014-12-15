@@ -1562,7 +1562,7 @@ server::p_inline (char *buf, int len)
 		handle_message_tags(*this, tags, &tags_data);
 	}
 
-	url_check_line (buf, len);
+	url_check_line(buf, len);
 
 	/* split line into words and words_to_end_of_line */
 	process_data_init (&pdibuf[0], buf, word, word_eol, false, false);

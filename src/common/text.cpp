@@ -332,7 +332,7 @@ scrollback_load (session &sess)
 					}
 
 					fe_print_text (sess, text, stamp, TRUE);
-				}
+					}
 				else
 				{
 					fe_print_text (sess, "  ", stamp, TRUE);
@@ -701,7 +701,7 @@ log_write (session &sess, const std::string & text, time_t ts)
 		close(sess.logfd);
 		sess.logfd = log_open_file(sess.server->servername, sess.channel,
 			sess.server->get_network(false));
-	}
+		}
 
 	if (prefs.hex_stamp_log)
 	{
@@ -1848,19 +1848,10 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 			done_all = true;
 			continue;
 		case 3:
-/*			if (sess->type == SESS_DIALOG)
-			{
-				if (prefs.dialog_indent_nicks)
-					o[output_index++] = '\t';
-				else
-					o[output_index++] = ' ';
-			} else
-			{*/
 				if (prefs.hex_text_indent)
 					dst[output_index++] = '\t';
 				else
 					dst[output_index++] = ' ';
-			/*}*/
 			break;
 		}
 	}

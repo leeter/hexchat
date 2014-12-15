@@ -370,13 +370,13 @@ strip_hidden_attribute(const std::string & src, char *dst)
 	return len;
 }
 
-#if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__)
+#if defined (USING_LINUX) || defined (USING_FREEBSD) || defined (__APPLE__) || defined (__CYGWIN__)
 
 static void
 get_cpu_info (double *mhz, int *cpus)
 {
 
-#ifdef USING_LINUX
+#if defined(USING_LINUX) || defined (__CYGWIN__)
 
 	char buf[256];
 	int fh;
@@ -454,7 +454,7 @@ get_cpu_info (double *mhz, int *cpus)
 	sysctl(mib, 2, &ncpu, &len, NULL, 0);
 
 	len = sizeof(freq);
-		sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
+        sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
 
 	*cpus = ncpu;
 	*mhz = (freq / 1000000);
@@ -597,7 +597,7 @@ const char * get_sys_str (bool with_cpu)
 		const char *cpuspeedstr = ( mhz > 1000 ) ? "GHz" : "MHz";
 		buffer << boost::format(" [%.2f%s]") % cpuspeed % cpuspeedstr;
 	}
-
+	
 	sys_str = buffer.str();
 	
 	return sys_str.c_str();
@@ -692,88 +692,88 @@ bool match_with_wildcards(const std::string &text, std::string wildcardPattern, 
 bool
 match(const char *mask, const char *string)
 {
-	register const char *m = mask, *s = string;
-	register char ch;
-	const char *bm, *bs;		/* Will be reg anyway on a decent CPU/compiler */
+  register const char *m = mask, *s = string;
+  register char ch;
+  const char *bm, *bs;		/* Will be reg anyway on a decent CPU/compiler */
 
-	/* Process the "head" of the mask, if any */
-	while ((ch = *m++) && (ch != '*'))
+  /* Process the "head" of the mask, if any */
+  while ((ch = *m++) && (ch != '*'))
 	{
-		switch (ch)
-		{
-		case '\\':
-			if (*m == '?' || *m == '*')
-				ch = *m++;
-		default:
-			if (rfc_tolower(*s) != rfc_tolower(ch))
+    switch (ch)
+    {
+      case '\\':
+	if (*m == '?' || *m == '*')
+	  ch = *m++;
+      default:
+	if (rfc_tolower(*s) != rfc_tolower(ch))
 				return false;
-		case '?':
-			if (!*s++)
+      case '?':
+	if (!*s++)
 				return false;
 		}
 	}
-	if (!ch)
-		return !(*s);
+  if (!ch)
+    return !(*s);
 
   /* We got a star: quickly find if/where we match the next char */
 got_star:
-	bm = m;			/* Next try rollback here */
-	while ((ch = *m++))
+  bm = m;			/* Next try rollback here */
+  while ((ch = *m++))
 	{
-		switch (ch)
-		{
-		case '?':
-			if (!*s++)
+    switch (ch)
+    {
+      case '?':
+	if (!*s++)
 				return false;
-		case '*':
-			bm = m;
-			continue;		/* while */
-		case '\\':
-			if (*m == '?' || *m == '*')
-				ch = *m++;
-		default:
-			goto break_while;	/* C is structured ? */
+      case '*':
+	bm = m;
+	continue;		/* while */
+      case '\\':
+	if (*m == '?' || *m == '*')
+	  ch = *m++;
+      default:
+	goto break_while;	/* C is structured ? */
 		}
 	}
 break_while:
-	if (!ch)
+  if (!ch)
 		return true;			/* mask ends with '*', we got it */
-	ch = rfc_tolower(ch);
-	while (rfc_tolower(*s++) != ch)
-		if (!*s)
+  ch = rfc_tolower(ch);
+  while (rfc_tolower(*s++) != ch)
+    if (!*s)
 			return false;
-	bs = s;			/* Next try start from here */
+  bs = s;			/* Next try start from here */
 
-	/* Check the rest of the "chunk" */
-	while ((ch = *m++))
+  /* Check the rest of the "chunk" */
+  while ((ch = *m++))
+  {
+    switch (ch)
+    {
+      case '*':
+	goto got_star;
+      case '\\':
+	if (*m == '?' || *m == '*')
+	  ch = *m++;
+      default:
+	if (rfc_tolower(*s) != rfc_tolower(ch))
 	{
-		switch (ch)
-		{
-		case '*':
-			goto got_star;
-		case '\\':
-			if (*m == '?' || *m == '*')
-				ch = *m++;
-		default:
-			if (rfc_tolower(*s) != rfc_tolower(ch))
-			{
-				if (!*s)
+	  if (!*s)
 					return false;
-				m = bm;
-				s = bs;
-				goto got_star;
+	  m = bm;
+	  s = bs;
+	  goto got_star;
 			}
-		case '?':
-			if (!*s++)
+      case '?':
+	if (!*s++)
 				return false;
 		}
 	}
-	if (*s)
-	{
-		m = bm;
-		s = bs;
-		goto got_star;
-	};
+  if (*s)
+  {
+    m = bm;
+    s = bs;
+    goto got_star;
+  };
 	return true;
 }
 
@@ -1102,7 +1102,7 @@ const char *
 country (const std::string *hostname)
 {
 	std::locale loc;
-	
+
 	if (!hostname || !hostname->empty() || std::isdigit(hostname->operator[](hostname->size() - 1), loc))
 	{
 		return nullptr;
@@ -1299,7 +1299,7 @@ rename_utf8 (char *oldname, char *newname)
 	{
 		g_free (fso);
 		return FALSE;
-	}
+}
 
 	res = rename (fso, fsn);
 	sav = errno;
@@ -1621,7 +1621,7 @@ std::string challengeauth_response(const std::string & username, const std::stri
 {
 	std::string user(username);
 	for (auto & c : user)
-	{
+{
 		c = rfc_tolower(c);			/* convert username to lowercase as per the RFC */
 	}
 

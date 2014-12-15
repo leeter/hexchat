@@ -125,22 +125,41 @@ static bool delete_nick(GKeyFile *keyfile, const char *nick) {
     return ok;
 }
 
+#if !GLIB_CHECK_VERSION(2,40,0)
+/**
+ * Writes the key store file to disk.
+ */
+static gboolean keyfile_save_to_file (GKeyFile *keyfile, char *filename) {
+    gboolean ok;
+
+    /* Serialize */
+    gsize file_length;
+    gchar *file_data = g_key_file_to_data(keyfile, &file_length, NULL);
+    if (!file_data)
+        return FALSE;
+
+    /* Write to file */
+    ok = g_file_set_contents (filename, file_data, file_length, NULL);
+    g_free(file_data);
+    return ok;
+}
+#endif
+
 /**
  * Writes the key store file to disk.
  */
 static bool save_keystore(GKeyFile *keyfile) {
     char *filename;
     bool ok;
-    // Serialize
-    gsize file_length;
-    gchar *file_data = g_key_file_to_data(keyfile, &file_length, NULL);
-    if (!file_data) return false;
-    
-    // Write to file
+
     filename = get_config_filename();
-    ok = g_file_set_contents(filename, file_data, file_length, NULL);
-    g_free(filename);
-    g_free(file_data);
+#if !GLIB_CHECK_VERSION(2,40,0)
+    ok = keyfile_save_to_file (keyfile, filename);
+#else
+    ok = g_key_file_save_to_file (keyfile, filename, NULL);
+#endif
+    g_free (filename);
+
     return ok;
 }
 

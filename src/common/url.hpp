@@ -30,7 +30,7 @@ enum word_types{
 	WORD_HOST6   = 4,
 	WORD_EMAIL   = 5,
 	WORD_NICK    = 6,
-	/* anything >0 will be displayed as a link by gtk_xtext_motion_notify() */
+/* anything >0 will be displayed as a link by gtk_xtext_motion_notify() */
 	WORD_DIALOG  = -1,
 	WORD_PATH    = -2
 };

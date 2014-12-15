@@ -52,26 +52,18 @@ static hexchat_plugin *ph;
  * Returns the path to the key store file.
  */
 gchar *get_config_filename() {
-    return g_build_filename(hexchat_get_info(ph, "configdir"), "addon_fishlim.conf", NULL);
+    char *filename_fs, *filename_utf8;
+
+    filename_utf8 = g_build_filename(hexchat_get_info(ph, "configdir"), "addon_fishlim.conf", NULL);
+    filename_fs = g_filename_from_utf8 (filename_utf8, -1, NULL, NULL, NULL);
+
+    g_free (filename_utf8);
+    return filename_fs;
 }
 
-/**
- * Appends data to a string. Returns true if there was sufficient memory.
- * Frees *s and returns false if an error occurs.
- */
-static bool append(char **s, size_t *length, const char *data) {
-    size_t datalen = strlen(data);
-    char *extended = realloc(*s, *length + datalen + 1);
-    if (!extended) {
-        free(*s);
-        return false;
+int irc_nick_cmp(const char *a, const char *b) {
+	return hexchat_nickcmp (ph, a, b);
     }
-    memcpy(extended + *length, data, datalen + 1);
-    *s = extended;
-    *length += datalen;
-    return true;
-}
-
 
 /*static int handle_debug(char *word[], char *word_eol[], void *userdata) {
     hexchat_printf(ph, "debug incoming: ");
@@ -106,7 +98,7 @@ static int handle_outgoing(const char *const word[], const char *const word_eol[
 /**
  * Called when a channel message or private message is received.
  */
-static int handle_incoming(const char *const word[], const char *const word_eol[], void *userdata) {
+static int handle_incoming(const char const*word[], const char const *word_eol[], hexchat_event_attrs *attrs, void *userdata) {
     const char *prefix;
     const char *command;
     const char *recipient;
@@ -114,12 +106,11 @@ static int handle_incoming(const char *const word[], const char *const word_eol[
     const char *peice;
     char *sender_nick;
     char *decrypted;
-    char *message;
     size_t w;
     size_t ew;
     size_t uw;
-    size_t length;
     char prefix_char = 0;
+    GString *message;
 
     if (!irc_parse_message((const char **)word, &prefix, &command, &w))
         return HEXCHAT_EAT_NONE;
@@ -149,12 +140,22 @@ static int handle_incoming(const char *const word[], const char *const word_eol[
     if (!decrypted) goto decrypt_error;
     
     // Build unecrypted message
-    message = NULL;
-    length = 0;
-    if (!append(&message, &length, "RECV")) goto decrypt_error;
+    message = g_string_sized_new (100); /* TODO: more accurate estimation of size */
+    g_string_append (message, "RECV");
+
+    if (attrs->server_time_utc)
+    {
+        GTimeVal tv = { (glong)attrs->server_time_utc, 0 };
+        char *timestamp = g_time_val_to_iso8601 (&tv);
+
+       g_string_append (message, " @time=");
+       g_string_append (message, timestamp);
+       g_free (timestamp);
+    }
     
     for (uw = 1; uw < HEXCHAT_MAX_WORDS; uw++) {
-        if (word[uw][0] != '\0' && !append(&message, &length, " ")) goto decrypt_error;
+        if (word[uw][0] != '\0')
+            g_string_append_c (message, ' ');
         
         if (uw == ew) {
             // Add the encrypted data
@@ -163,12 +164,11 @@ static int handle_incoming(const char *const word[], const char *const word_eol[
             
             if (ew == w+1) {
                 // Prefix with colon, which gets stripped out otherwise
-                if (!append(&message, &length, ":")) goto decrypt_error;
+                g_string_append_c (message, ':');
             }
             
             if (prefix_char) {
-                char prefix_str[2] = { prefix_char, '\0' };
-                if (!append(&message, &length, prefix_str)) goto decrypt_error;
+                g_string_append_c (message, prefix_char);
             }
             
         } else {
@@ -176,16 +176,16 @@ static int handle_incoming(const char *const word[], const char *const word_eol[
             peice = word[uw];
         }
         
-        if (!append(&message, &length, peice)) goto decrypt_error;
+        g_string_append (message, peice);
     }
     free(decrypted);
     
     // Simulate unencrypted message
-    //hexchat_printf(ph, "simulating: %s\n", message);
-    hexchat_command(ph, message);
+    //hexchat_printf(ph, "simulating: %s\n", message->str);
+    hexchat_command(ph, message->str);
     
-    free(message);
-    free(sender_nick);
+    g_string_free (message, TRUE);
+    g_free(sender_nick);
     return HEXCHAT_EAT_HEXCHAT;
   
   decrypt_error:
@@ -239,7 +239,7 @@ static int handle_delkey(const char *const word[], const char *const word_eol[],
         return HEXCHAT_EAT_HEXCHAT;
     }
     
-    nick = word_eol[2];
+    nick = g_strstrip (word_eol[2]);
     
     // Delete the given nick from the key store
     if (keystore_delete_nick(nick)) {
@@ -282,11 +282,11 @@ int hexchat_plugin_init(hexchat_plugin *plugin_handle,
     
     /* Add handlers */
     hexchat_hook_command(ph, "", HEXCHAT_PRI_NORM, handle_outgoing, NULL, NULL);
-    hexchat_hook_server(ph, "NOTICE", HEXCHAT_PRI_NORM, handle_incoming, NULL);
-    hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
+    hexchat_hook_server_attrs(ph, "NOTICE", HEXCHAT_PRI_NORM, handle_incoming, NULL);
+    hexchat_hook_server_attrs(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
     //hexchat_hook_server(ph, "RAW LINE", HEXCHAT_PRI_NORM, handle_debug, NULL);
-    hexchat_hook_server(ph, "TOPIC", HEXCHAT_PRI_NORM, handle_incoming, NULL);
-    hexchat_hook_server(ph, "332", HEXCHAT_PRI_NORM, handle_incoming, NULL);
+    hexchat_hook_server_attrs(ph, "TOPIC", HEXCHAT_PRI_NORM, handle_incoming, NULL);
+    hexchat_hook_server_attrs(ph, "332", HEXCHAT_PRI_NORM, handle_incoming, NULL);
     
     hexchat_printf(ph, "%s plugin loaded\n", plugin_name);
     /* Return success */

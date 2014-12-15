@@ -405,7 +405,7 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 #define IPADDR "[0-9]{1,3}(\\.[0-9]{1,3}){3}"
 #define IPV6GROUP "([0-9a-f]{0,4})"
 #define IPV6ADDR "((" IPV6GROUP "(:" IPV6GROUP "){7})"	\
-			 "|(" IPV6GROUP "(:" IPV6GROUP ")*:(:" IPV6GROUP ")+))" /* with :: compression */
+	         "|(" IPV6GROUP "(:" IPV6GROUP ")*:(:" IPV6GROUP ")+))" /* with :: compression */
 #define HOST "(" URL_DOMAIN TLD "|" IPADDR "|" IPV6ADDR ")"
 /* In urls the IPv6 must be enclosed in square brackets */
 #define HOST_URL "(" URL_DOMAIN TLD "|" IPADDR "|" "\\[" IPV6ADDR "\\]" ")"
@@ -571,7 +571,7 @@ re_url (void)
 		{
 			std::string to_escape(uri[i].path_sep);
 			std::string escaped(boost::regex_replace(to_escape, esc, rep, boost::match_default | boost::format_perl));
-			
+
 			url_regex_stream << '(' << escaped << PATH ")";
 		}
 		url_regex_stream << ')';

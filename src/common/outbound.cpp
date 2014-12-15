@@ -457,7 +457,7 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 		auto submask = mask.substr(0, at);
 		std::ostringstream username;
 		if (mask[0] == '~' || mask[0] == '+' ||
-			mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
+		    mask[0] == '=' || mask[0] == '^' || mask[0] == '-')
 		{
 			/* the ident is prefixed with something, we replace that sign with an * */
 			submask.erase(0, 1);
@@ -1048,7 +1048,7 @@ menu_entry::~menu_entry()
 
 static void
 menu_free (menu_entry *me)
-{	
+{
 	delete me;
 }
 
@@ -1702,7 +1702,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 	if (*rest) {
 		s->linebuf.resize(len - (rest - buf.begin()));
 		std::copy_n(rest, s->linebuf.size(), s->linebuf.begin());
-		 *rest = '\0';
+		*rest = '\0';
 		len -= s->linebuf.size(); /* possibly 0 */
 	}
 
@@ -1964,7 +1964,7 @@ get_file_cb (char *cmd, char *file)
 	char buf[1024 + 128];
 
 	/* execute the command once per file, then once more with
-	  no args */
+      no args */
 	if (file)
 	{
 		snprintf (buf, sizeof (buf), "%s %s", cmd, file);
@@ -2243,7 +2243,7 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 			mask = word[2];
 			if (strchr (mask, '?') == NULL &&
-				strchr (mask, '*') == NULL)
+			    strchr (mask, '*') == NULL)
 			{
 				mask = tbuf;
 				snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
@@ -4145,7 +4145,7 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 				switch (src[0])
 				{
 				case '%':
-					if ((dest - orig) + 2 >= destlen)
+					if ((dest - orig) + 2u >= destlen)
 						return 2;
 					dest[0] = '%';
 					dest[1] = 0;
@@ -4471,7 +4471,7 @@ handle_say (session *sess, char *text, int check_spch)
 }
 
 namespace
-{
+	{
 	class replace_formatter
 	{
 		const ircnet * net;
@@ -4518,8 +4518,8 @@ namespace
 				}
 			default:
 				return temp;
-			}
 		}
+	}
 	};
 
 }// end anonymous namespace
