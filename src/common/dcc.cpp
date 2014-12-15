@@ -739,7 +739,7 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 		break;
 	case ::dcc::DCC::dcc_type::TYPE_SEND:
 		/* passive send */
-		dcc->fastsend = prefs.hex_dcc_fast_send;
+		dcc->fastsend = !!prefs.hex_dcc_fast_send;
 		if (dcc->fastsend)
 			dcc->wiotag = fe_input_add(dcc->sok, FIA_WRITE, (GIOFunc)dcc_send_data, dcc);
 		dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_ack, dcc);

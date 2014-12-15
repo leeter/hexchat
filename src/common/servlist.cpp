@@ -21,6 +21,9 @@
 #include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sstream>
+#include <string>
+#include <boost/format.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -745,7 +748,7 @@ servlist_cycle_cb (server *serv)
 	if (serv->network)
 	{
 		PrintTextf (serv->server_session,
-			_("Cycling to next server in %s...\n"), serv->network->name);
+			_("Cycling to next server in %s...\n"), serv->network->name.c_str());
 		servlist_connect(serv->server_session, static_cast<ircnet *>(serv->network), TRUE);
 	}
 
@@ -1111,7 +1114,7 @@ servlist_net_add (const char *name, const char *comment, int prepend)
 	ircnet *net;
 
 	net = new ircnet();
-	net->name = strdup (name);
+	net->name = name;
 /*	net->comment = strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;
 
@@ -1326,7 +1329,6 @@ int
 servlist_save (void)
 {
 	FILE *fp;
-	char *buf;
 	ircnet *net;
 	ircserver *serv;
 	commandentry *cmd;
@@ -1365,7 +1367,7 @@ servlist_save (void)
 	{
 		net = static_cast<ircnet *>(list->data);
 
-		fprintf (fp, "N=%s\n", net->name);
+		fprintf (fp, "N=%s\n", net->name.c_str());
 		if (net->nick)
 			fprintf (fp, "I=%s\n", net->nick);
 		if (net->nick2)
@@ -1384,10 +1386,9 @@ servlist_save (void)
 			fprintf (fp, "E=%s\n", net->encoding);
 			if (!servlist_check_encoding (net->encoding))
 			{
-				buf = g_strdup_printf (_("Warning: \"%s\" character set is unknown. No conversion will be applied for network %s."),
-							 net->encoding, net->name);
-				fe_message (buf, FE_MSG_WARN);
-				g_free (buf);
+				std::ostringstream buffer;
+				buffer << boost::format(_("Warning: \"%s\" character set is unknown. No conversion will be applied for network %s.")) % net->encoding % net->name;
+				fe_message (buffer.str(), FE_MSG_WARN);
 			}
 		}
 
