@@ -3629,8 +3629,8 @@ mg_set_title (GtkWidget *vbox, const char *title) /* for non-irc tab/window only
 	old = static_cast<char*>(g_object_get_data(G_OBJECT(vbox), "title"));
 	if (old)
 	{
-		g_object_set_data (G_OBJECT (vbox), "title", strdup (title));
-		free (old);
+		g_object_set_data (G_OBJECT (vbox), "title", new_strdup (title));
+		delete[] old;
 	} else
 	{
 		gtk_window_set_title (GTK_WINDOW (vbox), title);

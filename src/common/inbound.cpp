@@ -226,8 +226,9 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 gboolean
 alert_match_word (const char *word, const char *masks)
 {
-	char * mutable_masks = strdup(masks),* mutable_word = strdup(word);
-	char *p = mutable_masks;
+	std::unique_ptr<char[]> mutable_masks(new_strdup(masks));
+	std::unique_ptr<char[]> mutable_word(new_strdup(word));
+	char *p = mutable_masks.get();
 	char endchar;
 	int res;
 
@@ -241,7 +242,7 @@ alert_match_word (const char *word, const char *masks)
 		{
 			endchar = *p;
 			*p = 0;
-			res = match (mutable_masks, mutable_word);
+			res = match (mutable_masks.get(), mutable_word.get());
 			*p = endchar;
 
 			if (res)
@@ -253,8 +254,6 @@ alert_match_word (const char *word, const char *masks)
 		}
 		p++;
 	}
-	free(mutable_word);
-	free(mutable_masks);
 }
 
 gboolean
@@ -968,14 +967,13 @@ inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip, int id,
 				/* guess where chanserv meant to post this -sigh- */
 				if (!g_ascii_strcasecmp (nick, "ChanServ") && !find_dialog (serv, nick))
 				{
-					char *dest = strdup (msg + 1);
-					char *end = strchr (dest, ']');
-					if (end)
+					std::string dest(msg + 1);
+					auto end = dest.find_first_of(']');
+					if (end != std::string::npos)
 					{
-						*end = 0;
+						dest.erase(dest.begin() + end, dest.end());
 						sess = find_channel (serv, dest);
 					}
-					free (dest);
 				}
 			}
 			if (!sess)

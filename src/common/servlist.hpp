@@ -41,7 +41,7 @@ struct favchannel
 
 struct ircnet
 {
-	char *name;
+	std::string name;
 	char *nick;
 	char *nick2;
 	char *user;
@@ -88,7 +88,7 @@ extern GSList *network_list;
 #define CHALLENGEAUTH_NICK		"Q@CServe.quakenet.org"
 
 /* DEFAULT_CHARSET is already defined in wingdi.h */
-#define IRC_DEFAULT_CHARSET		"UTF-8 (Unicode)"
+const char IRC_DEFAULT_CHARSET[] = "UTF-8 (Unicode)";
 
 void servlist_init (void);
 int servlist_save (void);

@@ -37,6 +37,7 @@
 #include "pixmaps.hpp"
 #include "fkeys.hpp"
 #include "servlistgui.hpp"
+#include "gtk_helpers.hpp"
 
 #define SERVLIST_X_PADDING 4			/* horizontal paddig in the network editor */
 #define SERVLIST_Y_PADDING 0			/* vertical padding in the network editor */
@@ -616,16 +617,10 @@ servlist_net_keypress_cb (GtkWidget *wid, GdkEventKey *evt, gpointer tree)
 static gint
 servlist_compare (ircnet *net1, ircnet *net2)
 {
-	gchar *net1_casefolded, *net2_casefolded;
-	int result=0;
+	glib_string net1_casefolded(g_utf8_casefold(net1->name.c_str(), net1->name.size()));
+	glib_string net2_casefolded(g_utf8_casefold(net2->name.c_str(), net1->name.size()));
 
-	net1_casefolded=g_utf8_casefold(net1->name,-1),
-	net2_casefolded=g_utf8_casefold(net2->name,-1),
-
-	result=g_utf8_collate(net1_casefolded,net2_casefolded);
-
-	g_free(net1_casefolded);
-	g_free(net2_casefolded);
+	int result = g_utf8_collate(net1_casefolded.get(), net2_casefolded.get());
 
 	return result;
 
@@ -1183,43 +1178,35 @@ servlist_celledit_cb (GtkCellRendererText *, gchar *arg1, gchar *arg2,
 {
 	GtkTreeModel *model = (GtkTreeModel *)user_data;
 	GtkTreeIter iter;
-	GtkTreePath *path;
 	char *netname;
 	ircnet *net;
 
 	if (!arg1 || !arg2)
 		return;
 
-	path = gtk_tree_path_new_from_string (arg1);
+	GtkTreePathPtr path( gtk_tree_path_new_from_string (arg1));
 	if (!path)
 		return;
 
-	if (!gtk_tree_model_get_iter (model, &iter, path))
+	if (!gtk_tree_model_get_iter (model, &iter, path.get()))
 	{
-		gtk_tree_path_free (path);
 		return;
 	}
 	gtk_tree_model_get (model, &iter, 0, &netname, -1);
-
+	glib_string netname_ptr(netname);
 	net = servlist_net_find (netname, NULL, strcmp);
-	g_free (netname);
 	if (net)
 	{
 		/* delete empty item */
 		if (arg2[0] == 0)
 		{
 			servlist_deletenetwork (net);
-			gtk_tree_path_free (path);
 			return;
 		}
 
-		netname = net->name;
-		net->name = strdup (arg2);
-		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, net->name, -1);
-		free (netname);
+		net->name = arg2;
+		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, net->name.c_str(), -1);
 	}
-
-	gtk_tree_path_free (path);
 }
 
 static void

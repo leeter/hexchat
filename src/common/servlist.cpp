@@ -685,7 +685,7 @@ servlist_connect_by_netname (session *sess, char *network, gboolean join)
 	{
 		net = static_cast<ircnet *>(list->data);
 
-		if (g_ascii_strcasecmp (net->name, network) == 0)
+		if (g_ascii_strcasecmp (net->name.c_str(), network) == 0)
 		{
 			servlist_connect (sess, net, join);
 			return 1;
@@ -908,7 +908,7 @@ servlist_net_find (char *name, int *pos, int (*cmpfunc) (const char *, const cha
 	while (list)
 	{
 		net = static_cast<ircnet *>(list->data);
-		if (cmpfunc (net->name, name) == 0)
+		if (cmpfunc (net->name.c_str(), name) == 0)
 		{
 			if (pos)
 				*pos = i;
@@ -1090,7 +1090,6 @@ servlist_net_remove (ircnet *net)
 		free (net->comment);
 	if (net->encoding)
 		free (net->encoding);
-	free (net->name);
 
 	/* for safety */
 	list = serv_list;

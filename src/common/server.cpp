@@ -2257,7 +2257,7 @@ server::get_network (bool fallback) const
 {
 	/* check the network list */
 	if (this->network)
-		return this->network->name;
+		return &(this->network->name)[0];
 
 	/* check the network name given in 005 NETWORK=... */
 	if (this->server_session && *this->server_session->channel)
@@ -2297,7 +2297,7 @@ server::set_name (const std::string& name)
 	{
 		if (this->network)
 		{
-			safe_strcpy (this->server_session->channel, this->network->name);
+			safe_strcpy (this->server_session->channel, this->network->name.c_str());
 		} else
 		{
 			safe_strcpy (this->server_session->channel, name.c_str());
