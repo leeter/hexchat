@@ -11,6 +11,7 @@ perl_la_LIBADD = $(PERL_LIBS)
 perl_la_CFLAGS = $(PERL_CFLAGS) -I$(top_srcdir)/src/common
 
 BUILT_SOURCES = hexchat.pm.h irc.pm.h
+AM_CPPFLAGS = $(PERL_CFLAGS) -I$(top_srcdir)/src/common $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 CLEANFILES = $(BUILT_SOURCES)
 
 hexchat.pm.h irc.pm.h: lib/HexChat.pm lib/Xchat.pm lib/HexChat/Embed.pm \
