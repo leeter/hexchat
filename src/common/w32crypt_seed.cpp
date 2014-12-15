@@ -20,6 +20,7 @@
 #define NOMINMAX
 
 #include <memory>
+#include <stdexcept>
 #include <minwindef.h>
 #include <bcrypt.h>
 #include <openssl/rand.h>
@@ -32,9 +33,12 @@
 #pragma comment(lib, "bcrypt.lib")
 
 namespace{
-	auto alg_deleter = [](BCRYPT_ALG_HANDLE handle)
+	struct alg_deleter
 	{
-		BCryptCloseAlgorithmProvider(handle, 0);
+		void operator()(BCRYPT_ALG_HANDLE handle)
+		{
+			BCryptCloseAlgorithmProvider(handle, 0);
+		}
 	};
 }
 
@@ -47,9 +51,9 @@ namespace w32
 			BCRYPT_ALG_HANDLE hdnl;
 			NTSTATUS res = BCryptOpenAlgorithmProvider(&hdnl, BCRYPT_RNG_ALGORITHM, nullptr, 0);
 			if (!BCRYPT_SUCCESS(res))
-				return; // TODO throw error?
+				throw std::runtime_error("Unable to generate enough random to be secure");
 
-			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg(hdnl);
+			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, alg_deleter> alg(hdnl);
 
 			UCHAR buffer[256] = { 0 };
 			for (int i = 0; i < 256 && BCRYPT_SUCCESS(res); ++i)
