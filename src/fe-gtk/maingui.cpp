@@ -1719,7 +1719,7 @@ mg_add_chan (session *sess)
 	if (sess->res->buffer == NULL)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = prefs.hex_stamp_text;
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = !!prefs.hex_stamp_text;
 		sess->res->user_model = userlist_create_model ();
 	}
 }
@@ -3167,7 +3167,7 @@ mg_create_topwindow (session *sess)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
 		gtk_xtext_buffer_show(GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), TRUE);
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = prefs.hex_stamp_text;
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = !!prefs.hex_stamp_text;
 		sess->res->user_model = userlist_create_model ();
 	}
 
@@ -3307,19 +3307,19 @@ mg_apply_setup (void)
 {
 	GSList *list = sess_list;
 	session *sess;
-	int done_main = FALSE;
+	bool done_main = false;
 
 	mg_create_tab_colors ();
 
 	while (list)
 	{
 		sess = static_cast<session*>(list->data);
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = prefs.hex_stamp_text;
-		((xtext_buffer *)sess->res->buffer)->needs_recalc = TRUE;
+		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = !!prefs.hex_stamp_text;
+		((xtext_buffer *)sess->res->buffer)->needs_recalc = true;
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);
 		if (sess->gui->is_tab)
-			done_main = TRUE;
+			done_main = true;
 		list = list->next;
 	}
 }

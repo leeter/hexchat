@@ -518,7 +518,7 @@ namespace
 
 			if (adj->value > adj->upper - adj->page_size)
 			{
-				buf->scrollbar_down = TRUE;
+				buf->scrollbar_down = true;
 				adj->value = adj->upper - adj->page_size;
 			}
 
@@ -547,9 +547,9 @@ namespace
 		if (xtext->buffer->old_value != xtext->adj->value)
 		{
 			if (xtext->adj->value >= xtext->adj->upper - xtext->adj->page_size)
-				xtext->buffer->scrollbar_down = TRUE;
+				xtext->buffer->scrollbar_down = true;
 			else
-				xtext->buffer->scrollbar_down = FALSE;
+				xtext->buffer->scrollbar_down = false;
 
 			if (xtext->adj->value + 1 == xtext->buffer->old_value ||
 				xtext->adj->value - 1 == xtext->buffer->old_value)	/* clicked an arrow? */
@@ -1071,7 +1071,7 @@ namespace {
 
 		if (gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(xtext)))))
 		{
-			xtext->buffer->marker_seen = TRUE;
+			xtext->buffer->marker_seen = true;
 		}
 	}
 
@@ -4072,7 +4072,7 @@ void
 gtk_xtext_clear(xtext_buffer *buf, int lines)
 {
 	textentry *next;
-	int marker_reset = FALSE;
+	bool marker_reset = false;
 
 	if (lines != 0)
 	{
@@ -4083,7 +4083,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			while (lines)
 			{
 				if (buf->text_last == buf->marker_pos)
-					marker_reset = TRUE;
+					marker_reset = true;
 				gtk_xtext_remove_bottom(buf);
 				lines--;
 			}
@@ -4094,7 +4094,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			while (lines)
 			{
 				if (buf->text_first == buf->marker_pos)
-					marker_reset = TRUE;
+					marker_reset = true;
 				gtk_xtext_remove_top(buf);
 				lines--;
 			}
@@ -4107,12 +4107,12 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			gtk_xtext_search_fini(buf);
 		if (buf->xtext->auto_indent)
 			buf->indent = MARGIN;
-		buf->scrollbar_down = TRUE;
+		buf->scrollbar_down = true;
 		buf->last_ent_start = NULL;
 		buf->last_ent_end = NULL;
 		buf->marker_pos = NULL;
 		if (buf->text_first)
-			marker_reset = TRUE;
+			marker_reset = true;
 		dontscroll(buf);
 
 		while (buf->text_first)
@@ -4184,7 +4184,7 @@ void
 gtk_xtext_check_marker_visibility(GtkXText * xtext)
 {
 	if (gtk_xtext_check_ent_visibility(xtext, xtext->buffer->marker_pos, 1))
-		xtext->buffer->marker_seen = TRUE;
+		xtext->buffer->marker_seen = true;
 }
 
 namespace{
@@ -4662,7 +4662,7 @@ namespace {
 			buf->marker_pos = ent;
 			buf->marker_state = MARKER_IS_SET;
 			dontscroll(buf); /* force scrolling off */
-			buf->marker_seen = FALSE;
+			buf->marker_seen = false;
 		}
 
 		if (buf->xtext->max_lines > 2 && buf->xtext->max_lines < buf->num_lines)
@@ -4880,7 +4880,7 @@ gtk_xtext_set_thin_separator(GtkXText *xtext, gboolean thin_separator)
 void
 gtk_xtext_set_time_stamp(xtext_buffer *buf, gboolean time_stamp)
 {
-	buf->time_stamp = time_stamp;
+	buf->time_stamp = !!time_stamp;
 }
 
 void
@@ -4988,7 +4988,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, int render)
 	/* after a font change */
 	if (buf->needs_recalc)
 	{
-		buf->needs_recalc = FALSE;
+		buf->needs_recalc = false;
 		gtk_xtext_recalc_widths(buf, TRUE);
 	}
 
@@ -5041,7 +5041,7 @@ gtk_xtext_buffer_new(GtkXText *xtext)
 	buf = new xtext_buffer();
 	buf->old_value = -1;
 	buf->xtext = xtext;
-	buf->scrollbar_down = TRUE;
+	buf->scrollbar_down = true;
 	buf->indent = xtext->space_width * 2;
 	dontscroll(buf);
 

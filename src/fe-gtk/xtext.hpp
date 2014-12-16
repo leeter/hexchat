@@ -106,10 +106,10 @@ struct xtext_buffer {
 	int window_width;				/* window size when last rendered. */
 	int window_height;
 
-	unsigned int time_stamp : 1;
-	unsigned int scrollbar_down : 1;
-	unsigned int needs_recalc : 1;
-	unsigned int marker_seen : 1;
+	bool time_stamp;
+	bool scrollbar_down;
+	bool needs_recalc;
+	bool marker_seen;
 
 	GList *search_found;		/* list of textentries where search found strings */
 	gchar *search_text;		/* desired text to search for */
