@@ -45,6 +45,7 @@
 #include "menu.hpp"
 #include "chanlist.hpp"
 #include "custom-list.hpp"
+#include "gtk_helpers.hpp"
 namespace
 {
 
@@ -423,7 +424,7 @@ chanlist_match_topic_button_toggled (GtkWidget * wid, server *serv)
 }
 
 static char *
-chanlist_get_selected (server *serv, gboolean get_topic)
+chanlist_get_selected (server *serv, bool get_topic)
 {
 	char *chan;
 	GtkTreeSelection *sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (serv->gui->chanlist_list));
@@ -441,7 +442,7 @@ static void
 chanlist_join (GtkWidget *, server *serv)
 {
 	char tbuf[CHANLEN + 6];
-	char *chan = chanlist_get_selected (serv, FALSE);
+	char *chan = chanlist_get_selected (serv, false);
 	if (chan)
 	{
 		if (serv->connected && (strcmp (chan, "*") != 0))
@@ -564,7 +565,7 @@ chanlist_menu_destroy (GtkWidget *menu, gpointer)
 static void
 chanlist_copychannel (GtkWidget *item, server *serv)
 {
-	char *chan = chanlist_get_selected (serv, FALSE);
+	char *chan = chanlist_get_selected (serv, false);
 	if (chan)
 	{
 		gtkutil_copy_to_clipboard (item, NULL, chan);
@@ -575,11 +576,10 @@ chanlist_copychannel (GtkWidget *item, server *serv)
 static void
 chanlist_copytopic (GtkWidget *item, server *serv)
 {
-	char *topic = chanlist_get_selected (serv, TRUE);
+	glib_string topic(chanlist_get_selected (serv, true));
 	if (topic)
 	{
-		gtkutil_copy_to_clipboard (item, NULL, topic);
-		g_free (topic);
+		gtkutil_copy_to_clipboard (item, NULL, topic.get());
 	}
 }
 
@@ -589,19 +589,17 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	GtkWidget *menu;
 	GtkTreeSelection *sel;
 	GtkTreePath *path;
-	char *chan;
 
 	if (event->button != 3)
 		return FALSE;
 
 	if (!gtk_tree_view_get_path_at_pos (tree, event->x, event->y, &path, 0, 0, 0))
 		return FALSE;
-
+	GtkTreePathPtr path_ptr(path);
 	/* select what they right-clicked on */
 	sel = gtk_tree_view_get_selection (tree);
 	gtk_tree_selection_unselect_all (sel);
 	gtk_tree_selection_select_path (sel, path);
-	gtk_tree_path_free (path);
 
 	menu = gtk_menu_new ();
 	if (event->window)
@@ -618,9 +616,8 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	mg_create_icon_item (_("Copy _Topic Text"), GTK_STOCK_COPY, menu,
 		G_CALLBACK(chanlist_copytopic), serv);
 
-	chan = chanlist_get_selected (serv, FALSE);
-	menu_addfavoritemenu (serv, menu, chan, FALSE);
-	g_free (chan);
+	glib_string chan (chanlist_get_selected (serv, false));
+	menu_addfavoritemenu (serv, menu, chan.get(), false);
 
 	gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL, 0, event->time);
 

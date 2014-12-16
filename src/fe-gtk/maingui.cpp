@@ -1594,7 +1594,7 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 
 		if (sess->type == session::SESS_CHANNEL)
-			menu_addfavoritemenu (sess->server, menu, sess->channel, TRUE);
+			menu_addfavoritemenu (sess->server, menu, sess->channel, true);
 		else if (sess->type == session::SESS_SERVER)
 			menu_addconnectmenu (sess->server, menu);
 	}

@@ -55,7 +55,7 @@ int fe_timeout_add(int interval, GSourceFunc callback, void *userdata);
 void fe_timeout_remove (int tag);
 void fe_new_window (struct session *sess, int focus);
 void fe_new_server (struct server *serv);
-void fe_add_rawlog (struct server *serv, const char *text, size_t len, int outbound);
+void fe_add_rawlog (struct server *serv, const char *text, size_t len, bool outbound);
 enum fe_msg
 {
 	FE_MSG_WAIT = 1,

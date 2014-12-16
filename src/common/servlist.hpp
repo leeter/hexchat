@@ -124,7 +124,7 @@ void servlist_favchan_remove (ircnet *net, favchannel *channel);
 favchannel *servlist_favchan_copy (favchannel *fav);
 GSList *servlist_favchan_listadd (GSList *chanlist, const char *channel, const char *key);
 
-gboolean joinlist_is_in_list (server *serv, char *channel);
+bool joinlist_is_in_list (server *serv, const char channel[]);
 
 /* FIXME
 void joinlist_split (char *autojoin, GSList **channels, GSList **keys);

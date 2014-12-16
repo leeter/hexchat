@@ -1468,20 +1468,19 @@ joinlist_find_chan (favchannel *curr_item, const char *channel)
 	}
 }
 
-gboolean
-joinlist_is_in_list (server *serv, char *channel)
+bool joinlist_is_in_list (server *serv,  const char channel[])
 {
 	if (!serv->network || !serv->network->favchanlist)
 	{
-		return FALSE;
+		return false;
 	}
 
 	if (g_slist_find_custom (serv->network->favchanlist, channel, (GCompareFunc) joinlist_find_chan))
 	{
-		return TRUE;
+		return true;
 	}
 	else
 	{
-		return FALSE;
+		return false;
 	}
 }

@@ -24,6 +24,7 @@
 #include <new>
 #include <vector>
 #include "custom-list.hpp"
+#include "gtk_helpers.hpp"
 
 /* indent -i3 -ci3 -ut -ts3 -bli0 -c0 custom-list.c */
 
@@ -620,29 +621,6 @@ custom_list_sortable_has_default_sort_func (GtkTreeSortable * sortable)
 	return FALSE;
 }
 
-/* fast as possible compare func for sorting.
-   TODO: If fast enough, use a unicode collation key and strcmp. */
-
-#define TOSML(c) (((c) >= 'A' && (c) <= 'Z') ? (c) - 'A' + 'a' : (c))
-
-static inline int
-fast_ascii_stricmp (const char *s1, const char *s2)
-{
-	int c1, c2;
-
-	while (*s1 && *s2)
-	{
-		c1 = (int) (unsigned char) TOSML (*s1);
-		c2 = (int) (unsigned char) TOSML (*s2);
-		if (c1 != c2)
-			return (c1 - c2);
-		s1++;
-		s2++;
-	}
-
-	return (((int) (unsigned char) *s1) - ((int) (unsigned char) *s2));
-}
-
 static gint
 custom_list_qsort_compare_func (const chanlistrow ** a, const chanlistrow ** b,
 										  CustomList * custom_list)
@@ -705,9 +683,7 @@ custom_list_append (CustomList * custom_list, chanlistrow * newrecord)
 	 *  (e.g. tree row references) that we have inserted
 	 *  a new row, and where it was inserted */
 
-	std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> path(gtk_tree_path_new(), gtk_tree_path_free);
-	if (!path)
-		throw std::bad_alloc();
+	GtkTreePathPtr path(gtk_tree_path_new());
 	gtk_tree_path_append_index (path.get(), newrecord->pos);
 /*  custom_list_get_iter(GTK_TREE_MODEL(custom_list), &iter, path);*/
 	iter.user_data = newrecord;
@@ -728,11 +704,6 @@ custom_list_resort (CustomList * custom_list)
 		return custom_list_qsort_compare_func(&a, &b, custom_list) < 0;
 		}
 	);
-	/*g_qsort_with_data (custom_list->rows,
-							 custom_list->num_rows,
-							 sizeof (chanlistrow *),
-							 (GCompareDataFunc) custom_list_qsort_compare_func,
-							 custom_list);*/
 
 	/* let other objects know about the new order */
 	std::vector<gint> neworder(custom_list->num_rows);
@@ -748,9 +719,7 @@ custom_list_resort (CustomList * custom_list)
 		(custom_list->rows[i])->pos = i;
 	}
 
-	std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> path(gtk_tree_path_new(), gtk_tree_path_free);
-	if (!path)
-		throw std::bad_alloc();
+	GtkTreePathPtr path(gtk_tree_path_new());
 	gtk_tree_model_rows_reordered (GTK_TREE_MODEL (custom_list), path.get(), NULL,
 											 &neworder[0]);
 }
@@ -758,15 +727,13 @@ custom_list_resort (CustomList * custom_list)
 void
 custom_list_clear (CustomList * custom_list)
 {
-	int i, max = custom_list->num_rows - 1;
-	GtkTreePath *path;
+	int max = custom_list->num_rows - 1;
 
-	for (i = max; i >= 0; i--)
+	for (int i = max; i >= 0; i--)
 	{
-		path = gtk_tree_path_new ();
-		gtk_tree_path_append_index (path, custom_list->rows[i]->pos);
-		gtk_tree_model_row_deleted (GTK_TREE_MODEL (custom_list), path);
-		gtk_tree_path_free (path);
+		GtkTreePathPtr path(gtk_tree_path_new ());
+		gtk_tree_path_append_index (path.get(), custom_list->rows[i]->pos);
+		gtk_tree_model_row_deleted (GTK_TREE_MODEL (custom_list), path.get());
 	}
 
 	custom_list->num_rows = 0;

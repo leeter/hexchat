@@ -538,7 +538,7 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 		submenu_list = g_slist_remove (submenu_list, submenu_list->data);
 }
 
-static char *str_copy = NULL;		/* for all pop-up menus */
+static std::unique_ptr<char[]> str_copy;		/* for all pop-up menus */
 static GtkWidget *nick_submenu = NULL;	/* user info submenu */
 
 static void
@@ -687,7 +687,7 @@ fe_userlist_update (session *sess, struct User *user)
 		return;
 
 	/* not the same nick as the menu? */
-	if (sess->server->p_cmp (user->nick, str_copy))
+	if (sess->server->p_cmp (user->nick, str_copy.get()))
 		return;
 
 	/* get rid of the "show" signal */
@@ -713,11 +713,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 	struct User *user;
 	GtkWidget *submenu, *menu = gtk_menu_new ();
 
-	if (str_copy)
-		free (str_copy);
-	str_copy = strdup (nick.c_str());
-	if (!str_copy)
-		std::terminate();
+	str_copy.reset(new_strdup(nick.c_str(), nick.size()));
 
 	submenu_list = 0;	/* first time through, might not be 0 */
 
@@ -750,10 +746,10 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 	if (num_sel > 1)
 		menu_create (menu, popup_list, NULL, FALSE);
 	else
-		menu_create (menu, popup_list, str_copy, FALSE);
+		menu_create (menu, popup_list, str_copy.get(), FALSE);
 
 	if (num_sel == 0)	/* xtext click */
-		menu_add_plugin_items (menu, "\x5$NICK", str_copy);
+		menu_add_plugin_items (menu, "\x5$NICK", str_copy.get());
 	else	/* userlist treeview click */
 		menu_add_plugin_items (menu, "\x5$NICK", NULL);
 
@@ -935,36 +931,33 @@ menu_urlmenu (GdkEventButton *event, const std::string & url)
 	GtkWidget *menu;
 	char *tmp, *chop;
 
-	if (str_copy)
-		free (str_copy);
-	str_copy = strdup (url.c_str());
+	str_copy.reset(new_strdup (url.c_str(), url.size()));
 
 	menu = gtk_menu_new ();
 	/* more than 51 chars? Chop it */
-	if (g_utf8_strlen (str_copy, -1) >= 52)
+	if (g_utf8_strlen (str_copy.get(), -1) >= 52)
 	{
-		tmp = strdup (str_copy);
-		chop = g_utf8_offset_to_pointer (tmp, 48);
+		std::unique_ptr<char[]> tmp(new_strdup (str_copy.get()));
+		chop = g_utf8_offset_to_pointer (tmp.get(), 48);
 		chop[0] = chop[1] = chop[2] = '.';
 		chop[3] = 0;
-		menu_quick_item (0, tmp, menu, XCMENU_SHADED, 0, 0);
-		free (tmp);
+		menu_quick_item (0, tmp.get(), menu, XCMENU_SHADED, 0, 0);
 	} else
 	{
-		menu_quick_item (0, str_copy, menu, XCMENU_SHADED, 0, 0);
+		menu_quick_item (0, str_copy.get(), menu, XCMENU_SHADED, 0, 0);
 	}
 	menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 
 	/* Two hardcoded entries */
-	if (strncmp (str_copy, "irc://", 6) == 0 ||
-		strncmp (str_copy, "ircs://",7) == 0)
-		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Connect"), menu, str_copy);
+	if (strncmp (str_copy.get(), "irc://", 6) == 0 ||
+		strncmp (str_copy.get(), "ircs://",7) == 0)
+		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Connect"), menu, str_copy.get());
 	else
-		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Open Link in Browser"), menu, str_copy);
-	menu_quick_item_with_callback (G_CALLBACK(copy_to_clipboard_cb), _("Copy Selected Link"), menu, str_copy);
+		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Open Link in Browser"), menu, str_copy.get());
+	menu_quick_item_with_callback (G_CALLBACK(copy_to_clipboard_cb), _("Copy Selected Link"), menu, str_copy.get());
 	/* custom ones from urlhandlers.conf */
-	menu_create (menu, urlhandler_list, str_copy, TRUE);
-	menu_add_plugin_items (menu, "\x4$URL", str_copy);
+	menu_create (menu, urlhandler_list, str_copy.get(), TRUE);
+	menu_add_plugin_items (menu, "\x4$URL", str_copy.get());
 	menu_popup (menu, event, NULL);
 }
 
@@ -1013,57 +1006,53 @@ menu_chanmenu (struct session *sess, GdkEventButton * event, char *chan)
 	if (find_channel (*(sess->server), chan))
 		is_joined = true;
 
-	if (str_copy)
-		free (str_copy);
-	str_copy = strdup (chan);
+	str_copy.reset(new_strdup (chan));
 
 	menu = gtk_menu_new ();
 
-	menu_quick_item (0, chan, menu, XCMENU_SHADED, str_copy, 0);
-	menu_quick_item (0, 0, menu, XCMENU_SHADED, str_copy, 0);
+	menu_quick_item (0, chan, menu, XCMENU_SHADED, str_copy.get(), 0);
+	menu_quick_item (0, 0, menu, XCMENU_SHADED, str_copy.get(), 0);
 
 	if (!is_joined)
 		menu_quick_item_with_callback (G_CALLBACK(menu_chan_join), _("Join Channel"), menu,
-												 str_copy);
+												 str_copy.get());
 	else
 	{
 		menu_quick_item_with_callback (G_CALLBACK(menu_chan_part), _("Part Channel"), menu,
-												 str_copy);
+												 str_copy.get());
 		menu_quick_item_with_callback (G_CALLBACK(menu_chan_cycle), _("Cycle Channel"), menu,
-												 str_copy);
+												 str_copy.get());
 	}
 
-	menu_addfavoritemenu (sess->server, menu, str_copy, FALSE);
+	menu_addfavoritemenu (sess->server, menu, str_copy.get(), false);
 
-	menu_add_plugin_items (menu, "\x5$CHAN", str_copy);
+	menu_add_plugin_items (menu, "\x5$CHAN", str_copy.get());
 	menu_popup (menu, event, NULL);
 }
 
 static void
 menu_delfav_cb (GtkWidget *item, server *serv)
 {
-	servlist_autojoinedit (static_cast<ircnet*>(serv->network), str_copy, FALSE);
+	servlist_autojoinedit (static_cast<ircnet*>(serv->network), str_copy.get(), FALSE);
 }
 
 static void
 menu_addfav_cb (GtkWidget *item, server *serv)
 {
-	servlist_autojoinedit(static_cast<ircnet*>(serv->network), str_copy, TRUE);
+	servlist_autojoinedit(static_cast<ircnet*>(serv->network), str_copy.get(), TRUE);
 }
 
 void
-menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean istree)
+menu_addfavoritemenu (server *serv, GtkWidget *menu, const char channel[], bool istree)
 {
-	char *str;
+	const char *str;
 	
 	if (!serv->network)
 		return;
 
-	if (channel != str_copy)
+	if (channel != str_copy.get())
 	{
-		if (str_copy)
-			free (str_copy);
-		str_copy = strdup (channel);
+		str_copy.reset(new_strdup (channel));
 	}
 	
 	if (istree)

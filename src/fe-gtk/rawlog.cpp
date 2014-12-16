@@ -20,6 +20,11 @@
 #include <cstring>
 #include <fcntl.h>
 #include <cstdlib>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <boost/algorithm/string/iter_find.hpp>
+#include <boost/algorithm/string/finder.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -144,31 +149,18 @@ open_rawlog (struct server *serv)
 }
 
 void
-fe_add_rawlog (server *serv, const char *text, size_t len, int outbound)
+fe_add_rawlog (server *serv, const char *text, size_t len, bool outbound)
 {
-	char **split_text;
-	char *new_text;
-	int i;
-
 	if (!serv->gui->rawlog_window)
 		return;
 
-	split_text = g_strsplit (text, "\r\n", 0);
-
-	for (i = 0; i < g_strv_length (split_text); i++)
+	std::vector<std::string> split_strings;
+	for (auto & it : boost::iter_split(split_strings, std::string(text, len), boost::algorithm::first_finder("\r\n")))
 	{
-		if (split_text[i][0] == 0)
+		if (it.empty())
 			break;
+		std::string new_text((outbound ? "\0034<<\017 " : "\0033>>\017 ") + it);
 
-		if (outbound)
-			new_text = g_strconcat ("\0034<<\017 ", split_text[i], NULL);
-		else
-			new_text = g_strconcat ("\0033>>\017 ", split_text[i], NULL);
-
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, reinterpret_cast<unsigned char*>(new_text), strlen (new_text), 0);
-
-		g_free (new_text);
+		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, reinterpret_cast<const unsigned char*>(new_text.c_str()), new_text.size(), 0);
 	}
-
-	g_strfreev (split_text);
 }

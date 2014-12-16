@@ -169,7 +169,7 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 static int
 server_send_real (server &serv, const char *buf, size_t len)
 {
-	fe_add_rawlog (&serv, buf, len, TRUE);
+	fe_add_rawlog (&serv, buf, len, true);
 
 	url_check_line (buf, len);
 
@@ -389,7 +389,7 @@ server_inline (server *serv, char *line, size_t len)
 		}
 	}
 
-	fe_add_rawlog (serv, line, len, FALSE);
+	fe_add_rawlog (serv, line, len, false);
 
 	/* let proto-irc.c handle it */
 	serv->p_inline (line, len);
