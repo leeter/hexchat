@@ -160,7 +160,7 @@ namespace
 	static unsigned char *
 		gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
 		int *newlen, GSList **slp, int strip_hidden);
-	static gboolean gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add);
+	static bool gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add);
 	static int gtk_xtext_render_page_timeout(GtkXText * xtext);
 	static int gtk_xtext_search_offset(xtext_buffer *buf, textentry *ent, unsigned int off);
 	static GList * gtk_xtext_search_textentry(xtext_buffer *, textentry *);
@@ -4139,7 +4139,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 }
 
 namespace{
-	static gboolean
+	static bool
 		gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add)
 	{
 		textentry *ent;
@@ -4149,7 +4149,7 @@ namespace{
 
 		if (find_ent == NULL)
 		{
-			return FALSE;
+			return false;
 		}
 
 		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
@@ -4158,7 +4158,7 @@ namespace{
 		/* If top line not completely displayed return FALSE */
 		if (ent == find_ent && buf->pagetop_subline > 0)
 		{
-			return FALSE;
+			return false;
 		}
 		/* Loop through line positions looking for find_ent */
 		lines = ((height + xtext->pixel_offset) / xtext->fontsize) + buf->pagetop_subline + add;
@@ -4167,16 +4167,16 @@ namespace{
 			lines -= g_slist_length(ent->sublines);
 			if (lines <= 0)
 			{
-				return FALSE;
+				return false;
 			}
 			if (ent == find_ent)
 			{
-				return TRUE;
+				return true;
 			}
 			ent = ent->next;
 		}
 
-		return FALSE;
+		return false;
 	}
 } // end anonymous namespace
 
@@ -4276,28 +4276,26 @@ namespace{
 			/* Non-regular-expression matching --- */
 		}
 		else {
-			gchar *hay, *pos;
+			gchar *pos;
 			gint lhay, off, len;
 			gint match = buf->search_flags & case_match;
 
-			hay = match ? g_strdup(str) : g_utf8_casefold(str, lstr);
-			lhay = strlen(hay);
+			glib_string hay( match ? g_strdup(str) : g_utf8_casefold(str, lstr));
+			lhay = strlen(hay.get());
 			off = 0;
 
-			for (pos = hay, len = lhay; len;
-				off += buf->search_lnee, pos = hay + off, len = lhay - off)
+			for (pos = hay.get(), len = lhay; len;
+				off += buf->search_lnee, pos = hay.get() + off, len = lhay - off)
 			{
 				str = g_strstr_len(pos, len, buf->search_nee);
 				if (str == NULL)
 				{
 					break;
 				}
-				off = str - hay;
+				off = str - hay.get();
 				gtk_xtext_unstrip_color(off, off + buf->search_lnee,
 					slp, &gl, ent->str.size());
 			}
-
-			g_free(hay);
 		}
 
 		/* Common processing --- */
