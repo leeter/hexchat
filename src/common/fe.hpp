@@ -38,7 +38,7 @@ struct menu_entry
 	bool enable;	/* enabled? sensitivity */
 
 	int key;
-	char *path;
+	std::string path;
 	char *label;
 	char *cmd;
 	char *ucmd;	/* unselect command (toggles) */

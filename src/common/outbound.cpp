@@ -1038,7 +1038,6 @@ GSList *menu_list = NULL;
 
 menu_entry::~menu_entry()
 {
-	free(this->path);
 	free(this->label);
 	free(this->cmd);
 	free(this->ucmd);
@@ -1087,7 +1086,7 @@ static menu_entry *menu_entry_find (const char path[], const char label[])
 	while (list)
 	{
 		me = static_cast<menu_entry*>(list->data);
-		if (!strcmp (path, me->path))
+		if (me->path == path)
 		{
 			if (me->label && label && !strcmp (label, me->label))
 				return me;
@@ -1116,7 +1115,7 @@ menu_del_children (const char path[], const char label[])
 	{
 		me = static_cast<menu_entry*>(list->data);
 		next = list->next;
-		if (!menu_streq (buf, me->path, false))
+		if (!menu_streq (buf, me->path.c_str(), false))
 		{
 			menu_list = g_slist_remove (menu_list, me);
 			menu_free (me);
@@ -1134,7 +1133,7 @@ static bool menu_del (const char path[], const char label[])
 	while (list)
 	{
 		me = static_cast<menu_entry*>(list->data);
-		if (!menu_streq (me->label, label, true) && !menu_streq (me->path, path, true))
+		if (!menu_streq (me->label, label, true) && !menu_streq (me->path.c_str(), path, true))
 		{
 			menu_list = g_slist_remove (menu_list, me);
 			fe_menu_del (me);
@@ -1194,7 +1193,7 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	me->markup = markup;
 	me->enable = enable;
 	me->key = key;
-	me->path = strdup (path);
+	me->path = path;
 	me->label = NULL;
 	me->cmd = NULL;
 	me->ucmd = NULL;

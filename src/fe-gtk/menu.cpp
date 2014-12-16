@@ -1881,7 +1881,7 @@ menu_canacaccel (GtkWidget *widget, guint signal_id, gpointer user_data)
 /* === STUFF FOR /MENU === */
 
 static GtkMenuItem *
-menu_find_item (GtkWidget *menu, char *name)
+menu_find_item (GtkWidget *menu, const char name[])
 {
 	GList *items = ((GtkMenuShell *) menu)->children;
 	GtkMenuItem *item;
@@ -1910,23 +1910,18 @@ menu_find_item (GtkWidget *menu, char *name)
 }
 
 static GtkWidget *
-menu_find_path (GtkWidget *menu, char *path)
+menu_find_path (GtkWidget *menu, const std::string & path)
 {
 	GtkMenuItem *item;
-	char *s;
-	char name[128];
-	size_t len;
-
+	std::string name;
 	/* grab the next part of the path */
-	s = strchr (path, '/');
-	len = s - path;
-	if (!s)
-		len = strlen (path);
-	len = std::min (len, sizeof (name) - 1);
-	memcpy (name, path, len);
-	name[len] = 0;
+	auto len = path.find_first_of('/');
+	if (len == std::string::npos)
+		name = path;
+	else
+		name = path.substr(0, len);
 
-	item = menu_find_item (menu, name);
+	item = menu_find_item (menu, name.c_str());
 	if (!item)
 		return NULL;
 
@@ -1934,15 +1929,15 @@ menu_find_path (GtkWidget *menu, char *path)
 	if (!menu)
 		return NULL;
 
-	path += len;
-	if (*path == 0)
+	auto next_path = path.cbegin() + len;
+	if (next_path == path.cend())
 		return menu;
 
-	return menu_find_path (menu, path + 1);
+	return menu_find_path (menu, path.substr(1));
 }
 
 static GtkWidget *
-menu_find (GtkWidget *menu, char *path, char *label)
+menu_find (GtkWidget *menu, const std::string & path, char *label)
 {
 	GtkWidget *item = NULL;
 
@@ -2064,9 +2059,9 @@ static GtkWidget *
 menu_add_radio (GtkWidget *menu, menu_entry *me)
 {
 	GtkWidget *item = NULL;
-	char *path = me->path + me->root_offset;
+	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
 
-	if (path[0] != 0)
+	if (path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
@@ -2080,9 +2075,9 @@ static GtkWidget *
 menu_add_toggle (GtkWidget *menu, menu_entry *me)
 {
 	GtkWidget *item = NULL;
-	char *path = me->path + me->root_offset;
+	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
 
-	if (path[0] != 0)
+	if (path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
@@ -2096,9 +2091,9 @@ static GtkWidget *
 menu_add_item (GtkWidget *menu, menu_entry *me, char *target)
 {
 	GtkWidget *item = NULL;
-	char *path = me->path + me->root_offset;
+	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
 
-	if (path[0] != 0)
+	if (path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
@@ -2113,14 +2108,13 @@ static GtkWidget *
 menu_add_sub (GtkWidget *menu, menu_entry *me)
 {
 	GtkWidget *item = NULL;
-	char *path = me->path + me->root_offset;
-	int pos;
+	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
 
-	if (path[0] != 0)
+	if (path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		pos = me->pos;
+		int pos = me->pos;
 		if (pos < 0)	/* position offset from end/bottom */
 			pos = g_list_length (GTK_MENU_SHELL (menu)->children) + pos;
 		menu_quick_sub (me->label, menu, &item, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, pos);
@@ -2131,7 +2125,8 @@ menu_add_sub (GtkWidget *menu, menu_entry *me)
 static void
 menu_del_cb (GtkWidget *menu, menu_entry *me, char *target)
 {
-	GtkWidget *item = menu_find (menu, me->path + me->root_offset, me->label);
+	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
+	GtkWidget *item = menu_find (menu, path, me->label);
 	if (item)
 		gtk_widget_destroy (item);
 }
@@ -2221,7 +2216,7 @@ menu_add_plugin_items (GtkWidget *menu, char *root, char *target)
 	while (list)
 	{
 		me = static_cast<menu_entry*>(list->data);
-		if (!me->is_main && !strncmp (me->path, root + 1, root[0]))
+		if (!me->is_main && !strncmp (me->path.c_str(), root + 1, root[0]))
 			menu_add_cb (menu, me, target);
 		list = list->next;
 	}
