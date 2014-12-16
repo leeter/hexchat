@@ -1334,20 +1334,20 @@ savebuffer_req_done (session *sess, char *file)
 }
 
 static void
-menu_savebuffer (GtkWidget * wid, gpointer none)
+menu_savebuffer (GtkWidget *, gpointer)
 {
 	gtkutil_file_req (_("Select an output filename"), (filereqcallback)savebuffer_req_done,
 							current_sess, NULL, NULL, FRF_WRITE);
 }
 
 static void
-menu_disconnect (GtkWidget * wid, gpointer none)
+menu_disconnect (GtkWidget *, gpointer)
 {
 	handle_command (current_sess, "DISCON", FALSE);
 }
 
 static void
-menu_reconnect (GtkWidget * wid, gpointer none)
+menu_reconnect (GtkWidget *, gpointer)
 {
 	if (current_sess->server->hostname[0])
 		handle_command (current_sess, "RECONNECT", FALSE);
