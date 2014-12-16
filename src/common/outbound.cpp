@@ -42,7 +42,6 @@
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/scope_exit.hpp>
 
 #define WANTSOCKET
 #define WANTARPA
@@ -3993,19 +3992,15 @@ const struct commands xc_cmds[] = {
 	{0, 0, 0, 0, 0, 0}
 };
 
-
-static int
-command_compare (const void *a, const void *b)
+static const commands * find_internal_command (const char *name)
 {
-	return g_ascii_strcasecmp (static_cast<const gchar*>(a), ((struct commands *)b)->name);
-}
-
-static struct commands *
-find_internal_command (const char *name)
-{
-	/* the "-1" is to skip the NULL terminator */
-	return static_cast<commands*>(bsearch (name, xc_cmds, (sizeof (xc_cmds) /
-				sizeof (xc_cmds[0])) - 1, sizeof (xc_cmds[0]), command_compare));
+	return std::find_if(
+		std::begin(xc_cmds),
+		std::end(xc_cmds),
+		[name](const commands& c){
+			if (!c.name) return false;
+			return g_ascii_strcasecmp(name, c.name) == 0;
+		});
 }
 
 static gboolean
@@ -4036,7 +4031,7 @@ usercommand_show_help (session *sess, const char *name)
 static void
 help (session *sess, char *tbuf, const char *helpcmd, int quiet)
 {
-	struct commands *cmd;
+	const commands *cmd;
 
 	if (plugin_show_help (sess, helpcmd))
 		return;
@@ -4549,7 +4544,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
 	static int command_level = 0;
-	struct commands *int_cmd;
+	const struct commands *int_cmd;
 	int ret = TRUE;
 
 	if (command_level > 99)
