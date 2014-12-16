@@ -209,42 +209,41 @@ struct GtkXText
 	int clip_y2;		/* from y to y2 */
 
 	/* current text states */
-	unsigned int underline : 1;
-	unsigned int hidden : 1;
+	bool underline;
+	bool hidden;
 
 	/* text parsing states */
-	unsigned int parsing_backcolor : 1;
-	unsigned int parsing_color : 1;
-	unsigned int backcolor : 1;
+	bool parsing_backcolor;
+	bool parsing_color;
+	bool backcolor;
 
 	/* various state information */
-	unsigned int moving_separator : 1;
-	unsigned int word_select : 1;
-	unsigned int line_select : 1;
-	unsigned int button_down : 1;
-	unsigned int hilighting : 1;
-	unsigned int dont_render : 1;
-	unsigned int dont_render2 : 1;
-	unsigned int cursor_hand : 1;
-	unsigned int cursor_resize : 1;
-	unsigned int skip_border_fills : 1;
-	unsigned int skip_stamp : 1;
-	unsigned int mark_stamp : 1;	/* Cut&Paste with stamps? */
-	unsigned int force_stamp : 1;	/* force redrawing it */
-	unsigned int render_hilights_only : 1;
-	unsigned int in_hilight : 1;
-	unsigned int un_hilight : 1;
-	unsigned int recycle : 1;
-	unsigned int force_render : 1;
-	unsigned int color_paste : 1; /* CTRL was pressed when selection finished */
+	bool moving_separator;
+	bool word_select;
+	bool line_select;
+	bool button_down;
+	bool hilighting;
+	bool dont_render;
+	bool dont_render2;
+	bool cursor_hand;
+	bool cursor_resize;
+	bool skip_border_fills;
+	bool skip_stamp;
+	bool mark_stamp;	/* Cut&Paste with stamps? */
+	bool force_stamp;	/* force redrawing it */
+	bool render_hilights_only;
+	bool in_hilight;
+	bool un_hilight;
+	bool force_render;
+	bool color_paste; /* CTRL was pressed when selection finished */
 
 	/* settings/prefs */
-	unsigned int auto_indent : 1;
-	unsigned int thinline : 1;
-	unsigned int marker : 1;
-	unsigned int separator : 1;
-	unsigned int wordwrap : 1;
-	unsigned int ignore_hidden : 1;	/* rawlog uses this */
+	bool auto_indent;
+	bool thinline;
+	bool marker;
+	bool separator;
+	bool wordwrap;
+	bool ignore_hidden;	/* rawlog uses this */
 };
 
 struct GtkXTextClass
