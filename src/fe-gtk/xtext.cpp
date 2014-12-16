@@ -2710,10 +2710,12 @@ namespace{
 	* 	GTK_MATCH_END if we're at the first byte past it
 	* 	GTK_MATCH_CUR if it is the current match
 	*/
-#define GTK_MATCH_START	1
-#define GTK_MATCH_MID	2
-#define GTK_MATCH_END	4
-#define GTK_MATCH_CUR	8
+	enum{
+		GTK_MATCH_START = 1,
+		GTK_MATCH_MID	= 2,
+		GTK_MATCH_END	= 4,
+		GTK_MATCH_CUR	= 8
+	};
 	static int
 		gtk_xtext_search_offset(xtext_buffer *buf, textentry *ent, unsigned int off)
 	{
@@ -2765,7 +2767,7 @@ namespace{
 	static int
 		gtk_xtext_render_str(GtkXText * xtext, int y, textentry * ent,
 		const unsigned char str[], int len, int win_width, int indent,
-		int line, int left_only, int *x_size_ret, int *emphasis)
+		int line, bool left_only, int *x_size_ret, int *emphasis)
 	{
 		GdkGC *gc;
 		int i = 0, x = indent, j = 0;
@@ -3357,7 +3359,7 @@ namespace{
 
 		y = (xtext->fontsize * line) + xtext->font->ascent - xtext->pixel_offset;
 		gtk_xtext_render_str(xtext, y, ent, (unsigned char*)text, len,
-			win_width, 2, line, TRUE, &xsize, &emphasis);
+			win_width, 2, line, true, &xsize, &emphasis);
 
 		/* restore everything back to how it was */
 		*ent = tmp_ent;
@@ -3420,7 +3422,7 @@ namespace{
 			if (!subline)
 			{
 				if (!gtk_xtext_render_str(xtext, y, ent, str, len, win_width,
-					indent, line, FALSE, NULL, &emphasis))
+					indent, line, false, NULL, &emphasis))
 				{
 					/* small optimization */
 					gtk_xtext_draw_marker(xtext, ent, y - xtext->fontsize * (taken + start_subline + 1));
@@ -3431,7 +3433,7 @@ namespace{
 			{
 				xtext->dont_render = true;
 				gtk_xtext_render_str(xtext, y, ent, str, len, win_width,
-					indent, line, FALSE, NULL, &emphasis);
+					indent, line, false, NULL, &emphasis);
 				xtext->dont_render = false;
 				subline--;
 				line--;
