@@ -41,6 +41,7 @@ struct favchannel
 
 struct ircnet
 {
+	ircnet();
 	std::string name;
 	char *nick;
 	char *nick2;

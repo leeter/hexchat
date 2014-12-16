@@ -1296,7 +1296,7 @@ truncate_tab_name (const std::string & name, int max)
 		std::string buf(name);
 		buf.reserve(name.size() + 4);
 		const char* offset = g_utf8_offset_to_pointer (buf.c_str(), max);
-		buf.erase(buf.begin() + std::distance(offset, buf.c_str()), buf.end());
+		buf.erase(buf.begin() + std::distance(buf.c_str(), offset), buf.end());
 		buf.append("..");
 		return buf;
 	}

@@ -39,6 +39,21 @@
 
 #include "servlist.hpp"
 
+ircnet::ircnet()
+	:nick(),
+	nick2(),
+	user(),
+	real(),
+	pass(),
+	logintype(),
+	comment(),
+	encoding(),
+	servlist(),
+	commandlist(),
+	favchanlist(),
+	selected(),
+	flags()
+{}
 
 struct defaultserver
 {
