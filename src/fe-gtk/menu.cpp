@@ -575,7 +575,7 @@ menu_nickinfo_cb (GtkWidget *menu, session *sess)
 		return;
 
 	/* issue a /WHOIS */
-	snprintf (buf, sizeof (buf), "WHOIS %s %s", str_copy, str_copy);
+	snprintf (buf, sizeof (buf), "WHOIS %s %s", str_copy.get(), str_copy.get());
 	handle_command (sess, buf, FALSE);
 	/* and hide the output */
 	sess->server->skip_next_whois = 1;

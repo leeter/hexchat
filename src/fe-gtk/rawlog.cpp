@@ -155,7 +155,8 @@ fe_add_rawlog (server *serv, const char *text, size_t len, bool outbound)
 		return;
 
 	std::vector<std::string> split_strings;
-	for (auto & it : boost::iter_split(split_strings, std::string(text, len), boost::algorithm::first_finder("\r\n")))
+	std::string text_buf(text, len);
+	for (auto & it : boost::iter_split(split_strings, text_buf, boost::algorithm::first_finder("\r\n")))
 	{
 		if (it.empty())
 			break;
