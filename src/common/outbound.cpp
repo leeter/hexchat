@@ -1292,7 +1292,7 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	{
 		state = atoi (word[idx] + 2);
 		idx++;
-		toggle = TRUE;
+		toggle = true;
 	}
 
 	if (word[idx+1][0] == 0)

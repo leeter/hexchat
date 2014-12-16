@@ -1155,7 +1155,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 			return sess->server->last_away_reason.c_str();
 		return NULL;
 
-  	case 0x2c0b7d03: /* channel */
+	case 0x2c0b7d03: /* channel */
 		return sess->channel;
 
 	case 0x2c0d614c: /* charset */

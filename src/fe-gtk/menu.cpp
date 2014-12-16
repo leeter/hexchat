@@ -1917,7 +1917,10 @@ menu_find_path (GtkWidget *menu, const std::string & path)
 	/* grab the next part of the path */
 	auto len = path.find_first_of('/');
 	if (len == std::string::npos)
+	{
 		name = path;
+		len = path.size();
+	}
 	else
 		name = path.substr(0, len);
 
@@ -2093,7 +2096,7 @@ menu_add_item (GtkWidget *menu, menu_entry *me, char *target)
 	GtkWidget *item = NULL;
 	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
 
-	if (path.empty())
+	if (!path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
