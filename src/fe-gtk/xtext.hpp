@@ -255,10 +255,10 @@ struct GtkXTextClass
 };
 
 GtkWidget *gtk_xtext_new(GdkColor palette[], int separator);
-void gtk_xtext_append(xtext_buffer *buf, unsigned char *text, int len, time_t stamp);
+void gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
-	unsigned char *left_text, int left_len,
-	unsigned char *right_text, int right_len,
+	const unsigned char left_text[], int left_len,
+	const unsigned char right_text[], int right_len,
 	time_t stamp);
 int gtk_xtext_set_font(GtkXText *xtext, char *name);
 void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
@@ -274,8 +274,6 @@ void gtk_xtext_check_marker_visibility(GtkXText *xtext);
 void gtk_xtext_set_marker_last(session *sess);
 
 gboolean gtk_xtext_is_empty(xtext_buffer *buf);
-typedef void(*GtkXTextForeach) (GtkXText *xtext, unsigned char *text, void *data);
-void gtk_xtext_foreach(xtext_buffer *buf, GtkXTextForeach func, void *data);
 
 void gtk_xtext_set_error_function(GtkXText *xtext, void(*error_function) (int));
 void gtk_xtext_set_indent(GtkXText *xtext, gboolean indent);

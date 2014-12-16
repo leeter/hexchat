@@ -68,14 +68,29 @@
 char *nocasestrstr(const char *text, const char *tofind);	/* util.c */
 int xtext_get_stamp_str(time_t, char **);
 
+typedef std::basic_string<unsigned char> ustring;
+
 struct textentry
 {
+	textentry()
+		:next(),
+		prev(),
+		stamp(),
+		str_width(),
+		mark_start(),
+		mark_end(),
+		indent(),
+		left_len(),
+		slp(),
+		sublines(),
+		tag(),
+		marks(){}
+
 	struct textentry *next;
 	struct textentry *prev;
-	unsigned char *str;
+	ustring str;
 	time_t stamp;
 	gint16 str_width;
-	gint16 str_len;
 	gint16 mark_start;
 	gint16 mark_end;
 	gint16 indent;
@@ -83,8 +98,6 @@ struct textentry
 	GSList *slp;
 	GSList *sublines;
 	guchar tag;
-	guchar pad1;
-	guchar pad2;	/* 32-bit align : 44 bytes total */
 	GList *marks;	/* List of found strings */
 };
 
@@ -145,7 +158,7 @@ namespace
 		guint16 width;
 	};
 	static unsigned char *
-		gtk_xtext_strip_color(unsigned char *text, int len, unsigned char *outbuf,
+		gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
 		int *newlen, GSList **slp, int strip_hidden);
 	static gboolean gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add);
 	static int gtk_xtext_render_page_timeout(GtkXText * xtext);
@@ -882,20 +895,20 @@ namespace {
 		{
 			if (off >= suboff)
 				break;
-			mbl = charlen(ent->str + off);
+			mbl = charlen(ent->str.c_str() + off);
 			len -= mbl;
 			off += mbl;
 		}
 		if (len < 0)
-			return ent->str_len;		/* Bad char -- return max offset. */
+			return ent->str.size();		/* Bad char -- return max offset. */
 
 		/* Step through characters to find the one at the x position */
 		wid = x - indent;
 		len = meta->len - (off - meta->off);
 		while (wid > 0)
 		{
-			mbl = charlen(ent->str + off);
-			mbw = backend_get_text_width_emph(xtext, ent->str + off, mbl, meta->emph);
+			mbl = charlen(ent->str.c_str() + off);
+			mbw = backend_get_text_width_emph(xtext, ent->str.c_str() + off, mbl, meta->emph);
 			wid -= mbw;
 			xx += mbw;
 			if (xx >= x)
@@ -908,7 +921,7 @@ namespace {
 					hid = list;
 				list = g_slist_next(list);
 				if (list == NULL)
-					return ent->str_len;
+					return ent->str.size();
 				meta = static_cast<offlen_t*>(list->data);
 				off = meta->off;
 				len = meta->len;
@@ -931,7 +944,7 @@ namespace {
 		int line, int *out_of_bounds)
 	{
 		int indent;
-		unsigned char *str;
+		const unsigned char *str;
 
 		if (subline < 1)
 			indent = ent->indent;
@@ -944,15 +957,15 @@ namespace {
 			return 0;
 		}
 
-		str = ent->str + gtk_xtext_find_subline(xtext, ent, subline);
-		if (str >= ent->str + ent->str_len)
+		str = ent->str.c_str() + gtk_xtext_find_subline(xtext, ent, subline);
+		if (str >= ent->str.c_str() + ent->str.size())
 			return 0;
 
 		/* Let user select left a few pixels to grab hidden text e.g. '<' */
 		if (x < indent - xtext->space_width)
 		{
 			*out_of_bounds = 1;
-			return (str - ent->str);
+			return (str - ent->str.c_str());
 		}
 
 		*out_of_bounds = 0;
@@ -1357,13 +1370,13 @@ namespace {
 		if (!ent_start)
 		{
 			ent_start = xtext->buffer->text_last;
-			offset_start = ent_start->str_len;
+			offset_start = ent_start->str.size();
 		}
 
 		if (!ent_end)
 		{
 			ent_end = xtext->buffer->text_last;
-			offset_end = ent_end->str_len;
+			offset_end = ent_end->str.size();
 		}
 
 		if ((ent_start != ent_end && xtext->select_start_y > xtext->select_end_y) || /* different entries */
@@ -1381,7 +1394,7 @@ namespace {
 
 			/* in case the cursor is out of bounds we keep offset_end from gtk_xtext_find_char and fix the length */
 			if (gtk_xtext_get_word(xtext, xtext->select_end_x, xtext->select_end_y, NULL, &offset_end, &len_end, NULL) == NULL)
-				len_end = offset_end == ent_end->str_len ? 0 : -1; /* -1 for the space, 0 if at the end */
+				len_end = offset_end == ent_end->str.size() ? 0 : -1; /* -1 for the space, 0 if at the end */
 
 			if (!marking_up)
 				offset_end += len_end;
@@ -1391,8 +1404,8 @@ namespace {
 		/* line/ent selection */
 		else if (xtext->line_select)
 		{
-			offset_start = marking_up ? ent_start->str_len : 0;
-			offset_end = marking_up ? 0 : ent_end->str_len;
+			offset_start = marking_up ? ent_start->str.size() : 0;
+			offset_end = marking_up ? 0 : ent_end->str.size();
 		}
 
 		if (marking_up)
@@ -1417,7 +1430,7 @@ namespace {
 		gtk_xtext_selection_clear(xtext->buffer);
 
 		/* set the default values */
-		ent_start->mark_end = ent_start->str_len;
+		ent_start->mark_end = ent_start->str.size();
 		ent_end->mark_start = 0;
 
 		/* set the calculated values (this overwrites the default values if we're on the same ent) */
@@ -1431,7 +1444,7 @@ namespace {
 			while (ent && ent != ent_end)
 			{
 				ent->mark_start = 0;
-				ent->mark_end = ent->str_len;
+				ent->mark_end = ent->str.size();
 				ent = ent->next;
 			}
 		}
@@ -1564,18 +1577,18 @@ namespace {
 	{
 		textentry *ent;
 		int offset;
-		unsigned char *word;
-		unsigned char *last, *end;
+		const unsigned char *word;
+		const unsigned char *last, *end;
 		int len;
 		int out_of_bounds = 0;
 		int len_to_offset = 0;
 
 		ent = gtk_xtext_find_char(xtext, x, y, &offset, &out_of_bounds, NULL);
-		if (ent == NULL || out_of_bounds || offset < 0 || offset >= ent->str_len)
+		if (ent == NULL || out_of_bounds || offset < 0 || offset >= ent->str.size())
 			return NULL;
 
-		word = ent->str + offset;
-		while ((word = (unsigned char*)g_utf8_find_prev_char((const gchar*)ent->str, (const gchar*)word)))
+		word = ent->str.c_str() + offset;
+		while ((word = (unsigned char*)g_utf8_find_prev_char((const gchar*)ent->str.c_str(), (const gchar*)word)))
 		{
 			if (is_del(*word))
 			{
@@ -1586,13 +1599,13 @@ namespace {
 			len_to_offset += charlen(word);
 		}
 		if (!word)
-			word = ent->str;
+			word = ent->str.c_str();
 
 		/* remove color characters from the length */
 		gtk_xtext_strip_color((unsigned char*)word, len_to_offset, xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
 
 		last = word;
-		end = ent->str + ent->str_len;
+		end = ent->str.c_str() + ent->str.size();
 		len = 0;
 		do
 		{
@@ -1608,7 +1621,7 @@ namespace {
 		if (ret_ent)
 			*ret_ent = ent;
 		if (ret_off)
-			*ret_off = word - ent->str;
+			*ret_off = word - ent->str.c_str();
 		if (ret_len)
 			*ret_len = len;		/* Length before stripping */
 
@@ -2061,7 +2074,7 @@ namespace {
 			{
 				gtk_xtext_selection_clear(xtext->buffer);
 				ent->mark_start = 0;
-				ent->mark_end = ent->str_len;
+				ent->mark_end = ent->str.size();
 				gtk_xtext_selection_render(xtext, ent, ent);
 				xtext->line_select = TRUE;
 			}
@@ -2169,7 +2182,7 @@ namespace {
 						pos += stamp_size;
 					}
 
-					std::copy_n(ent->str + ent->mark_start, ent->mark_end - ent->mark_start, pos);
+					std::copy_n(ent->str.cbegin() + ent->mark_start, ent->mark_end - ent->mark_start, pos);
 					pos += ent->mark_end - ent->mark_start;
 				}
 			}
@@ -2409,7 +2422,7 @@ namespace{
 	}
 
 	static unsigned char *
-		gtk_xtext_strip_color(unsigned char *text, int len, unsigned char *outbuf,
+		gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
 		int *newlen, GSList **slpp, int strip_hidden)
 	{
 		chunk_t c;
@@ -2417,7 +2430,7 @@ namespace{
 		int rcol = 0, bgcol = 0;
 		int hidden = FALSE;
 		unsigned char *new_str;
-		unsigned char *text0 = text;
+		const unsigned char *text0 = text;
 		int mbl;	/* multi-byte length */
 
 		if (outbuf == NULL)
@@ -2527,7 +2540,7 @@ namespace{
 			ent->slp = NULL;
 		}
 
-		new_buf = gtk_xtext_strip_color(ent->str, ent->str_len, xtext->scratch_buffer,
+		new_buf = gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), xtext->scratch_buffer,
 			NULL, &slp0, 2);
 
 		width = backend_get_text_width_slp(xtext, new_buf, slp0);
@@ -2538,13 +2551,13 @@ namespace{
 			offlen_t *meta;
 
 			meta = static_cast<offlen_t *>(slp->data);
-			meta->width = backend_get_text_width_emph(xtext, ent->str + meta->off, meta->len, meta->emph);
+			meta->width = backend_get_text_width_emph(xtext, ent->str.c_str() + meta->off, meta->len, meta->emph);
 		}
 		return width;
 	}
 
 	static int
-		gtk_xtext_text_width(GtkXText *xtext, unsigned char *text, int len)
+		gtk_xtext_text_width(GtkXText *xtext, const unsigned char text[], int len)
 	{
 		unsigned char *new_buf;
 		int new_len;
@@ -2567,7 +2580,7 @@ namespace{
 	/* actually draw text to screen (one run with the same color/attribs) */
 
 	static int
-		gtk_xtext_render_flush(GtkXText * xtext, int x, int y, unsigned char *str,
+		gtk_xtext_render_flush(GtkXText * xtext, int x, int y, const unsigned char str[],
 		int len, GdkGC *gc, int *emphasis)
 	{
 		int str_width;
@@ -2621,7 +2634,7 @@ namespace{
 			dofill = false;	/* already drawn the background */
 		}
 
-		backend_draw_text_emph(xtext, dofill, gc, x, y, (char*)str, len, str_width, *emphasis);
+		backend_draw_text_emph(xtext, dofill, gc, x, y, (const char*)str, len, str_width, *emphasis);
 
 		if (pix)
 		{
@@ -2752,12 +2765,12 @@ namespace{
 
 	static int
 		gtk_xtext_render_str(GtkXText * xtext, int y, textentry * ent,
-		unsigned char *str, int len, int win_width, int indent,
+		const unsigned char str[], int len, int win_width, int indent,
 		int line, int left_only, int *x_size_ret, int *emphasis)
 	{
 		GdkGC *gc;
 		int i = 0, x = indent, j = 0;
-		unsigned char *pstr = str;
+		const unsigned char *pstr = str;
 		int col_num, tmp;
 		int offset;
 		int mark = FALSE;
@@ -2768,7 +2781,7 @@ namespace{
 
 		xtext->in_hilight = FALSE;
 
-		offset = str - ent->str;
+		offset = str - ent->str.c_str();
 
 		gc = xtext->fgc;				  /* our foreground GC */
 
@@ -3153,11 +3166,11 @@ namespace{
 	/* walk through str until this line doesn't fit anymore */
 
 	static int
-		find_next_wrap(GtkXText * xtext, textentry * ent, unsigned char *str,
+		find_next_wrap(GtkXText * xtext, textentry * ent, const unsigned char str[],
 		int win_width, int indent)
 	{
-		unsigned char *last_space = str;
-		unsigned char *orig_str = str;
+		const unsigned char *last_space = str;
+		const unsigned char *orig_str = str;
 		int str_width = indent;
 		int rcol = 0, bgcol = 0;
 		int hidden = FALSE;
@@ -3171,12 +3184,12 @@ namespace{
 
 		/* single liners */
 		if (win_width >= ent->str_width + ent->indent)
-			return ent->str_len;
+			return ent->str.size();
 
 		/* it does happen! */
 		if (win_width < 1)
 		{
-			ret = ent->str_len - (str - ent->str);
+			ret = ent->str.size() - (str - ent->str.c_str());
 			goto done;
 		}
 
@@ -3184,9 +3197,9 @@ namespace{
 		for (lp = ent->slp; lp; lp = g_slist_next(lp))
 		{
 			offlen_t *meta = static_cast<offlen_t *>(lp->data);
-			unsigned char *start, *end;
+			const unsigned char *start, *end;
 
-			start = ent->str + meta->off;
+			start = ent->str.c_str() + meta->off;
 			end = start + meta->len;
 			if (str >= start && str < end)
 			{
@@ -3275,7 +3288,7 @@ namespace{
 				}
 			}
 
-			if (str >= ent->str + ent->str_len)
+			if (str >= ent->str.c_str() + ent->str.size())
 			{
 				ret = str - orig_str;
 				goto done;
@@ -3302,7 +3315,7 @@ namespace{
 		{
 			rlen = GPOINTER_TO_UINT(g_slist_nth_data(ent->sublines, line - 1));
 			if (rlen == 0)
-				rlen = ent->str_len;
+				rlen = ent->str.size();
 		}
 		return rlen;
 	}
@@ -3373,12 +3386,12 @@ namespace{
 		gtk_xtext_render_line(GtkXText * xtext, textentry * ent, int line,
 		int lines_max, int subline, int win_width)
 	{
-		unsigned char *str;
+		const unsigned char *str;
 		int indent, taken, entline, len, y, start_subline;
 		int emphasis = 0;
 
 		entline = taken = 0;
-		str = ent->str;
+		str = ent->str.c_str();
 		indent = ent->indent;
 		start_subline = subline;
 
@@ -3434,7 +3447,7 @@ namespace{
 			if (line >= lines_max)
 				break;
 
-		} while (str < ent->str + ent->str_len);
+		} while (str < ent->str.c_str() + ent->str.size());
 
 		gtk_xtext_draw_marker(xtext, ent, y - xtext->fontsize * (taken + start_subline));
 
@@ -3502,7 +3515,7 @@ namespace {
 			{
 				ent->indent =
 					(buf->indent -
-					gtk_xtext_text_width(buf->xtext, ent->str,
+					gtk_xtext_text_width(buf->xtext, ent->str.c_str(),
 					ent->left_len)) - buf->xtext->space_width;
 				if (ent->indent < MARGIN)
 					ent->indent = MARGIN;
@@ -3586,16 +3599,14 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 {
 	textentry *ent;
 	int newlen;
-	char *buf;
 
 	ent = xtext->buffer->text_first;
 	while (ent)
 	{
-		buf = (char*)gtk_xtext_strip_color(ent->str, ent->str_len, NULL,
-			&newlen, NULL, FALSE);
-		write(fh, buf, newlen);
+		glib_string buf((char*)gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), NULL,
+			&newlen, NULL, FALSE));
+		write(fh, buf.get(), newlen);
 		write(fh, "\n", 1);
-		free(buf);
 		ent = ent->next;
 	}
 }
@@ -3605,7 +3616,7 @@ namespace{
 	static int
 		gtk_xtext_lines_taken(xtext_buffer *buf, textentry * ent)
 	{
-		unsigned char *str;
+		const unsigned char *str;
 		int indent, len;
 		int win_width;
 
@@ -3615,20 +3626,20 @@ namespace{
 
 		if (win_width >= ent->indent + ent->str_width)
 		{
-			ent->sublines = g_slist_append(ent->sublines, GINT_TO_POINTER(ent->str_len));
+			ent->sublines = g_slist_append(ent->sublines, GINT_TO_POINTER(ent->str.size()));
 			return 1;
 		}
 
 		indent = ent->indent;
-		str = ent->str;
+		str = ent->str.c_str();
 
 		do
 		{
 			len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
-			ent->sublines = g_slist_append(ent->sublines, GINT_TO_POINTER(str + len - ent->str));
+			ent->sublines = g_slist_append(ent->sublines, GINT_TO_POINTER(str + len - ent->str.c_str()));
 			indent = buf->indent;
 			str += len;
-		} while (str < ent->str + ent->str_len);
+		} while (str < ent->str.c_str() + ent->str.size());
 
 		return g_slist_length(ent->sublines);
 	}
@@ -4241,7 +4252,7 @@ namespace{
 			return gl;
 		}
 
-		str = (gchar*)gtk_xtext_strip_color(ent->str, ent->str_len, buf->xtext->scratch_buffer,
+		str = (gchar*)gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), buf->xtext->scratch_buffer,
 			&lstr, &slp, !buf->xtext->ignore_hidden);
 
 		/* Regular-expression matching --- */
@@ -4258,7 +4269,7 @@ namespace{
 			while (g_match_info_matches(gmi))
 			{
 				g_match_info_fetch_pos(gmi, 0, &start, &end);
-				gtk_xtext_unstrip_color(start, end, slp, &gl, ent->str_len);
+				gtk_xtext_unstrip_color(start, end, slp, &gl, ent->str.size());
 				g_match_info_next(gmi, NULL);
 			}
 			g_match_info_free(gmi);
@@ -4284,7 +4295,7 @@ namespace{
 				}
 				off = str - hay;
 				gtk_xtext_unstrip_color(off, off + buf->search_lnee,
-					slp, &gl, ent->str_len);
+					slp, &gl, ent->str.size());
 			}
 
 			g_free(hay);
@@ -4617,19 +4628,10 @@ namespace {
 
 	/* append a textentry to our linked list */
 
-	static void
-		gtk_xtext_append_entry(xtext_buffer *buf, textentry * ent, time_t stamp)
+	static void gtk_xtext_append_entry(xtext_buffer *buf, textentry * ent, time_t stamp)
 	{
-		int i;
-
 		/* we don't like tabs */
-		i = 0;
-		while (i < ent->str_len)
-		{
-			if (ent->str[i] == '\t')
-				ent->str[i] = ' ';
-			i++;
-		}
+		std::replace(ent->str.begin(), ent->str.end(), '\t', ' ');
 
 		ent->stamp = stamp;
 		if (stamp == 0)
@@ -4710,12 +4712,11 @@ namespace {
 
 void
 gtk_xtext_append_indent(xtext_buffer *buf,
-unsigned char *left_text, int left_len,
-unsigned char *right_text, int right_len,
+const unsigned char left_text[], int left_len,
+const unsigned char right_text[], int right_len,
 time_t stamp)
 {
 	textentry *ent;
-	unsigned char *str;
 	int space;
 	int tempindent;
 	int left_width;
@@ -4732,19 +4733,16 @@ time_t stamp)
 	if (right_text[right_len - 1] == '\n')
 		right_len--;
 
-	ent = static_cast<textentry*>(g_malloc0(left_len + right_len + 2 + sizeof(textentry)));
-	str = (unsigned char *)ent + sizeof(textentry);
-
+	ent = new textentry;
+	ent->str.resize(left_len + right_len + 1, '\0');
+	auto str = ent->str.begin();
 	std::copy_n(left_text, left_len, str);
 	str[left_len] = ' ';
 	std::copy_n(right_text, right_len, str + left_len + 1);
-	str[left_len + 1 + right_len] = 0;
 
 	left_width = gtk_xtext_text_width(buf->xtext, left_text, left_len);
 
 	ent->left_len = left_len;
-	ent->str = str;
-	ent->str_len = left_len + 1 + right_len;
 	ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
 
 	if (buf->time_stamp)
@@ -4774,7 +4772,7 @@ time_t stamp)
 }
 
 void
-gtk_xtext_append(xtext_buffer *buf, unsigned char *text, int len, time_t stamp)
+gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp)
 {
 	textentry *ent;
 
@@ -4787,12 +4785,12 @@ gtk_xtext_append(xtext_buffer *buf, unsigned char *text, int len, time_t stamp)
 	if (len >= sizeof(buf->xtext->scratch_buffer))
 		len = sizeof(buf->xtext->scratch_buffer) - 1;
 
-	ent = static_cast<textentry*>(g_malloc0(len + 1 + sizeof(textentry)));
-	ent->str = (unsigned char *)ent + sizeof(textentry);
-	ent->str_len = len;
+	ent = new textentry;
 	if (len)
-		std::copy_n(text, len, ent->str);
-	ent->str[len] = 0;
+	{
+		ent->str.resize(len - 1, '\0');
+		std::copy_n(text, len - 1 , ent->str.begin());
+	}
 	ent->indent = 0;
 	ent->left_len = -1;
 
@@ -4825,13 +4823,13 @@ gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 			/* copy the text over */
 			if (search_area->xtext->auto_indent)
 			{
-				gtk_xtext_append_indent(out, ent->str, ent->left_len,
-					ent->str + ent->left_len + 1,
-					ent->str_len - ent->left_len - 1, 0);
+				gtk_xtext_append_indent(out, ent->str.c_str(), ent->left_len,
+					ent->str.c_str() + ent->left_len + 1,
+					ent->str.size() - ent->left_len - 1, 0);
 			}
 			else
 			{
-				gtk_xtext_append(out, ent->str, ent->str_len, 0);
+				gtk_xtext_append(out, ent->str.c_str(), ent->str.size(), 0);
 			}
 
 			out->text_last->stamp = ent->stamp;
@@ -4842,18 +4840,6 @@ gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 	out->search_found = g_list_reverse(out->search_found);
 
 	return matches;
-}
-
-void
-gtk_xtext_foreach(xtext_buffer *buf, GtkXTextForeach func, void *data)
-{
-	textentry *ent = buf->text_first;
-
-	while (ent)
-	{
-		(*func) (buf->xtext, ent->str, data);
-		ent = ent->next;
-	}
 }
 
 void
@@ -5083,7 +5069,7 @@ gtk_xtext_buffer_free(xtext_buffer *buf)
 	while (ent)
 	{
 		next = ent->next;
-		g_free(ent);
+		delete ent;
 		ent = next;
 	}
 
