@@ -1854,7 +1854,7 @@ menu_set_fullscreen (session_gui *gui, int full)
 }
 
 GtkWidget *
-create_icon_menu (char *labeltext, void *stock_name, int is_stock)
+create_icon_menu (char *labeltext, void *stock_name, bool is_stock)
 {
 	GtkWidget *item, *img;
 
@@ -1944,7 +1944,7 @@ menu_find (GtkWidget *menu, const std::string & path, char *label)
 {
 	GtkWidget *item = NULL;
 
-	if (path[0] != 0)
+	if (!path.empty())
 		menu = menu_find_path (menu, path);
 	if (menu)
 		item = (GtkWidget *)menu_find_item (menu, label);
@@ -1955,7 +1955,7 @@ static void
 menu_foreach_gui (menu_entry *me, void (*callback) (GtkWidget *, menu_entry *, char *))
 {
 	GSList *list = sess_list;
-	int tabdone = FALSE;
+	bool tabdone = false;
 	session *sess;
 
 	if (!me->is_main)
@@ -1969,7 +1969,7 @@ menu_foreach_gui (menu_entry *me, void (*callback) (GtkWidget *, menu_entry *, c
 		{
 			callback (sess->gui->menu, me, NULL);
 			if (sess->gui->is_tab)
-				tabdone = TRUE;
+				tabdone = true;
 		}
 		list = list->next;
 	}
@@ -2365,11 +2365,11 @@ menu_create_main (void *accel_group, int bar, int away, int toplevel,
 			break;
 
 		case M_MENUPIX:
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, FALSE);
+			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, false);
 			goto normalitem;
 
 		case M_MENUSTOCK:
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, TRUE);
+			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
 			goto normalitem;
 
 		case M_MENUITEM:
@@ -2434,7 +2434,7 @@ togitem:
 		case M_MENUSUB:
 			group = NULL;
 			submenu = gtk_menu_new ();
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, TRUE);
+			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
 			/* record the English name for /menu */
 			g_object_set_data (G_OBJECT (item), "name", const_cast<char*>(mymenu[i].text));
 			gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);

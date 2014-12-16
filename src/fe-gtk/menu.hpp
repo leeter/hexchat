@@ -36,7 +36,7 @@ void usermenu_update (void);
 GtkWidget *menu_toggle_item (const char *label, GtkWidget *menu, GCallback callback, void *userdata, int state);
 GtkWidget *menu_quick_item (const std::string *cmd, char *label, GtkWidget * menu, int flags, gpointer userdata, char *icon);
 GtkWidget *menu_quick_sub (const char *name, GtkWidget *menu, GtkWidget **sub_item_ret, int flags, int pos);
-GtkWidget *create_icon_menu (char *labeltext, void *stock_name, int is_stock);
+GtkWidget *create_icon_menu (char *labeltext, void *stock_name, bool is_stock);
 void menu_create (GtkWidget *menu, GSList *list, char *target, int check_path);
 void menu_bar_toggle (void);
 void menu_add_plugin_items (GtkWidget *menu, char *root, char *target);

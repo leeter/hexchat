@@ -253,7 +253,7 @@ struct GtkXTextClass
 	void(*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
 };
 
-GtkWidget *gtk_xtext_new(GdkColor palette[], int separator);
+GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
 void gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
 	const unsigned char left_text[], int left_len,
@@ -287,7 +287,7 @@ void gtk_xtext_set_wordwrap(GtkXText *xtext, gboolean word_wrap);
 
 xtext_buffer *gtk_xtext_buffer_new(GtkXText *xtext);
 void gtk_xtext_buffer_free(xtext_buffer *buf);
-void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, int render);
+void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render);
 void gtk_xtext_copy_selection(GtkXText *xtext);
 GType gtk_xtext_get_type(void);
 

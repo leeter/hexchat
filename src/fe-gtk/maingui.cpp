@@ -84,7 +84,7 @@ static void mg_link_irctab (session *sess, int focus);
 
 static session_gui static_mg_gui;
 static session_gui *mg_gui = NULL;	/* the shared irc tab */
-static int ignore_chanmode = FALSE;
+static bool ignore_chanmode = false;
 static const char chan_flags[] = { 'c', 'n', 'r', 't', 'i', 'm', 'l', 'k' };
 
 static chan *active_tab = NULL;	/* active tab */
@@ -846,7 +846,8 @@ mg_populate (session *sess)
 {
 	session_gui *gui = sess->gui;
 	restore_gui *res = sess->res;
-	int i, render = TRUE;
+	int i;
+	bool render = true;
 	guint16 vis = gui->ul_hidden;
 	GtkAllocation allocation;
 
@@ -896,7 +897,7 @@ mg_populate (session *sess)
 	  by showing/hidding the userlist */
 	gtk_widget_get_allocation (gui->user_box, &allocation);
 	if (vis != gui->ul_hidden && allocation.width > 1)
-		render = FALSE;
+		render = false;
 
 	gtk_xtext_buffer_show (GTK_XTEXT (gui->xtext), static_cast<xtext_buffer*>(res->buffer), render);
 
@@ -931,7 +932,7 @@ mg_populate (session *sess)
 	fe_userlist_numbers (*sess);
 
 	/* restore all the channel mode buttons */
-	ignore_chanmode = TRUE;
+	ignore_chanmode = true;
 	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
 	{
 		/* Hide if mode not supported */
@@ -944,7 +945,7 @@ mg_populate (session *sess)
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]),
 									res->flag_wid_state[i]);
 	}
-	ignore_chanmode = FALSE;
+	ignore_chanmode = false;
 
 	if (gui->lagometer)
 	{
@@ -1071,7 +1072,7 @@ mg_tab_close_cb (GtkWidget *dialog, gint arg1, session *sess)
 	if (arg1 == GTK_RESPONSE_OK && is_session (sess))
 	{
 		/* force it NOT to send individual PARTs */
-		sess->server->sent_quit = TRUE;
+		sess->server->sent_quit = true;
 
 		for (list = sess_list; list;)
 		{
@@ -1083,7 +1084,7 @@ mg_tab_close_cb (GtkWidget *dialog, gint arg1, session *sess)
 		}
 
 		/* just send one QUIT - better for BNCs */
-		sess->server->sent_quit = FALSE;
+		sess->server->sent_quit = false;
 		fe_close_window (sess);
 	}
 }
@@ -1133,7 +1134,7 @@ mg_create_icon_item (char *label, char *stock, GtkWidget *menu,
 {
 	GtkWidget *item;
 
-	item = create_icon_menu (label, stock, TRUE);
+	item = create_icon_menu (label, stock, true);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (callback),
 							userdata);
@@ -1992,9 +1993,9 @@ mg_flagbutton_cb (GtkWidget *but, char *flag)
 		flagk_hit (but, sess);
 		break;
 	case 'b':
-		ignore_chanmode = TRUE;
+		ignore_chanmode = true;
 		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sess->gui->flag_b), FALSE);
-		ignore_chanmode = FALSE;
+		ignore_chanmode = false;
 		banlist_opengui (sess);
 		break;
 	default:
@@ -3166,7 +3167,7 @@ mg_create_topwindow (session *sess)
 	if (sess->res->buffer == NULL)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		gtk_xtext_buffer_show(GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), TRUE);
+		gtk_xtext_buffer_show(GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), true);
 		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = !!prefs.hex_stamp_text;
 		sess->res->user_model = userlist_create_model ();
 	}
@@ -3441,10 +3442,10 @@ fe_update_mode_buttons (session *sess, char mode, char sign)
 		{
 			if (!sess->gui->is_tab || sess == current_tab)
 			{
-				ignore_chanmode = TRUE;
+				ignore_chanmode = true;
 				if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (sess->gui->flag_wid[i])) != state)
 					gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sess->gui->flag_wid[i]), state);
-				ignore_chanmode = FALSE;
+				ignore_chanmode = false;
 			} else
 			{
 				sess->res->flag_wid_state[i] = state;

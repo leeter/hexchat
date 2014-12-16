@@ -575,13 +575,13 @@ namespace
 } // end anonymous namespace
 
 GtkWidget *
-gtk_xtext_new(GdkColor palette[], int separator)
+gtk_xtext_new(GdkColor palette[], bool separator)
 {
 	GtkXText *xtext;
 
 	xtext = static_cast<GtkXText*>(g_object_new(gtk_xtext_get_type(), NULL));
 	xtext->separator = separator;
-	xtext->wordwrap = TRUE;
+	xtext->wordwrap = true;
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
 	xtext->orig_buffer = xtext->buffer;
 
@@ -4956,7 +4956,7 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 }
 
 void
-gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, int render)
+gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 {
 	int w, h;
 
