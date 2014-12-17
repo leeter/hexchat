@@ -3332,7 +3332,7 @@ namespace{
 		int xsize, y, emphasis;
 
 		/* trashing ent here, so make a backup first */
-		textentry tmp_ent = *ent;
+		textentry tmp_ent(*ent);
 		jo = xtext->jump_out_offset;	/* back these up */
 		ji = xtext->jump_in_offset;
 		hs = xtext->hilight_start;
@@ -3344,25 +3344,25 @@ namespace{
 		if (xtext->mark_stamp)
 		{
 			/* if this line is marked, mark this stamp too */
-			if (ent->mark_start == 0)
+			if (tmp_ent.mark_start == 0)
 			{
-				ent->mark_start = 0;
-				ent->mark_end = len;
+				tmp_ent.mark_start = 0;
+				tmp_ent.mark_end = len;
 			}
 			else
 			{
-				ent->mark_start = -1;
-				ent->mark_end = -1;
+				tmp_ent.mark_start = -1;
+				tmp_ent.mark_end = -1;
 			}
-			ent->str = (unsigned char*)text;
+			tmp_ent.str = (unsigned char*)text;
 		}
 
 		y = (xtext->fontsize * line) + xtext->font->ascent - xtext->pixel_offset;
-		gtk_xtext_render_str(xtext, y, ent, (unsigned char*)text, len,
+		gtk_xtext_render_str(xtext, y, &tmp_ent, (unsigned char*)text, len,
 			win_width, 2, line, true, &xsize, &emphasis);
 
 		/* restore everything back to how it was */
-		*ent = tmp_ent;
+		//(*ent) = std::move(tmp_ent);
 		xtext->jump_out_offset = jo;
 		xtext->jump_in_offset = ji;
 		xtext->hilight_start = hs;
