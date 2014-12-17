@@ -3983,7 +3983,7 @@ namespace{
 		});
 		g_slist_free(ent->sublines);
 
-		free(ent);
+		delete ent;
 		return visible;
 	}
 
