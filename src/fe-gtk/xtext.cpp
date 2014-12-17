@@ -1935,7 +1935,7 @@ namespace {
 		xtext->jump_out_offset = 0;
 		gtk_xtext_render_ents(xtext, buf->last_ent_start, buf->last_ent_end);
 
-		xtext->skip_border_fills = true;
+		xtext->skip_border_fills = false;
 		xtext->skip_stamp = false;
 
 		xtext->buffer->last_ent_start = NULL;
