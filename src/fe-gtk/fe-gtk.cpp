@@ -21,13 +21,14 @@
 #include <cstring>
 #include <cstdlib>
 #include <memory>
-
+#include <boost/filesystem.hpp>
 #include "fe-gtk.hpp"
 
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <Windows.h>
 #include <gdk/gdkwin32.h>
 #else
 #include <unistd.h>
@@ -230,16 +231,13 @@ fe_args (int argc, char *argv[])
 	/* cuts can. So we have to set the current dir manually, to the path  */
 	/* of the exe. */
 	{
-		char *tmp = strdup (argv[0]);
-		char *sl;
-
-		sl = strrchr (tmp, G_DIR_SEPARATOR);
-		if (sl)
+		wchar_t path[MAX_PATH] = { 0 };
+		DWORD len = GetModuleFileNameW(nullptr, path, MAX_PATH);
+		if (len)
 		{
-			*sl = 0;
-			chdir (tmp);
+			 auto dir = boost::filesystem::canonical(boost::filesystem::path(path).parent_path());
+			_wchdir (dir.wstring().c_str());
 		}
-		free (tmp);
 	}
 #endif
 
