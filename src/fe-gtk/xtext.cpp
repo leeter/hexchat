@@ -54,10 +54,7 @@
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
 #ifdef WIN32
-#include <windows.h>
 #include <io.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkwin32.h>
 #else
 #include <unistd.h>
 #ifdef GDK_WINDOWING_X11
@@ -138,7 +135,7 @@ namespace
 
 
 	static void gtk_xtext_render_page(GtkXText * xtext);
-	static void gtk_xtext_calc_lines(xtext_buffer *buf, int);
+	static void gtk_xtext_calc_lines(xtext_buffer *buf, bool);
 	static std::string gtk_xtext_selection_get_text(GtkXText *xtext, int *len_ret);
 	static textentry *gtk_xtext_nth(GtkXText *xtext, int line, int *subline);
 	static void gtk_xtext_adjustment_changed(GtkAdjustment * adj,
@@ -500,7 +497,7 @@ namespace
 	}
 
 	static void
-		gtk_xtext_adjustment_set(xtext_buffer *buf, int fire_signal)
+		gtk_xtext_adjustment_set(xtext_buffer *buf, bool fire_signal)
 	{
 		GtkAdjustment *adj = buf->xtext->adj;
 
@@ -824,11 +821,11 @@ namespace {
 				allocation->width, allocation->height);
 			dontscroll(xtext->buffer);	/* force scrolling off */
 			if (!height_only)
-				gtk_xtext_calc_lines(xtext->buffer, FALSE);
+				gtk_xtext_calc_lines(xtext->buffer, false);
 			else
 			{
 				xtext->buffer->pagetop_ent = NULL;
-				gtk_xtext_adjustment_set(xtext->buffer, FALSE);
+				gtk_xtext_adjustment_set(xtext->buffer, false);
 			}
 			if (xtext->buffer->scrollbar_down)
 				gtk_adjustment_set_value(xtext->adj, xtext->adj->upper -
@@ -1959,7 +1956,7 @@ namespace {
 			if (xtext->buffer->indent != old)
 			{
 				gtk_xtext_recalc_widths(xtext->buffer, FALSE);
-				gtk_xtext_adjustment_set(xtext->buffer, TRUE);
+				gtk_xtext_adjustment_set(xtext->buffer, true);
 				gtk_xtext_render_page(xtext);
 			}
 			else
@@ -3524,7 +3521,7 @@ namespace {
 			ent = ent->next;
 		}
 
-		gtk_xtext_calc_lines(buf, FALSE);
+		gtk_xtext_calc_lines(buf, false);
 	}
 } // end anonymous namespace
 int
@@ -3649,7 +3646,7 @@ namespace{
 	* This should only be called when the window resizes.               */
 
 	static void
-		gtk_xtext_calc_lines(xtext_buffer *buf, int fire_signal)
+		gtk_xtext_calc_lines(xtext_buffer *buf, bool fire_signal)
 	{
 		textentry *ent;
 		int width;
@@ -3939,14 +3936,12 @@ gtk_xtext_refresh(GtkXText * xtext)
 
 namespace{
 
-	static int
-		gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
+	static bool	gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
 	{
-		int visible;
-
+		std::unique_ptr<textentry> entry(ent);
 		/* Set visible to TRUE if this is the current buffer */
 		/* and this ent shows up on the screen now */
-		visible = buffer->xtext->buffer == buffer &&
+		bool visible = buffer->xtext->buffer == buffer &&
 			gtk_xtext_check_ent_visibility(buffer->xtext, ent, 0);
 
 		if (ent == buffer->pagetop_ent)
@@ -3983,7 +3978,6 @@ namespace{
 		});
 		g_slist_free(ent->sublines);
 
-		delete ent;
 		return visible;
 	}
 
@@ -4128,12 +4122,12 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 
 	if (buf->xtext->buffer == buf)
 	{
-		gtk_xtext_calc_lines(buf, TRUE);
+		gtk_xtext_calc_lines(buf, true);
 		gtk_xtext_refresh(buf->xtext);
 	}
 	else
 	{
-		gtk_xtext_calc_lines(buf, FALSE);
+		gtk_xtext_calc_lines(buf, false);
 	}
 
 	if (marker_reset)
@@ -4606,7 +4600,7 @@ namespace {
 		else if (xtext->buffer->scrollbar_down)
 		{
 			g_signal_handler_block(xtext->adj, xtext->vc_signal_tag);
-			gtk_xtext_adjustment_set(xtext->buffer, FALSE);
+			gtk_xtext_adjustment_set(xtext->buffer, false);
 			gtk_adjustment_set_value(adj, adj->upper - adj->page_size);
 			g_signal_handler_unblock(xtext->adj, xtext->vc_signal_tag);
 			xtext->buffer->old_value = adj->value;
@@ -4614,7 +4608,7 @@ namespace {
 		}
 		else
 		{
-			gtk_xtext_adjustment_set(xtext->buffer, TRUE);
+			gtk_xtext_adjustment_set(xtext->buffer, true);
 			if (xtext->force_render)
 			{
 				xtext->force_render = false;
@@ -5014,7 +5008,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 		if (buf->window_width != w)
 		{
 			buf->window_width = w;
-			gtk_xtext_calc_lines(buf, FALSE);
+			gtk_xtext_calc_lines(buf, false);
 			if (buf->scrollbar_down)
 				gtk_adjustment_set_value(xtext->adj, xtext->adj->upper -
 				xtext->adj->page_size);
@@ -5025,7 +5019,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 			buf->pagetop_ent = NULL;
 			if (buf->scrollbar_down)
 				xtext->adj->value = xtext->adj->upper;
-			gtk_xtext_adjustment_set(buf, FALSE);
+			gtk_xtext_adjustment_set(buf, false);
 		}
 
 		gtk_xtext_render_page(xtext);

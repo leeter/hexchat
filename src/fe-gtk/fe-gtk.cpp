@@ -29,7 +29,6 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <gdk/gdkwin32.h>
-#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -616,7 +615,7 @@ fe_progressbar_start (session *sess)
 		mg_progressbar_create (sess->gui);
 	else
 	/* otherwise just remember to create on when it gets focused */
-		sess->res->c_graph = TRUE;
+		sess->res->c_graph = true;
 }
 
 void
@@ -633,7 +632,7 @@ fe_progressbar_end (server *serv)
 		{
 			if (sess->gui->bar)
 				mg_progressbar_destroy (sess->gui);
-			sess->res->c_graph = FALSE;
+			sess->res->c_graph = false;
 		}
 		list = list->next;
 	}

@@ -929,7 +929,7 @@ void
 menu_urlmenu (GdkEventButton *event, const std::string & url)
 {
 	GtkWidget *menu;
-	char *tmp, *chop;
+	char *chop;
 
 	str_copy.reset(new_strdup (url.c_str(), url.size()));
 

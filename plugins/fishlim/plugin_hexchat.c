@@ -98,7 +98,7 @@ static int handle_outgoing(const char *const word[], const char *const word_eol[
 /**
  * Called when a channel message or private message is received.
  */
-static int handle_incoming(const char const*word[], const char const *word_eol[], hexchat_event_attrs *attrs, void *userdata) {
+static int handle_incoming(const char * const word[], const char * const word_eol[], hexchat_event_attrs *attrs, void *userdata) {
     const char *prefix;
     const char *command;
     const char *recipient;
@@ -231,15 +231,18 @@ static int handle_setkey(const char *const word[], const char *const word_eol[],
  * Command handler for /delkey
  */
 static int handle_delkey(const char *const word[], const char *const word_eol[], void *userdata) {
-    const char *nick;
+	const char *nick;
+	char* tmp;
     
     // Check syntax
     if (*word[2] == '\0' || *word[3] != '\0') {
         hexchat_printf(ph, "%s\n", usage_delkey);
         return HEXCHAT_EAT_HEXCHAT;
     }
+	tmp = g_strdup(word_eol[2]);
     
-    nick = g_strstrip (word_eol[2]);
+    nick = g_strstrip (tmp);
+	
     
     // Delete the given nick from the key store
     if (keystore_delete_nick(nick)) {
@@ -247,7 +250,7 @@ static int handle_delkey(const char *const word[], const char *const word_eol[],
     } else {
         hexchat_printf(ph, "\00305Failed to delete key in addon_fishlim.conf!\n");
     }
-    
+	g_free(tmp);
     return HEXCHAT_EAT_HEXCHAT;
 }
 

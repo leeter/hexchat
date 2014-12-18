@@ -638,7 +638,7 @@ mg_unpopulate (session *sess)
 
 	if (gui->bar)
 	{
-		res->c_graph = TRUE;	/* still have a graph, just not visible now */
+		res->c_graph = true;	/* still have a graph, just not visible now */
 		mg_progressbar_destroy (gui);
 	}
 }
@@ -965,7 +965,7 @@ mg_populate (session *sess)
 	/* did this tab have a connecting graph? restore it.. */
 	if (res->c_graph)
 	{
-		res->c_graph = FALSE;
+		res->c_graph = false;
 		mg_progressbar_create (gui);
 	}
 
