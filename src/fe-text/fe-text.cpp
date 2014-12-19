@@ -85,7 +85,7 @@ fe_new_window (struct session *sess, int focus)
 {
 	char buf[512];
 
-	sess->gui = new session_gui;
+	sess->gui = new session_gui();
 	current_sess = sess;
 
 	if (!sess->server->front_session)

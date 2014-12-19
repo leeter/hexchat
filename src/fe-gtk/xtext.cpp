@@ -3524,8 +3524,8 @@ namespace {
 		gtk_xtext_calc_lines(buf, false);
 	}
 } // end anonymous namespace
-int
-gtk_xtext_set_font(GtkXText *xtext, char *name)
+
+bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 {
 
 	if (xtext->font)
@@ -3536,16 +3536,16 @@ gtk_xtext_set_font(GtkXText *xtext, char *name)
 
 	backend_font_open(xtext, name);
 	if (xtext->font == NULL)
-		return FALSE;
+		return false;
 
 	xtext->fontsize = xtext->font->ascent + xtext->font->descent;
 
 	{
 		char *time_str;
 		int stamp_size = xtext_get_stamp_str(time(0), &time_str);
+		glib_string time_str_ptr(time_str);
 		xtext->stamp_width =
 			gtk_xtext_text_width(xtext, (unsigned char*)time_str, stamp_size) + MARGIN;
-		g_free(time_str);
 	}
 
 	gtk_xtext_fix_indent(xtext->buffer);
@@ -3553,7 +3553,7 @@ gtk_xtext_set_font(GtkXText *xtext, char *name)
 	if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
 		gtk_xtext_recalc_widths(xtext->buffer, TRUE);
 
-	return TRUE;
+	return true;
 }
 
 void
