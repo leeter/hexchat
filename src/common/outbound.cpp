@@ -4561,9 +4561,9 @@ handle_command (session *sess, char *cmd, bool check_spch)
 
 	auto len = strlen (cmd);
 	// TODO .. figure out another way to do this... ideally we should let commands do their own buffers
-	auto pdilen = std::max(len + 1, 2048ull);
+	auto pdilen = std::max((len + 1), 2048ull);
 	std::string pdibuf(pdilen, '\0');
-	auto tbuflen = std::max((len * 2) + 1, 2048ull);
+	auto tbuflen = std::max(((len * 2) + 1), 2048ull);
 	std::string tbuf(tbuflen, '\0');
 
 	/* split the text into words and word_eol */
