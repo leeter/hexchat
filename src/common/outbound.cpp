@@ -4557,9 +4557,11 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	/* anything below MUST DEC command_level before returning */
 
 	auto len = strlen (cmd);
-	std::string pdibuf(len + 1, '\0');
-
-	std::string tbuf((len * 2) + 1, '\0');
+	// TODO .. figure out another way to do this... ideally we should let commands do their own buffers
+	auto pdilen = std::max(len + 1, 2048ull);
+	std::string pdibuf(pdilen, '\0');
+	auto tbuflen = std::max((len * 2) + 1, 2048ull);
+	std::string tbuf(tbuflen, '\0');
 
 	/* split the text into words and word_eol */
 	process_data_init (&pdibuf[0], cmd, word, word_eol, true, true);
