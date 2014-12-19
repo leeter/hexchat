@@ -159,7 +159,7 @@ void fe_ctrl_gui (session *sess, fe_gui_action action, int arg);
 int fe_gui_info (session *sess, int info_type);
 void *fe_gui_info_ptr (session *sess, int info_type);
 void fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *), void *ud);
-char *fe_get_inputbox_contents (struct session *sess);
+const char *fe_get_inputbox_contents (struct session *sess);
 int fe_get_inputbox_cursor (struct session *sess);
 void fe_set_inputbox_contents (struct session *sess, char *text);
 void fe_set_inputbox_cursor (struct session *sess, int delta, int pos);

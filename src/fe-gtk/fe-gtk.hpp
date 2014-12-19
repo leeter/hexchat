@@ -22,6 +22,7 @@
 
 #include "../../config.h"
 
+#include <string>
 #define DISPLAY_NAME "HexChat"
 
 #ifndef WIN32
@@ -103,6 +104,7 @@ struct server_gui
 
 struct restore_gui
 {
+	restore_gui();
 	banlist_info *banlist;
 
 	void *tab;			/* (chan *) */
@@ -110,17 +112,17 @@ struct restore_gui
 	/* information stored when this tab isn't front-most */
 	void *user_model;	/* for filling the GtkTreeView */
 	void *buffer;		/* xtext_Buffer */
-	char *input_text;	/* input text buffer (while not-front tab) */
-	char *topic_text;	/* topic GtkEntry buffer */
-	char *key_text;
-	char *limit_text;
+	std::string input_text;	/* input text buffer (while not-front tab) */
+	std::string topic_text;	/* topic GtkEntry buffer */
+	std::string key_text;
+	std::string limit_text;
 	gfloat old_ul_value;	/* old userlist value (for adj) */
 	gfloat lag_value;	/* lag-o-meter */
-	char *lag_text;	/* lag-o-meter text */
-	char *lag_tip;		/* lag-o-meter tooltip */
+	std::string lag_text;	/* lag-o-meter text */
+	std::string lag_tip;		/* lag-o-meter tooltip */
 	gfloat queue_value; /* outbound queue meter */
-	char *queue_text;		/* outbound queue text */
-	char *queue_tip;		/* outbound queue tooltip */
+	std::string queue_text;		/* outbound queue text */
+	std::string queue_tip;		/* outbound queue tooltip */
 	short flag_wid_state[NUM_FLAG_WIDS];
 	bool c_graph;	/* connecting graph, is there one? */
 };

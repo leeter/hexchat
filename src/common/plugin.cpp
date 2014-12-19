@@ -175,14 +175,11 @@ plugin_free (hexchat_plugin *pl, int do_deinit, int allow_refuse)
 xit:
 	if (pl->free_strings)
 	{
-		if (pl->name)
-			free (pl->name);
-		if (pl->desc)
-			free (pl->desc);
-		if (pl->version)
-			free (pl->version);
+		delete[] pl->name;
+		delete[] pl->desc;
+		delete[] pl->version;
 	}
-		free ((char *)pl->filename);
+	delete[] pl->filename;
 
 	plugin_list = g_slist_remove (plugin_list, pl);
 
@@ -255,7 +252,7 @@ plugin_add (session *sess, const char *filename, void *handle, plugin_init_func 
 
 	file = NULL;
 	if (filename)
-		file = strdup (filename);
+		file = new_strdup (filename);
 
 	pl = plugin_list_add (sess, file, file, NULL, NULL, handle, deinit_func,
 								 fake, FALSE);
@@ -810,9 +807,9 @@ plugin_add_hook (hexchat_plugin *pl, int type, int pri, const char *name,
 	hook->type = type;
 	hook->pri = pri;
 	if (name)
-		hook->name = strdup (name);
+		hook->name = new_strdup (name);
 	if (help_text)
-		hook->help_text = strdup (help_text);
+		hook->help_text = new_strdup (help_text);
 	hook->callback = callb;
 	hook->pl = pl;
 	hook->userdata = userdata;
@@ -900,10 +897,8 @@ hexchat_unhook (hexchat_plugin *ph, hexchat_hook *hook)
 
 	hook->type = HOOK_DELETED;	/* expunge later */
 
-	if (hook->name)
-		free (hook->name);	/* NULL for timers & fds */
-	if (hook->help_text)
-		free (hook->help_text);	/* NULL for non-commands */
+	delete[] hook->name;	/* NULL for timers & fds */
+	delete[] hook->help_text;	/* NULL for non-commands */
 
 	return hook->userdata;
 }
@@ -1667,8 +1662,8 @@ hexchat_plugingui_add (hexchat_plugin *ph, const char *filename,
 							const char *version, char *reserved)
 {
 #ifdef USE_PLUGIN
-	ph = plugin_list_add (NULL, strdup (filename), strdup (name), strdup (desc),
-								 strdup (version), NULL, NULL, TRUE, TRUE);
+	ph = plugin_list_add (NULL, new_strdup (filename), new_strdup (name), new_strdup (desc),
+								 new_strdup (version), NULL, NULL, TRUE, TRUE);
 	fe_pluginlist_update ();
 #endif
 

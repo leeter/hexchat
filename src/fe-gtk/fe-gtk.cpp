@@ -512,18 +512,13 @@ void fe_set_topic (session *sess, const std::string & topic, const std::string& 
 	}
 	else
 	{
-		if (sess->res->topic_text)
-		{
-			free (sess->res->topic_text);
-		}
-
 		if (prefs.hex_text_stripcolor_topic)
 		{
-			sess->res->topic_text = strdup (stripped_topic.c_str());
+			sess->res->topic_text = stripped_topic;
 		}
 		else
 		{
-			sess->res->topic_text = strdup (topic.c_str());
+			sess->res->topic_text = topic;
 		}
 	}
 }
@@ -539,19 +534,17 @@ fe_set_hilight (struct session *sess)
 }
 
 static void
-fe_update_mode_entry (session *sess, GtkWidget *entry, char **text, char *new_text)
+fe_update_mode_entry (session *sess, GtkWidget *entry, std::string & text, const std::string& new_text)
 {
 	if (!sess->gui->is_tab || sess == current_tab)
 	{
 		if (sess->gui->flag_wid[0])	/* channel mode buttons enabled? */
-			gtk_entry_set_text (GTK_ENTRY (entry), new_text);
+			gtk_entry_set_text (GTK_ENTRY (entry), new_text.c_str());
 	} else
 	{
 		if (sess->gui->is_tab)
 		{
-			if (*text)
-				free (*text);
-			*text = strdup (new_text);
+			text = new_text;
 		}
 	}
 }
@@ -560,7 +553,7 @@ void
 fe_update_channel_key (struct session *sess)
 {
 	fe_update_mode_entry (sess, sess->gui->key_entry,
-								 &sess->res->key_text, sess->channelkey);
+								 sess->res->key_text, sess->channelkey);
 	fe_set_title (*sess);
 }
 
@@ -571,7 +564,7 @@ fe_update_channel_limit (struct session *sess)
 
 	sprintf (tmp, "%d", sess->limit);
 	fe_update_mode_entry (sess, sess->gui->limit_entry,
-								 &sess->res->limit_text, tmp);
+								 sess->res->limit_text, tmp);
 	fe_set_title (*sess);
 }
 
@@ -702,7 +695,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 	{
 		GRegexCompileFlags gcf = static_cast<GRegexCompileFlags>( (flags & case_match)? 0: G_REGEX_CASELESS);
 
-		lbuf->search_re = g_regex_new (sstr, gcf, static_cast<GRegexMatchFlags>(0), &err);
+		lbuf->search_re = g_regex_new (sstr, gcf, GRegexMatchFlags(), &err);
 		if (err)
 		{
 			PrintText (lastlog_sess, _(err->message));
@@ -763,9 +756,7 @@ fe_set_lag (server *serv, long lag)
 		sess = static_cast<session*>(list->data);
 		if (sess->server == serv)
 		{
-			if (sess->res->lag_tip)
-				free (sess->res->lag_tip);
-			sess->res->lag_tip = strdup (lagtip);
+			sess->res->lag_tip = lagtip;
 
 			if (!sess->gui->is_tab || current_tab == sess)
 			{
@@ -779,9 +770,7 @@ fe_set_lag (server *serv, long lag)
 			} else
 			{
 				sess->res->lag_value = per;
-				if (sess->res->lag_text)
-					free (sess->res->lag_text);
-				sess->res->lag_text = strdup (lagtext);
+				sess->res->lag_text = lagtext;
 			}
 		}
 		list = list->next;
@@ -809,9 +798,7 @@ fe_set_throttle (server *serv)
 			snprintf (tbuf, sizeof (tbuf) - 1, _("%d bytes"), serv->sendq_len);
 			snprintf (tip, sizeof (tip) - 1, _("Network send queue: %d bytes"), serv->sendq_len);
 
-			if (sess->res->queue_tip)
-				free (sess->res->queue_tip);
-			sess->res->queue_tip = strdup (tip);
+			sess->res->queue_tip = tip;
 
 			if (!sess->gui->is_tab || current_tab == sess)
 			{
@@ -825,9 +812,7 @@ fe_set_throttle (server *serv)
 			} else
 			{
 				sess->res->queue_value = per;
-				if (sess->res->queue_text)
-					free (sess->res->queue_text);
-				sess->res->queue_text = strdup (tbuf);
+				sess->res->queue_text = tbuf;
 			}
 		}
 		list = list->next;
@@ -936,12 +921,11 @@ fe_gui_info_ptr (session *sess, int info_type)
 	return NULL;
 }
 
-char *
-fe_get_inputbox_contents (session *sess)
+const char * fe_get_inputbox_contents (session *sess)
 {
 	/* not the current tab */
-	if (sess->res->input_text)
-		return sess->res->input_text;
+	if (sess != current_sess)
+		return sess->res->input_text.c_str();
 
 	/* current focused tab */
 	return SPELL_ENTRY_GET_TEXT (sess->gui->input_box);
@@ -951,7 +935,7 @@ int
 fe_get_inputbox_cursor (session *sess)
 {
 	/* not the current tab (we don't remember the cursor pos) */
-	if (sess->res->input_text)
+	if (sess != current_sess)
 		return 0;
 
 	/* current focused tab */
@@ -980,9 +964,7 @@ fe_set_inputbox_contents (session *sess, char *text)
 		SPELL_ENTRY_SET_TEXT (sess->gui->input_box, text);
 	} else
 	{
-		if (sess->res->input_text)
-			free (sess->res->input_text);
-		sess->res->input_text = strdup (text);
+		sess->res->input_text = text;
 	}
 }
 

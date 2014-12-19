@@ -2605,13 +2605,13 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		notj_msg (sess);
 		return TRUE;
 	}
-
+	
 	snprintf (tbuf, TBUFSIZE, "\001ACTION %s\001\r", act);
 	/* first try through DCC CHAT */
 	if (dcc::dcc_write_chat (sess->channel, tbuf))
 	{
 		/* print it to screen */
-		inbound_action (sess, sess->channel, sess->server->nick, "", act, TRUE, FALSE,
+		inbound_action (sess, sess->channel, sess->server->nick, "", act, true, false,
 							 &no_tags);
 	} else
 	{
@@ -2623,7 +2623,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				sess->server->p_action (sess->channel, split_text);
 				/* print it to screen */
 				inbound_action (sess, sess->channel, sess->server->nick, "",
-									 split_text, TRUE, FALSE,
+									 split_text, true, false,
 									 &no_tags);
 
 				if (*split_text)
@@ -2635,7 +2635,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			sess->server->p_action (sess->channel, act + offset);
 			/* print it to screen */
 			inbound_action (sess, sess->channel, sess->server->nick, "",
-								 act + offset, TRUE, FALSE, &no_tags);
+								 act + offset, true, false, &no_tags);
 		} else
 		{
 			notc_msg (sess);

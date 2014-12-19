@@ -616,12 +616,12 @@ mg_unpopulate (session *sess)
 	gui = sess->gui;
 	res = sess->res;
 
-	res->input_text = strdup (SPELL_ENTRY_GET_TEXT (gui->input_box));
-	res->topic_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->topic_entry)));
-	res->limit_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->limit_entry)));
+	res->input_text = SPELL_ENTRY_GET_TEXT (gui->input_box);
+	res->topic_text = gtk_entry_get_text (GTK_ENTRY (gui->topic_entry));
+	res->limit_text = gtk_entry_get_text (GTK_ENTRY (gui->limit_entry));
 	res->key_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->key_entry)));
 	if (gui->laginfo)
-		res->lag_text = strdup (gtk_label_get_text (GTK_LABEL (gui->laginfo)));
+		res->lag_text = gtk_label_get_text (GTK_LABEL (gui->laginfo));
 	if (gui->throttleinfo)
 		res->queue_text = strdup (gtk_label_get_text (GTK_LABEL (gui->throttleinfo)));
 
@@ -644,49 +644,28 @@ mg_unpopulate (session *sess)
 }
 
 static void
-mg_restore_label (GtkWidget *label, char **text)
+mg_restore_label (GtkWidget *label, std::string & text)
 {
 	if (!label)
 		return;
 
-	if (*text)
-	{
-		gtk_label_set_text (GTK_LABEL (label), *text);
-		free (*text);
-		*text = NULL;
-	} else
-	{
-		gtk_label_set_text (GTK_LABEL (label), "");
-	}
+	gtk_label_set_text(GTK_LABEL(label), text.c_str());
+	text.clear();
 }
 
 static void
-mg_restore_entry (GtkWidget *entry, char **text)
+mg_restore_entry (GtkWidget *entry, std::string & text)
 {
-	if (*text)
-	{
-		gtk_entry_set_text (GTK_ENTRY (entry), *text);
-		free (*text);
-		*text = NULL;
-	} else
-	{
-		gtk_entry_set_text (GTK_ENTRY (entry), "");
-	}
+	gtk_entry_set_text(GTK_ENTRY(entry), text.c_str());
+	text.clear();
 	gtk_editable_set_position (GTK_EDITABLE (entry), -1);
 }
 
 static void
-mg_restore_speller (GtkWidget *entry, char **text)
+mg_restore_speller (GtkWidget *entry, std::string & text)
 {
-	if (*text)
-	{
-		SPELL_ENTRY_SET_TEXT (entry, *text);
-		free (*text);
-		*text = NULL;
-	} else
-	{
-		SPELL_ENTRY_SET_TEXT (entry, "");
-	}
+	SPELL_ENTRY_SET_TEXT(entry, text.c_str());
+	text.clear();
 	SPELL_ENTRY_SET_POS (entry, -1);
 }
 
@@ -905,12 +884,12 @@ mg_populate (session *sess)
 		gtk_widget_set_sensitive (gui->menu, TRUE);
 
 	/* restore all the GtkEntry's */
-	mg_restore_entry (gui->topic_entry, &res->topic_text);
-	mg_restore_speller (gui->input_box, &res->input_text);
-	mg_restore_entry (gui->key_entry, &res->key_text);
-	mg_restore_entry (gui->limit_entry, &res->limit_text);
-	mg_restore_label (gui->laginfo, &res->lag_text);
-	mg_restore_label (gui->throttleinfo, &res->queue_text);
+	mg_restore_entry (gui->topic_entry, res->topic_text);
+	mg_restore_speller (gui->input_box, res->input_text);
+	mg_restore_entry (gui->key_entry, res->key_text);
+	mg_restore_entry (gui->limit_entry, res->limit_text);
+	mg_restore_label (gui->laginfo, res->lag_text);
+	mg_restore_label (gui->throttleinfo, res->queue_text);
 
 	mg_focus (sess);
 	fe_set_title (*sess);
@@ -951,15 +930,15 @@ mg_populate (session *sess)
 	{
 		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (gui->lagometer),
 												 res->lag_value);
-		if (res->lag_tip)
-			gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->lagometer), res->lag_tip);
+		if (!res->lag_tip.empty())
+			gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->lagometer), res->lag_tip.c_str());
 	}
 	if (gui->throttlemeter)
 	{
 		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (gui->throttlemeter),
 												 res->queue_value);
-		if (res->queue_tip)
-			gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->throttlemeter), res->queue_tip);
+		if (!res->queue_tip.empty())
+			gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->throttlemeter), res->queue_tip.c_str());
 	}
 
 	/* did this tab have a connecting graph? restore it.. */
@@ -3397,8 +3376,7 @@ fe_clear_channel (session &sess)
 		}
 	} else
 	{
-		free(sess.res->topic_text);
-		sess.res->topic_text = nullptr;
+		sess.res->topic_text.clear();
 	}
 }
 
@@ -3501,6 +3479,18 @@ fe_set_channel (session *sess)
 	if (sess->res->tab != NULL)
 		chan_rename(static_cast<chan *>(sess->res->tab), sess->channel, prefs.hex_gui_tab_trunc);
 }
+
+restore_gui::restore_gui()
+	:tab(),			/* (chan *) */
+
+	/* information stored when this tab isn't front-most */
+	user_model(),	/* for filling the GtkTreeView */
+	buffer(),	/* xtext_Buffer */
+	old_ul_value(),	/* old userlist value (for adj) */
+	lag_value(),	/* lag-o-meter */
+	queue_value(), /* outbound queue meter */
+	flag_wid_state(),
+	c_graph(){}
 
 void
 mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
@@ -3659,28 +3649,6 @@ fe_session_callback (session *sess)
 {
 	if (sess->res->banlist && sess->res->banlist->window)
 		mg_close_gen (NULL, sess->res->banlist->window);
-
-	if (sess->res->input_text)
-		free (sess->res->input_text);
-
-	if (sess->res->topic_text)
-		free (sess->res->topic_text);
-
-	if (sess->res->limit_text)
-		free (sess->res->limit_text);
-
-	if (sess->res->key_text)
-		free (sess->res->key_text);
-
-	if (sess->res->queue_text)
-		free (sess->res->queue_text);
-	if (sess->res->queue_tip)
-		free (sess->res->queue_tip);
-
-	if (sess->res->lag_text)
-		free (sess->res->lag_text);
-	if (sess->res->lag_tip)
-		free (sess->res->lag_tip);
 
 	if (sess->gui->bartag)
 		fe_timeout_remove (sess->gui->bartag);
