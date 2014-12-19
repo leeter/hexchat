@@ -1037,11 +1037,11 @@ GSList *menu_list = NULL;
 
 menu_entry::~menu_entry()
 {
-	free(this->label);
-	free(this->cmd);
-	free(this->ucmd);
-	free(this->group);
-	free(this->icon);
+	delete[] this->label;
+	delete[] this->cmd;
+	delete[] this->ucmd;
+	delete[] this->group;
+	delete[] this->icon;
 }
 
 static void
@@ -1200,23 +1200,23 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	me->icon = NULL;
 
 	if (label)
-		me->label = strdup (label);
+		me->label = new_strdup (label);
 	if (cmd)
-		me->cmd = strdup (cmd);
+		me->cmd = new_strdup (cmd);
 	if (ucmd)
-		me->ucmd = strdup (ucmd);
+		me->ucmd = new_strdup (ucmd);
 	if (group)
-		me->group = strdup (group);
+		me->group = new_strdup (group);
 	if (icon)
-		me->icon = strdup (icon);
+		me->icon = new_strdup (icon);
 
 	menu_list = g_slist_append (menu_list, me);
 	char* menu_label = fe_menu_add (me);
 	if (menu_label)
 	{
 		/* FE has given us a stripped label */
-		free (me->label);
-		me->label = strdup(menu_label);
+		delete[] me->label;
+		me->label = new_strdup(menu_label);
 		g_free(menu_label); /* this is from pango */
 	}
 }

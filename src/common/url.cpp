@@ -312,7 +312,7 @@ void
 url_check_line (const char *buf, int len)
 {
 	GRegex *re(void);
-	GMatchInfo *gmi;
+	GMatchInfo *gmi = nullptr;
 	const char *po = buf;
 	int i;
 

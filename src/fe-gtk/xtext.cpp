@@ -116,7 +116,10 @@ namespace
 
 
 	/* force scrolling off */
-#define dontscroll(buf) (buf)->last_pixel_pos = 0x7fffffff
+	void dontscroll(xtext_buffer* buf)
+	{ 
+		(buf)->last_pixel_pos = 0x7fffffff; 
+	}
 
 	static GtkWidgetClass *parent_class = NULL;
 
@@ -160,7 +163,7 @@ namespace
 	static bool gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add);
 	static int gtk_xtext_render_page_timeout(GtkXText * xtext);
 	static int gtk_xtext_search_offset(xtext_buffer *buf, textentry *ent, unsigned int off);
-	static GList * gtk_xtext_search_textentry(xtext_buffer *, textentry *);
+	static GList * gtk_xtext_search_textentry(xtext_buffer *, const textentry &);
 	static void gtk_xtext_search_textentry_add(xtext_buffer *, textentry *, GList *, bool);
 	static void gtk_xtext_search_textentry_del(xtext_buffer *, textentry *);
 	static void gtk_xtext_search_textentry_fini(gpointer, gpointer);
@@ -4159,8 +4162,7 @@ namespace{
 	}
 
 	/* Search a single textentry for occurrence(s) of search arg string */
-	static GList *
-		gtk_xtext_search_textentry(xtext_buffer *buf, textentry *ent)
+	static GList * gtk_xtext_search_textentry(xtext_buffer *buf, const textentry &ent)
 	{
 		gchar *str;								/* text string to be searched */
 		GList *gl = NULL;
@@ -4171,7 +4173,7 @@ namespace{
 			return gl;
 		}
 		std::vector<offlen_t> slp;
-		str = (gchar*)gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), buf->xtext->scratch_buffer,
+		str = (gchar*)gtk_xtext_strip_color(ent.str.c_str(), ent.str.size(), buf->xtext->scratch_buffer,
 			&lstr, &slp, !buf->xtext->ignore_hidden);
 
 		/* Regular-expression matching --- */
@@ -4188,7 +4190,7 @@ namespace{
 			while (g_match_info_matches(gmi))
 			{
 				g_match_info_fetch_pos(gmi, 0, &start, &end);
-				gtk_xtext_unstrip_color(start, end, slp, &gl, ent->str.size());
+				gtk_xtext_unstrip_color(start, end, slp, &gl, ent.str.size());
 				g_match_info_next(gmi, NULL);
 			}
 			g_match_info_free(gmi);
@@ -4214,7 +4216,7 @@ namespace{
 				}
 				off = str - hay.get();
 				gtk_xtext_unstrip_color(off, off + buf->search_lnee,
-					slp, &gl, ent->str.size());
+					slp, &gl, ent.str.size());
 			}
 		}
 
@@ -4365,7 +4367,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			{
 				GList *gl;
 
-				gl = gtk_xtext_search_textentry(buf, ent);
+				gl = gtk_xtext_search_textentry(buf, *ent);
 				gtk_xtext_search_textentry_add(buf, ent, gl, FALSE);
 			}
 		}
@@ -4392,7 +4394,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			{
 				GList *gl;
 
-				gl = gtk_xtext_search_textentry(buf, ent);
+				gl = gtk_xtext_search_textentry(buf, *ent);
 				gtk_xtext_search_textentry_add(buf, ent, gl, TRUE);
 			}
 			buf->search_found = g_list_reverse(buf->search_found);
@@ -4609,7 +4611,7 @@ namespace {
 		{
 			GList *gl;
 
-			gl = gtk_xtext_search_textentry(buf, ent);
+			gl = gtk_xtext_search_textentry(buf, *ent);
 			gtk_xtext_search_textentry_add(buf, ent, gl, FALSE);
 		}
 	}
@@ -4724,7 +4726,7 @@ gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 
 	while (ent)
 	{
-		gl = gtk_xtext_search_textentry(out, ent);
+		gl = gtk_xtext_search_textentry(out, *ent);
 		if (gl)
 		{
 			matches++;
