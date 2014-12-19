@@ -3994,13 +3994,14 @@ const struct commands xc_cmds[] = {
 
 static const commands * find_internal_command (const char *name)
 {
-	return std::find_if(
+	const commands * cmd = std::find_if(
 		std::begin(xc_cmds),
 		std::end(xc_cmds),
 		[name](const commands& c){
-			if (!c.name) return false;
-			return g_ascii_strcasecmp(name, c.name) == 0;
-		});
+		if (!c.name) return false;
+		return g_ascii_strcasecmp(name, c.name) == 0;
+	});
+	return cmd != std::end(xc_cmds) ? cmd : nullptr;
 }
 
 static gboolean
