@@ -30,6 +30,7 @@
 #include <limits>
 #include <locale>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <cstring>
@@ -4360,18 +4361,20 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 }
 
 static void
-user_command (session * sess, char *tbuf, const char *cmd, char *word[],
+user_command (session * sess, char *tbuf, const std::string & cmd, char *word[],
 				  char *word_eol[])
 {
-	if (!auto_insert (tbuf, 2048, (const unsigned char*)cmd, word, word_eol, "", sess->channel, "",
+	char buf[2048] = { 0 };
+	if (!auto_insert (buf, 2048, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
 		sess->server->get_network(true), "",
 							sess->server->nick, "", ""))
 	{
 		PrintText (sess, _("Bad arguments for user command.\n"));
 		return;
 	}
-
-	handle_command (sess, tbuf, TRUE);
+	if (buf[2047])
+		throw std::runtime_error("buffer overflow");
+	handle_command (sess, buf, TRUE);
 }
 
 /* handle text entered without a hex_input_command_char prefix */
@@ -4603,7 +4606,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		pop = (struct popup *) list->data;
 		if (!g_ascii_strcasecmp (pop->name.c_str(), word[1]))
 		{
-			user_command (sess, &tbuf[0], pop->cmd.c_str(), word, word_eol);
+			user_command (sess, &tbuf[0], pop->cmd, word, word_eol);
 			user_cmd = true;
 		}
 		list = list->next;
