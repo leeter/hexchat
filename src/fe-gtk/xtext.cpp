@@ -150,7 +150,7 @@ namespace
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
 		GtkAdjustment *vadj);
 	static int gtk_xtext_render_ents(GtkXText * xtext, textentry *, textentry *);
-	static void gtk_xtext_recalc_widths(xtext_buffer *buf, int);
+	static void gtk_xtext_recalc_widths(xtext_buffer *buf, bool);
 	static void gtk_xtext_fix_indent(xtext_buffer *buf);
 	static int gtk_xtext_find_subline(GtkXText *xtext, textentry *ent, int line);
 	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
@@ -161,7 +161,7 @@ namespace
 	static int gtk_xtext_render_page_timeout(GtkXText * xtext);
 	static int gtk_xtext_search_offset(xtext_buffer *buf, textentry *ent, unsigned int off);
 	static GList * gtk_xtext_search_textentry(xtext_buffer *, textentry *);
-	static void gtk_xtext_search_textentry_add(xtext_buffer *, textentry *, GList *, gboolean);
+	static void gtk_xtext_search_textentry_add(xtext_buffer *, textentry *, GList *, bool);
 	static void gtk_xtext_search_textentry_del(xtext_buffer *, textentry *);
 	static void gtk_xtext_search_textentry_fini(gpointer, gpointer);
 	static void gtk_xtext_search_fini(xtext_buffer *);
@@ -1762,7 +1762,7 @@ namespace {
 				gtk_xtext_fix_indent(xtext->buffer);
 				if (tmp != xtext->buffer->indent)
 				{
-					gtk_xtext_recalc_widths(xtext->buffer, FALSE);
+					gtk_xtext_recalc_widths(xtext->buffer, false);
 					if (xtext->buffer->scrollbar_down)
 						gtk_adjustment_set_value(xtext->adj, xtext->adj->upper -
 						xtext->adj->page_size);
@@ -1934,7 +1934,7 @@ namespace {
 			gtk_xtext_fix_indent(xtext->buffer);
 			if (xtext->buffer->indent != old)
 			{
-				gtk_xtext_recalc_widths(xtext->buffer, FALSE);
+				gtk_xtext_recalc_widths(xtext->buffer, false);
 				gtk_xtext_adjustment_set(xtext->buffer, true);
 				gtk_xtext_render_page(xtext);
 			}
@@ -3437,7 +3437,7 @@ namespace {
 	}
 
 	static void
-		gtk_xtext_recalc_widths(xtext_buffer *buf, int do_str_width)
+		gtk_xtext_recalc_widths(xtext_buffer *buf, bool do_str_width)
 	{
 		textentry *ent;
 
@@ -3491,7 +3491,7 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 	gtk_xtext_fix_indent(xtext->buffer);
 
 	if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
-		gtk_xtext_recalc_widths(xtext->buffer, TRUE);
+		gtk_xtext_recalc_widths(xtext->buffer, true);
 
 	return true;
 }
@@ -4222,7 +4222,7 @@ namespace{
 	}
 
 	/* Add a list of found search results to an entry, maybe NULL */
-	static void gtk_xtext_search_textentry_add(xtext_buffer *buf, textentry *ent, GList *gl, gboolean pre)
+	static void gtk_xtext_search_textentry_add(xtext_buffer *buf, textentry *ent, GList *gl, bool pre)
 	{
 		ent->marks = gl;
 		if (gl)
@@ -4670,7 +4670,7 @@ time_t stamp)
 			buf->indent = buf->xtext->max_auto_indent;
 
 		gtk_xtext_fix_indent(buf);
-		gtk_xtext_recalc_widths(buf, FALSE);
+		gtk_xtext_recalc_widths(buf, false);
 
 		ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
 		buf->xtext->force_render = true;
@@ -4898,7 +4898,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 	if (buf->needs_recalc)
 	{
 		buf->needs_recalc = false;
-		gtk_xtext_recalc_widths(buf, TRUE);
+		gtk_xtext_recalc_widths(buf, true);
 	}
 
 	/* now change to the new buffer */
