@@ -4046,7 +4046,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 		while (buf->text_first)
 		{
 			next = buf->text_first->next;
-			free(buf->text_first);
+			delete buf->text_first;
 			buf->text_first = next;
 		}
 		buf->text_last = NULL;
