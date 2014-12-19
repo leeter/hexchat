@@ -4557,9 +4557,9 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	/* anything below MUST DEC command_level before returning */
 
 	auto len = strlen (cmd);
-	std::string pdibuf(std::max(len + 1, 1024ull), '\0');
+	std::string pdibuf(len + 1, '\0');
 
-	std::string tbuf(std::max((len * 2) + 1, 1024ull), '\0');
+	std::string tbuf((len * 2) + 1, '\0');
 
 	/* split the text into words and word_eol */
 	process_data_init (&pdibuf[0], cmd, word, word_eol, true, true);
