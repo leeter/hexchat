@@ -28,6 +28,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/format.hpp>
 
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
@@ -1079,50 +1080,47 @@ save_config (void)
 }
 
 static void
-set_showval (session *sess, const struct prefs *var, char *tbuf)
+set_showval (session *sess, const struct prefs *var, char *buf)
 {
-	size_t len;
 	size_t dots;
-	size_t j;
-
-	len = strlen (var->name);
+	std::ostringstream buffer;
+	std::ostream_iterator<char> tbuf(buffer);
+	auto len = strlen (var->name);
 	std::copy_n(var->name, len, tbuf);
 	if (len > 29)
 		dots = 0;
 	else
 		dots = 29 - len;
 
-	tbuf[len++] = '\003';
-	tbuf[len++] = '2';
+	*tbuf++ = '\003';
+	*tbuf++ = '2';
 
-	for (j = 0; j < dots; j++)
+	for (size_t j = 0; j < dots; j++)
 	{
-		tbuf[j + len] = '.';
+		*tbuf++ = '.';
 	}
-
-	len += j;
 
 	switch (var->type)
 	{
 		case TYPE_STR:
-			sprintf (tbuf + len, "\0033:\017 %s\n", (char *) &prefs + var->offset);
+			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var->offset);
 			break;
 		case TYPE_INT:
-			sprintf (tbuf + len, "\0033:\017 %d\n", *((int *) &prefs + var->offset));
+			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var->offset);
 			break;
 		case TYPE_BOOL:
 			if (*((int *) &prefs + var->offset))
 			{
-				sprintf (tbuf + len, "\0033:\017 %s\n", "ON");
+				buffer << boost::format(_("\0033:\017 %s\n")) % _("ON");
 			}
 			else
 			{
-				sprintf (tbuf + len, "\0033:\017 %s\n", "OFF");
+				buffer << boost::format(_("\0033:\017 %s\n")) % _("OFF");
 			}
 			break;
 	}
 
-	PrintText (sess, tbuf);
+	PrintText (sess, buffer.str());
 }
 
 static void
