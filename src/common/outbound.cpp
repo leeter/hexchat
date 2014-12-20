@@ -4086,26 +4086,25 @@ auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
 		if (src[0] == '%' || src[0] == '&')
 		{
 			std::locale locale;
-			if (std::isdigit<unsigned char>(src[1], locale))
+			if (std::isdigit<char>(src[1], locale))
 			{
-				if (std::isdigit<unsigned char>(src[2], locale) && std::isdigit<unsigned char>(src[3], locale))
+				if (std::isdigit<char>(src[2], locale) && std::isdigit<char>(src[3], locale))
 				{
 					buf[0] = src[1];
 					buf[1] = src[2];
 					buf[2] = src[3];
 					buf[3] = 0;
 					dest[0] = atoi (buf);
-					utf = g_locale_to_utf8 (dest, 1, 0, &utf_len, 0);
+					auto utf = g_locale_to_utf8 (dest, 1, 0, &utf_len, 0);
 					if (utf)
 					{
+						glib_string utf8_str(utf);
 						if ((dest - orig) + utf_len >= destlen)
 						{
-							g_free ((gpointer)utf);
 							return 2;
 						}
 
 						std::copy_n(utf, utf_len, dest);
-						g_free ((gpointer)utf);
 						dest += utf_len;
 					}
 					src += 3;
