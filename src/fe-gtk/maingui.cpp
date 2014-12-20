@@ -3481,7 +3481,8 @@ fe_set_channel (session *sess)
 }
 
 restore_gui::restore_gui()
-	:tab(),			/* (chan *) */
+	:banlist(),
+	tab(),			/* (chan *) */
 
 	/* information stored when this tab isn't front-most */
 	user_model(),	/* for filling the GtkTreeView */

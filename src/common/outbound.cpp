@@ -4332,7 +4332,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 						lenu = strlen(user->nick);
 						if (lenu == len)
 						{
-							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick, space);
+							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick, space - 1);
 							len = -1;
 							break;
 						}
