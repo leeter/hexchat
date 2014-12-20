@@ -27,7 +27,7 @@
 extern const struct commands xc_cmds[];
 extern GSList *menu_list;
 
-int auto_insert (char *dest, int destlen, const unsigned char *src, char *word[], char *word_eol[],
+int auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[], const char * const word_eol[],
 				 const char *a, const char *c, const char *d, const char *e, const char *h,const char *n, const char *s, const char *u);
 std::string command_insert_vars (session *sess, const std::string& cmd);
 int handle_command (session *sess, char *cmd, bool check_spch);

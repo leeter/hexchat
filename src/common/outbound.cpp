@@ -4067,8 +4067,8 @@ help (session *sess, char *tbuf, const char *helpcmd, int quiet)
  * - this beast is used for UserCommands, UserlistButtons and CTCP replies   */
 
 int
-auto_insert (char *dest, int destlen, const unsigned char *src, char *word[],
-				 char *word_eol[], const char *a, const char *c, const char *d, const char *e, const char *h,
+auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[],
+				 const char * const word_eol[], const char *a, const char *c, const char *d, const char *e, const char *h,
 				 const char *n, const char *s, const char *u)
 {
 	int num;
