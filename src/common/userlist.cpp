@@ -591,6 +591,30 @@ public:
 		return std::make_pair(true, this->users_.size());
 	}
 
+	boost::optional<const User&> find(const std::string & nick) const
+	{
+		auto result = std::find_if(
+			users_alpha_.cbegin(),
+			users_alpha_.cend(),
+			[&nick, this](const User* u){
+			return this->locale_(nick, std::string(u->nick));
+		});
+		if (result != users_alpha_.cend())
+			return boost::optional<const User&>(*(*result));
+		return boost::none;
+	}
+
+	boost::optional<User&> find(const std::string & nick)
+	{
+		auto result = const_cast<const userlist_impl&>(*this).find(nick);
+		if (result)
+		{
+			User& res = const_cast<User&>(result.get());
+			return boost::optional<User&>(res);
+		}
+		return boost::none;
+	}
+
 	void foreach_alpha(std::function<void(User&)> func)
 	{
 
@@ -622,4 +646,9 @@ userlist::size_type userlist::hops() const
 userlist::size_type userlist::voices() const
 {
 	return impl_->voices();
+}
+
+void userlist::imbue(const std::locale & locale)
+{
+	impl_->imbue(locale);
 }
