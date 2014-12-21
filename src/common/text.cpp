@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <string>
 #include <cwchar>
 #include <sstream>
@@ -32,6 +37,8 @@
 #include <boost/format.hpp>
 
 #ifdef WIN32
+#include <Windows.h>
+#include <mmsystem.h>
 #include <io.h>
 #else
 #include <unistd.h>
@@ -206,10 +213,6 @@ scrollback_shrink (session &sess)
 static void
 scrollback_save (session &sess, const std::string & text)
 {
-	char *buf;
-	time_t stamp;
-	size_t len;
-
 	if (sess.type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
 
@@ -226,6 +229,7 @@ scrollback_save (session &sess, const std::string & text)
 
 	if (sess.scrollfd == -1)
 	{
+		char* buf;
 		if ((buf = scrollback_get_filename (sess)) == NULL)
 			return;
 
@@ -235,15 +239,12 @@ scrollback_save (session &sess, const std::string & text)
 			return;
 	}
 
-	stamp = time (0);
-	if (sizeof (stamp) == 4)	/* gcc will optimize one of these out */
-		buf = g_strdup_printf ("T %d ", (int) stamp);
-	else
-		buf = g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp);
+	auto stamp = time (0);
+	auto buf = g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp);
 	write (sess.scrollfd, buf, strlen (buf));
 	g_free (buf);
 
-	len = text.size();
+	auto len = text.size();
 	write (sess.scrollfd, text.c_str(), text.size());
 	if (len && text[len - 1] != '\n')
 		write (sess.scrollfd, "\n", 1);

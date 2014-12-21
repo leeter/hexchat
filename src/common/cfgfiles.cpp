@@ -15,7 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #include <algorithm>
 #include <iterator>
 #include <fcntl.h>
@@ -38,14 +41,11 @@
 #include "fe.hpp"
 #include "text.hpp"
 #include "hexchatc.hpp"
-#include "typedef.h"
 #include "charset_helpers.hpp"
 #include "filesystem.hpp"
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
 #define STRICT_TYPED_ITEMIDS
-#define NOMINMAX
 #include <io.h>
 #else
 #include <unistd.h>

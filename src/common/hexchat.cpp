@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <atomic>
 #include <random>
 #include <cstdio>
@@ -31,8 +36,6 @@
 #include "inet.hpp"
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <boost/locale.hpp>
 #include <boost/filesystem/path.hpp>
 #include <windows.h>
@@ -145,7 +148,7 @@ lastact_update(session *sess)
 {
 	int oldidx = sess->lastact_idx;
 	int newidx = LACT_NONE;
-	int dia = (sess->type == session::SESS_DIALOG);
+	bool dia = (sess->type == session::SESS_DIALOG);
 
 	if (sess->nick_said)
 		newidx = dia? LACT_QUERY_HI: LACT_CHAN_HI;
@@ -181,14 +184,12 @@ lastact_update(session *sess)
 session *
 lastact_getfirst(int (*filter) (session *sess))
 {
-	int i;
 	session *sess = nullptr;
-	GList *curitem;
 
 	/* 5 is the number of priority classes LACT_ */
-	for (i = 0; i < 5 && !sess; i++)
+	for (int i = 0; i < 5 && !sess; i++)
 	{
-		curitem = sess_list_by_lastact[i];
+		auto curitem = sess_list_by_lastact[i];
 		while (curitem && !sess)
 		{
 			sess = static_cast<session*>(g_list_nth_data(curitem, 0));
@@ -255,7 +256,6 @@ find_channel (const server &serv, const std::string &chan)
 static void
 lagcheck_update (void)
 {
-	server *serv;
 	GSList *list = serv_list;
 	
 	if (!prefs.hex_gui_lagometer)
@@ -263,7 +263,7 @@ lagcheck_update (void)
 
 	while (list)
 	{
-		serv = static_cast<server*>(list->data);
+		auto serv = static_cast<server*>(list->data);
 		if (serv->lag_sent)
 			fe_set_lag (serv, -1);
 

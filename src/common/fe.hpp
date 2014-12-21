@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <string>
+#include "sessfwd.hpp"
 struct User;
 
 /* for storage of /menu entries */

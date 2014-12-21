@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -28,8 +33,6 @@
 #include <stdexcept>
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 #include <io.h>
 #else

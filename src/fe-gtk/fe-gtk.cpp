@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <string>
 #include <cstdio>
 #include <cstring>
@@ -26,9 +31,9 @@
 
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <Windows.h>
+#include <mmsystem.h>
+#include <shellapi.h>
 #include <gdk/gdkwin32.h>
 #else
 #include <unistd.h>

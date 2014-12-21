@@ -23,6 +23,10 @@
  * Jim Seymour (jseymour@LinxNet.com)
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 /* we only use 32 bits, but without this define, you get only 31! */
 #define _FILE_OFFSET_BITS 64
 #include <vector>

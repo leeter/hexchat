@@ -18,6 +18,10 @@
 
 /* IRC RFC1459(+commonly used extensions) protocol implementation */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #include <cstdint>
 #include <string>
 #include <cstring>

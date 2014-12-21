@@ -22,6 +22,7 @@
 
 #include <string>
 #include <boost/optional.hpp>
+#include "sessfwd.hpp"
 #include "hexchat.hpp"
 
 struct server;

@@ -17,8 +17,8 @@
  */
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-#endif
 #define NOMINMAX
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>

@@ -18,7 +18,10 @@
  */
 
 /* per-channel/dialog settings :: /CHANOPT */
-
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #include <cstdint>
 #include <cstddef>
 #include <algorithm>

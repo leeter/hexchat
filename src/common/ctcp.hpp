@@ -20,6 +20,9 @@
 #ifndef HEXCHAT_CTCP_HPP
 #define HEXCHAT_CTCP_HPP
 
+#include "sessfwd.hpp"
+#include "proto-irc.hpp"
+
 void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
 						char *word[], char *word_eol[], bool id,
 						const message_tags_data *tags_data);

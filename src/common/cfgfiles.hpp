@@ -22,14 +22,15 @@
 #ifndef HEXCHAT_CFGFILES_HPP
 #define HEXCHAT_CFGFILES_HPP
 
+#include <cstdio>
 #include <string>
-#include <iosfwd>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 
+#include "sessfwd.hpp"
 #include "hexchat.hpp"
 
-#define LANGUAGES_LENGTH 53
+enum{ LANGUAGES_LENGTH = 53 };
 
 extern char *xdir;
 extern const char * const languages[LANGUAGES_LENGTH];
