@@ -45,6 +45,7 @@
 #include "../common/url.hpp"
 #include "../common/dcc.hpp"
 #include "../common/charset_helpers.hpp"
+#include "../common/session.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "pixmaps.hpp"

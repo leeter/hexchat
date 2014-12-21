@@ -47,6 +47,7 @@
 #include "../common/hexchatc.hpp"
 #include "../common/url.hpp"
 #include "../common/marshal.h"
+#include "../common/session.hpp"
 #include "fe-gtk.hpp"
 #include "xtext.hpp"
 #include "fkeys.hpp"

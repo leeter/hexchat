@@ -20,10 +20,11 @@
 #ifndef HEXCHAT_HISTORY_HPP
 #define HEXCHAT_HISTORY_HPP
 
-#define HISTORY_SIZE 100
 #include <string>
 #include <utility>
 #include <array>
+
+enum{ HISTORY_SIZE = 100 };
 
 class history
 {

@@ -52,6 +52,7 @@
 #include "plugin-timer.hpp"
 #include "notify.hpp"
 #include "server.hpp"
+#include "session.hpp"
 #include "servlist.hpp"
 #include "outbound.hpp"
 #include "text.hpp"

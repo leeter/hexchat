@@ -36,6 +36,7 @@
 #include "../common/server.hpp"
 #include "../common/servlist.hpp"
 #include "../common/fe.hpp"
+#include "../common/session.hpp"
 #include "fe-gtk.hpp"
 #include "chanlist.hpp"
 

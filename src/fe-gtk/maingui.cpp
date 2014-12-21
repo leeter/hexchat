@@ -45,6 +45,7 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"
 #include "../common/userlist.hpp"
+#include "../common/session.hpp"
 
 #include "fe-gtk.hpp"
 #include "banlist.hpp"

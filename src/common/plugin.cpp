@@ -50,14 +50,14 @@
 #include "text.hpp"
 #include "dcc.hpp"
 #include "userlist.hpp"
+#include "session.hpp"
+
 #define PLUGIN_C
 typedef struct session hexchat_context;
 #include "hexchat-plugin.h"
 #include "plugin.h"
 #include "typedef.h"
 #include "filesystem.hpp"
-
-
 
 #include "hexchatc.hpp"
 

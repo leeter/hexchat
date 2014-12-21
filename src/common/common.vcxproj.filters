@@ -131,6 +131,12 @@
     <ClInclude Include="text.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="session.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sessfwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">

@@ -49,6 +49,7 @@
 #include "hexchatc.hpp"
 #include "url.hpp"
 #include "servlist.hpp"
+#include "session.hpp"
 
 
 void

@@ -21,6 +21,7 @@
 #define HEXCHAT_C_HPP
 #include <atomic>
 #include <string>
+#include "sessfwd.hpp"
 
 extern struct hexchatprefs prefs;
 
@@ -52,7 +53,6 @@ struct server;
 
 session * find_channel (const server &serv, const std::string &chan);
 session * find_dialog (const server &serv, const char *nick);
-session * new_ircwindow(server *serv, const char *name, session::session_type type, int focus);
 void lastact_update (session * sess);
 session * lastact_getfirst (int (*filter) (session *sess));
 bool is_session (session * sess);

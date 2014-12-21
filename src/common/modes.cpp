@@ -34,6 +34,7 @@
 #include "util.hpp"
 #include "inbound.hpp"
 #include "userlist.hpp"
+#include "session.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif

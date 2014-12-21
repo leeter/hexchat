@@ -30,6 +30,7 @@
 #include "../common/fe.hpp"
 #include "../common/server.hpp"
 #include "../common/util.hpp"
+#include "../common/session.hpp"
 
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"

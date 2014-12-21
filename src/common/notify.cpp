@@ -47,6 +47,7 @@
 #include "text.hpp"
 #include "util.hpp"
 #include "hexchatc.hpp"
+#include "session.hpp"
 
 
 GSList *notify_list = 0;

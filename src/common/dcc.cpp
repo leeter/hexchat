@@ -60,6 +60,7 @@
 #include "url.hpp"
 #include "hexchatc.hpp"
 #include "filesystem.hpp"
+#include "session.hpp"
 
 #ifdef USE_DCC64
 #define BIG_STR_TO_INT(x) strtoull(x,NULL,10)

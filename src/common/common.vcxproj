@@ -39,6 +39,8 @@
     <ClInclude Include="sasl.hpp" />
     <ClInclude Include="server.hpp" />
     <ClInclude Include="servlist.hpp" />
+    <ClInclude Include="sessfwd.hpp" />
+    <ClInclude Include="session.hpp" />
     <ClInclude Include="ssl.hpp" />
     <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />

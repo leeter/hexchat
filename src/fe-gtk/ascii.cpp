@@ -24,6 +24,7 @@
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
+#include "../common/session.hpp"
 #include "gtkutil.hpp"
 #include "ascii.hpp"
 #include "maingui.hpp"

@@ -35,6 +35,8 @@
 #include <ctime>			/* need time_t */
 #include <boost/optional.hpp>
 
+#include "sessfwd.hpp"
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define NOEXCEPT throw()
 #else
@@ -47,8 +49,6 @@
 #define DEPRECATED_IN_MAC_OS_X_VERSION_10_7_AND_LATER
 #endif
 #endif
-
-#include "history.hpp"
 
 #ifndef HAVE_SNPRINTF
 #define snprintf g_snprintf
@@ -97,8 +97,6 @@
 const std::size_t FONTNAMELEN = 127;
 const std::size_t PATHLEN = 255;
 const std::size_t DOMAINLEN = 100;
-const std::size_t NICKLEN = 64;				/* including the NULL, so 63 really */
-const std::size_t CHANLEN = 300;
 const std::size_t PDIWORDS = 32;
 const std::size_t USERNAMELEN = 10;
 const char HIDDEN_CHAR = 8;			/* invisible character for xtext */
@@ -365,101 +363,6 @@ enum lact{
 	LACT_CHAN		= 3,	/* channel with messages */
 	LACT_CHAN_DATA	= 4	/* channel with other data */
 };
-
-/* Moved from fe-gtk for use in outbound.c as well -- */
-enum gtk_xtext_search_flags {
-	case_match = 1,
-	backward = 2,
-	highlight = 4,
-	follow = 8,
-	regexp = 16
-};
-
-inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_search_flags b)
-{
-	return static_cast<gtk_xtext_search_flags>(static_cast<int>(a) | static_cast<int>(b));
-}
-
-struct session
-{
-	typedef int session_type;
-	/* Session types */
-	enum type: session_type{
-		SESS_SERVER = 1,
-		SESS_CHANNEL,
-		SESS_DIALOG,
-		SESS_NOTICES,
-		SESS_SNOTICES
-	};
-	session(struct server *serv, const char *from, session::session_type type);
-	~session();
-	/* Per-Channel Alerts */
-	/* use a byte, because we need a pointer to each element */
-	guint8 alert_beep;
-	guint8 alert_taskbar;
-	guint8 alert_tray;
-
-	/* Per-Channel Settings */
-	guint8 text_hidejoinpart;
-	guint8 text_logging;
-	guint8 text_scrollback;
-	guint8 text_strip;
-
-	struct server *server;
-	std::vector<struct User*> usertree_alpha;			/* pure alphabetical tree */
-	std::vector<std::unique_ptr<struct User>> usertree;		/* ordered with Ops first */
-	struct User *me;					/* points to myself in the usertree */
-	char channel[CHANLEN];
-	char waitchannel[CHANLEN];		  /* waiting to join channel (/join sent) */
-	char willjoinchannel[CHANLEN];	  /* will issue /join for this channel */
-	char session_name[CHANLEN];		 /* the name of the session, should not modified */
-	char channelkey[64];			  /* XXX correct max length? */
-	int limit;						  /* channel user limit */
-	int logfd;
-	int scrollfd;							/* scrollback filedes */
-	int scrollwritten;					/* number of lines written */
-
-	char lastnick[NICKLEN];			  /* last nick you /msg'ed */
-
-	history hist;
-	std::string name;
-
-	int ops;								/* num. of ops in channel */
-	int hops;						  /* num. of half-oped users */
-	int voices;							/* num. of voiced people */
-	int total;							/* num. of users in channel */
-
-	std::string quitreason;
-	std::string topic;
-	std::string current_modes;
-
-	int mode_timeout_tag;
-
-	struct session *lastlog_sess;
-	struct nbexec *running_exec;
-
-	struct session_gui *gui;		/* initialized by fe_new_window */
-	struct restore_gui *res;
-
-	session::session_type type;					/* SESS_* */
-
-	int lastact_idx;		/* the sess_list_by_lastact[] index of the list we're in.
-							 * For valid values, see defines of LACT_*. */
-
-	bool new_data;			/* new data avail? (purple tab) */
-	bool nick_said;		/* your nick mentioned? (blue tab) */
-	bool msg_said;			/* new msg available? (red tab) */
-
-	bool ignore_date;
-	bool ignore_mode;
-	bool ignore_names;
-	bool end_of_names;
-	bool doing_who;		/* /who sent on this channel */
-	bool done_away_check;	/* done checking for away status changes */
-	gtk_xtext_search_flags lastlog_flags;
-	void (*scrollback_replay_marklast) (struct session *sess);
-};
-
 struct msproxy_state_t
 {
 	gint32				clientid;

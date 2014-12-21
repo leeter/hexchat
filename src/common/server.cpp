@@ -23,6 +23,11 @@
 
 /*#define DEBUG_MSPROXY*/
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <algorithm>
 #include <array>
 #include <string>
@@ -66,6 +71,7 @@
 #include "servlist.hpp"
 #include "server.hpp"
 #include "dcc.hpp"
+#include "session.hpp"
 
 
 namespace dcc = ::hexchat::dcc;
@@ -106,15 +112,15 @@ extern pxProxyFactory *libproxy_factory;
 int
 tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server * serv)
 {
-	int ret = 0;
-	std::unique_ptr<char, decltype(&::g_free)> locale(nullptr, &::g_free);
-	gsize loc_len;
 	if (!serv->server_connection)
 		return 1; // throw?
 
+	int ret = 0;
+	glib_string locale;
+	gsize loc_len;
+
 	if (encoding == nullptr)	/* system */
 	{
-		locale = nullptr;
 		if (!prefs.utf8_locale)
 		{
 			const gchar *charset;
@@ -268,7 +274,7 @@ tcp_sendf (server &serv, const char *fmt, ...)
 {
 	va_list args;
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
-      string shorter, so allow alot more than 512 for now. */
+	  string shorter, so allow alot more than 512 for now. */
 	static char send_buf[1540];	/* good code hey (no it's not overflowable) */
 	int len;
 

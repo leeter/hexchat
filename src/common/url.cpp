@@ -29,6 +29,7 @@
 #include "cfgfiles.hpp"
 #include "fe.hpp"
 #include "server.hpp"
+#include "session.hpp"
 #include "url.hpp"
 #include "userlist.hpp"
 #ifdef HAVE_STRINGS_H

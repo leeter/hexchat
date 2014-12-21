@@ -44,6 +44,7 @@
 #include "../common/fe.hpp"
 #include "../common/server.hpp"
 #include "../common/dcc.hpp"
+#include "../common/session.hpp"
 #include "fe-text.h"
 
 struct server_gui{ int foo; };

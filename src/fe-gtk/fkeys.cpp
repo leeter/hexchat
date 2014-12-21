@@ -48,6 +48,7 @@
 #include "../common/typedef.h"
 #include "../common/server.hpp"
 #include "../common/filesystem.hpp"
+#include "../common/session.hpp"
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.hpp"
 #include "menu.hpp"
@@ -1617,7 +1618,7 @@ struct session *sess)
 				/* bash style completion */
 				if (g_list_next(list) != NULL)
 				{
-					buf.reserve(std::max(COMP_BUF, len + NICKLEN));
+					buf.reserve(std::max(COMP_BUF, size_t(len + NICKLEN)));
 					if (strlen (result) > elen) /* the largest common prefix is larger than nick, change the data */
 					{
 						if (prefix_len)

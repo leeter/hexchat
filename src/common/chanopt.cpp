@@ -34,6 +34,7 @@
 #include <boost/iostreams/stream.hpp>  
 
 #include "hexchat.hpp"
+#include "session.hpp"
 #include "chanopt.hpp"
 
 #include "text.hpp"

@@ -25,6 +25,7 @@
 #include "../common/fe.hpp"
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"
+#include "../common/session.hpp"
 #include "fe-gtk.hpp"
 #include "pixmaps.hpp"
 #include "maingui.hpp"

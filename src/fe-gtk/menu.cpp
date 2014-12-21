@@ -52,6 +52,7 @@
 #include "../common/util.hpp"
 #include "../common/text.hpp"
 #include "../common/userlist.hpp"
+#include "../common/session.hpp"
 #include "xtext.hpp"
 #include "ascii.hpp"
 #include "banlist.hpp"

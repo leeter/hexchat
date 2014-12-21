@@ -39,6 +39,8 @@
 
 #include "servlist.hpp"
 
+#include "session.hpp"
+
 ircnet::ircnet()
 	:nick(),
 	nick2(),

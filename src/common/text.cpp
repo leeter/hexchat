@@ -51,6 +51,7 @@
 #include "text.hpp"
 #include "charset_helpers.hpp"
 #include "typedef.h"
+#include "session.hpp"
 
 #ifdef USE_LIBCANBERRA
 #include <canberra.h>

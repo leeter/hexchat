@@ -30,6 +30,7 @@
 #include "server.hpp"
 #include "util.hpp"
 #include "userlist.hpp"
+#include "session.hpp"
 
 
 User::~User()

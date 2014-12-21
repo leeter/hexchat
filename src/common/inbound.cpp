@@ -55,6 +55,7 @@
 #include "dcc.hpp"
 #include "sasl.hpp"
 #include "userlist.hpp"
+#include "session.hpp"
 
 namespace dcc = hexchat::dcc;
 

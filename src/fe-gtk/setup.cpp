@@ -29,6 +29,7 @@
 #include "../common/userlist.hpp"
 #include "../common/util.hpp"
 #include "../common/hexchatc.hpp"
+#include "../common/session.hpp"
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
