@@ -28,8 +28,6 @@ struct notify
 {
 	std::string name;
 	std::vector<std::string> networks;
-	//char *name;
-	//char *networks;	/* network names, comma sep */
 	GSList *server_list;
 };
 
