@@ -75,6 +75,7 @@
 #include "outbound.hpp"
 #include "chanopt.hpp"
 #include "dcc.hpp"
+#include "userlist.hpp"
 
 namespace hexchat{
 namespace fe{

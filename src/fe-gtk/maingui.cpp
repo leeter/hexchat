@@ -15,6 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#endif
 #define NOMINMAX
 #include <cstdlib>
 #include <cstring>
@@ -41,6 +44,7 @@
 #include "../common/chanopt.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/dcc.hpp"
+#include "../common/userlist.hpp"
 
 #include "fe-gtk.hpp"
 #include "banlist.hpp"

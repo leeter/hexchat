@@ -49,6 +49,7 @@
 #include "notify.hpp"
 #include "text.hpp"
 #include "dcc.hpp"
+#include "userlist.hpp"
 #define PLUGIN_C
 typedef struct session hexchat_context;
 #include "hexchat-plugin.h"

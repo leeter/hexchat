@@ -29,6 +29,7 @@
 #include "hexchatc.hpp"
 #include "server.hpp"
 #include "util.hpp"
+#include "userlist.hpp"
 
 
 User::~User()
@@ -58,7 +59,7 @@ User::User()
 namespace{
 
 	static int
-		nick_cmp_az_ops(const server &serv, const User & user1, const User & user2)
+		nick_cmp_az_ops(const std::locale &locale, const User & user1, const User & user2)
 	{
 		unsigned int access1 = user1.access;
 		unsigned int access2 = user2.access;
@@ -75,8 +76,10 @@ namespace{
 					return 1;
 			}
 		}
-
-		return serv.p_cmp(user1.nick, user2.nick);
+		auto nick1Len = std::strlen(user1.nick);
+		auto nick2Len = std::strlen(user2.nick);
+		auto& collate = std::use_facet<std::collate<char>>(locale);
+		return collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
 	}
 
 	static int
@@ -86,18 +89,21 @@ namespace{
 	}
 
 	static int
-		nick_cmp(const User &user1, const User &user2, const server &serv)
+		nick_cmp(const User &user1, const User &user2, const std::locale &locale)
 	{
+		auto nick1Len = std::strlen(user1.nick);
+		auto nick2Len = std::strlen(user2.nick);
+		auto& collate = std::use_facet<std::collate<char>>(locale);
 		switch (prefs.hex_gui_ulist_sort)
 		{
 		case 0:
-			return nick_cmp_az_ops(serv, user1, user2);
+			return nick_cmp_az_ops(locale, user1, user2);
 		case 1:
-			return serv.p_cmp(user1.nick, user2.nick);
+			return collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
 		case 2:
-			return -1 * nick_cmp_az_ops(serv, user1, user2);
+			return -1 * nick_cmp_az_ops(locale, user1, user2);
 		case 3:
-			return -1 * serv.p_cmp(user1.nick, user2.nick);
+			return -1 * collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
 		default:
 			return -1;
 		}
@@ -112,7 +118,7 @@ namespace{
 			sess.usertree.end(),
 			[&sess](const std::unique_ptr<User> &a, const std::unique_ptr<User> &b)
 		{
-			return nick_cmp(*a, *b, *sess.server) < 0;
+			return nick_cmp(*a, *b, sess.server->current_locale()) < 0;
 		});
 
 		std::sort(
@@ -423,7 +429,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 				const char account[], const char realname[], const message_tags_data *tags_data)
 {
 	int prefix_chars;
-	auto acc = nick_access (sess->server, name, &prefix_chars);
+	auto acc = nick_access (sess->server, name, prefix_chars);
 
 	notify_set_online (*sess->server, name + prefix_chars, tags_data);
 
@@ -544,20 +550,24 @@ public:
 
 	void sort()
 	{
-		/*std::sort(
+		std::sort(
 			this->users_.begin(),
 			this->users_.end(),
-			[&sess](const std::unique_ptr<User> &a, const std::unique_ptr<User> &b)
+			[this](const std::unique_ptr<User> &a, const std::unique_ptr<User> &b)
 		{
-			return nick_cmp(*a, *b, *sess.server) < 0;
+			return nick_cmp(*a, *b, this->locale_) < 0;
 		});
 
+		auto& collate = std::use_facet<std::collate<char>>(locale_);
 		std::sort(
 			this->users_alpha_.begin(),
 			this->users_alpha_.end(),
-			[&sess](const User* a, const User* b){
-			return sess.server->p_cmp(a->nick, b->nick) < 0;
-		});*/
+			[&collate](const User* a, const User* b){
+				auto nick1Len = std::strlen(a->nick);
+				auto nick2Len = std::strlen(b->nick);
+				return collate.compare(a->nick, a->nick + nick1Len, b->nick, b->nick + nick2Len);
+			}
+		);
 	}
 
 	std::pair<bool, size_type> insert(std::unique_ptr<User> user)
@@ -576,12 +586,15 @@ public:
 		const char* nick = user->nick;
 		this->users_.emplace_back(std::move(user));
 		this->users_alpha_.emplace_back(this->users_.back().get());
-
+		this->sort();
 
 		return std::make_pair(true, this->users_.size());
-		//return userlist_resort(*sess, nick);
 	}
-	 
+
+	void foreach_alpha(std::function<void(User&)> func)
+	{
+
+	}
 };
 
 userlist::userlist()

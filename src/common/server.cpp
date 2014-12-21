@@ -1664,6 +1664,7 @@ traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, struc
 }
 
 /* this is the child process making the connection attempt */
+#if 0
 static int
 server_child (server * serv)
 {
@@ -1860,6 +1861,7 @@ xit:
 	return 0;
 	/* cppcheck-suppress memleak */
 }
+#endif
 
 static gboolean
 io_poll(io::tcp::connection * connection){
@@ -2066,6 +2068,11 @@ int server::compare(const std::string &lhs, const std::string &rhs) const
 {
 	auto& collate = std::use_facet<std::collate<char>>(locale_);
 	return collate.compare(lhs.c_str(), lhs.c_str() + lhs.size(), rhs.c_str(), rhs.c_str() + rhs.size());
+}
+
+const std::locale & server::current_locale() const
+{
+	return locale_;
 }
 
 void

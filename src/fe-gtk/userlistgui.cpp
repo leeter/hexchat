@@ -230,7 +230,7 @@ fe_userlist_set_selected (struct session *sess)
 	}
 }
 
-static std::pair<GtkTreeIterPtr, bool> find_row (GtkTreeView *treeview, GtkTreeModel *model, struct User *user)
+static std::pair<GtkTreeIterPtr, bool> find_row (GtkTreeView *treeview, GtkTreeModel *model, const struct User *user)
 {
 	GtkTreeIter iter;
 	User *row_user;
@@ -274,7 +274,7 @@ userlist_get_value (GtkWidget *treeview)
 }
 
 bool
-fe_userlist_remove (session *sess, struct User *user)
+fe_userlist_remove(session *sess, struct User const *user)
 {
 /*	GtkAdjustment *adj;
 	gfloat val, end;*/
@@ -303,7 +303,7 @@ fe_userlist_remove (session *sess, struct User *user)
 }
 
 void
-fe_userlist_rehash (session *sess, struct User *user)
+fe_userlist_rehash (session *sess, struct User const *user)
 {
 	int nick_color = 0;
 

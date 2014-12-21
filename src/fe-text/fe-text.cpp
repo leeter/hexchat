@@ -688,7 +688,7 @@ fe_progressbar_start (struct session *sess)
 {
 }
 void
-fe_progressbar_end (struct server *serv)
+fe_progressbar_end (struct server *)
 {
 }
 void
@@ -696,12 +696,12 @@ fe_userlist_insert (struct session *, struct User *, int, bool)
 {
 }
 bool
-fe_userlist_remove (struct session *, struct User *)
+fe_userlist_remove (struct session *, struct User const *)
 {
 	return false;
 }
 void
-fe_userlist_rehash (struct session *, struct User *)
+fe_userlist_rehash (struct session *, struct User const *)
 {
 }
 void
@@ -709,30 +709,30 @@ fe_userlist_move (struct session *, struct User *, int )
 {
 }
 void
-fe_userlist_numbers (session &sess)
+fe_userlist_numbers (session &)
 {
 }
 void
-fe_userlist_clear (session &sess)
+fe_userlist_clear (session &)
 {
 }
 void
-fe_userlist_set_selected (struct session *sess)
+fe_userlist_set_selected (struct session *)
 {
 }
 namespace hexchat{
 namespace fe{
 namespace dcc{
 void
-fe_dcc_add (struct ::hexchat::dcc::DCC *dcc)
+fe_dcc_add (struct ::hexchat::dcc::DCC *)
 {
 }
 void
-fe_dcc_update(struct ::hexchat::dcc::DCC *dcc)
+fe_dcc_update(struct ::hexchat::dcc::DCC *)
 {
 }
 void
-fe_dcc_remove(struct ::hexchat::dcc::DCC *dcc)
+fe_dcc_remove(struct ::hexchat::dcc::DCC *)
 {
 }
 }

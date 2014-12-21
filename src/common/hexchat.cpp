@@ -58,6 +58,7 @@
 #include "url.hpp"
 #include "hexchatc.hpp"
 #include "dcc.hpp"
+#include "userlist.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
 #include <glib-object.h>			/* for g_type_init() */

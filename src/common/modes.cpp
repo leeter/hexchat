@@ -33,6 +33,7 @@
 #include "fe.hpp"
 #include "util.hpp"
 #include "inbound.hpp"
+#include "userlist.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -177,7 +178,7 @@ get_nick_prefix (const server * serv, unsigned int access)
 	+nick would return 001000 in binary */
 
 unsigned int
-nick_access (const server * serv, const char *nick, int *modechars)
+nick_access (const server * serv, const char *nick, int &modechars)
 {
 	int i;
 	unsigned int access = 0;
@@ -196,7 +197,7 @@ nick_access (const server * serv, const char *nick, int *modechars)
 		nick++;
 	}
 
-	*modechars = nick - orig;
+	modechars = nick - orig;
 
 	return access;
 }

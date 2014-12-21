@@ -30,6 +30,7 @@
 #include "fe.hpp"
 #include "server.hpp"
 #include "url.hpp"
+#include "userlist.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -223,7 +224,7 @@ match_nick (const char *word, int *start, int *end)
 	if (nick_prefixes.find_first_of(word[*start]) != std::string::npos)
 		(*start)++;
 
-	std::unique_ptr<char, glib_deleter> str(g_strndup (&word[*start], *end - *start));
+	glib_string str(g_strndup (&word[*start], *end - *start));
 
 	if (!userlist_find (current_sess, str.get()))
 	{

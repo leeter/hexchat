@@ -93,6 +93,7 @@ public:
 	bool p_raw(const std::string & raw);
 	int(*p_cmp)(const char *s1, const char *s2);
 	int compare(const std::string & lhs, const std::string & rhs) const;
+	const std::locale & current_locale() const;
 
 	void set_name(const std::string& name);
 	void set_encoding(const char* new_encoding);

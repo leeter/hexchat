@@ -1975,7 +1975,7 @@ setup_apply_to_sess (session_gui *gui)
 	if (prefs.hex_gui_input_style)
 	{
 		char buf[256];
-		sprintf (buf, cursor_color_rc,
+		snprintf (buf, sizeof(buf), cursor_color_rc,
 				(colors[COL_FG].red >> 8),
 				(colors[COL_FG].green >> 8),
 				(colors[COL_FG].blue >> 8));

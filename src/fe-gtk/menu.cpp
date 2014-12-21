@@ -51,6 +51,7 @@
 #include "../common/notify.hpp"
 #include "../common/util.hpp"
 #include "../common/text.hpp"
+#include "../common/userlist.hpp"
 #include "xtext.hpp"
 #include "ascii.hpp"
 #include "banlist.hpp"

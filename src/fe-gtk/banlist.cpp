@@ -41,6 +41,7 @@
 #include "../common/outbound.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/server.hpp"
+#include "../common/userlist.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "banlist.hpp"

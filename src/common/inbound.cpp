@@ -54,6 +54,7 @@
 #include "chanopt.hpp"
 #include "dcc.hpp"
 #include "sasl.hpp"
+#include "userlist.hpp"
 
 namespace dcc = hexchat::dcc;
 
