@@ -572,9 +572,6 @@ notify_deluser (const char *name)
 			}
 			notify_list = g_slist_remove (notify_list, notify);
 			notify_watch_all (notify, false);
-			/*if (notify->networks)
-				free (notify->networks);
-			free (notify->name);*/
 			delete notify;
 			fe_notify_update (0);
 			return true;

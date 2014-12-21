@@ -1686,9 +1686,8 @@ setup_snd_changed_cb (GtkEntry *ent, GtkTreeView *tree)
 		return;
 
 	/* get the new sound file */
-	if (sound_files[n])
-		free (sound_files[n]);
-	sound_files[n] = strdup (gtk_entry_get_text (GTK_ENTRY (ent)));
+	delete[] sound_files[n];
+	sound_files[n] = new_strdup (gtk_entry_get_text (GTK_ENTRY (ent)));
 
 	/* update the TreeView list */
 	store = (GtkListStore *)gtk_tree_view_get_model (tree);

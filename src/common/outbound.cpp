@@ -2515,9 +2515,8 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		if (word_eol[3][0])
 			arg = word_eol[3];
 
-		file = expand_homedir (word[2]);
-		error = plugin_load (sess, file, arg);
-		free (file);
+		glib_string file(expand_homedir (word[2]));
+		error = plugin_load (sess, file.get(), arg);
 
 		if (error)
 			PrintText (sess, error);

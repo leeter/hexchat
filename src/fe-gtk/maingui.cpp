@@ -307,24 +307,23 @@ mg_inputbox_focus (GtkWidget *widget, GdkEventFocus *event, session_gui *gui)
 void
 mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 {
-	char *cmd;
-	static int ignore = FALSE;
+	static bool ignore = false;
 	GSList *list;
 	session *sess = NULL;
 
 	if (ignore)
 		return;
 
-	cmd = SPELL_ENTRY_GET_TEXT (igad);
-	if (cmd[0] == 0)
+	const char* cmd_text = SPELL_ENTRY_GET_TEXT (igad);
+	if (cmd_text[0] == 0)
 		return;
 
-	cmd = strdup (cmd);
+	std::string cmd(cmd_text);
 
 	/* avoid recursive loop */
-	ignore = TRUE;
+	ignore = true;
 	SPELL_ENTRY_SET_TEXT (igad, "");
-	ignore = FALSE;
+	ignore = false;
 
 	/* where did this event come from? */
 	if (gui->is_tab)
@@ -345,9 +344,7 @@ mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 	}
 
 	if (sess)
-		handle_multiline (sess, cmd, TRUE, FALSE);
-
-	free (cmd);
+		handle_multiline (sess, &cmd[0], TRUE, FALSE);
 }
 
 static gboolean
@@ -1821,8 +1818,8 @@ mg_changui_destroy (session *sess)
 		/* it fixes: Gdk-CRITICAL **: gdk_colormap_get_screen: */
 		/*           assertion `GDK_IS_COLORMAP (cmap)' failed */
 		ret = sess->gui->window;
-		free (sess->gui);
-		sess->gui = NULL;
+		delete sess->gui;
+		sess->gui = nullptr;
 	}
 	return ret;
 }
