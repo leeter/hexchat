@@ -107,13 +107,12 @@ static const GOptionEntry gopt_entries[] =
  {NULL}
 };
 
-auto widget_deleter = [&](GtkWidget* d){ if (d) gtk_widget_destroy(d); };
 #ifdef WIN32
 static void
 create_msg_dialog (gchar *title, gchar *message)
 {
-	std::unique_ptr<GtkWidget, decltype(widget_deleter)> dialog(
-		gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "%s", message), widget_deleter);
+	std::unique_ptr<GtkWidget, decltype(&gtk_widget_destroy)> dialog(
+		gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "%s", message), &gtk_widget_destroy);
 	gtk_window_set_title (GTK_WINDOW (dialog.get()), title);
 
 /* On Win32 we automatically have the icon. If we try to load it explicitly, it will look ugly for some reason. */
