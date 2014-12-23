@@ -582,7 +582,7 @@ fe_is_chanwindow (struct server *serv)
 }
 
 void
-fe_notify_update (char *name)
+fe_notify_update(const std::string* name)
 {
 	if (!name)
 		hexchat::gui::notify::notify_gui_update ();

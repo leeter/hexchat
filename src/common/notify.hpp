@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 #include "proto-irc.hpp"
+#include "serverfwd.hpp"
+#include "sessfwd.hpp"
 
 struct notify
 {
@@ -58,7 +60,7 @@ void notify_send_watches (server & serv);
 
 /* the general stuff */
 void notify_adduser (const char *name, const char *networks);
-bool notify_deluser (const char *name);
+bool notify_deluser (const std::string& name);
 void notify_cleanup (void);
 void notify_load (void);
 void notify_save (void);

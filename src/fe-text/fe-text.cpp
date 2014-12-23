@@ -671,7 +671,7 @@ fe_ban_list_end (struct session *sess, int rplcode)
 	return 0;
 }
 void
-fe_notify_update (char *name)
+fe_notify_update(const std::string*)
 {
 }
 namespace hexchat{
