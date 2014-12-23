@@ -23,9 +23,9 @@
 #include <string>
 #include <boost/optional.hpp>
 #include "sessfwd.hpp"
+#include "serverfwd.hpp"
 #include "hexchat.hpp"
 
-struct server;
 extern const struct commands xc_cmds[];
 extern GSList *menu_list;
 

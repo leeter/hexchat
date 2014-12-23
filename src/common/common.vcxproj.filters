@@ -137,6 +137,9 @@
     <ClInclude Include="sessfwd.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="serverfwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">

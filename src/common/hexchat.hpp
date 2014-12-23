@@ -100,7 +100,7 @@ const std::size_t DOMAINLEN = 100;
 const std::size_t PDIWORDS = 32;
 const std::size_t USERNAMELEN = 10;
 const char HIDDEN_CHAR = 8;			/* invisible character for xtext */
-struct session;
+
 struct nbexec
 {
 	nbexec(session *);

@@ -22,6 +22,7 @@
 #include <atomic>
 #include <string>
 #include "sessfwd.hpp"
+#include "serverfwd.hpp"
 
 extern struct hexchatprefs prefs;
 
@@ -48,8 +49,6 @@ extern GSList *usermenu_list;
 extern GSList *urlhandler_list;
 extern GSList *tabmenu_list;
 extern GList *sess_list_by_lastact[];
-
-struct server;
 
 session * find_channel (const server &serv, const std::string &chan);
 session * find_dialog (const server &serv, const char *nick);

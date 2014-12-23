@@ -27,6 +27,8 @@
 #include <string>
 #include <boost/optional.hpp>
 #include "proto-irc.hpp"
+#include "sessfwd.hpp"
+#include "serverfwd.hpp"
 
 struct User
 {
@@ -47,8 +49,7 @@ struct User
 	bool away;
 	bool selected;
 };
-struct server;
-struct session;
+
 class userlist
 {
 	typedef std::size_t size_type;
@@ -67,7 +68,7 @@ public:
 	void imbue(const std::locale & locale);
 	void add();
 };
-const int USERACCESS_SIZE = 12;
+enum{ USERACCESS_SIZE = 12 };
 
 bool userlist_add_hostname (session *sess, const char nick[],
 									const char hostname[], const char realname[],

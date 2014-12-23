@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
+#include "serverfwd.hpp"
 
 extern int ignored_ctcp;
 extern int ignored_priv;
@@ -57,9 +58,6 @@ enum class flood_check_type
 	CTCP,
 	PRIV
 };
-
-// TODO: move to server fwd header
-struct server;
 
 const std::vector<ignore>& get_ignore_list();
 boost::optional<ignore &> ignore_exists (const std::string& mask);

@@ -24,8 +24,7 @@
 
 #include <ctime>						/* for time_t */
 #include "proto-irc.hpp"
-
-struct server;
+#include "serverfwd.hpp"
 
 namespace hexchat{
 #define STAT_QUEUED 0
