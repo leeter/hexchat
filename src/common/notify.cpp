@@ -22,20 +22,19 @@
 #endif
 
 #include <algorithm>
-#include <vector>
-#include <sstream>
-#include <string>
-#include <locale>
-#include <vector>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <ctime>
+#include <functional>
+#include <locale>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <ctime>
-#include <functional>
-#include <algorithm>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
@@ -45,7 +44,6 @@
 #include <unistd.h>
 #endif
 
-#include "hexchat.hpp"
 #include "notify.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
@@ -182,33 +180,31 @@ static void notify_announce_offline (server & serv, struct notify_per_server *se
 								 const std::string &nick, bool quiet, 
 								 const message_tags_data *tags_data)
 {
-	session *sess = serv.front_session;
-
 	servnot->ison = false;
 	servnot->lastoff = time (0);
 	std::string mutable_nick(nick);
 	if (!quiet)
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
-									  serv.get_network (true), NULL, 0,
-									  tags_data->timestamp);
+	{
+		session *sess = serv.front_session;
+		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
+			serv.get_network(true), NULL, 0,
+			tags_data->timestamp);
+	}
 	fe_notify_update(&mutable_nick);
 	fe_notify_update (nullptr);
 }
 
-static void
-notify_announce_online (server & serv, struct notify_per_server *servnot,
+static void notify_announce_online (server & serv, notify_per_server &servnot,
 								const std::string& nick, const message_tags_data *tags_data)
 {
-	session *sess;
-
-	sess = serv.front_session;
-
-	servnot->lastseen = time (0);
-	if (servnot->ison)
+	servnot.lastseen = time (0);
+	if (servnot.ison)
 		return;
-
-	servnot->ison = true;
-	servnot->laston = time (0);
+	
+	session *sess = serv.front_session;
+	
+	servnot.ison = true;
+	servnot.laston = time (0);
 	std::string mutable_nick = nick;
 	mutable_nick.push_back(0);
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
@@ -219,11 +215,10 @@ notify_announce_online (server & serv, struct notify_per_server *servnot,
 
 	if (prefs.hex_notify_whois_online)
 	{
-
 		/* Let's do whois with idle time (like in /quote WHOIS %s %s) */
-		std::string wii_str(nick.size() * 2 + 2, '\0');
-		sprintf(&wii_str[0], "%s %s", nick.c_str(), nick.c_str());
-		serv.p_whois (wii_str);
+		std::ostringstream buf;
+		buf << boost::format("%s %s") % nick % nick;
+		serv.p_whois (buf.str());
 	}
 }
 
@@ -254,7 +249,7 @@ notify_set_online (server & serv, const std::string& nick,
 	if (!servnot)
 		return;
 
-	notify_announce_online (serv, servnot, nick, tags_data);
+	notify_announce_online (serv, *servnot, nick, tags_data);
 }
 
 /* monitor can send lists for numeric 730/731 */
@@ -297,7 +292,7 @@ void notify_set_online_list (server & serv, const std::string& users,
 		auto nick = token.substr(0, pos);
 		auto servnot = notify_find (serv, nick);
 		if (servnot)
-			notify_announce_online (serv, servnot, nick, tags_data);
+			notify_announce_online (serv, *servnot, nick, tags_data);
 	}
 }
 
@@ -418,7 +413,7 @@ void notify_markonline(server &serv, const char * const word[], const message_ta
 			if (!serv.p_cmp (notify->name.c_str(), word[i]))
 			{
 				seen = true;
-				notify_announce_online (serv, servnot, notify->name, tags_data);
+				notify_announce_online (serv, *servnot, notify->name, tags_data);
 				break;
 			}
 			i++;
