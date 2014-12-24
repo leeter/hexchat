@@ -91,83 +91,76 @@ GdkColor colors[] = {
 void
 palette_alloc (GtkWidget * widget)
 {
-	int i;
-	static int done_alloc = FALSE;
-	GdkColormap *cmap;
+	static bool done_alloc = false;
 
 	if (!done_alloc)		  /* don't do it again */
 	{
-		done_alloc = TRUE;
-		cmap = gtk_widget_get_colormap (widget);
-		for (i = MAX_COL; i >= 0; i--)
+		done_alloc = true;
+		auto cmap = gtk_widget_get_colormap (widget);
+		for (int i = MAX_COL; i >= 0; i--)
 			gdk_colormap_alloc_color (cmap, &colors[i], FALSE, TRUE);
 	}
 }
 
-void
-palette_load (void)
+void palette_load (void)
 {
-	int i, j, l, fh;
-	char prefname[256];
-	struct stat st;
-	//char *cfg;
-	int red, green, blue;
-
-	fh = hexchat_open_file ("colors.conf", O_RDONLY, 0, 0);
-	if (fh != -1)
+	int fh = hexchat_open_file ("colors.conf", O_RDONLY, 0, 0);
+	if (fh == -1)
 	{
-		fstat (fh, &st);
-		std::string cfg(st.st_size + 1, '\0');
-		l = read (fh, &cfg[0], st.st_size);
-		if (l >= 0)
-			cfg[l] = '\0';
-
-		/* mIRC colors 0-31 are here */
-		for (i = 0; i < 32; i++)
-		{
-			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_get_color (&cfg[0], prefname, red, green, blue);
-			colors[i].red = red;
-			colors[i].green = green;
-			colors[i].blue = blue;
-		}
-
-		/* our special colors are mapped at 256+ */
-		for (i = 256, j = 32; j < MAX_COL+1; i++, j++)
-		{
-			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_get_color(&cfg[0], prefname, red, green, blue);
-			colors[j].red = red;
-			colors[j].green = green;
-			colors[j].blue = blue;
-		}
-		close (fh);
+		return;
 	}
+	struct stat st;
+	fstat(fh, &st);
+	std::string cfg(st.st_size + 1, '\0');
+	auto l = read(fh, &cfg[0], st.st_size);
+	if (l >= 0)
+		cfg[l] = '\0';
+
+	char prefname[256];
+	int red, green, blue;
+	/* mIRC colors 0-31 are here */
+	for (int i = 0; i < 32; i++)
+	{
+		snprintf(prefname, sizeof prefname, "color_%d", i);
+		cfg_get_color(&cfg[0], prefname, red, green, blue);
+		colors[i].red = red;
+		colors[i].green = green;
+		colors[i].blue = blue;
+	}
+
+	/* our special colors are mapped at 256+ */
+	for (int i = 256, j = 32; j < MAX_COL + 1; i++, j++)
+	{
+		snprintf(prefname, sizeof prefname, "color_%d", i);
+		cfg_get_color(&cfg[0], prefname, red, green, blue);
+		colors[j].red = red;
+		colors[j].green = green;
+		colors[j].blue = blue;
+	}
+	close(fh);
 }
 
-void
-palette_save (void)
+void palette_save (void)
 {
-	int i, j, fh;
-	char prefname[256];
-
-	fh = hexchat_open_file ("colors.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh != -1)
+	int fh = hexchat_open_file ("colors.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	if (fh == -1)
 	{
-		/* mIRC colors 0-31 are here */
-		for (i = 0; i < 32; i++)
-		{
-			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_put_color (fh, colors[i].red, colors[i].green, colors[i].blue, prefname);
-		}
-
-		/* our special colors are mapped at 256+ */
-		for (i = 256, j = 32; j < MAX_COL+1; i++, j++)
-		{
-			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_put_color (fh, colors[j].red, colors[j].green, colors[j].blue, prefname);
-		}
-
-		close (fh);
+		return;
 	}
+	char prefname[256];
+	/* mIRC colors 0-31 are here */
+	for (int i = 0; i < 32; i++)
+	{
+		snprintf(prefname, sizeof prefname, "color_%d", i);
+		cfg_put_color(fh, colors[i].red, colors[i].green, colors[i].blue, prefname);
+	}
+
+	/* our special colors are mapped at 256+ */
+	for (int i = 256, j = 32; j < MAX_COL + 1; i++, j++)
+	{
+		snprintf(prefname, sizeof prefname, "color_%d", i);
+		cfg_put_color(fh, colors[j].red, colors[j].green, colors[j].blue, prefname);
+	}
+
+	close(fh);
 }
