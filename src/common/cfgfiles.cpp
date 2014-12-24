@@ -30,12 +30,12 @@
 #include <cstdio>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string/erase.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/format.hpp>
 
-#include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "util.hpp"
 #include "fe.hpp"
@@ -52,9 +52,6 @@
 #define HEXCHAT_DIR "hexchat"
 #endif
 
-namespace bio = boost::iostreams;
-namespace fs = boost::filesystem;
-
 const std::string DEF_FONT("Monospace 9");
 const std::string DEF_FONT_ALTER("Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont");
 
@@ -68,14 +65,13 @@ const char * const languages[LANGUAGES_LENGTH] = {
 };
 
 void
-list_addentry (GSList ** list, const char *cmd, const char *name)
+list_addentry(GSList ** list, std::string cmd, std::string name)
 {
-	struct popup *pop = new popup;
-	pop->name = name;
-	if (cmd)
-		pop->cmd = cmd;
+	std::unique_ptr<popup> pop(new popup);
+	pop->name = std::move(name);
+	pop->cmd = std::move(cmd);
 
-	*list = g_slist_append (*list, pop);
+	*list = g_slist_append (*list, pop.release());
 }
 
 /* read it in from a buffer to our linked list */
@@ -113,16 +109,10 @@ list_load_from_data (GSList ** list, const std::string &ibuf)
 	}
 }
 
-void
-list_loadconf (const char *file, GSList ** list, const char *defaultconf)
+void list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 {
-	char *filebuf;
-	int fd;
-	struct stat st;
-
-	filebuf = g_build_filename (get_xdir (), file, NULL);
-	fd = g_open (filebuf, O_RDONLY | OFLAGS, 0);
-	g_free (filebuf);
+	auto filebuf = io::fs::make_path(config::config_dir()) / file;
+	int fd = g_open (filebuf.string().c_str(), O_RDONLY | OFLAGS, 0);
 
 	if (fd == -1)
 	{
@@ -132,6 +122,8 @@ list_loadconf (const char *file, GSList ** list, const char *defaultconf)
 		}			
 		return;
 	}
+
+	struct stat st;
 	if (fstat (fd, &st) != 0)
 	{
 		perror ("fstat");
@@ -150,25 +142,21 @@ list_free (GSList ** list)
 {
 	while (*list)
 	{
-		popup *data = (popup *) (*list)->data;
-		*list = g_slist_remove(*list, data);
-		delete data;
+		std::unique_ptr<popup> data(static_cast<popup *>((*list)->data));
+		*list = g_slist_remove(*list, data.get());
 	}
 }
 
-bool
-list_delentry (GSList ** list, char *name)
+bool list_delentry(GSList ** list, const char name[])
 {
-	struct popup *pop;
 	GSList *alist = *list;
-
 	while (alist)
 	{
-		pop = (struct popup *) alist->data;
+		auto pop = static_cast<popup *>(alist->data);
 		if (!g_ascii_strcasecmp (name, pop->name.c_str()))
 		{
-			*list = g_slist_remove (*list, pop);
-			delete pop;
+			std::unique_ptr<popup> pop_ptr(pop);
+			*list = g_slist_remove (*list, pop_ptr.get());
 			return true;
 		}
 		alist = alist->next;
@@ -217,25 +205,20 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 	}
 }
 
-static int
-cfg_put_str (int fh, const char *var, const char *value)
+static bool cfg_put_str (int fh, const char *var, const char *value)
 {
 	char buf[512];
-	int len;
 
 	snprintf (buf, sizeof buf, "%s = %s\n", var, value);
-	len = strlen (buf);
+	auto len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
 
-int
-cfg_put_color (int fh, int r, int g, int b, char *var)
+bool cfg_put_color (int fh, int r, int g, int b, const char var[])
 {
 	char buf[400];
-	int len;
-
 	snprintf (buf, sizeof buf, "%s = %04x %04x %04x\n", var, r, g, b);
-	len = strlen (buf);
+	auto len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
 
@@ -253,30 +236,28 @@ cfg_put_int (int fh, int value, const char *var)
 	return (write (fh, buf, len) == len);
 }
 
-int
-cfg_get_color (char *cfg, char *var, int *r, int *g, int *b)
+bool cfg_get_color(char *cfg, const char var[], int &r, int &g, int &b)
 {
 	char str[128];
 
 	if (!cfg_get_str (cfg, var, str, sizeof (str)))
-		return 0;
-
-	sscanf (str, "%04x %04x %04x", r, g, b);
-	return 1;
+		return false;
+	std::istringstream in(str);
+	in >> std::hex >> r >> g >> b;
+	return true;
 }
 
-int
-cfg_get_int_with_result (char *cfg, const char *var, int *result)
+int cfg_get_int_with_result (char *cfg, const char *var, bool &result)
 {
 	char str[128];
 
 	if (!cfg_get_str (cfg, var, str, sizeof (str)))
 	{
-		*result = 0;
+		result = false;
 		return 0;
 	}
 
-	*result = 1;
+	result = true;
 	return atoi (str);
 }
 
@@ -307,7 +288,7 @@ get_xdir (void)
 #ifndef WIN32
 		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
 #else
-
+		namespace fs = boost::filesystem;
 		wchar_t* roaming_path_wide = nullptr;
 
 		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
@@ -355,8 +336,7 @@ check_config_dir (void)
 	return g_access (get_xdir (), F_OK);
 }
 
-static char *
-default_file (void)
+static const char * default_file (void)
 {
 	static char *dfile = NULL;
 
@@ -628,9 +608,7 @@ convert_with_fallback (const char *str, const char *fallback)
 static int
 find_language_number (const char * const lang)
 {
-	int i;
-
-	for (i = 0; i < LANGUAGES_LENGTH; i++)
+	for (int i = 0; i < LANGUAGES_LENGTH; i++)
 		if (!strcmp (lang, languages[i]))
 			return i;
 
@@ -642,11 +620,8 @@ find_language_number (const char * const lang)
 static int
 get_default_language (void)
 {
-	const char *locale;
-	int lang_no;
-
 	/* LC_ALL overrides LANG, so we must check it first */
-	locale = g_getenv ("LC_ALL");
+	auto locale = g_getenv ("LC_ALL");
 
 	if (!locale)
 		locale = g_getenv ("LANG") ? g_getenv ("LANG") : "en";
@@ -660,7 +635,7 @@ get_default_language (void)
 	if (dot_loc != std::string::npos)
 		lang.erase(dot_loc);
 
-	lang_no = find_language_number (lang.c_str());
+	int lang_no = find_language_number (lang.c_str());
 
 	if (lang_no >= 0)
 	{
@@ -680,41 +655,35 @@ static char *
 get_default_spell_languages (void)
 {
 	const gchar* const *langs = g_get_language_names ();
-	char *last = NULL;
-	//char *p;
 	char lang_list[64] = { 0 };
 	char *ret = lang_list;
-	int i;
 
 	if (langs != NULL)
 	{
-		for (i = 0; langs[i]; i++)
+		glib_string last;
+		for (int i = 0; langs[i]; i++)
 		{
-			if (g_ascii_strncasecmp (langs[i], "C", 1) != 0 && strlen (langs[i]) >= 2)
+			if (g_ascii_strncasecmp (langs[i], "C", 1) == 0 || strlen (langs[i]) < 2)
 			{
-				/* Avoid duplicates */
-				if (!last || !g_str_has_prefix (langs[i], last))
+				continue;
+			}
+			/* Avoid duplicates */
+			if (!last || !g_str_has_prefix(langs[i], last.get()))
+			{
+				if (last != NULL)
 				{
-					if (last != NULL)
-					{
-						g_free(last);
-						g_strlcat (lang_list, ",", sizeof(lang_list));
-					}
-
-					/* ignore .utf8 */
-					std::string lang_without_utf8(langs[i]);
-					size_t location = lang_without_utf8.find_last_of('.');
-					if (location > 0)
-						lang_without_utf8[location] = '\0';
-
-					last = g_strndup (lang_without_utf8.c_str(), 2);
-
-					g_strlcat (lang_list, lang_without_utf8.c_str(), sizeof(lang_list));
+					g_strlcat(lang_list, ",", sizeof(lang_list));
 				}
+
+				/* ignore .utf8 */
+				std::string lang_without_utf8(langs[i]);
+				boost::erase_last(lang_without_utf8, ".utf8");
+
+				last.reset(g_strndup(lang_without_utf8.c_str(), 2));
+
+				g_strlcat(lang_list, lang_without_utf8.c_str(), sizeof(lang_list));
 			}
 		}
-		if (last != NULL)
-			g_free(last);
 
 		if (lang_list[0])
 			return g_strdup (ret);
@@ -728,9 +697,6 @@ load_default_config(void)
 {
 	const char *username, *realname, *font, *langs;
 	char *sp;
-#ifdef WIN32
-	wchar_t* roaming_path_wide;
-#endif
 
 	username = g_get_user_name ();
 	if (!username)
@@ -855,6 +821,7 @@ load_default_config(void)
 	strcpy (prefs.hex_away_reason, _("I'm busy"));
 	strcpy (prefs.hex_completion_suffix, ",");
 #ifdef WIN32
+	wchar_t* roaming_path_wide;
 	if (portable_mode () || SHGetKnownFolderPath (FOLDERID_Downloads, 0, NULL, &roaming_path_wide) != S_OK)
 	{
 		snprintf (prefs.hex_dcc_dir, sizeof (prefs.hex_dcc_dir), "%s\\downloads", get_xdir ());
@@ -880,7 +847,7 @@ load_default_config(void)
 	
 	strcpy (prefs.hex_gui_ulist_doubleclick, "QUERY %s");
 	strcpy (prefs.hex_input_command_char, "/");
-	strcpy (prefs.hex_irc_logmask, "%n"G_DIR_SEPARATOR_S"%c.log");
+	strcpy (prefs.hex_irc_logmask, "%n" G_DIR_SEPARATOR_S "%c.log");
 	safe_strcpy (prefs.hex_irc_nick1, username, sizeof(prefs.hex_irc_nick1));
 	safe_strcpy (prefs.hex_irc_nick2, username, sizeof(prefs.hex_irc_nick2));
 	g_strlcat (prefs.hex_irc_nick2, "_", sizeof(prefs.hex_irc_nick2));
@@ -923,31 +890,24 @@ load_default_config(void)
 	g_free ((char *)langs);
 }
 
-int
-make_config_dirs (void)
+bool make_config_dirs (void)
 {
-	char *buf;
-
 	if (g_mkdir_with_parents (get_xdir (), 0700) != 0)
-		return -1;
+		return false;
 	
-	buf = g_build_filename (get_xdir (), "addons", NULL);
-	if (g_mkdir (buf, 0700) != 0)
+	glib_string buf(g_build_filename (get_xdir (), "addons", NULL));
+	if (g_mkdir (buf.get(), 0700) != 0)
 	{
-		g_free (buf);
-		return -1;
+		return false;
 	}
-	g_free (buf);
 	
-	buf = g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, NULL);
-	if (g_mkdir (buf, 0700) != 0)
+	buf.reset(g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, NULL));
+	if (g_mkdir (buf.get(), 0700) != 0)
 	{
-		g_free (buf);
-		return -1;
+		return false;
 	}
-	g_free (buf);
 
-	return 0;
+	return true;
 }
 
 int
@@ -962,32 +922,30 @@ make_dcc_dirs (void)
 	return 0;
 }
 
-int
-load_config (void)
+int load_config (void)
 {
-	char *cfg, *sp;
-	int res, val, i;
-
 	g_assert(check_config_dir () == 0);
-
-	if (!g_file_get_contents (default_file (), &cfg, NULL, NULL))
+	gchar* cfg_ptr;
+	if (!g_file_get_contents (default_file (), &cfg_ptr, NULL, NULL))
 		return -1;
-
+	glib_string cfg(cfg_ptr);
 	/* If the config is incomplete we have the default values loaded */
 	load_default_config();
 
-	i = 0;
+	int i = 0;
 	do
 	{
+		bool res;
+		int val;
 		switch (vars[i].type)
 		{
 		case TYPE_STR:
-			cfg_get_str (cfg, vars[i].name, (char *) &prefs + vars[i].offset,
+			cfg_get_str (cfg.get(), vars[i].name, (char *) &prefs + vars[i].offset,
 				     vars[i].len);
 			break;
 		case TYPE_BOOL:
 		case TYPE_INT:
-			val = cfg_get_int_with_result (cfg, vars[i].name, &res);
+			val = cfg_get_int_with_result(cfg.get(), vars[i].name, res);
 			if (res)
 				*((int *) &prefs + vars[i].offset) = val;
 			break;
@@ -995,48 +953,40 @@ load_config (void)
 		i++;
 	}
 	while (vars[i].name);
-	
-	g_free (cfg);
 
 	if (prefs.hex_gui_win_height < 138)
 		prefs.hex_gui_win_height = 138;
 	if (prefs.hex_gui_win_width < 106)
 		prefs.hex_gui_win_width = 106;
 
-	sp = strchr (prefs.hex_irc_user_name, ' ');
+	auto sp = strchr (prefs.hex_irc_user_name, ' ');
 	if (sp)
 		sp[0] = 0;	/* spaces in username would break the login */
 
 	return 0;
 }
 
-int
-save_config (void)
+bool save_config (void)
 {
-	int fh, i;
-	char *config, *new_config;
-
 	if (check_config_dir () != 0)
 		make_config_dirs ();
 
-	config = default_file ();
-	new_config = g_strconcat (config, ".new", NULL);
+	auto config = default_file ();
+	glib_string new_config(g_strconcat (config, ".new", NULL));
 	
-	fh = g_open (new_config, OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
+	int fh = g_open (new_config.get(), OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh == -1)
 	{
-		g_free (new_config);
-		return 0;
+		return false;
 	}
 
 	if (!cfg_put_str (fh, "version", PACKAGE_VERSION))
 	{
 		close (fh);
-		g_free (new_config);
-		return 0;
+		return false;
 	}
 		
-	i = 0;
+	int i = 0;
 	do
 	{
 		switch (vars[i].type)
@@ -1045,8 +995,7 @@ save_config (void)
 			if (!cfg_put_str (fh, vars[i].name, (char *) &prefs + vars[i].offset))
 			{
 				close (fh);
-				g_free (new_config);
-				return 0;
+				return false;
 			}
 			break;
 		case TYPE_INT:
@@ -1054,8 +1003,7 @@ save_config (void)
 			if (!cfg_put_int (fh, *((int *) &prefs + vars[i].offset), vars[i].name))
 			{
 				close (fh);
-				g_free (new_config);
-				return 0;
+				return false;
 			}
 		}
 		i++;
@@ -1064,35 +1012,28 @@ save_config (void)
 
 	if (close (fh) == -1)
 	{
-		g_free (new_config);
-		return 0;
+		return false;
 	}
 
 #ifdef WIN32
 	g_unlink (config);	/* win32 can't rename to an existing file */
 #endif
-	if (g_rename (new_config, config) == -1)
+	if (g_rename (new_config.get(), config) == -1)
 	{
-		g_free (new_config);
-		return 0;
+		return false;
 	}
-	g_free (new_config);
 
-	return 1;
+	return true;
 }
 
 static void
 set_showval (session *sess, const struct prefs *var, char *buf)
 {
-	size_t dots;
 	std::ostringstream buffer;
 	std::ostream_iterator<char> tbuf(buffer);
 	auto len = strlen (var->name);
 	std::copy_n(var->name, len, tbuf);
-	if (len > 29)
-		dots = 0;
-	else
-		dots = 29 - len;
+	size_t dots = len > 29 ? 0 : 29 - len;
 
 	*tbuf++ = '\003';
 	*tbuf++ = '2';
@@ -1128,9 +1069,7 @@ set_showval (session *sess, const struct prefs *var, char *buf)
 static void
 set_list (session * sess, char *tbuf)
 {
-	int i;
-
-	i = 0;
+	int i = 0;
 	do
 	{
 		set_showval (sess, &vars[i], tbuf);
@@ -1157,14 +1096,13 @@ cfg_get_bool (const char *var)
 	return -1;
 }
 
-int
-cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int wild = FALSE;
+	bool wild = false;
 	bool or_token = false;
-	int off = FALSE;
-	int quiet = FALSE;
-	int erase = FALSE;
+	bool off = false;
+	bool quiet = false;
+	bool erase = false;
 	int i = 0, finds = 0, found;
 	int idx = 2;
 	int prev_numeric;
@@ -1173,14 +1111,14 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (g_ascii_strcasecmp (word[2], "-e") == 0)
 	{
 		idx++;
-		erase = TRUE;
+		erase = true;
 	}
 
 	/* turn a bit OFF */
 	if (g_ascii_strcasecmp (word[idx], "-off") == 0)
 	{
 		idx++;
-		off = TRUE;
+		off = true;
 	}
 
 	/* turn a bit ON */
@@ -1193,7 +1131,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (g_ascii_strcasecmp (word[idx], "-quiet") == 0)
 	{
 		idx++;
-		quiet = TRUE;
+		quiet = true;
 	}
 
 	var = word[idx];
@@ -1207,7 +1145,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if ((strchr (var, '*') || strchr (var, '?')) && !*val)
 	{
-		wild = TRUE;
+		wild = true;
 	}
 
 	if (*val == '=')
@@ -1319,12 +1257,8 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-int
-hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
+int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
-	char *buf;
-	int fd;
-
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
 		if (xof_flags & io::fs::XOF_DOMODE)
@@ -1333,34 +1267,19 @@ hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 			return g_open (file, flags | OFLAGS, 0);
 	}
 
-	buf = g_build_filename (get_xdir (), file, NULL);
-
+	auto buf = io::fs::make_path(config::config_dir()) / file;
 	if (xof_flags & io::fs::XOF_DOMODE)
 	{
-		fd = g_open (buf, flags | OFLAGS, mode);
+		return g_open (buf.string().c_str(), flags | OFLAGS, mode);
 	}
-	else
-	{
-		fd = g_open (buf, flags | OFLAGS, 0);
-	}
-
-	g_free (buf);
-
-	return fd;
+	return g_open(buf.string().c_str(), flags | OFLAGS, 0);
 }
 
-FILE *
-hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
+FILE * hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {
-	char *buf;
-	FILE *fh;
-
 	if (xof_flags & io::fs::XOF_FULLPATH)
-		return fopen (file, mode);
+		return g_fopen (file, mode);
 
-	buf = g_build_filename (get_xdir (), file, NULL);
-	fh = g_fopen (buf, mode);
-	g_free (buf);
-
-	return fh;
+	auto buf = io::fs::make_path(config::config_dir()) / file;
+	return g_fopen (buf.string().c_str(), mode);
 }

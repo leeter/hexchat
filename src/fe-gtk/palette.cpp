@@ -126,7 +126,7 @@ palette_load (void)
 		for (i = 0; i < 32; i++)
 		{
 			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_get_color (&cfg[0], prefname, &red, &green, &blue);
+			cfg_get_color (&cfg[0], prefname, red, green, blue);
 			colors[i].red = red;
 			colors[i].green = green;
 			colors[i].blue = blue;
@@ -136,7 +136,7 @@ palette_load (void)
 		for (i = 256, j = 32; j < MAX_COL+1; i++, j++)
 		{
 			snprintf (prefname, sizeof prefname, "color_%d", i);
-			cfg_get_color(&cfg[0], prefname, &red, &green, &blue);
+			cfg_get_color(&cfg[0], prefname, red, green, blue);
 			colors[j].red = red;
 			colors[j].green = green;
 			colors[j].blue = blue;
