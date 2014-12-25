@@ -80,6 +80,7 @@ static char * scrollback_get_filename (const session &sess)
 	if (!net)
 		return nullptr;
 	bfs::path path = bfs::path( config::config_dir() ) / "scrollback" / net / "";
+	bfs::create_directories(path);
 
 	auto chan = log_create_filename (sess.channel);
 	char *buf = nullptr;
@@ -245,8 +246,14 @@ scrollback_save (session &sess, const std::string & text)
 void
 scrollback_load (session &sess)
 {
-	if (sess.text_scrollback == SET_DEFAULT && !prefs.hex_text_replay || sess.text_scrollback != SET_ON)
+	if (sess.text_scrollback == SET_DEFAULT)
 	{
+		if (!prefs.hex_text_replay)
+			return;
+	}
+	else
+	{
+		if (sess.text_scrollback != SET_ON)
 			return;
 	}
 	
