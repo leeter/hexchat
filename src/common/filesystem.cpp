@@ -44,8 +44,7 @@ namespace io
 {
 	namespace fs
 	{
-		bfs::path
-			make_path(const std::string & path)
+		bfs::path make_path(const std::string & path)
 		{
 #ifdef WIN32
 			return charset::widen(path);

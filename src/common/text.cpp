@@ -21,19 +21,21 @@
 #define NOMINMAX
 #endif
 
-#include <string>
-#include <cwchar>
-#include <sstream>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <ctime>
+#include <cwchar>
+#include <memory>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
 #ifdef WIN32
@@ -71,26 +73,18 @@ static ca_context *ca_con;
 static void mkdir_p (char *filename);
 static std::string log_create_filename (const std::string& channame);
 
-static char *
-scrollback_get_filename (session &sess)
+static char * scrollback_get_filename (const session &sess)
 {
-	const char *net;
-	char *buf;
-
-	net = sess.server->get_network(false);
+	namespace bfs = boost::filesystem;
+	const char * net = sess.server->get_network(false);
 	if (!net)
-		return NULL;
-	auto path = io::fs::make_path({ { get_xdir(), "scrollback", net, "" } });
-	boost::filesystem::create_directories(path);
-	/*buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, "");
-	mkdir_p (buf);
-	g_free (buf);*/
+		return nullptr;
+	bfs::path path = bfs::path( config::config_dir() ) / "scrollback" / net / "";
 
 	auto chan = log_create_filename (sess.channel);
+	char *buf = nullptr;
 	if (!chan.empty())
 		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan.c_str());
-	else
-		buf = NULL;
 
 	return buf;
 }
@@ -147,32 +141,29 @@ scrollback_close (session &sess)
 static void
 scrollback_shrink (session &sess)
 {
-	char *file;
-	char *buf;
+	
 	int fh;
 	int lines;
 	int line;
-	gsize len;
-	char *p;
 
 	scrollback_close (sess);
 	sess.scrollwritten = 0;
 	lines = 0;
-
-	if ((file = scrollback_get_filename (sess)) == NULL)
+	glib_string file(scrollback_get_filename(sess));
+	if (!file)
 	{
-		g_free (file);
 		return;
 	}
 
-	if (!g_file_get_contents (file, &buf, &len, NULL))
+	char *buf;
+	gsize len;
+	if (!g_file_get_contents (file.get(), &buf, &len, NULL))
 	{
-		g_free (file);
 		return;
 	}
-
+	glib_string buf_ptr(buf);
 	/* count all lines */
-	p = buf;
+	auto p = buf;
 	while (p != buf + len)
 	{
 		if (*p == '\n')
@@ -180,11 +171,9 @@ scrollback_shrink (session &sess)
 		p++;
 	}
 
-	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
-	g_free (file);
+	fh = g_open (file.get(), O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
 	if (fh == -1)
 	{
-		free (buf);
 		return;
 	}
 
@@ -207,7 +196,6 @@ scrollback_shrink (session &sess)
 	}
 
 	close (fh);
-	free (buf);
 }
 
 static void
@@ -229,20 +217,18 @@ scrollback_save (session &sess, const std::string & text)
 
 	if (sess.scrollfd == -1)
 	{
-		char* buf;
-		if ((buf = scrollback_get_filename (sess)) == NULL)
+		glib_string buf(scrollback_get_filename(sess));
+		if (!buf)
 			return;
 
-		sess.scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY, 0644);
-		g_free (buf);
+		sess.scrollfd = g_open (buf.get(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 		if (sess.scrollfd == -1)
 			return;
 	}
 
 	auto stamp = time (0);
-	auto buf = g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp);
-	write (sess.scrollfd, buf, strlen (buf));
-	g_free (buf);
+	glib_string buf(g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp));
+	write (sess.scrollfd, buf.get(), strlen (buf.get()));
 
 	auto len = text.size();
 	write (sess.scrollfd, text.c_str(), text.size());
@@ -259,104 +245,80 @@ scrollback_save (session &sess, const std::string & text)
 void
 scrollback_load (session &sess)
 {
-	char *buf;
-	char *text;
-	time_t stamp;
-	int lines;
-	GIOChannel *io;
-	GError *file_error = NULL;
-	GError *io_err = NULL;
-
-	if (sess.text_scrollback == SET_DEFAULT)
+	if (sess.text_scrollback == SET_DEFAULT && !prefs.hex_text_replay || sess.text_scrollback != SET_ON)
 	{
-		if (!prefs.hex_text_replay)
 			return;
 	}
-	else
-	{
-		if (sess.text_scrollback != SET_ON)
-			return;
-	}
-
-	if ((buf = scrollback_get_filename (sess)) == NULL)
+	
+	glib_string buf(scrollback_get_filename(sess));
+	if (!buf)
 		return;
-
-	io = g_io_channel_new_file (buf, "r", &file_error);
-	g_free (buf);
+	GError *file_error = nullptr;
+	std::unique_ptr<GIOChannel, decltype(&g_io_channel_unref)> io(g_io_channel_new_file (buf.get(), "r", &file_error), g_io_channel_unref);
 	if (!io)
 		return;
 
-	lines = 0;
+	int lines = 0;
+	char *text;
+	time_t stamp;
 
 	while (1)
 	{
 		gsize n_bytes;
-		GIOStatus io_status;
-
-		io_status = g_io_channel_read_line (io, &buf, &n_bytes, NULL, &io_err);
-		
-		if (io_status == G_IO_STATUS_NORMAL)
+		gchar* buf_ptr;
+		GError *io_err = nullptr;
+		auto io_status = g_io_channel_read_line (io.get(), &buf_ptr, &n_bytes, nullptr, &io_err);
+		glib_string buf(buf_ptr);
+		if (io_status != G_IO_STATUS_NORMAL)
 		{
-			char *buf_tmp;
+			break;
+		}
 
-			/* If nothing but funny trailing matter e.g. 0x0d or 0x0d0a, toss it */
-			if (n_bytes >= 1 && buf[0] == 0x0d)
+		/* If nothing but funny trailing matter e.g. 0x0d or 0x0d0a, toss it */
+		if (n_bytes >= 1 && buf[0] == 0x0d)
+		{
+			continue;
+		}
+
+		n_bytes--;
+		auto buf_tmp = buf.get();
+		buf.reset(g_strndup(buf_tmp, n_bytes));
+
+		/*
+		* Some scrollback lines have three blanks after the timestamp and a newline
+		* Some have only one blank and a newline
+		* Some don't even have a timestamp
+		* Some don't have any text at all
+		*/
+		if (buf[0] == 'T')
+		{
+			stamp = strtoull(buf.get() + 2, NULL, 10); /* in case time_t is 64 bits */
+			text = strchr(buf.get() + 3, ' ');
+			if (text && text[1])
 			{
-				g_free (buf);
-				continue;
-			}
-
-			n_bytes--;
-			buf_tmp = buf;
-			buf = g_strndup (buf_tmp, n_bytes);
-			g_free (buf_tmp);
-
-			/*
-			 * Some scrollback lines have three blanks after the timestamp and a newline
-			 * Some have only one blank and a newline
-			 * Some don't even have a timestamp
-			 * Some don't have any text at all
-			 */
-			if (buf[0] == 'T')
-			{
-				if (sizeof (time_t) == 4)
-					stamp = strtoul (buf + 2, NULL, 10);
-				else
-					stamp = strtoull (buf + 2, NULL, 10); /* in case time_t is 64 bits */
-				text = strchr (buf + 3, ' ');
-				if (text && text[1])
+				std::string temp;
+				if (prefs.hex_text_stripcolor_replay)
 				{
-					std::string temp;
-					if (prefs.hex_text_stripcolor_replay)
-					{
-						temp = strip_color (text + 1, STRIP_COLOR);
-						text = &temp[0];
-					}
-
-					fe_print_text (sess, text, stamp, TRUE);
-					}
-				else
-				{
-					fe_print_text (sess, "  ", stamp, TRUE);
+					temp = strip_color(text + 1, STRIP_COLOR);
+					text = &temp[0];
 				}
+
+				fe_print_text(sess, text, stamp, TRUE);
 			}
 			else
 			{
-				if (strlen (buf))
-					fe_print_text (sess, buf, 0, TRUE);
-				else
-					fe_print_text (sess, "  ", 0, TRUE);
+				fe_print_text(sess, "  ", stamp, TRUE);
 			}
-			lines++;
-
-			g_free (buf);
 		}
-
 		else
-			break;
+		{
+			if (strlen(buf.get()))
+				fe_print_text(sess, buf.get(), 0, TRUE);
+			else
+				fe_print_text(sess, "  ", 0, TRUE);
+		}
+		lines++;
 	}
-
-	g_io_channel_unref (io);
 
 	sess.scrollwritten = lines;
 
@@ -364,9 +326,8 @@ scrollback_load (session &sess)
 	{
 		text = ctime (&stamp);
 		text[24] = 0;	/* get rid of the \n */
-		buf = g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text);
-		fe_print_text (sess, buf, 0, TRUE);
-		g_free (buf);
+		buf.reset(g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text));
+		fe_print_text (sess, buf.get(), 0, TRUE);
 		/*EMIT_SIGNAL (XP_TE_GENMSG, sess, "*", buf, NULL, NULL, NULL, 0);*/
 	}
 }
@@ -376,7 +337,7 @@ log_close (session &sess)
 {
 	if (sess.logfd != -1)
 	{
-		std::time_t currenttime = std::time (NULL);
+		std::time_t currenttime = std::time (nullptr);
 		std::ostringstream stream(_("**** ENDING LOGGING AT "), std::ios_base::ate);
 		stream << std::ctime(&currenttime) <<"\n";
 		auto to_output = stream.str();
@@ -402,11 +363,10 @@ static std::string
 log_create_filename (const std::string & channame)
 {
 	std::string ret(channame);
-	int mbl;
 
 	for (auto tmp = ret.begin(); tmp != ret.end();)
 	{
-		mbl = g_utf8_skip[*tmp];
+		auto mbl = g_utf8_skip[*tmp];
 		if (mbl == 1)
 		{
 #ifndef WIN32
@@ -534,7 +494,6 @@ static std::string log_create_pathname (const char *servname, const char *channa
 {
 	char fname[384];
 	char fnametime[384];
-	time_t now;
 	std::string net_name, chan_name;
 
 	if (!netname)
@@ -559,7 +518,7 @@ static std::string log_create_pathname (const char *servname, const char *channa
 	log_insert_vars (fname, sizeof (fname), prefs.hex_irc_logmask, chan_name.c_str(), net_name.c_str(), servname);
 
 	/* insert time/date */
-	now = time (NULL);
+	auto now = time (NULL);
 	strftime_utf8 (fnametime, sizeof (fnametime), fname, now);
 
 	/* create final path/filename */
@@ -581,10 +540,7 @@ static std::string log_create_pathname (const char *servname, const char *channa
 static int
 log_open_file (const char *servname, const char *channame, const char *netname)
 {
-	char buf[512];
 	int fd;
-	time_t currenttime;
-
 	auto file = log_create_pathname (servname, channame, netname);
 
 #ifdef WIN32
@@ -595,7 +551,8 @@ log_open_file (const char *servname, const char *channame, const char *netname)
 
 	if (fd == -1)
 		return -1;
-	currenttime = time (NULL);
+	auto currenttime = time (NULL);
+	char buf[512];
 	write (fd, buf,
 			 snprintf (buf, sizeof (buf), _("**** BEGIN LOGGING AT %s\n"),
 						  ctime (&currenttime)));
@@ -678,9 +635,6 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 static void
 log_write (session &sess, const std::string & text, time_t ts)
 {
-	char *stamp;
-	int len;
-
 	if (sess.text_logging == SET_DEFAULT)
 	{
 		if (!prefs.hex_irc_logging)
@@ -703,16 +657,17 @@ log_write (session &sess, const std::string & text, time_t ts)
 		close(sess.logfd);
 		sess.logfd = log_open_file(sess.server->servername, sess.channel,
 			sess.server->get_network(false));
-		}
+	}
 
 	if (prefs.hex_stamp_log)
 	{
 		if (!ts) ts = time(0);
-		len = get_stamp_str (prefs.hex_stamp_log_format, ts, &stamp);
+		char* stamp;
+		auto len = get_stamp_str (prefs.hex_stamp_log_format, ts, &stamp);
 		if (len)
 		{
+			glib_string stamp_ptr(stamp);
 			write (sess.logfd, stamp, len);
-			g_free (stamp);
 		}
 	}
 	auto temp = strip_color (text, STRIP_ALL);
@@ -870,35 +825,36 @@ text_validate (char **text, size_t *len)
 void
 PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 {
-	std::string buf(text);
-	char *conv = nullptr;
-
+	// putting this in here to help track down places that are sending in invalid UTF-8
+	if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
+	{
+		throw std::invalid_argument("text must be valid utf8");
+	}
 	if (!sess)
 	{
 		if (!sess_list)
 			return;
-		sess = (session *) sess_list->data;
+		sess = static_cast<session *>(sess_list->data);
 	}
+	
+	std::string buf(text);
 
 	/* make sure it's valid utf8 */
 	if (buf.empty())
 	{
 		buf = "\n";
 		//buf.push_back(0);
-	} else
-	{
-		size_t len = 0;
-		//buf.push_back(0);
-		char* buf_ptr = &buf[0];
-		conv = text_validate (&buf_ptr, &len);
-	}
+	}// else
+	//{
+	//	size_t len = 0;
+	//	//buf.push_back(0);
+	//	char* buf_ptr = &buf[0];
+	//	conv.reset(text_validate (&buf_ptr, &len));
+	//}
 
 	log_write(*sess, buf, timestamp);
 	scrollback_save(*sess, buf);
 	fe_print_text(*sess, &buf[0], timestamp, FALSE);
-
-	if (conv)
-	g_free (conv);
 }
 
 void
@@ -908,21 +864,19 @@ PrintText (session *sess, const std::string & text)
 }
 
 void
-PrintTextf (session *sess, const char *format, ...)
+PrintTextf (session *sess, const char format[], ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf(g_strdup_vprintf (format, args));
 	va_end (args);
 
-	PrintText (sess, buf);
-	g_free (buf);
+	PrintText (sess, buf.get());
 }
 
 void
-PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...)
+PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)
 {
 	va_list args;
 	char *buf;

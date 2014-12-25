@@ -413,7 +413,7 @@ struct glib_deleter
 	}
 };
 
-typedef std::unique_ptr<gchar, glib_deleter> glib_string;
+typedef std::unique_ptr<gchar[], glib_deleter> glib_string;
 
 /* CL: get a random int in the range [0..n-1]. DON'T use rand() % n, it gives terrible results. */
 int RAND_INT(int n); 
