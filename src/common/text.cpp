@@ -35,8 +35,11 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
+
 
 #ifdef WIN32
 #include <Windows.h>
@@ -58,7 +61,6 @@
 #include "outbound.hpp"
 #include "hexchatc.hpp"
 #include "text.hpp"
-#include "charset_helpers.hpp"
 #include "typedef.h"
 #include "session.hpp"
 
@@ -70,24 +72,23 @@
 static ca_context *ca_con;
 #endif
 
-static void mkdir_p (char *filename);
 static std::string log_create_filename (const std::string& channame);
 
-static char * scrollback_get_filename (const session &sess)
+static boost::optional<boost::filesystem::path> scrollback_get_filename (const session &sess)
 {
 	namespace bfs = boost::filesystem;
 	const char * net = sess.server->get_network(false);
 	if (!net)
-		return nullptr;
+		return boost::none;
 	bfs::path path = bfs::path( config::config_dir() ) / "scrollback" / net / "";
-	bfs::create_directories(path);
+	boost::system::error_code ec;
+	bfs::create_directories(path, ec);
 
 	auto chan = log_create_filename (sess.channel);
-	char *buf = nullptr;
-	if (!chan.empty())
-		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan.c_str());
+	if (chan.empty())
+		return boost::none;
 
-	return buf;
+	return path / (chan + ".txt");
 }
 
 #if 0
@@ -97,7 +98,7 @@ scrollback_unlock (session *sess)
 {
 	char buf[1024];
 
-	if (scrollback_get_filename (sess, buf, sizeof (buf) - 6) == NULL)
+	if (!scrollback_get_filename (sess, buf, sizeof (buf) - 6))
 		return;
 
 	strcat (buf, ".lock");
@@ -110,7 +111,7 @@ scrollback_lock (session *sess)
 	char buf[1024];
 	int fh;
 
-	if (scrollback_get_filename (sess, buf, sizeof (buf) - 6) == NULL)
+	if (!scrollback_get_filename (sess, buf, sizeof (buf) - 6))
 		return FALSE;
 
 	strcat (buf, ".lock");
@@ -127,8 +128,7 @@ scrollback_lock (session *sess)
 
 #endif
 
-void
-scrollback_close (session &sess)
+void scrollback_close (session &sess)
 {
 	if (sess.scrollfd != -1)
 	{
@@ -139,18 +139,12 @@ scrollback_close (session &sess)
 
 /* shrink the file to roughly prefs.hex_text_max_lines */
 
-static void
-scrollback_shrink (session &sess)
+static void scrollback_shrink (session &sess)
 {
-	
-	int fh;
-	int lines;
-	int line;
-
 	scrollback_close (sess);
 	sess.scrollwritten = 0;
-	lines = 0;
-	glib_string file(scrollback_get_filename(sess));
+	int lines = 0;
+	auto file = scrollback_get_filename(sess);
 	if (!file)
 	{
 		return;
@@ -158,7 +152,7 @@ scrollback_shrink (session &sess)
 
 	char *buf;
 	gsize len;
-	if (!g_file_get_contents (file.get(), &buf, &len, NULL))
+	if (!g_file_get_contents (file->string().c_str(), &buf, &len, NULL))
 	{
 		return;
 	}
@@ -172,13 +166,13 @@ scrollback_shrink (session &sess)
 		p++;
 	}
 
-	fh = g_open (file.get(), O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
+	int fh = g_open(file->string().c_str(), O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
 	if (fh == -1)
 	{
 		return;
 	}
 
-	line = 0;
+	int line = 0;
 	p = buf;
 	while (p != buf + len)
 	{
@@ -199,8 +193,7 @@ scrollback_shrink (session &sess)
 	close (fh);
 }
 
-static void
-scrollback_save (session &sess, const std::string & text)
+static void scrollback_save (session &sess, const std::string & text)
 {
 	if (sess.type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
@@ -218,11 +211,11 @@ scrollback_save (session &sess, const std::string & text)
 
 	if (sess.scrollfd == -1)
 	{
-		glib_string buf(scrollback_get_filename(sess));
-		if (!buf)
+		auto path = scrollback_get_filename(sess);
+		if (!path)
 			return;
 
-		sess.scrollfd = g_open (buf.get(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+		sess.scrollfd = g_open (path->string().c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 		if (sess.scrollfd == -1)
 			return;
 	}
@@ -243,25 +236,23 @@ scrollback_save (session &sess, const std::string & text)
 		scrollback_shrink (sess);
 }
 
-void
-scrollback_load (session &sess)
+void scrollback_load (session &sess)
 {
 	if (sess.text_scrollback == SET_DEFAULT)
 	{
 		if (!prefs.hex_text_replay)
 			return;
 	}
-	else
+	else if (sess.text_scrollback != SET_ON)
 	{
-		if (sess.text_scrollback != SET_ON)
-			return;
+		return;
 	}
 	
-	glib_string buf(scrollback_get_filename(sess));
-	if (!buf)
+	auto path = scrollback_get_filename(sess);
+	if (!path)
 		return;
 	GError *file_error = nullptr;
-	std::unique_ptr<GIOChannel, decltype(&g_io_channel_unref)> io(g_io_channel_new_file (buf.get(), "r", &file_error), g_io_channel_unref);
+	std::unique_ptr<GIOChannel, decltype(&g_io_channel_unref)> io(g_io_channel_new_file (path->string().c_str(), "r", &file_error), g_io_channel_unref);
 	if (!io)
 		return;
 
@@ -333,20 +324,19 @@ scrollback_load (session &sess)
 	{
 		text = ctime (&stamp);
 		text[24] = 0;	/* get rid of the \n */
-		buf.reset(g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text));
+		glib_string buf(g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text));
 		fe_print_text (sess, buf.get(), 0, TRUE);
 		/*EMIT_SIGNAL (XP_TE_GENMSG, sess, "*", buf, NULL, NULL, NULL, 0);*/
 	}
 }
 
-void
-log_close (session &sess)
+void log_close (session &sess)
 {
 	if (sess.logfd != -1)
 	{
 		std::time_t currenttime = std::time (nullptr);
-		std::ostringstream stream(_("**** ENDING LOGGING AT "), std::ios_base::ate);
-		stream << std::ctime(&currenttime) <<"\n";
+		std::ostringstream stream;
+		stream << boost::format(_("**** ENDING LOGGING AT %s\n")) % std::ctime(&currenttime);
 		auto to_output = stream.str();
 		write (sess.logfd, to_output.c_str(), to_output.length());
 		close (sess.logfd);
@@ -354,49 +344,21 @@ log_close (session &sess)
 	}
 }
 
-static void
-mkdir_p (char *filename)
+static std::string log_create_filename (const std::string & channame)
 {
-	char *dirname;
-
-	dirname = g_path_get_dirname (filename);
-
-	g_mkdir_with_parents (dirname, 0700);
-
-	g_free (dirname);
-}
-
-static std::string
-log_create_filename (const std::string & channame)
-{
-	std::string ret(channame);
-
-	for (auto tmp = ret.begin(); tmp != ret.end();)
-	{
-		auto mbl = g_utf8_skip[*tmp];
-		if (mbl == 1)
-		{
-#ifndef WIN32
-			*tmp = rfc_tolower (*tmp);
-			if (*tmp == '/')
+	static const std::string replace_format{ "_" };
+#ifdef WIN32
+	/* win32 can't handle filenames with \|/><:"*? characters */
+	static boost::regex replace_regex("(/|\\\\|>|<|\\:|\"|\\*|\\?|\\|)");
 #else
-			/* win32 can't handle filenames with \|/><:"*? characters */
-			if (*tmp == '\\' || *tmp == '|' || *tmp == '/' ||
-				 *tmp == '>'  || *tmp == '<' || *tmp == ':' ||
-				 *tmp == '\"' || *tmp == '*' || *tmp == '?')
+	static boost::regex replace_regex("/");
 #endif
-				*tmp = '_';
-		}
-		tmp += mbl;
-	}
-
-	return ret;
+	return boost::replace_all_regex_copy(channame, replace_regex, replace_format);
 }
 
 /* like strcpy, but % turns into %% */
 
-static char *
-log_escape_strcpy (char *dest, const char *src, const char *end)
+static char * log_escape_strcpy (char *dest, const char *src, const char *end)
 {
 	while (*src)
 	{
@@ -421,8 +383,7 @@ log_escape_strcpy (char *dest, const char *src, const char *end)
 
 /* substitutes %c %n %s into buffer */
 
-static void
-log_insert_vars (char *buf, size_t bufsize, const char *fmt, const char *c, const char *n, const char *s)
+static void log_insert_vars (char *buf, size_t bufsize, const char *fmt, const char *c, const char *n, const char *s)
 {
 	char *end = buf + bufsize;
 
@@ -469,8 +430,7 @@ log_insert_vars (char *buf, size_t bufsize, const char *fmt, const char *c, cons
 	}
 }
 
-static bool
-logmask_is_fullpath ()
+static bool logmask_is_fullpath ()
 {
 	/* Check if final path/filename is absolute or relative.
 	 * If one uses log mask variables, such as "%c/...", %c will be empty upon
@@ -497,63 +457,48 @@ logmask_is_fullpath ()
 	}
 }
 
-static std::string log_create_pathname (const char *servname, const char *channame, const char *netname)
+static boost::filesystem::path log_create_pathname (const char *servname, const char *channame, const char *netname)
 {
-	char fname[384];
-	char fnametime[384];
-	std::string net_name, chan_name;
+	namespace bfs = boost::filesystem;
 
-	if (!netname)
-	{
-		net_name = "NETWORK";
-	}
-	else
-	{
-		net_name = log_create_filename (netname);
-	}
+	std::string net_name = !netname ? std::string("NETWORK") : log_create_filename(netname);
 
 	/* first, everything is in UTF-8 */
-	if (!rfc_casecmp (channame, servname))
-	{
-		chan_name = "server";
-	}
-	else
-	{
-		chan_name = log_create_filename (channame);
-	}
-
+	std::string chan_name = !rfc_casecmp(channame, servname) ? std::string("server") : log_create_filename(channame);
+	
+	char fname[384];
 	log_insert_vars (fname, sizeof (fname), prefs.hex_irc_logmask, chan_name.c_str(), net_name.c_str(), servname);
 
 	/* insert time/date */
-	auto now = time (NULL);
+	auto now = time (nullptr);
+	char fnametime[384];
 	strftime_utf8 (fnametime, sizeof (fnametime), fname, now);
-
+	bfs::path ret;
 	/* create final path/filename */
 	if (logmask_is_fullpath ())
 	{
-		snprintf (fname, sizeof (fname), "%s", fnametime);
+		ret = fnametime;
 	}
 	else	/* relative path */
 	{
-		snprintf (fname, sizeof (fname), "%s" G_DIR_SEPARATOR_S "logs" G_DIR_SEPARATOR_S "%s", get_xdir (), fnametime);
+		ret = bfs::path(config::config_dir()) / "logs" / fnametime;
 	}
 
 	/* create all the subdirectories */
-	mkdir_p (fname);
+	boost::system::error_code ec;
+	bfs::create_directories(ret, ec);
 
-	return fname;
+	return ret;
 }
 
-static int
-log_open_file (const char *servname, const char *channame, const char *netname)
+static int log_open_file (const char *servname, const char *channame, const char *netname)
 {
-	int fd;
 	auto file = log_create_pathname (servname, channame, netname);
-
+	int fd;
 #ifdef WIN32
-	fd = g_open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
+	fd = _wopen (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
 #else
-	fd = g_open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+	fd = open (file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 #endif
 
 	if (fd == -1)
@@ -562,13 +507,12 @@ log_open_file (const char *servname, const char *channame, const char *netname)
 	char buf[512];
 	write (fd, buf,
 			 snprintf (buf, sizeof (buf), _("**** BEGIN LOGGING AT %s\n"),
-						  ctime (&currenttime)));
+						  std::ctime (&currenttime)));
 
 	return fd;
 }
 
-static void
-log_open (session &sess)
+static void log_open (session &sess)
 {
 	static bool log_error = false;
 
@@ -587,8 +531,7 @@ log_open (session &sess)
 	}
 }
 
-void
-log_open_or_close (session *sess)
+void log_open_or_close (session *sess)
 {
 	if (sess->text_logging == SET_DEFAULT)
 	{
@@ -606,12 +549,9 @@ log_open_or_close (session *sess)
 	}
 }
 
-gsize
-get_stamp_str (char *fmt, time_t tim, char **ret)
+gsize get_stamp_str (const char fmt[], time_t tim, char **ret)
 {
-	char *loc = NULL;
-	char dest[128];
-	gsize len;
+	glib_string loc;
 
 	/* strftime wants the format string in LOCALE! */
 	if (!prefs.utf8_locale)
@@ -619,12 +559,13 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 		const gchar *charset;
 
 		g_get_charset (&charset);
-		loc = g_convert_with_fallback (fmt, -1, charset, "UTF-8", "?", 0, 0, 0);
+		loc.reset(g_convert_with_fallback (fmt, -1, charset, "UTF-8", "?", 0, 0, 0));
 		if (loc)
-			fmt = loc;
+			fmt = loc.get();
 	}
 
-	len = strftime_validated (dest, sizeof (dest), fmt, localtime (&tim));
+	char dest[128];
+	auto len = strftime_validated (dest, sizeof (dest), fmt, localtime (&tim));
 	if (len)
 	{
 		if (prefs.utf8_locale)
@@ -633,14 +574,10 @@ get_stamp_str (char *fmt, time_t tim, char **ret)
 			*ret = g_locale_to_utf8 (dest, len, 0, &len, 0);
 	}
 
-	if (loc)
-	g_free (loc);
-
 	return len;
 }
 
-static void
-log_write (session &sess, const std::string & text, time_t ts)
+static void log_write (session &sess, const std::string & text, time_t ts)
 {
 	if (sess.text_logging == SET_DEFAULT)
 	{
@@ -659,7 +596,8 @@ log_write (session &sess, const std::string & text, time_t ts)
 	/* change to a different log file? */
 	auto file = log_create_pathname (sess.server->servername, sess.channel,
 		sess.server->get_network(false));
-	if (g_access(file.c_str(), F_OK) != 0)
+	boost::system::error_code ec;
+	if (!boost::filesystem::exists(file, ec))
 	{
 		close(sess.logfd);
 		sess.logfd = log_open_file(sess.server->servername, sess.channel,
@@ -698,7 +636,6 @@ static unsigned char *
 iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 {
 	typedef std::basic_ostringstream<unsigned char> utf8ostringstream;
-	unsigned int idx;
 	//unsigned char *res, *output;
 	static const unsigned short lowtable[] = /* 74 byte table for 80-a4 */
 	{
@@ -749,7 +686,6 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 	/* worst case scenario: every byte turns into 3 bytes */
 	utf8ostringstream output_stream;
 	std::ostream_iterator<unsigned char, unsigned char> output(output_stream);
-
 	while (len)
 	{
 		if (G_LIKELY (*text < 0x80))
@@ -758,7 +694,7 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 		}
 		else if (*text <= 0xa4)	/* 80-a4 use a lookup table */
 		{
-			idx = *text - 0x80;
+			auto idx = *text - 0x80;
 			if (lowtable[idx] & 0x2000)
 			{
 				*output++ = (lowtable[idx] >> 8) & 0xdf; /* 2 byte utf-8 */
@@ -791,8 +727,8 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 	return (unsigned char*)g_strdup((const char*)output_stream.str().c_str());
 }
 
-char *
-text_validate (char **text, size_t *len)
+// deprecated should be removed as soon as possible... we should be using UTF-8 everywhere
+char * text_validate (char **text, size_t *len)
 {
 	char *utf;
 	gsize utf_len;
@@ -829,8 +765,7 @@ text_validate (char **text, size_t *len)
 	return utf;
 }
 
-void
-PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
+void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 {
 	// putting this in here to help track down places that are sending in invalid UTF-8
 	if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
@@ -864,14 +799,12 @@ PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 	fe_print_text(*sess, &buf[0], timestamp, FALSE);
 }
 
-void
-PrintText (session *sess, const std::string & text)
+void PrintText (session *sess, const std::string & text)
 {
 	PrintTextTimeStamp (sess, text, 0);
 }
 
-void
-PrintTextf (session *sess, const char format[], ...)
+void PrintTextf (session *sess, const char format[], ...)
 {
 	va_list args;
 
@@ -882,8 +815,7 @@ PrintTextf (session *sess, const char format[], ...)
 	PrintText (sess, buf.get());
 }
 
-void
-PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)
+void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)
 {
 	va_list args;
 	char *buf;
@@ -955,7 +887,7 @@ PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)
 char *pntevts_text[NUM_XP];
 char *pntevts[NUM_XP];
 
-#define pevt_generic_none_help NULL
+#define pevt_generic_none_help nullptr
 
 static const char * const pevt_genmsg_help[] = {
 	N_("Left message"),
@@ -1503,8 +1435,7 @@ static const char * const pevt_discon_help[] = {
 
 #include "textevents.h"
 
-static void
-pevent_load_defaults ()
+static void pevent_load_defaults ()
 {
 	int i;
 
@@ -1521,8 +1452,7 @@ pevent_load_defaults ()
 	}
 }
 
-void
-pevent_make_pntevts ()
+void pevent_make_pntevts ()
 {
 	int i, m;
 	char out[1024];
@@ -1560,8 +1490,7 @@ pevent_make_pntevts ()
 
 /* Better hope you pass good args.. --AGL */
 
-static void
-pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
+static void pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 {
 	int penum = *i_penum;
 	char *text = *i_text, *snd = *i_snd;
@@ -1579,8 +1508,7 @@ pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 	*i_penum = 0;
 }
 
-static int
-pevent_find (char *name, int *i_i)
+static int pevent_find (char *name, int *i_i)
 {
 	int i = *i_i, j;
 
@@ -1600,8 +1528,7 @@ pevent_find (char *name, int *i_i)
 	}
 }
 
-int
-pevent_load (const char *filename)
+int pevent_load (const char *filename)
 {
 	/* AGL, I've changed this file and pevent_save, could you please take a look at
 	 *      the changes and possibly modify them to suit you
@@ -1650,8 +1577,7 @@ pevent_load (const char *filename)
 		}
 		else if (first_part == "event_text")
 		{
-			if (text)
-				free (text);
+			delete[] text;
 
 #if 0
 			/* This allows updating of old strings. We don't use new defaults
@@ -1680,7 +1606,7 @@ pevent_load (const char *filename)
 				text = strdup (ofs);
 			}
 #else
-			text = strdup (second_part.c_str());
+			text = new_strdup (second_part.c_str());
 #endif
 
 			continue;
@@ -1699,8 +1625,7 @@ pevent_load (const char *filename)
 	return 0;
 }
 
-static void
-pevent_check_all_loaded ()
+static void pevent_check_all_loaded ()
 {
 	int i;
 
@@ -1720,13 +1645,12 @@ pevent_check_all_loaded ()
 	}
 }
 
-void
-load_text_events ()
+void load_text_events ()
 {
 	memset (&pntevts_text, 0, sizeof (char *) * (NUM_XP));
 	memset (&pntevts, 0, sizeof (char *) * (NUM_XP));
 
-	if (pevent_load (NULL))
+	if (pevent_load (nullptr))
 		pevent_load_defaults ();
 	pevent_check_all_loaded ();
 	pevent_make_pntevts ();
@@ -1739,8 +1663,7 @@ load_text_events ()
 */
 #define ARG_FLAG(argn) (1 << (argn))
 
-void
-format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
+void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
 {
 	int len, output_index, input_index, numargs;
 	bool done_all = false;
@@ -1823,8 +1746,7 @@ format_event (session *sess, int index, char **args, char *dst, size_t dstsize, 
 		dst[0] = 0;
 }
 
-static void
-display_event (session *sess, int event, char **args, 
+static void display_event (session *sess, int event, char **args, 
 					unsigned int stripcolor_args, time_t timestamp)
 {
 	char buf[4096];
@@ -1843,8 +1765,7 @@ namespace
 	};
 } // end anonymous namespace
 
-int
-pevt_build_string (const char *input, char* &output, int *max_arg)
+int pevt_build_string (const char *input, char* &output, int *max_arg)
 {
 	std::vector<std::vector<char>> events;
 	int clen;
@@ -1978,8 +1899,7 @@ pevt_build_string (const char *input, char* &output, int *max_arg)
 
 static const char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
-int
-text_color_of (const std::string &name)
+int text_color_of (const std::string &name)
 {
 	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
 	sum %= sizeof (rcolors) / sizeof (char);
@@ -1989,12 +1909,9 @@ text_color_of (const std::string &name)
 
 /* called by EMIT_SIGNAL macro */
 
-void
-text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
+void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 			  time_t timestamp)
 {
-	char *word[PDIWORDS];
-	int i;
 	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->text_strip) ? 0xFFFFFFFF : 0);
 	char tbuf[NICKLEN + 4];
 
@@ -2007,12 +1924,13 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	std::string empty("\000");
 	std::string name(te[index].name);
 	name.push_back(0);
+	char *word[PDIWORDS] = { 0 };
 	word[0] = &name[0];
 	word[1] = (a ? a : &empty[0]);
 	word[2] = (b ? b : &empty[0]);
 	word[3] = (c ? c : &empty[0]);
 	word[4] = (d ? d : &empty[0]);
-	for (i = 5; i < PDIWORDS; i++)
+	for (int i = 5; i < PDIWORDS; i++)
 		word[i] = &empty[0];
 
 	if (plugin_emit_print (sess, word, timestamp))
@@ -2080,20 +1998,13 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	display_event (sess, index, word, stripcolor_args, timestamp);
 }
 
-char *
-text_find_format_string (char *name)
+char * text_find_format_string (char *name)
 {
-	int i = 0;
-
-	i = pevent_find (name, &i);
-	if (i >= 0)
-		return pntevts_text[i];
-
-	return NULL;
+	int i = pevent_find (name, &i);
+	return i >= 0 ? pntevts_text[i] : nullptr;
 }
 
-int
-text_emit_by_name (char *name, session *sess, time_t timestamp,
+int text_emit_by_name (char *name, session *sess, time_t timestamp,
 				   char *a, char *b, char *c, char *d)
 {
 	int i = 0;
@@ -2108,12 +2019,9 @@ text_emit_by_name (char *name, session *sess, time_t timestamp,
 	return 0;
 }
 
-void
-pevent_save (char *fn)
+void pevent_save (char *fn)
 {
-	int fd, i;
-	char buf[1024];
-
+	int fd;
 	if (!fn)
 		fd = hexchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
 			0x180, io::fs::XOF_DOMODE);
@@ -2132,8 +2040,9 @@ pevent_save (char *fn)
 		return;
 	}
 
-	for (i = 0; i < NUM_XP; i++)
+	for (int i = 0; i < NUM_XP; i++)
 	{
+		char buf[1024];
 		write (fd, buf, snprintf (buf, sizeof (buf),
 										  "event_name=%s\n", te[i].name));
 		write (fd, buf, snprintf (buf, sizeof (buf),
@@ -2148,8 +2057,7 @@ pevent_save (char *fn)
 /* =========================== */
 char *sound_files[NUM_XP];
 
-void
-sound_beep (session *sess)
+void sound_beep (session *sess)
 {
 	if (!prefs.hex_gui_focus_omitalerts || !fe_gui_info (sess, 0) == 1)
 	{
@@ -2162,21 +2070,16 @@ sound_beep (session *sess)
 	}
 }
 
-void
-sound_play (const char *file, gboolean quiet)
+void sound_play (const char *file, gboolean quiet)
 {
-	char *buf;
-	char *wavfile;
-#ifndef WIN32
-	char *cmd;
-#endif
+	namespace bfs = boost::filesystem;
 
 	/* the pevents GUI editor triggers this after removing a soundfile */
-	if (!file[0])
+	if (!file || !file[0])
 	{
 		return;
 	}
-
+	bfs::path wavfile;
 #ifdef WIN32
 	/* check for fullpath */
 	if (file[0] == '\\' || (((file[0] >= 'A' && file[0] <= 'Z') || (file[0] >= 'a' && file[0] <= 'z')) && file[1] == ':'))
@@ -2184,17 +2087,17 @@ sound_play (const char *file, gboolean quiet)
 	if (file[0] == '/')
 #endif
 	{
-		wavfile = g_strdup (file);
+		wavfile = file;
 	}
 	else
 	{
-		wavfile = g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, file, NULL);
+		wavfile = bfs::path(config::config_dir()) / HEXCHAT_SOUND_DIR / file;
 	}
 
-	if (g_access (wavfile, R_OK) == 0)
+	if (g_access (wavfile.string().c_str(), R_OK) == 0)
 	{
 #ifdef WIN32
-		PlaySoundW (charset::widen(wavfile).c_str(), NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
+		PlaySoundW (wavfile.c_str(), nullptr, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
 #else
 #ifdef USE_LIBCANBERRA
 		if (ca_con == NULL)
@@ -2206,17 +2109,15 @@ sound_play (const char *file, gboolean quiet)
 											CA_PROP_APPLICATION_ICON_NAME, "hexchat", NULL);
 		}
 
-		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile, NULL) != 0)
+		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile.c_str(), NULL) != 0)
 #endif
 		{
-			cmd = g_find_program_in_path ("play");
+			glib_strin cmd (g_find_program_in_path ("play"));
 	
 			if (cmd)
 			{
-				buf = g_strdup_printf ("%s \"%s\"", cmd, wavfile);
-				hexchat_exec (buf);
-				g_free (buf);
-				g_free (cmd);
+				glib_string buf(g_strdup_printf ("%s \"%s\"", cmd.get(), wavfile.c_str()));
+				hexchat_exec (buf.get());
 			}
 		}
 #endif
@@ -2225,17 +2126,14 @@ sound_play (const char *file, gboolean quiet)
 	{
 		if (!quiet)
 		{
-			buf = g_strdup_printf (_("Cannot read sound file:\n%s"), wavfile);
-			fe_message (buf, FE_MSG_ERROR);
-			g_free (buf);
+			std::ostringstream buf;
+			buf << boost::format(_("Cannot read sound file:\n%s")) % wavfile;
+			fe_message (buf.str(), FE_MSG_ERROR);
 		}
 	}
-
-	g_free (wavfile);
 }
 
-void
-sound_play_event (int i)
+void sound_play_event (int i)
 {
 	if (sound_files[i])
 	{
@@ -2243,33 +2141,28 @@ sound_play_event (int i)
 	}
 }
 
-static void
-sound_load_event (char *evt, char *file)
+static void sound_load_event (char *evt, char *file)
 {
 	int i = 0;
 
 	if (file[0] && pevent_find (evt, &i) != -1)
 	{
 		if (sound_files[i])
-			free (sound_files[i]);
-		sound_files[i] = strdup (file);
+			delete[] sound_files[i];
+		sound_files[i] = new_strdup (file);
 	}
 }
 
-void
-sound_load ()
+void sound_load ()
 {
-	int fd;
-	char buf[512];
-	char evt[128];
-
 	memset (&sound_files, 0, sizeof (char *) * (NUM_XP));
 
-	fd = hexchat_open_file ("sound.conf", O_RDONLY, 0, 0);
+	int fd = hexchat_open_file ("sound.conf", O_RDONLY, 0, 0);
 	if (fd == -1)
 		return;
-
+	char evt[128];
 	evt[0] = 0;
+	char buf[512];
 	while (waitline (fd, buf, sizeof buf, FALSE) != -1)
 	{
 		if (strncmp (buf, "event=", 6) == 0)
@@ -2289,21 +2182,18 @@ sound_load ()
 	close (fd);
 }
 
-void
-sound_save ()
+void sound_save ()
 {
-	int fd, i;
-	char buf[512];
-
-	fd = hexchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
+	int fd = hexchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
 		 io::fs::XOF_DOMODE);
 	if (fd == -1)
 		return;
 
-	for (i = 0; i < NUM_XP; i++)
+	for (int i = 0; i < NUM_XP; i++)
 	{
 		if (sound_files[i] && sound_files[i][0])
 		{
+			char buf[512];
 			write (fd, buf, snprintf (buf, sizeof (buf),
 											  "event=%s\n", te[i].name));
 			write (fd, buf, snprintf (buf, sizeof (buf),
