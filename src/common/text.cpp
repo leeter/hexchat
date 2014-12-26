@@ -21,6 +21,7 @@
 #define NOMINMAX
 #endif
 
+#include <array>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -1508,9 +1509,9 @@ static void pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 	*i_penum = 0;
 }
 
-static int pevent_find (char *name, int *i_i)
+static int pevent_find (const char name[], int &i_i)
 {
-	int i = *i_i, j;
+	int i = i_i, j;
 
 	j = i + 1;
 	while (1)
@@ -1519,7 +1520,7 @@ static int pevent_find (char *name, int *i_i)
 			j = 0;
 		if (strcmp (te[j].name, name) == 0)
 		{
-			*i_i = j;
+			i_i = j;
 			return j;
 		}
 		if (j == i)
@@ -1572,7 +1573,7 @@ int pevent_load (const char *filename)
 		{
 			if (penum >= 0)
 				pevent_trigger_load (&penum, &text, &snd);
-			penum = pevent_find (&second_part[0], &i);
+			penum = pevent_find (&second_part[0], i);
 			continue;
 		}
 		else if (first_part == "event_text")
@@ -2000,7 +2001,7 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 
 char * text_find_format_string (char *name)
 {
-	int i = pevent_find (name, &i);
+	int i = pevent_find (name, i);
 	return i >= 0 ? pntevts_text[i] : nullptr;
 }
 
@@ -2009,7 +2010,7 @@ int text_emit_by_name (char *name, session *sess, time_t timestamp,
 {
 	int i = 0;
 
-	i = pevent_find (name, &i);
+	i = pevent_find (name, i);
 	if (i >= 0)
 	{
 		text_emit (i, sess, a, b, c, d, timestamp);
@@ -2055,13 +2056,14 @@ void pevent_save (char *fn)
 /* =========================== */
 /* ========== SOUND ========== */
 /* =========================== */
-char *sound_files[NUM_XP];
+std::array<std::string, NUM_XP> sound_files;
+//char *sound_files[NUM_XP];
 
 void sound_beep (session *sess)
 {
 	if (!prefs.hex_gui_focus_omitalerts || !fe_gui_info (sess, 0) == 1)
 	{
-		if (sound_files[XP_TE_BEEP] && sound_files[XP_TE_BEEP][0])
+		if (!sound_files[XP_TE_BEEP].empty())
 			/* user defined beep _file_ */
 			sound_play_event (XP_TE_BEEP);
 		else
@@ -2070,12 +2072,12 @@ void sound_beep (session *sess)
 	}
 }
 
-void sound_play (const char *file, gboolean quiet)
+void sound_play (const std::string & file, bool quiet)
 {
 	namespace bfs = boost::filesystem;
 
 	/* the pevents GUI editor triggers this after removing a soundfile */
-	if (!file || !file[0])
+	if (file.empty())
 	{
 		return;
 	}
@@ -2135,28 +2137,21 @@ void sound_play (const char *file, gboolean quiet)
 
 void sound_play_event (int i)
 {
-	if (sound_files[i])
-	{
-		sound_play (sound_files[i], FALSE);
-	}
+	sound_play(sound_files[i], false);
 }
 
-static void sound_load_event (char *evt, char *file)
+static void sound_load_event (const char evt[], const char file[])
 {
 	int i = 0;
 
-	if (file[0] && pevent_find (evt, &i) != -1)
+	if (file[0] && pevent_find (evt, i) != -1)
 	{
-		if (sound_files[i])
-			delete[] sound_files[i];
-		sound_files[i] = new_strdup (file);
+		sound_files[i] = file;
 	}
 }
 
 void sound_load ()
 {
-	memset (&sound_files, 0, sizeof (char *) * (NUM_XP));
-
 	int fd = hexchat_open_file ("sound.conf", O_RDONLY, 0, 0);
 	if (fd == -1)
 		return;
@@ -2191,13 +2186,13 @@ void sound_save ()
 
 	for (int i = 0; i < NUM_XP; i++)
 	{
-		if (sound_files[i] && sound_files[i][0])
+		if (!sound_files[i].empty())
 		{
 			char buf[512];
 			write (fd, buf, snprintf (buf, sizeof (buf),
 											  "event=%s\n", te[i].name));
 			write (fd, buf, snprintf (buf, sizeof (buf),
-											  "sound=%s\n\n", sound_files[i]));
+											  "sound=%s\n\n", sound_files[i].c_str()));
 		}
 	}
 

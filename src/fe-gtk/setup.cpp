@@ -21,9 +21,11 @@
 #define NOMINMAX
 #endif
 
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -1535,10 +1537,10 @@ setup_create_color_page (void)
 /* === GLOBALS for sound GUI === */
 
 static GtkWidget *sndfile_entry;
-static int ignore_changed = FALSE;
+static bool ignore_changed = false;
 
 extern const text_event te[]; /* text.c */
-extern char *sound_files[];
+extern std::array<std::string, NUM_XP> sound_files;
 
 static void
 setup_snd_populate (GtkTreeView * treeview)
@@ -1555,10 +1557,7 @@ setup_snd_populate (GtkTreeView * treeview)
 	for (i = NUM_XP-1; i >= 0; i--)
 	{
 		gtk_list_store_prepend (store, &iter);
-		if (sound_files[i])
-			gtk_list_store_set (store, &iter, 0, te[i].name, 1, sound_files[i], 2, i, -1);
-		else
-			gtk_list_store_set (store, &iter, 0, te[i].name, 1, "", 2, i, -1);
+		gtk_list_store_set(store, &iter, 0, te[i].name, 1, sound_files[i].c_str(), 2, i, -1);
 		if (i == last_selected_row)
 		{
 			gtk_tree_selection_select_iter (sel, &iter);
@@ -1589,20 +1588,16 @@ setup_snd_get_selected (GtkTreeSelection *sel, GtkTreeIter *iter)
 static void
 setup_snd_row_cb (GtkTreeSelection *sel, gpointer user_data)
 {
-	int n;
 	GtkTreeIter iter;
 
-	n = setup_snd_get_selected (sel, &iter);
+	int n = setup_snd_get_selected (sel, &iter);
 	if (n == -1)
 		return;
 	last_selected_row = n;
 
-	ignore_changed = TRUE;
-	if (sound_files[n])
-		gtk_entry_set_text (GTK_ENTRY (sndfile_entry), sound_files[n]);
-	else
-		gtk_entry_set_text (GTK_ENTRY (sndfile_entry), "");
-	ignore_changed = FALSE;
+	ignore_changed = true;
+	gtk_entry_set_text(GTK_ENTRY(sndfile_entry), sound_files[n].c_str());
+	ignore_changed = false;
 }
 
 static void
@@ -1672,7 +1667,7 @@ setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
 static void
 setup_snd_play_cb (GtkWidget *button, GtkEntry *entry)
 {
-	sound_play (gtk_entry_get_text (entry), FALSE);
+	sound_play (gtk_entry_get_text (entry), false);
 }
 
 static void
@@ -1692,12 +1687,11 @@ setup_snd_changed_cb (GtkEntry *ent, GtkTreeView *tree)
 		return;
 
 	/* get the new sound file */
-	delete[] sound_files[n];
-	sound_files[n] = new_strdup (gtk_entry_get_text (GTK_ENTRY (ent)));
+	sound_files[n] = gtk_entry_get_text (GTK_ENTRY (ent));
 
 	/* update the TreeView list */
 	store = (GtkListStore *)gtk_tree_view_get_model (tree);
-	gtk_list_store_set (store, &iter, 1, sound_files[n], -1);
+	gtk_list_store_set (store, &iter, 1, sound_files[n].c_str(), -1);
 
 	gtk_widget_set_sensitive (cancel_button, FALSE);
 }

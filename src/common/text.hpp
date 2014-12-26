@@ -63,7 +63,7 @@ gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 char *text_find_format_string (char *name);
  
-void sound_play (const char *file, gboolean quiet);
+void sound_play (const std::string & file, bool quiet);
 void sound_play_event (int i);
 void sound_beep (session *);
 void sound_load ();
