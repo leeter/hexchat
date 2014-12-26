@@ -1954,7 +1954,7 @@ flagk_hit (GtkWidget * wid, struct session *sess)
 }
 
 static void
-mg_flagbutton_cb (GtkWidget *but, char *flag)
+mg_flagbutton_cb (GtkWidget *but, const char flag[])
 {
 	session *sess;
 	char mode;
@@ -1985,7 +1985,7 @@ mg_flagbutton_cb (GtkWidget *but, char *flag)
 }
 
 static GtkWidget *
-mg_create_flagbutton (char *tip, GtkWidget *box, char *face)
+mg_create_flagbutton (const char tip[], GtkWidget *box, const char face[])
 {
 	GtkWidget *wid;
 
@@ -1994,7 +1994,7 @@ mg_create_flagbutton (char *tip, GtkWidget *box, char *face)
 	gtk_widget_set_tooltip_text (wid, tip);
 	gtk_box_pack_start (GTK_BOX (box), wid, 0, 0, 0);
 	g_signal_connect (G_OBJECT (wid), "toggled",
-							G_CALLBACK (mg_flagbutton_cb), face);
+							G_CALLBACK (mg_flagbutton_cb), (gpointer)face);
 	show_and_unfocus (wid);
 
 	return wid;
