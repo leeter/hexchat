@@ -1901,8 +1901,8 @@ mg_change_flag (GtkWidget * wid, session *sess, char flag)
 			mode[0] = '-';
 		serv->p_mode (sess->channel, mode);
 		serv->p_join_info (sess->channel);
-		sess->ignore_mode = TRUE;
-		sess->ignore_date = TRUE;
+		sess->ignore_mode = true;
+		sess->ignore_date = true;
 	}
 }
 
@@ -1999,7 +1999,7 @@ mg_create_flagbutton (const char tip[], GtkWidget *box, const char face[])
 }
 
 static void
-mg_key_entry_cb (GtkWidget * igad, gpointer userdata)
+mg_key_entry_cb (GtkWidget * igad, gpointer)
 {
 	char modes[512];
 	session *sess = current_sess;
@@ -2015,7 +2015,7 @@ mg_key_entry_cb (GtkWidget * igad, gpointer userdata)
 }
 
 static void
-mg_limit_entry_cb (GtkWidget * igad, gpointer userdata)
+mg_limit_entry_cb (GtkWidget * igad, gpointer)
 {
 	char modes[512];
 	session *sess = current_sess;
@@ -2095,24 +2095,22 @@ mg_create_link_buttons (GtkWidget *box, gpointer userdata)
 static void
 mg_dialog_button_cb (GtkWidget *wid, const char *cmd)
 {
-	/* the longest cmd is 12, and the longest nickname is 64 */
-	char buf[128];
-	char *host = "";
-	char *topic;
-
 	if (!current_sess)
 		return;
 
-	topic = (char *)(gtk_entry_get_text (GTK_ENTRY (current_sess->gui->topic_entry)));
+	const char *host = "";
+	auto topic = gtk_entry_get_text (GTK_ENTRY (current_sess->gui->topic_entry));
 	topic = strrchr (topic, '@');
 	if (topic)
 		host = topic + 1;
 
-	auto_insert (buf, sizeof (buf), (unsigned char*)cmd, 0, 0, "", "", "",
+	/* the longest cmd is 12, and the longest nickname is 64 */
+	char buf[128];
+	auto_insert (buf, sizeof (buf), (const unsigned char*)cmd, 0, 0, "", "", "",
 		current_sess->server->get_network(true), host, "",
 					 current_sess->channel, "");
 
-	handle_command (current_sess, buf, TRUE);
+	handle_command (current_sess, buf, true);
 
 	/* dirty trick to avoid auto-selection */
 	SPELL_ENTRY_SET_EDITABLE (current_sess->gui->input_box, FALSE);
