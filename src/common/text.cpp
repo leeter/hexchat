@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 
@@ -2140,41 +2141,37 @@ void sound_play_event (int i)
 	sound_play(sound_files[i], false);
 }
 
-static void sound_load_event (const char evt[], const char file[])
+// file is intended to be an R-Value
+static void sound_load_event (const std::string & evt, std::string file)
 {
 	int i = 0;
 
-	if (file[0] && pevent_find (evt, i) != -1)
+	if (!file.empty() && pevent_find (evt.c_str(), i) != -1)
 	{
-		sound_files[i] = file;
+		sound_files[i] = std::move(file);
 	}
 }
 
 void sound_load ()
 {
-	int fd = hexchat_open_file ("sound.conf", O_RDONLY, 0, 0);
-	if (fd == -1)
-		return;
-	char evt[128];
-	evt[0] = 0;
-	char buf[512];
-	while (waitline (fd, buf, sizeof buf, FALSE) != -1)
+	namespace bfs = boost::filesystem;
+	auto path = bfs::path(config::config_dir()) / "sound.conf";
+	bfs::ifstream instream(path, std::ios::in | std::ios::binary);
+	std::string evt;
+	for(std::string line; std::getline(instream, line, '\n');)
 	{
-		if (strncmp (buf, "event=", 6) == 0)
+		if (boost::starts_with(line, "event="))
 		{
-			safe_strcpy (evt, buf + 6);
+			evt = line.substr(6);
 		}
-		else if (strncmp (buf, "sound=", 6) == 0)
+		else if (boost::starts_with(line, "sound="))
 		{
-			if (evt[0] != 0)
+			if (!evt.empty())
 			{
-				sound_load_event (evt, buf + 6);
-				evt[0] = 0;
+				sound_load_event (evt, line.substr(6));
 			}
 		}
 	}
-
-	close (fd);
 }
 
 void sound_save ()
