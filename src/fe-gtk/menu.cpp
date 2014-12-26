@@ -1848,7 +1848,7 @@ menu_set_fullscreen (session_gui *gui, int full)
 }
 
 GtkWidget *
-create_icon_menu (char *labeltext, void *stock_name, bool is_stock)
+create_icon_menu (const char labeltext[], void *stock_name, bool is_stock)
 {
 	GtkWidget *item, *img;
 

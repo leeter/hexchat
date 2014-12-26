@@ -1110,12 +1110,10 @@ mg_menu_destroy (GtkWidget *menu, gpointer userdata)
 }
 
 void
-mg_create_icon_item (char *label, char *stock, GtkWidget *menu,
+mg_create_icon_item (const char label[], const char stock[], GtkWidget *menu,
 							GCallback callback, void *userdata)
 {
-	GtkWidget *item;
-
-	item = create_icon_menu (label, stock, true);
+	GtkWidget *item = create_icon_menu (label,(void*) stock, true);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (callback),
 							userdata);
