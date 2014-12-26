@@ -2112,7 +2112,7 @@ void sound_play (const char *file, gboolean quiet)
 		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile.c_str(), NULL) != 0)
 #endif
 		{
-			glib_strin cmd (g_find_program_in_path ("play"));
+			glib_string cmd (g_find_program_in_path ("play"));
 	
 			if (cmd)
 			{
