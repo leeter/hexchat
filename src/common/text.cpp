@@ -1684,7 +1684,7 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 			input_index += sizeof (int);
 			if (output_index + len > dstsize)
 			{
-				fprintf(stderr, "Overflow in display_event (%s)\n", display_evt);
+				fprintf(stderr, "Overflow in display_event (%s)\n", display_evt.c_str());
 				dst[0] = 0;
 				return;
 			}
