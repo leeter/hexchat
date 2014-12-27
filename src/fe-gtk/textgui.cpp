@@ -47,7 +47,7 @@
 typedef std::char_traits < unsigned char > uchar_traits;
 extern const text_event te[];
 extern std::array<std::string, NUM_XP> pntevts_text;
-extern char *pntevts[];
+extern std::array<std::string, NUM_XP> pntevts;
 
 static GtkWidget *pevent_dialog = NULL, *pevent_dialog_twid,
 	*pevent_dialog_list, *pevent_dialog_hlist;
@@ -160,7 +160,6 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	GtkXText *xtext = GTK_XTEXT (pevent_dialog_twid);
 	int m;
 	const char *text;
-	char *out;
 	int sig;
 
 	if (!gtkutil_treeview_get_selected (GTK_TREE_VIEW (pevent_dialog_list),
@@ -169,15 +168,14 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 
 	text = new_text;
 	auto len = strlen (new_text);
-
-	if (pevt_build_string (text, out, &m) != 0)
+	std::string out;
+	if (pevt_build_string (text, out, m) != 0)
 	{
 		fe_message (_("There was an error parsing the string"), FE_MSG_ERROR);
 		return;
 	}
 	if (m > (te[sig].num_args & 0x7f))
 	{
-		delete[] out;
 		std::ostringstream outbuf;
 		outbuf << boost::format(_("This signal is only passed %d args, $%d is invalid")) % (te[sig].num_args & 0x7f) % m;
 		fe_message (outbuf.str(), FE_MSG_WARN);
@@ -189,10 +187,8 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 
 	gtk_list_store_set (GTK_LIST_STORE (model), &iter, TEXT_COLUMN, new_text, -1);
 
-	delete[] pntevts[sig];
-
 	pntevts_text[sig] = text;
-	pntevts[sig] = out;
+	pntevts[sig] = std::move(out);
 
 	std::string buf(text, len);
 	buf.push_back('\n');

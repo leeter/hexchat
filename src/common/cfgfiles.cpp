@@ -1182,7 +1182,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 					if (!quiet)
 					{
-						PrintTextf (sess, "%s set to: %s (was: %s)\n", var, (char *) &prefs + vars[i].offset, prev_string.c_str());
+						PrintTextf (sess, boost::format(_("%s set to: %s (was: %s)\n")) % var % ((char *) &prefs + vars[i].offset) % prev_string);
 					}
 				}
 				else

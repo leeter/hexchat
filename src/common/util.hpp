@@ -55,7 +55,7 @@ int rfc_ncasecmp (const char *, const char *, size_t);
 int buf_get_line (char *, char **, int *, int len);
 char *nocasestrstr (const char *text, const char *tofind);
 const char *country (const std::string *);
-void country_search (char *pattern, void *ud, void (*print)(void *, char *, ...));
+void country_search(char *pattern, session *ud, void(*print)(session *, const char [], ...));
 const char *get_sys_str (bool with_cpu);
 void util_exec (const char *cmd);
 enum strip_flags{

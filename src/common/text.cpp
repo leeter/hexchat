@@ -806,6 +806,13 @@ void PrintText (session *sess, const std::string & text)
 	PrintTextTimeStamp (sess, text, 0);
 }
 
+void PrintTextf(session * sess, const boost::format & fmt)
+{
+	std::ostringstream outbuf;
+	outbuf << fmt;
+	PrintText(sess, outbuf.str());
+}
+
 void PrintTextf (session *sess, const char format[], ...)
 {
 	va_list args;
@@ -887,8 +894,7 @@ void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], 
    --AGL
  */
 std::array<std::string, NUM_XP> pntevts_text;
-//char *pntevts_text[NUM_XP];
-char *pntevts[NUM_XP];
+std::array<std::string, NUM_XP> pntevts;
 
 #define pevt_generic_none_help nullptr
 
@@ -1457,8 +1463,7 @@ void pevent_make_pntevts ()
 	for (int i = 0; i < NUM_XP; i++)
 	{
 		int m;
-		delete[] pntevts[i];
-		if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
+		if (pevt_build_string (pntevts_text[i], pntevts[i], m) != 0)
 		{
 			snprintf (out, sizeof (out),
 						 _("Error parsing event %s.\nLoading default."), te[i].name);
@@ -1468,7 +1473,7 @@ void pevent_make_pntevts ()
 				pntevts_text[i] = te[i].def;
 			else
 				pntevts_text[i] = _(te[i].def);
-			if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
+			if (pevt_build_string (pntevts_text[i], pntevts[i], m) != 0)
 			{
 				fprintf (stderr,
 							"HexChat CRITICAL *** default event text failed to build!\n");
@@ -1640,8 +1645,6 @@ static void pevent_check_all_loaded ()
 
 void load_text_events ()
 {
-	memset (&pntevts, 0, sizeof (char *) * (NUM_XP));
-
 	if (pevent_load (nullptr))
 		pevent_load_defaults ();
 	pevent_check_all_loaded ();
@@ -1662,13 +1665,13 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 	int len, output_index, input_index, numargs;
 	bool done_all = false;
 
-	const char* display_evt = pntevts[index];
+	const std::string& display_evt = pntevts[index];
 	numargs = te[index].num_args & 0x7f;
 
 	output_index = input_index = len = 0;
 	dst[0] = 0;
 
-	if (display_evt == NULL)
+	if (display_evt.empty())
 		return;
 
 	while (!done_all)
@@ -1694,15 +1697,15 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 			char arg_idx = display_evt[input_index++];
 			if (arg_idx > numargs)
 			{
-				fprintf(stderr,
+				PrintTextf(sess,
 							"HexChat DEBUG: display_event: arg > numargs (%d %d %s)\n",
-					arg_idx, numargs, display_evt);
+					arg_idx, numargs, display_evt.c_str());
 				break;
 			}
 			const char* current_argument = args[(int)arg_idx + 1];
 			if (current_argument == NULL)
 			{
-				fprintf(stderr, "arg[%d] is NULL in print event\n", arg_idx + 1);
+				PrintTextf(sess, "arg[%d] is NULL in print event\n", arg_idx + 1);
 			}
 			else
 			{
@@ -1757,11 +1760,11 @@ namespace
 	};
 } // end anonymous namespace
 
-int pevt_build_string(const std::string& input, char* &output, int *max_arg)
+int pevt_build_string(const std::string& input, std::string & output, int &max_arg)
 {
 	std::vector<std::vector<char>> events;
 	int clen;
-	char o[4096], d, *obuf;
+	char o[4096], d;
 	int output_index, max = -1, x;
 
 	auto len = input.size();
@@ -1869,18 +1872,17 @@ int pevt_build_string(const std::string& input, char* &output, int *max_arg)
 	events.emplace_back(std::move(evt));
 	clen += 1;
 
-	output_index = 0;
-	obuf = new char[clen];
+	std::string obuf(clen, '\0');
+	auto o_index = obuf.begin();
 	for (const auto& evt : events)
 	{
-		std::copy(evt.cbegin(), evt.cend(), &obuf[output_index]);
-		output_index += evt.size();
+		std::copy(evt.cbegin(), evt.cend(), o_index);
+		o_index += evt.size();
 	}
 
-	if (max_arg)
-		*max_arg = max;
+	max_arg = max;
 
-	output = obuf;
+	output = std::move(obuf);
 	return 0;
 }
 

@@ -22,6 +22,7 @@
 
 #include <string>
 #include <ctime>
+#include <boost/format/format_fwd.hpp>
 #include "textenums.h"
 
 /* timestamp is non-zero if we are using server-time */
@@ -44,13 +45,14 @@ void scrollback_load (session &sess);
 int text_word_check (char *word, int len);
 void PrintText(session *sess, const std::string & text);
 void PrintTextTimeStamp (session *sess, const std::string & text, time_t timestamp);
+void PrintTextf(session * sess, const boost::format & fmt);
 void PrintTextf (session *sess, const char *format, ...) G_GNUC_PRINTF (2, 3);
 void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...) G_GNUC_PRINTF (3, 4);
 void log_close (session &sess);
 void log_open_or_close (session *sess);
 void load_text_events (void);
 void pevent_save (const char file_name[]);
-int pevt_build_string (const std::string& input, char *&output, int *max_arg);
+int pevt_build_string(const std::string& input, std::string & output, int &max_arg);
 int pevent_load (const char *filename);
 void pevent_make_pntevts (void);
 int text_color_of (const std::string& name);

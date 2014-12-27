@@ -41,6 +41,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <boost/iostreams/stream.hpp>
 
 #define WANTSOCKET
@@ -393,7 +394,7 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		if (sess->server->is_away)
 		{
 			if (!sess->server->last_away_reason.empty())
-				PrintTextf (sess, _("Already marked away: %s\n"), sess->server->last_away_reason.c_str());
+				PrintTextf (sess, boost::format(_("Already marked away: %s\n")) % sess->server->last_away_reason);
 			return FALSE;
 		}
 
@@ -740,14 +741,14 @@ cmd_country (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		/* search? */
 		if (strcmp (code, "-s") == 0)
 		{
-			country_search (word[3], sess, (void (*)(void*, char*, ...))PrintTextf);
+			country_search(word[3], sess, PrintTextf);
 			return TRUE;
 		}
 
 		/* search, but forgot the -s */
 		if (strchr (code, '*'))
 		{
-			country_search(code, sess, (void(*)(void*, char*, ...))PrintTextf);
+			country_search(code, sess, PrintTextf);
 			return TRUE;
 		}
 

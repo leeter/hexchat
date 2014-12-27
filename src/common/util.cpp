@@ -1120,7 +1120,7 @@ country (const std::string *hostname)
 }
 
 void
-country_search (char *pattern, void *ud, void (*print)(void *, char *, ...))
+country_search (char *pattern, session *ud, void (*print)(session *, const char [], ...))
 {
 	for (const auto & bucket : domain)
 	{
