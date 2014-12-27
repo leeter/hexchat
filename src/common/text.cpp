@@ -886,7 +886,8 @@ void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], 
 
    --AGL
  */
-char *pntevts_text[NUM_XP];
+std::array<std::string, NUM_XP> pntevts_text;
+//char *pntevts_text[NUM_XP];
 char *pntevts[NUM_XP];
 
 #define pevt_generic_none_help nullptr
@@ -1439,41 +1440,34 @@ static const char * const pevt_discon_help[] = {
 
 static void pevent_load_defaults ()
 {
-	int i;
-
-	for (i = 0; i < NUM_XP; i++)
+	for (int i = 0; i < NUM_XP; i++)
 	{
-		if (pntevts_text[i])
-			delete[] pntevts_text[i];
-
 		/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 		if (te[i].num_args & 128)
-			pntevts_text[i] = new_strdup (te[i].def);
+			pntevts_text[i] = te[i].def;
 		else
-			pntevts_text[i] = new_strdup (_(te[i].def));
+			pntevts_text[i] = _(te[i].def);
 	}
 }
 
 void pevent_make_pntevts ()
 {
-	int i, m;
 	char out[1024];
 
-	for (i = 0; i < NUM_XP; i++)
+	for (int i = 0; i < NUM_XP; i++)
 	{
-		if (pntevts[i] != NULL)
-			free (pntevts[i]);
+		int m;
+		delete[] pntevts[i];
 		if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
 		{
 			snprintf (out, sizeof (out),
 						 _("Error parsing event %s.\nLoading default."), te[i].name);
 			fe_message (out, FE_MSG_WARN);
-			delete[] pntevts_text[i];
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
-				pntevts_text[i] = new_strdup (te[i].def);
+				pntevts_text[i] = te[i].def;
 			else
-				pntevts_text[i] = new_strdup (_(te[i].def));
+				pntevts_text[i] = _(te[i].def);
 			if (pevt_build_string (pntevts_text[i], pntevts[i], &m) != 0)
 			{
 				fprintf (stderr,
@@ -1499,8 +1493,7 @@ static void pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 
 	if (penum != -1 && text != NULL)
 	{
-		delete[] (pntevts_text[penum]);
-		pntevts_text[penum] = new_strdup(text);
+		pntevts_text[penum] = text;
 	}
 
 	delete[] text;
@@ -1629,27 +1622,24 @@ int pevent_load (const char *filename)
 
 static void pevent_check_all_loaded ()
 {
-	int i;
-
-	for (i = 0; i < NUM_XP; i++)
+	for (int i = 0; i < NUM_XP; i++)
 	{
-		if (pntevts_text[i] == NULL)
+		if (pntevts_text[i].empty())
 		{
 			/*printf ("%s\n", te[i].name);
 			snprintf(out, sizeof(out), "The data for event %s failed to load. Reverting to defaults.\nThis may be because a new version of HexChat is loading an old config file.\n\nCheck all print event texts are correct", evtnames[i]);
 			   gtkutil_simpledialog(out); */
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
-				pntevts_text[i] = new_strdup (te[i].def);
+				pntevts_text[i] = te[i].def;
 			else
-				pntevts_text[i] = new_strdup (_(te[i].def));
+				pntevts_text[i] = _(te[i].def);
 		}
 	}
 }
 
 void load_text_events ()
 {
-	memset (&pntevts_text, 0, sizeof (char *) * (NUM_XP));
 	memset (&pntevts, 0, sizeof (char *) * (NUM_XP));
 
 	if (pevent_load (nullptr))
@@ -1667,10 +1657,10 @@ void load_text_events ()
 
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
 {
-	int len, output_index, input_index, numargs;
-	bool done_all = false;
 	if (index < 0 || index > sizeof(pntevts))
 		throw std::invalid_argument("Invalid index");
+	int len, output_index, input_index, numargs;
+	bool done_all = false;
 
 	const char* display_evt = pntevts[index];
 	numargs = te[index].num_args & 0x7f;
@@ -1767,15 +1757,15 @@ namespace
 	};
 } // end anonymous namespace
 
-int pevt_build_string (const char *input, char* &output, int *max_arg)
+int pevt_build_string(const std::string& input, char* &output, int *max_arg)
 {
 	std::vector<std::vector<char>> events;
 	int clen;
 	char o[4096], d, *obuf;
 	int output_index, max = -1, x;
 
-	auto len = strlen (input);
-	std::string buf(input, len + 1);
+	auto len = input.size();
+	std::string buf(input);
 	check_special_chars (&buf[0], true);
 
 	len = strlen (buf.c_str());
@@ -2000,10 +1990,10 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	display_event (sess, index, word, stripcolor_args, timestamp);
 }
 
-char * text_find_format_string (char *name)
+const char * text_find_format_string (const char name[])
 {
 	int i = pevent_find (name, i);
-	return i >= 0 ? pntevts_text[i] : nullptr;
+	return i >= 0 ? pntevts_text[i].c_str() : nullptr;
 }
 
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
@@ -2021,14 +2011,14 @@ int text_emit_by_name (char *name, session *sess, time_t timestamp,
 	return 0;
 }
 
-void pevent_save (char *fn)
+void pevent_save(const char file_name[])
 {
 	int fd;
-	if (!fn)
+	if (!file_name)
 		fd = hexchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
 			0x180, io::fs::XOF_DOMODE);
 	else
-		fd = hexchat_open_file (fn, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
+		fd = hexchat_open_file (file_name, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
 			io::fs::XOF_FULLPATH | io::fs::XOF_DOMODE);
 	if (fd == -1)
 	{
@@ -2048,7 +2038,7 @@ void pevent_save (char *fn)
 		write (fd, buf, snprintf (buf, sizeof (buf),
 										  "event_name=%s\n", te[i].name));
 		write (fd, buf, snprintf (buf, sizeof (buf),
-										  "event_text=%s\n\n", pntevts_text[i]));
+										  "event_text=%s\n\n", pntevts_text[i].c_str()));
 	}
 
 	close (fd);

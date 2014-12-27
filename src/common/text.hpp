@@ -49,8 +49,8 @@ void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, .
 void log_close (session &sess);
 void log_open_or_close (session *sess);
 void load_text_events (void);
-void pevent_save (char *fn);
-int pevt_build_string (const char *input, char *&output, int *max_arg);
+void pevent_save (const char file_name[]);
+int pevt_build_string (const std::string& input, char *&output, int *max_arg);
 int pevent_load (const char *filename);
 void pevent_make_pntevts (void);
 int text_color_of (const std::string& name);
@@ -61,7 +61,7 @@ int text_emit_by_name (char *name, session *sess, time_t timestamp,
 char *text_validate (char **text, size_t *len);
 gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
-char *text_find_format_string (char *name);
+const char *text_find_format_string (const char name[]);
  
 void sound_play (const std::string & file, bool quiet);
 void sound_play_event (int i);

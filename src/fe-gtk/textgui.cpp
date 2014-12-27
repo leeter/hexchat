@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <array>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -45,7 +46,7 @@
 #include "gtk_helpers.hpp"
 typedef std::char_traits < unsigned char > uchar_traits;
 extern const text_event te[];
-extern char *pntevts_text[];
+extern std::array<std::string, NUM_XP> pntevts_text;
 extern char *pntevts[];
 
 static GtkWidget *pevent_dialog = NULL, *pevent_dialog_twid,
@@ -188,10 +189,9 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 
 	gtk_list_store_set (GTK_LIST_STORE (model), &iter, TEXT_COLUMN, new_text, -1);
 
-	delete[] (pntevts_text[sig]);
-	free (pntevts[sig]);
+	delete[] pntevts[sig];
 
-	pntevts_text[sig] = new_strdup(text);
+	pntevts_text[sig] = text;
 	pntevts[sig] = out;
 
 	std::string buf(text, len);
@@ -249,20 +249,19 @@ pevent_selection_changed (GtkTreeSelection *sel, gpointer userdata)
 static void
 pevent_dialog_fill (GtkWidget *list)
 {
-	int i;
 	GtkListStore *store;
 	GtkTreeIter iter;
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (list)));
 	gtk_list_store_clear (store);
 
-	i = NUM_XP;
+	int i = NUM_XP;
 	do
 	{
 		i--;
 		gtk_list_store_insert_with_values (store, &iter, 0,
 													  EVENT_COLUMN, te[i].name,
-													  TEXT_COLUMN, pntevts_text[i],
+													  TEXT_COLUMN, pntevts_text[i].c_str(),
 													  ROW_COLUMN, i, -1);
 	}
 	while (i != 0);
@@ -316,7 +315,7 @@ pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 {
 	for (int n = 0; n < NUM_XP; n++)
 	{
-		std::string out(_(pntevts_text[n]));
+		std::string out(_(pntevts_text[n].c_str()));
 		out.push_back('\n');
 		out.push_back(0);
 		check_special_chars (&out[0], true);
