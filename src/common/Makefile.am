@@ -72,7 +72,7 @@ libhexchatcommon_a_SOURCES = base64.cpp cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cp
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
 	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp url.cpp userlist.cpp util.cpp
-libhexchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
+libhexchatcommon_a_CPPFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
 libhexchatcommon_a_LIBS = ../libirc/libirc.a $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_REGEX_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_CHRONO_LIBS)
 
 textenums.h: textevents.h
