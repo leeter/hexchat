@@ -1768,36 +1768,34 @@ hexchat_free (hexchat_plugin *ph, void *ptr)
 	g_free (ptr);
 }
 
+namespace {
+	enum class set_mode
+	{
+		del,
+		save
+	};
+}
 static int
-hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char *value, int mode) /* mode: 0 = delete, 1 = save */
+hexchat_pluginpref_set_str_real(hexchat_plugin *pl, const char *var, const char *value, set_mode mode) /* mode: 0 = delete, 1 = save */
 {
 	namespace bfs = boost::filesystem;
-	FILE *fpIn;
-	int fhOut;
-	char *buffer;
-	char *buffer_tmp;
-	char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
-	char *line_bufp = line_buffer;
-
 	glib_string canon(g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name.c_str()));
 	canonalize_key (canon.get());
-	glib_string confname(g_strdup_printf ("addon_%s.conf", canon));
-	glib_string confname_tmp(g_strdup_printf ("%s.new", confname));
+	glib_string confname(g_strdup_printf ("addon_%s.conf", canon.get()));
+	glib_string confname_tmp(g_strdup_printf ("%s.new", confname.get()));
+	auto fhOut = hexchat_open_file (confname_tmp.get(), O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	
+	if (fhOut == -1)		/* unable to save, abort */
+	{
+		return FALSE;
+	}
+	auto fpIn = hexchat_fopen_file(confname.get(), "r", 0);
 	auto config_dir = bfs::path(config::config_dir());
 	auto confpath = config_dir / confname.get();
 	auto confoldpath = config_dir / confname_tmp.get();
-	fhOut = hexchat_open_file (confname_tmp.get(), O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	fpIn = hexchat_fopen_file (confname.get(), "r", 0);
-
-	if (fhOut == -1)		/* unable to save, abort */
+	if (fpIn == NULL)	/* no previous config file, no parsing */
 	{
-		if (fpIn)
-			fclose (fpIn);
-		return FALSE;
-	}
-	else if (fpIn == NULL)	/* no previous config file, no parsing */
-	{
-		if (mode)
+		if (mode == set_mode::save)
 		{
 			glib_string escaped_value(g_strescape (value, NULL));
 			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
@@ -1821,12 +1819,15 @@ hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char
 	else	/* existing config file, preserve settings and find & replace current var value if any */
 	{
 		bool prevSetting = false;
+		char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
+		char *line_bufp = line_buffer;
+		auto var_len = std::strlen(var);
 
 		while (fscanf (fpIn, " %[^\n]", line_bufp) != EOF)	/* read whole lines including whitespaces */
 		{
 			glib_string buffer_tmp(g_strdup_printf ("%s ", var));	/* add one space, this way it works against var - var2 checks too */
 			glib_string buffer;
-			if (strncmp (buffer_tmp.get(), line_buffer, strlen (var) + 1) == 0)	/* given setting already exists */
+			if (strncmp (buffer_tmp.get(), line_buffer, var_len + 1) == 0)	/* given setting already exists */
 			{
 				if (mode)									/* overwrite the existing matching setting if we are in save mode */
 				{
@@ -1873,7 +1874,7 @@ hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char
 int
 hexchat_pluginpref_set_str (hexchat_plugin *pl, const char *var, const char *value)
 {
-	return hexchat_pluginpref_set_str_real (static_cast<hexchat_plugin_internal*>(pl), var, value, 1);
+	return hexchat_pluginpref_set_str_real (static_cast<hexchat_plugin_internal*>(pl), var, value, set_mode::save);
 }
 
 static int
@@ -1915,7 +1916,7 @@ hexchat_pluginpref_set_int (hexchat_plugin *pl, const char *var, int value)
 	char buffer[12];
 
 	snprintf (buffer, sizeof (buffer), "%d", value);
-	return hexchat_pluginpref_set_str_real(static_cast<hexchat_plugin_internal*>(pl), var, buffer, 1);
+	return hexchat_pluginpref_set_str_real(static_cast<hexchat_plugin_internal*>(pl), var, buffer, set_mode::save);
 }
 
 int
@@ -1936,7 +1937,7 @@ hexchat_pluginpref_get_int (hexchat_plugin *pl, const char *var)
 int
 hexchat_pluginpref_delete (hexchat_plugin *pl, const char *var)
 {
-	return hexchat_pluginpref_set_str_real (pl, var, 0, 0);
+	return hexchat_pluginpref_set_str_real (pl, var, nullptr, set_mode::del);
 }
 
 int
