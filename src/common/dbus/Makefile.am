@@ -6,6 +6,8 @@ libhexchatdbus_a_SOURCES =			\
 	dbus-plugin.h				\
 	dbus-client.cpp				\
 	dbus-client.h
+libhexchatdbus_a_CPPFLAGS = $(CPPFLAGS) $(DBUS_CFLAGS)
+libhexchatdbus_a_CFLAGS = $(CFLAGS) $(DBUS_CFLAGS)
 
 EXTRA_DIST =				\
 	remote-object.xml		\
