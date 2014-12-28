@@ -24,6 +24,7 @@ CLEANFILES = $(BUILT_SOURCES)
 
 
 noinst_PROGRAMS = example
+example_CFLAGS = $(CFLAGS)
 example_SOURCES = example.c
 example_LDADD = $(DBUS_LIBS) $(GLIB_LIBS)
 
