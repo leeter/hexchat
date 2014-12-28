@@ -219,10 +219,10 @@ plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 	return pl;
 }
 
-static void *
-hexchat_dummy (hexchat_plugin *ph)
+static int
+hexchat_dummy(hexchat_plugin *, void *, char *, int *)
 {
-	return NULL;
+	return -1;
 }
 
 #ifdef WIN32

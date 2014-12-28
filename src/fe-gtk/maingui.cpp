@@ -3526,8 +3526,8 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	if (mg_gui == NULL)
 	{
 		first_run = true;
+		static_mg_gui = session_gui();
 		gui = &static_mg_gui;
-		memset (gui, 0, sizeof (session_gui));
 		gui->is_tab = TRUE;
 		sess->gui = gui;
 		mg_create_tabwindow (sess);
