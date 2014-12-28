@@ -4033,16 +4033,15 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 					buf[2] = src[3];
 					buf[3] = 0;
 					dest[0] = atoi (buf);
-					auto utf = g_locale_to_utf8 (dest, 1, 0, &utf_len, 0);
+					glib_string utf(g_locale_to_utf8(dest, 1, 0, &utf_len, 0));
 					if (utf)
 					{
-						glib_string utf8_str(utf);
 						if ((dest - orig) + utf_len >= destlen)
 						{
 							return 2;
 						}
 
-						std::copy_n(utf, utf_len, dest);
+						std::copy_n(utf.get(), utf_len, dest);
 						dest += utf_len;
 					}
 					src += 3;
