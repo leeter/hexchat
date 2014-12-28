@@ -27,6 +27,7 @@ extern GSList *serv_list;
 #include <chrono>
 #include <locale>
 #include <boost/chrono.hpp>
+#include <boost/optional.hpp>
 #include <tcpfwd.hpp>
 
 struct server

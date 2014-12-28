@@ -33,7 +33,7 @@
 #include <utility>
 #include <unordered_map>
 #include <ctime>			/* need time_t */
-#include <boost/optional.hpp>
+#include <boost/optional/optional_fwd.hpp>
 
 #include "sessfwd.hpp"
 

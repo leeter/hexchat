@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <cstring>
 #include <stdexcept>
+#include <boost/optional.hpp>
 
 #ifdef WIN32
 #include <windows.h>
@@ -254,8 +255,8 @@ menu_toggle_item (const char *label, GtkWidget *menu, GCallback callback, void *
 }
 
 GtkWidget *
-menu_quick_item (const std::string *cmd, char *label, GtkWidget * menu, int flags,
-					  gpointer userdata, char *icon)
+menu_quick_item (const std::string *cmd, const char label[], GtkWidget * menu, int flags,
+					  gpointer userdata, const char icon[])
 {
 	GtkWidget *img, *item;
 	char *path;
@@ -1934,7 +1935,7 @@ menu_find_path (GtkWidget *menu, const std::string & path)
 }
 
 static GtkWidget *
-menu_find (GtkWidget *menu, const std::string & path, char *label)
+menu_find (GtkWidget *menu, const std::string & path, const char label[])
 {
 	GtkWidget *item = NULL;
 
@@ -1974,7 +1975,7 @@ menu_update_cb (GtkWidget *menu, menu_entry *me, char *target)
 {
 	GtkWidget *item;
 
-	item = menu_find (menu, me->path, me->label);
+	item = menu_find (menu, me->path, me->label? me->label->c_str() : nullptr);
 	if (item)
 	{
 		gtk_widget_set_sensitive (item, me->enable);
@@ -1997,12 +1998,12 @@ menu_radio_cb (GtkCheckMenuItem *item, menu_entry *me)
 	menu_foreach_gui (me, menu_update_cb);
 
 	if (me->state && me->cmd)
-		handle_command (current_sess, me->cmd, FALSE);
+		handle_command (current_sess, &me->cmd.get()[0], false);
 }
 
 /* toggle state changed via mouse click */
 static void
-menu_toggle_cb (GtkCheckMenuItem *item, menu_entry *me)
+menu_toggle_cb(GtkCheckMenuItem *item, menu_entry *me)
 {
 	me->state = 0;
 	if (item->active)
@@ -2010,17 +2011,17 @@ menu_toggle_cb (GtkCheckMenuItem *item, menu_entry *me)
 
 	/* update the state, incase this was changed via right-click. */
 	/* This will update all other windows and menu bars */
-	menu_foreach_gui (me, menu_update_cb);
+	menu_foreach_gui(me, menu_update_cb);
 
 	if (me->state)
-		handle_command (current_sess, me->cmd, FALSE);
+		handle_command(current_sess, me->cmd ? &me->cmd.get()[0] : nullptr, false);
 	else
-		handle_command (current_sess, me->ucmd, FALSE);
+		handle_command(current_sess, me->ucmd ? &me->cmd.get()[0] : nullptr, false);
 }
 
 static GtkWidget *
-menu_radio_item (char *label, GtkWidget *menu, GCallback callback, void *userdata,
-						int state, char *groupname)
+menu_radio_item (const char label[], GtkWidget *menu, GCallback callback, void *userdata,
+						int state, const char groupname[])
 {
 	GtkWidget *item;
 	GtkMenuItem *parent;
@@ -2062,7 +2063,7 @@ menu_add_radio (GtkWidget *menu, menu_entry *me)
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		item = menu_radio_item (me->label, menu, G_CALLBACK(menu_radio_cb), me, me->state, me->group);
+		item = menu_radio_item (me->label ? me->label->c_str(): nullptr, menu, G_CALLBACK(menu_radio_cb), me, me->state, me->group ? me->group->c_str() : nullptr);
 		menu_reorder (GTK_MENU (menu), item, me->pos);
 	}
 	return item;
@@ -2078,7 +2079,7 @@ menu_add_toggle (GtkWidget *menu, menu_entry *me)
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		item = menu_toggle_item (me->label, menu, G_CALLBACK(menu_toggle_cb), me, me->state);
+		item = menu_toggle_item (me->label ? me->label->c_str() : nullptr, menu, G_CALLBACK(menu_toggle_cb), me, me->state);
 		menu_reorder (GTK_MENU (menu), item, me->pos);
 	}
 	return item;
@@ -2094,8 +2095,8 @@ menu_add_item (GtkWidget *menu, menu_entry *me, char *target)
 		menu = menu_find_path (menu, path);
 	if (menu)
 	{
-		std::string temp(me->cmd);
-		item = menu_quick_item (&temp, me->label, menu, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, target, me->icon);
+		std::string temp(me->cmd ? me->cmd.get() : std::string());
+		item = menu_quick_item(&temp, me->label ? me->label->c_str() : nullptr, menu, me->markup ? XCMENU_MARKUP | XCMENU_MNEMONIC : XCMENU_MNEMONIC, target, me->icon ? me->icon->c_str() : nullptr);
 		menu_reorder (GTK_MENU (menu), item, me->pos);
 	}
 	return item;
@@ -2114,7 +2115,7 @@ menu_add_sub (GtkWidget *menu, menu_entry *me)
 		int pos = me->pos;
 		if (pos < 0)	/* position offset from end/bottom */
 			pos = g_list_length (GTK_MENU_SHELL (menu)->children) + pos;
-		menu_quick_sub (me->label, menu, &item, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, pos);
+		menu_quick_sub (me->label ? me->label->c_str() : nullptr, menu, &item, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, pos);
 	}
 	return item;
 }
@@ -2123,7 +2124,7 @@ static void
 menu_del_cb (GtkWidget *menu, menu_entry *me, char *target)
 {
 	auto path = me->path.size() > me->root_offset ? me->path.substr(me->root_offset) : std::string();
-	GtkWidget *item = menu_find (menu, path, me->label);
+	GtkWidget *item = menu_find(menu, path, me->label ? me->label->c_str() : nullptr);
 	if (item)
 		gtk_widget_destroy (item);
 }
@@ -2159,14 +2160,13 @@ menu_add_cb (GtkWidget *menu, menu_entry *me, char *target)
 char *
 fe_menu_add (menu_entry *me)
 {
-	char *text;
-
 	menu_foreach_gui (me, menu_add_cb);
 
 	if (!me->markup)
 		return NULL;
-
-	if (!pango_parse_markup (me->label, -1, 0, NULL, &text, NULL, NULL))
+	
+	char *text = nullptr;
+	if (!pango_parse_markup(me->label ? me->label->c_str() : nullptr, -1, 0, NULL, &text, NULL, NULL))
 		return NULL;
 
 	/* return the label with markup stripped */
@@ -2190,32 +2190,22 @@ fe_menu_update (menu_entry *me)
 static void
 menu_add_plugin_mainmenu_items (GtkWidget *menu)
 {
-	GSList *list;
-	menu_entry *me;
-
-	list = menu_list;	/* outbound.c */
-	while (list)
+	/* outbound.c */
+	for (auto& me : menu_list)
 	{
-		me = static_cast<menu_entry*>(list->data);
 		if (me->is_main)
-			menu_add_cb (menu, me, NULL);
-		list = list->next;
+			menu_add_cb (menu, me.get(), NULL);
 	}
 }
 
 void
 menu_add_plugin_items (GtkWidget *menu, char *root, char *target)
 {
-	GSList *list;
-	menu_entry *me;
-
-	list = menu_list;	/* outbound.c */
-	while (list)
+	/* outbound.c */
+	for (auto & me : menu_list)
 	{
-		me = static_cast<menu_entry*>(list->data);
 		if (!me->is_main && !strncmp (me->path.c_str(), root + 1, root[0]))
-			menu_add_cb (menu, me, target);
-		list = list->next;
+			menu_add_cb (menu, me.get(), target);
 	}
 }
 

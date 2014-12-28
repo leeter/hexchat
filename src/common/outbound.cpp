@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <deque>
 #include <istream>
 #include <limits>
 #include <locale>
@@ -44,6 +45,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/optional.hpp>
 
 #define WANTSOCKET
 #define WANTARPA
@@ -1033,26 +1035,19 @@ cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-GSList *menu_list = NULL;
+std::vector<std::unique_ptr<menu_entry> > menu_list;
+//GSList *menu_list = NULL;
 
-menu_entry::~menu_entry()
-{
-	delete[] this->label;
-	delete[] this->cmd;
-	delete[] this->ucmd;
-	delete[] this->group;
-	delete[] this->icon;
-}
-
-static void
-menu_free (menu_entry *me)
-{
-	delete me;
-}
+//menu_entry::~menu_entry()
+//{
+//	delete[] this->label;
+//	delete[] this->cmd;
+//	delete[] this->ucmd;
+//	delete[] this->group;
+//	delete[] this->icon;
+//}
 
 /* strings equal? but ignore underscores */
-
-
 bool menu_streq (const char s1[], const char s2[], bool def)
 {
 	/* for separators */
@@ -1078,28 +1073,20 @@ bool menu_streq (const char s1[], const char s2[], bool def)
 
 static menu_entry *menu_entry_find (const char path[], const char label[])
 {
-	GSList *list;
-	menu_entry *me;
-
-	list = menu_list;
-	while (list)
+	for (auto & me : menu_list)// = menu_list; list; list = g_slist_next(list))
 	{
-		me = static_cast<menu_entry*>(list->data);
 		if (me->path == path)
 		{
-			if (me->label && label && !strcmp (label, me->label))
-				return me;
+			if (me->label && label && (me->label && me->label.get() == label))
+				return me.get();
 		}
-		list = list->next;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static void
 menu_del_children (const char path[], const char label[])
 {
-	GSList *list, *next;
-	menu_entry *me;
 	char buf[512];
 
 	if (!label)
@@ -1109,51 +1096,38 @@ menu_del_children (const char path[], const char label[])
 	else
 		snprintf (buf, sizeof (buf), "%s", label);
 
-	list = menu_list;
-	while (list)
-	{
-		me = static_cast<menu_entry*>(list->data);
-		next = list->next;
-		if (!menu_streq (buf, me->path.c_str(), false))
-		{
-			menu_list = g_slist_remove (menu_list, me);
-			menu_free (me);
-		}
-		list = next;
-	}
+	menu_list.erase(std::remove_if(menu_list.begin(), menu_list.end(), [&buf](const std::unique_ptr<menu_entry> & me){
+		return !menu_streq(buf, me->path.c_str(), false);
+	}), menu_list.end());
 }
 
 static bool menu_del (const char path[], const char label[])
 {
-	GSList *list;
-	menu_entry *me;
-
-	list = menu_list;
-	while (list)
+	auto me = std::find_if(menu_list.begin(), menu_list.end(), [label, path](const std::unique_ptr<menu_entry> & me)
 	{
-		me = static_cast<menu_entry*>(list->data);
-		if (!menu_streq (me->label, label, true) && !menu_streq (me->path.c_str(), path, true))
-		{
-			menu_list = g_slist_remove (menu_list, me);
-			fe_menu_del (me);
-			menu_free (me);
-			/* delete this item's children, if any */
-			menu_del_children (path, label);
-			return true;
-		}
-		list = list->next;
+		return !menu_streq(me->label ? me->label->c_str() : nullptr, label, true)
+			&& !menu_streq(me->path.c_str(), path, true);
+	});
+
+	if (me == menu_list.end());
+	{
+		return false;
 	}
 
-	return false;
+	fe_menu_del(me->get());
+	menu_list.erase(me);
+	
+	/* delete this item's children, if any */
+	menu_del_children(path, label);
+	return true;
 }
 
 static bool
 menu_is_mainmenu_root (const char path[], gint16 &offset)
 {
-	static const char *menus[] = {"\x4$TAB","\x5$TRAY","\x4$URL","\x5$NICK","\x5$CHAN"};
-	int i;
+	static const char *const menus[] = {"\x4$TAB","\x5$TRAY","\x4$URL","\x5$NICK","\x5$CHAN"};
 
-	for (i = 0; i < 5; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		if (!strncmp (path, menus[i] + 1, menus[i][0]))
 		{
@@ -1171,10 +1145,8 @@ menu_is_mainmenu_root (const char path[], gint16 &offset)
 static void
 menu_add (const char path[], const char label[], const char cmd[], const char ucmd[], int pos, int state, bool markup, bool enable, int mod, int key, const char group[], const char icon[])
 {
-	menu_entry *me;
-
 	/* already exists? */
-	me = menu_entry_find (path, label);
+	menu_entry *me = menu_entry_find(path, label);
 	if (me)
 	{
 		/* update only */
@@ -1183,8 +1155,8 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 		fe_menu_update (me);
 		return;
 	}
-
-	me = new menu_entry;
+	std::unique_ptr<menu_entry> me_ptr(new menu_entry);
+	me = me_ptr.get();
 	me->pos = pos;
 	me->modifier = mod;
 	me->is_main = menu_is_mainmenu_root (path, me->root_offset);
@@ -1193,60 +1165,41 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	me->enable = enable;
 	me->key = key;
 	me->path = path;
-	me->label = NULL;
-	me->cmd = NULL;
-	me->ucmd = NULL;
-	me->group = NULL;
-	me->icon = NULL;
 
 	if (label)
-		me->label = new_strdup (label);
+		me->label.emplace(label);
 	if (cmd)
-		me->cmd = new_strdup (cmd);
+		me->cmd.emplace(cmd);
 	if (ucmd)
-		me->ucmd = new_strdup (ucmd);
+		me->ucmd.emplace(ucmd);
 	if (group)
-		me->group = new_strdup (group);
+		me->group.emplace(group);
 	if (icon)
-		me->icon = new_strdup (icon);
+		me->icon.emplace(icon);
 
-	menu_list = g_slist_append (menu_list, me);
-	char* menu_label = fe_menu_add (me);
+	menu_list.emplace_back(std::move(me_ptr));
+	glib_string menu_label(fe_menu_add (me)); /* this is from pango */
 	if (menu_label)
 	{
 		/* FE has given us a stripped label */
-		delete[] me->label;
-		me->label = new_strdup(menu_label);
-		g_free(menu_label); /* this is from pango */
+		me->label = std::string(menu_label.get());
 	}
 }
 
 static int
 cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int idx = 2;
-	int len;
-	int pos = 0xffff;
-	int state = 0;
-	bool toggle = false;
-	bool enable = true;
-	bool markup = false;
-	int key = 0;
-	int mod = 0;
-	char *label;
-	char *group = NULL;
-	char *icon = NULL;
-
 	if (!word[2][0] || !word[3][0])
 		return FALSE;
-
+	int idx = 2;	
+	bool enable = true;
 	/* -eX enabled or not? */
 	if (word[idx][0] == '-' && word[idx][1] == 'e')
 	{
 		enable = !!atoi (word[idx] + 2);
 		idx++;
 	}
-
+	char *icon = NULL;
 	/* -i<ICONFILE> */
 	if (word[idx][0] == '-' && word[idx][1] == 'i')
 	{
@@ -1254,24 +1207,26 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		idx++;
 	}
 
+	int key = 0;
+	int mod = 0;
 	/* -k<mod>,<key> key binding */
 	if (word[idx][0] == '-' && word[idx][1] == 'k')
 	{
-		char *comma = strchr (word[idx], ',');
+		const char *comma = strchr (word[idx], ',');
 		if (!comma)
 			return FALSE;
 		mod = atoi (word[idx] + 2);
 		key = atoi (comma + 1);
 		idx++;
 	}
-
+	bool markup = false;
 	/* -m to specify PangoMarkup language */
 	if (word[idx][0] == '-' && word[idx][1] == 'm')
 	{
-		markup = TRUE;
+		markup = true;
 		idx++;
 	}
-
+	int pos = 0xffff;
 	/* -pX to specify menu position */
 	if (word[idx][0] == '-' && word[idx][1] == 'p')
 	{
@@ -1279,6 +1234,8 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		idx++;
 	}
 
+	char *group = nullptr;
+	int state = 0;
 	/* -rSTATE,GROUP to specify a radio item */
 	if (word[idx][0] == '-' && word[idx][1] == 'r')
 	{
@@ -1286,7 +1243,8 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		group = word[idx] + 4;
 		idx++;
 	}
-
+	
+	bool toggle = false;
 	/* -tX to specify toggle item with default state */
 	if (word[idx][0] == '-' && word[idx][1] == 't')
 	{
@@ -1300,19 +1258,19 @@ cmd_menu (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	/* the path */
 	path_part (word[idx+1], tbuf, 512);
-	len = strlen (tbuf);
+	auto len = strlen (tbuf);
 	if (len)
 		tbuf[len - 1] = 0;
 
 	/* the name of the item */
-	label = file_part (word[idx + 1]);
+	auto label = file_part (word[idx + 1]);
 	if (label[0] == '-' && label[1] == 0)
 		label = NULL;	/* separator */
 
 	if (markup)
 	{
-		char *p;	/* to force pango closing tags through */
-		for (p = label; *p; p++)
+		/* to force pango closing tags through */
+		for (auto p = label; *p; p++)
 			if (*p == 3)
 				*p = '/';
 	}
@@ -1346,14 +1304,18 @@ cmd_mkick (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	const std::string reason = word_eol[2] ? word_eol[2] : std::string();
 	for (auto & user : sess->usertree)
-{
-	if (user->op && !user->me)
+	{
+		if (user->op && !user->me)
+		{
 			sess->server->p_kick(sess->channel, user->nick, reason);
-}
+		}
+	}
 	for (auto & user : sess->usertree)
-{
+	{
 		if (!user->op && !user->me)
+		{
 			sess->server->p_kick(sess->channel, user->nick, reason);
+		}
 	}
 	return TRUE;
 }
@@ -1387,12 +1349,10 @@ static int
 cmd_dns (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
-	struct User *user;
-	message_tags_data no_tags = message_tags_data();
-
 	if (*nick)
 	{
-		user = userlist_find (sess, nick);
+		message_tags_data no_tags = message_tags_data();
+		auto user = userlist_find (sess, nick);
 		if (user)
 		{
 			if (user->hostname)
@@ -1424,11 +1384,9 @@ cmd_echo (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static void
 exec_check_process (struct session *sess)
 {
-	int val;
-
 	if (sess->running_exec == NULL)
 		return;
-	val = waitpid (sess->running_exec->childpid, NULL, WNOHANG);
+	auto val = waitpid (sess->running_exec->childpid, NULL, WNOHANG);
 	if (val == -1 || val > 0)
 	{
 		close (sess->running_exec->myfd);
@@ -1442,15 +1400,13 @@ exec_check_process (struct session *sess)
 static int
 cmd_execs (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int r;
-
 	exec_check_process (sess);
 	if (sess->running_exec == NULL)
 	{
 		EMIT_SIGNAL (XP_TE_NOCHILD, sess, NULL, NULL, NULL, NULL, 0);
 		return FALSE;
 	}
-	r = kill (sess->running_exec->childpid, SIGSTOP);
+	int r = kill (sess->running_exec->childpid, SIGSTOP);
 	if (r == -1)
 		PrintText (sess, "Error in kill(2)\n");
 
@@ -1632,12 +1588,10 @@ norm:			nbuf[j] = buf[i];
 static void *
 memrchr (const void *block, int c, size_t size)
 {
-	unsigned char *p;
-
-	for (p = (unsigned char *)block + size; p != block; p--)
+	for (auto p = (unsigned char *)block + size; p != block; p--)
 		if (*p == c)
 			return p;
-	return 0;
+	return nullptr;
 }
 #endif
 
@@ -1859,8 +1813,7 @@ cmd_exportconf (struct session *sess, char *tbuf, char *word[], char *word_eol[]
 static int
 cmd_flushq (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	sprintf (tbuf, "Flushing server send queue, %d bytes.\n", sess->server->sendq_len);
-	PrintText (sess, tbuf);
+	PrintTextf(sess, boost::format(_("Flushing server send queue, %d bytes.\n")) % sess->server->sendq_len);
 	sess->server->flush_queue ();
 	return TRUE;
 }
@@ -1879,9 +1832,9 @@ static int
 cmd_gate (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *server_name = word[2];
-	server *serv = sess->server;
 	if (*server_name)
 	{
+		server *serv = sess->server;
 		char *port = word[3];
 #ifdef USE_OPENSSL
 		serv->use_ssl = FALSE;
@@ -1931,10 +1884,10 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static void
 get_int_cb (int cancel, int val, getvalinfo *info)
 {
-	char buf[512];
 	std::unique_ptr<getvalinfo> info_ptr(info);
 	if (!cancel)
 	{
+		char buf[512];
 		snprintf (buf, sizeof (buf), "%s %d", info->cmd.c_str(), val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);
@@ -1959,30 +1912,29 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static void
 get_file_cb (char *cmd, char *file)
 {
-	char buf[1024 + 128];
-
 	/* execute the command once per file, then once more with
 	  no args */
 	if (file)
 	{
+		char buf[1024 + 128];
 		snprintf (buf, sizeof (buf), "%s %s", cmd, file);
 		handle_command (current_sess, buf, FALSE);
 	}
 	else
 	{
+		std::unique_ptr<char[]> cmd_ptr(cmd);
 		handle_command (current_sess, cmd, FALSE);
-		free (cmd);
 	}
 }
 
 static int
 cmd_getfile (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	int idx = 2;
-	int flags = 0;
-
 	if (!word[3][0])
 		return FALSE;
+
+	int idx = 2;
+	int flags = 0;
 
 	if (!strcmp (word[2], "-folder"))
 	{
@@ -2002,7 +1954,7 @@ cmd_getfile (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		idx++;
 	}
 
-	fe_get_file (word[idx+1], word[idx+2], (void (*)(void*, char*))get_file_cb, strdup (word[idx]), flags);
+	fe_get_file (word[idx+1], word[idx+2], (void (*)(void*, char*))get_file_cb, new_strdup (word[idx]), flags);
 
 	return TRUE;
 }
@@ -2010,10 +1962,10 @@ cmd_getfile (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 static void
 get_str_cb (int cancel, const char val[], getvalinfo *info)
 {
-	char buf[512];
 	std::unique_ptr<getvalinfo> info_ptr(info);
 	if (!cancel)
 	{
+		char buf[512];
 		snprintf (buf, sizeof (buf), "%s %s", info->cmd.c_str(), val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);

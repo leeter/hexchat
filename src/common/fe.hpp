@@ -22,13 +22,14 @@
 
 #include <cstdint>
 #include <string>
+#include <boost/optional.hpp>
 #include "sessfwd.hpp"
 struct User;
 
 /* for storage of /menu entries */
 struct menu_entry
 {
-	~menu_entry();
+	//~menu_entry();
 	std::int32_t pos;	/* position */
 	std::int16_t modifier;	/* keybinding */
 	std::int16_t root_offset;	/* bytes to offset ->path */
@@ -40,11 +41,11 @@ struct menu_entry
 
 	int key;
 	std::string path;
-	char *label;
-	char *cmd;
-	char *ucmd;	/* unselect command (toggles) */
-	char *group;	/* for radio items or NULL */
-	char *icon;	/* filename */
+	boost::optional<std::string> label;
+	boost::optional<std::string> cmd;
+	boost::optional<std::string> ucmd; /* unselect command (toggles) */
+	boost::optional<std::string> group; /* for radio items or NULL */
+	boost::optional<std::string> icon; /* filename */
 };
 
 int fe_args (int argc, char *argv[]);
