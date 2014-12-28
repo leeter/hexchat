@@ -22,7 +22,6 @@
 #endif
 
 #include <cstring>
-#include "../common/hexchat-plugin.h"
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/inbound.hpp"
@@ -107,9 +106,7 @@ static void tray_init (void);
 static WinStatus
 tray_get_window_status (void)
 {
-	const char *st;
-
-	st = hexchat_get_info (ph, "win_status");
+	const char *st = hexchat_get_info (ph, "win_status");
 
 	if (!st)
 		return WS_HIDDEN;
@@ -127,12 +124,10 @@ static int
 tray_count_channels (void)
 {
 	int cons = 0;
-	GSList *list;
-	session *sess;
 
-	for (list = sess_list; list; list = list->next)
+	for (auto list = sess_list; list; list = list->next)
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server->connected && sess->channel[0] &&
 			sess->type == session::SESS_CHANNEL)
 			cons++;
@@ -144,9 +139,8 @@ static int
 tray_count_networks (void)
 {
 	int cons = 0;
-	GSList *list;
 
-	for (list = serv_list; list; list = list->next)
+	for (auto list = serv_list; list; list = list->next)
 	{
 		if (((server *)list->data)->connected)
 			cons++;
@@ -224,28 +218,24 @@ static void
 tray_set_balloonf (const char *text, const char *format, ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf(g_strdup_vprintf (format, args));
 	va_end (args);
 
-	fe_tray_set_balloon (buf, text);
-	g_free (buf);
+	fe_tray_set_balloon (buf.get(), text);
 }
 
 static void
 tray_set_tipf (const char *format, ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf(g_strdup_vprintf (format, args));
 	va_end (args);
 
-	fe_tray_set_tooltip (buf);
-	g_free (buf);
+	fe_tray_set_tooltip(buf.get());
 }
 
 static void
@@ -413,7 +403,6 @@ tray_toggle_visibility (bool force_hide)
 	static GdkScreen *screen;
 	static int maximized;
 	static int fullscreen;
-	GtkWindow *win;
 
 	if (!sticon)
 		return false;
@@ -421,7 +410,7 @@ tray_toggle_visibility (bool force_hide)
 	/* ph may have an invalid context now */
 	hexchat_set_context (ph, hexchat_find_context (ph, NULL, NULL));
 
-	win = GTK_WINDOW (hexchat_get_info (ph, "gtkwin_ptr"));
+	auto win = GTK_WINDOW (hexchat_get_info (ph, "gtkwin_ptr"));
 
 	tray_stop_flash ();
 	tray_reset_counts ();
@@ -528,12 +517,9 @@ tray_find_away_status (void)
 static void
 tray_foreach_server (GtkWidget *item, char *cmd)
 {
-	GSList *list;
-	server *serv;
-
-	for (list = serv_list; list; list = list->next)
+	for (auto list = serv_list; list; list = list->next)
 	{
-		serv = static_cast<server*>(list->data);
+		auto serv = static_cast<server*>(list->data);
 		if (serv->connected)
 			handle_command (serv->server_session, cmd, FALSE);
 	}
@@ -757,12 +743,10 @@ tray_message_cb(const char *const word[], void *userdata)
 static void
 tray_priv (const char *from, const char *text)
 {
-	const char *network;
-
 	if (alert_match_word (from, prefs.hex_irc_no_hilight))
 		return;
 
-	network = hexchat_get_info (ph, "network");
+	auto network = hexchat_get_info (ph, "network");
 	if (!network)
 		network = hexchat_get_info (ph, "server");
 
@@ -804,12 +788,10 @@ tray_invited_cb(const char *const word[], void *userdata)
 static int
 tray_dcc_cb(const char *const word[], void *userdata)
 {
-	const char *network;
-
 /*	if (tray_status == TS_FILEOFFER)
 		return HEXCHAT_EAT_NONE;*/
 
-	network = hexchat_get_info (ph, "network");
+	auto network = hexchat_get_info (ph, "network");
 	if (!network)
 		network = hexchat_get_info (ph, "server");
 

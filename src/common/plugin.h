@@ -20,147 +20,20 @@
 #ifndef HEXCHAT_COMMONPLUGIN_H
 #define HEXCHAT_COMMONPLUGIN_H
 
-#ifdef __cplusplus
-extern "C" {
+#ifndef PLUGIN_C
+#define PLUGIN_C
 #endif
-
-struct t_hexchat_plugin;
-typedef t_hexchat_plugin hexchat_plugin;
+#include "sessfwd.hpp"
+typedef struct session hexchat_context;
+#include "hexchat-plugin.h"
 
 typedef int(*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name,
 	char **plugin_desc, char **plugin_version, char *arg);
 typedef int(*plugin_deinit_func)(hexchat_plugin *);
 
-#ifdef PLUGIN_C
-struct t_hexchat_plugin
+//#ifdef PLUGIN_C
+struct hexchat_plugin_internal : public hexchat_plugin
 {
-	/* Keep these in sync with hexchat-plugin.h */
-	/* !!don't change the order, to keep binary compat!! */
-	hexchat_hook *(*hexchat_hook_command) (hexchat_plugin *ph,
-		    const char *name,
-		    int pri,
-			int(*callback) (const char * const word[], const char * const word_eol[], void *user_data),
-		    const char *help_text,
-		    void *userdata);
-	hexchat_hook *(*hexchat_hook_server) (hexchat_plugin *ph,
-		   const char *name,
-		   int pri,
-		   int(*callback) (const char * const word[], const char * const word_eol[], void *user_data),
-		   void *userdata);
-	hexchat_hook *(*hexchat_hook_print) (hexchat_plugin *ph,
-		  const char *name,
-		  int pri,
-		  int(*callback) (const char * const word[], void *user_data),
-		  void *userdata);
-	hexchat_hook *(*hexchat_hook_timer) (hexchat_plugin *ph,
-		  int timeout,
-		  int (*callback) (void *user_data),
-		  void *userdata);
-	hexchat_hook *(*hexchat_hook_fd) (hexchat_plugin *ph,
-		   int fd,
-		   int flags,
-		   int (*callback) (int fd, int flags, void *user_data),
-		   void *userdata);
-	void *(*hexchat_unhook) (hexchat_plugin *ph,
-	      hexchat_hook *hook);
-	void (*hexchat_print) (hexchat_plugin *ph,
-	     const char *text);
-	void (*hexchat_printf) (hexchat_plugin *ph,
-	      const char *format, ...);
-	void (*hexchat_command) (hexchat_plugin *ph,
-	       const char *command);
-	void (*hexchat_commandf) (hexchat_plugin *ph,
-		const char *format, ...);
-	int (*hexchat_nickcmp) (hexchat_plugin *ph,
-	       const char *s1,
-	       const char *s2);
-	int (*hexchat_set_context) (hexchat_plugin *ph,
-		   hexchat_context *ctx);
-	hexchat_context *(*hexchat_find_context) (hexchat_plugin *ph,
-		    const char *servname,
-		    const char *channel);
-	hexchat_context *(*hexchat_get_context) (hexchat_plugin *ph);
-	const char *(*hexchat_get_info) (hexchat_plugin *ph,
-		const char *id);
-	int (*hexchat_get_prefs) (hexchat_plugin *ph,
-		 const char *name,
-		 const char **string,
-		 int *integer);
-	hexchat_list * (*hexchat_list_get) (hexchat_plugin *ph,
-		const char *name);
-	void (*hexchat_list_free) (hexchat_plugin *ph,
-		 hexchat_list *xlist);
-	const char * const * (*hexchat_list_fields) (hexchat_plugin *ph,
-		   const char *name);
-	int (*hexchat_list_next) (hexchat_plugin *ph,
-		 hexchat_list *xlist);
-	const char * (*hexchat_list_str) (hexchat_plugin *ph,
-		hexchat_list *xlist,
-		const char *name);
-	int (*hexchat_list_int) (hexchat_plugin *ph,
-		hexchat_list *xlist,
-		const char *name);
-	void * (*hexchat_plugingui_add) (hexchat_plugin *ph,
-		     const char *filename,
-		     const char *name,
-		     const char *desc,
-		     const char *version,
-		     char *reserved);
-	void (*hexchat_plugingui_remove) (hexchat_plugin *ph,
-			void *handle);
-	int (*hexchat_emit_print) (hexchat_plugin *ph,
-			const char *event_name, ...);
-	void *(*hexchat_read_fd) (hexchat_plugin *ph);
-	time_t (*hexchat_list_time) (hexchat_plugin *ph,
-		hexchat_list *xlist,
-		const char *name);
-	char *(*hexchat_gettext) (hexchat_plugin *ph,
-		const char *msgid);
-	void (*hexchat_send_modes) (hexchat_plugin *ph,
-		  const char **targets,
-		  int ntargets,
-		  int modes_per_line,
-		  char sign,
-		  char mode);
-	char *(*hexchat_strip) (hexchat_plugin *ph,
-	     const char *str,
-	     int len,
-	     int flags);
-	void (*hexchat_free) (hexchat_plugin *ph,
-	    void *ptr);
-	int (*hexchat_pluginpref_set_str) (hexchat_plugin *ph,
-		const char *var,
-		const char *value);
-	int (*hexchat_pluginpref_get_str) (hexchat_plugin *ph,
-		const char *var,
-		char *dest);
-	int (*hexchat_pluginpref_set_int) (hexchat_plugin *ph,
-		const char *var,
-		int value);
-	int (*hexchat_pluginpref_get_int) (hexchat_plugin *ph,
-		const char *var);
-	int (*hexchat_pluginpref_delete) (hexchat_plugin *ph,
-		const char *var);
-	int (*hexchat_pluginpref_list) (hexchat_plugin *ph,
-		char *dest);
-	hexchat_hook *(*hexchat_hook_server_attrs) (hexchat_plugin *ph,
-		   const char *name,
-		   int pri,
-		   int(*callback) (const char * const word[], const char * const word_eol[],
-							hexchat_event_attrs *attrs, void *user_data),
-		   void *userdata);
-	hexchat_hook *(*hexchat_hook_print_attrs) (hexchat_plugin *ph,
-		  const char *name,
-		  int pri,
-		  int(*callback) (const char * const word[], hexchat_event_attrs *attrs,
-						   void *user_data),
-		  void *userdata);
-	int (*hexchat_emit_print_attrs) (hexchat_plugin *ph, hexchat_event_attrs *attrs,
-									 const char *event_name, ...);
-	hexchat_event_attrs *(*hexchat_event_attrs_create) (hexchat_plugin *ph);
-	void (*hexchat_event_attrs_free) (hexchat_plugin *ph,
-									  hexchat_event_attrs *attrs);
-
 	/* PRIVATE FIELDS! */
 	void *handle;		/* from dlopen */
 	char *filename;	/* loaded from */
@@ -169,14 +42,14 @@ struct t_hexchat_plugin
 	char *version;
 	session *context;
 	plugin_deinit_func deinit_callback;	/* pointer to hexchat_plugin_deinit */
-	unsigned int fake:1;		/* fake plugin. Added by hexchat_plugingui_add() */
-	unsigned int free_strings:1;		/* free name,desc,version? */
+	bool fake;		/* fake plugin. Added by hexchat_plugingui_add() */
+	bool free_strings;		/* free name,desc,version? */
 };
-#endif
+//#endif
 
 const char *plugin_load (session *sess, const char *filename, char *arg);
 int plugin_reload (session *sess, const char *name, int by_filename);
-void plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, int fake);
+void plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, bool fake);
 int plugin_kill (char *name, int by_filename);
 void plugin_kill_all (void);
 void plugin_auto_load (session *sess);
@@ -190,8 +63,8 @@ GList* plugin_command_list(GList *tmp_list);
 int plugin_show_help (session *sess, const char *cmd);
 void plugin_command_foreach (session *sess, void *userdata, void (*cb) (session *sess, void *userdata, char *name, char *usage));
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif

@@ -50,7 +50,6 @@
 #include "cfgfiles.hpp"
 #include "chanopt.hpp"
 #include "ignore.hpp"
-#include "hexchat-plugin.h"
 #include "plugin.h"
 #include "plugin-timer.hpp"
 #include "notify.hpp"
@@ -422,7 +421,7 @@ irc_init (session *sess)
 
 	done_init = true;
 
-	plugin_add(sess, nullptr, nullptr, timer_plugin_init, timer_plugin_deinit, nullptr, FALSE);
+	plugin_add(sess, nullptr, nullptr, timer_plugin_init, timer_plugin_deinit, nullptr, false);
 
 #ifdef USE_PLUGIN
 	if (!arg_skip_plugins)
@@ -430,7 +429,7 @@ irc_init (session *sess)
 #endif
 
 #ifdef USE_DBUS
-	plugin_add (sess, nullptr, nullptr, dbus_plugin_init, nullptr, nullptr, FALSE);
+	plugin_add (sess, nullptr, nullptr, dbus_plugin_init, nullptr, nullptr, false);
 #endif
 
 	if (prefs.hex_notify_timeout)

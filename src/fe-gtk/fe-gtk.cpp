@@ -390,7 +390,7 @@ fe_idle (gpointer data)
 {
 	session *sess = static_cast<session*>(sess_list->data);
 
-	plugin_add (sess, NULL, NULL, tray_plugin_init, tray_plugin_deinit, NULL, FALSE);
+	plugin_add (sess, NULL, NULL, tray_plugin_init, tray_plugin_deinit, NULL, false);
 
 	if (arg_minimize == 1)
 		gtk_window_iconify (GTK_WINDOW (sess->gui->window));

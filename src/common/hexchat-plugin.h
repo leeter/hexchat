@@ -55,7 +55,7 @@ typedef struct
 	time_t server_time_utc; /* 0 if not used */
 } hexchat_event_attrs;
 
-#ifndef PLUGIN_C
+//#ifndef PLUGIN_C
 struct t_hexchat_plugin
 {
 	/* these are only used on win32 */
@@ -195,7 +195,7 @@ struct t_hexchat_plugin
 	void (*hexchat_event_attrs_free) (hexchat_plugin *ph,
 									  hexchat_event_attrs *attrs);
 };
-#endif
+//#endif
 
 
 hexchat_hook *

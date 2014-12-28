@@ -24,9 +24,6 @@
 #include "fe-gtk.hpp"
 
 #include "../common/hexchat.hpp"
-#define PLUGIN_C
-typedef struct session hexchat_context;
-#include "../common/hexchat-plugin.h"
 #include "../common/plugin.h"
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"
@@ -109,7 +106,6 @@ extern GSList *plugin_list;
 void
 fe_pluginlist_update (void)
 {
-	hexchat_plugin *pl;
 	GSList *list;
 	GtkTreeView *view;
 	GtkListStore *store;
@@ -125,7 +121,7 @@ fe_pluginlist_update (void)
 	list = plugin_list;
 	while (list)
 	{
-		pl = static_cast<hexchat_plugin*>( list->data);
+		auto pl = static_cast<hexchat_plugin_internal*>( list->data);
 		if (pl->version[0] != 0)
 		{
 			gtk_list_store_append (store, &iter);
