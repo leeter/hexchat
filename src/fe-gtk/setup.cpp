@@ -382,22 +382,22 @@ static const setting filexfer_settings[] =
 	{ST_END, 0, 0, 0, 0, 0}
 };
 
-static const int balloonlist[3] =
+static const unsigned int balloonlist[3] =
 {
 	P_OFFINTNL(hex_input_balloon_chans), P_OFFINTNL(hex_input_balloon_priv), P_OFFINTNL(hex_input_balloon_hilight)
 };
 
-static const int trayblinklist[3] =
+static const unsigned int trayblinklist[3] =
 {
 	P_OFFINTNL(hex_input_tray_chans), P_OFFINTNL(hex_input_tray_priv), P_OFFINTNL(hex_input_tray_hilight)
 };
 
-static const int taskbarlist[3] =
+static const unsigned int taskbarlist[3] =
 {
 	P_OFFINTNL(hex_input_flash_chans), P_OFFINTNL(hex_input_flash_priv), P_OFFINTNL(hex_input_flash_hilight)
 };
 
-static const int beeplist[3] =
+static const unsigned int beeplist[3] =
 {
 	P_OFFINTNL(hex_input_beep_chans), P_OFFINTNL(hex_input_beep_priv), P_OFFINTNL(hex_input_beep_hilight)
 };

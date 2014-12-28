@@ -1096,7 +1096,7 @@ static bool menu_del (const char path[], const char label[])
 			&& !menu_streq(me->path.c_str(), path, true);
 	});
 
-	if (me == menu_list.end());
+	if (me == menu_list.end())
 	{
 		return false;
 	}
