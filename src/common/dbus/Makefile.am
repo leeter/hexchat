@@ -2,8 +2,8 @@ AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wext
 AM_CFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 
 noinst_LIBRARIES = libhexchatdbus.a
-libhexchatdbus_a_CFLAGS = $(CFLAGS)
-libhexchatdbus_a_CPPFLAGS = $(CPPFLAGS)
+libhexchatdbus_a_CFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
+libhexchatdbus_a_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 libhexchatdbus_a_SOURCES =			\
 	dbus-plugin.c				\
 	dbus-plugin.h				\
@@ -24,7 +24,7 @@ CLEANFILES = $(BUILT_SOURCES)
 
 
 noinst_PROGRAMS = example
-example_CFLAGS = $(CFLAGS)
+example_CFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 example_SOURCES = example.c
 example_LDADD = $(DBUS_LIBS) $(GLIB_LIBS)
 
