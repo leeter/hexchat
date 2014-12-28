@@ -2448,7 +2448,7 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	}
 
 #ifdef USE_PLUGIN
-	if (g_str_has_suffix (word[2], "."G_MODULE_SUFFIX))
+	if (g_str_has_suffix (word[2], "." G_MODULE_SUFFIX))
 	{
 		arg = NULL;
 		if (word_eol[3][0])
