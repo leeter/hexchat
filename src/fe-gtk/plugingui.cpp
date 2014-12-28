@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <boost/filesystem.hpp>
 
 #include "fe-gtk.hpp"
 
@@ -106,6 +107,7 @@ extern GSList *plugin_list;
 void
 fe_pluginlist_update (void)
 {
+	namespace bfs = boost::filesystem;
 	GSList *list;
 	GtkTreeView *view;
 	GtkListStore *store;
@@ -122,13 +124,13 @@ fe_pluginlist_update (void)
 	while (list)
 	{
 		auto pl = static_cast<hexchat_plugin_internal*>( list->data);
-		if (pl->version[0] != 0)
+		if (!pl->version.empty())
 		{
 			gtk_list_store_append (store, &iter);
-			gtk_list_store_set (store, &iter, NAME_COLUMN, pl->name,
-								VERSION_COLUMN, pl->version,
-								FILE_COLUMN, file_part (pl->filename),
-								DESC_COLUMN, pl->desc, -1);
+			gtk_list_store_set (store, &iter, NAME_COLUMN, pl->name.c_str(),
+								VERSION_COLUMN, pl->version.c_str(),
+								FILE_COLUMN, bfs::path(pl->filename).filename().string().c_str(),
+								DESC_COLUMN, pl->desc.c_str(), -1);
 		}
 		list = list->next;
 	}

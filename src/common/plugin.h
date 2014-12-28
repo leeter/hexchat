@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_COMMONPLUGIN_H
 #define HEXCHAT_COMMONPLUGIN_H
 
+#include <string>
 #ifndef PLUGIN_C
 #define PLUGIN_C
 #endif
@@ -36,14 +37,13 @@ struct hexchat_plugin_internal : public hexchat_plugin
 {
 	/* PRIVATE FIELDS! */
 	void *handle;		/* from dlopen */
-	char *filename;	/* loaded from */
-	char *name;
-	char *desc;
-	char *version;
+	std::string filename; /* loaded from */
+	std::string name;
+	std::string desc;
+	std::string version;
 	session *context;
 	plugin_deinit_func deinit_callback;	/* pointer to hexchat_plugin_deinit */
 	bool fake;		/* fake plugin. Added by hexchat_plugingui_add() */
-	bool free_strings;		/* free name,desc,version? */
 };
 //#endif
 

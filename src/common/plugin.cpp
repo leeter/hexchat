@@ -20,19 +20,21 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <istream>
 #include <memory>
 #include <new>
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <cstring>
-#include <cstdarg>
-#include <cstdio>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
@@ -57,10 +59,8 @@
 #include "session.hpp"
 
 #define PLUGIN_C
-//#include "hexchat-plugin.h"
 #include "plugin.h"
 #include "typedef.h"
-#include "filesystem.hpp"
 
 #include "hexchatc.hpp"
 
@@ -177,13 +177,6 @@ plugin_free(hexchat_plugin_internal *pl, int do_deinit, int allow_refuse)
 #endif
 
 xit:
-	if (pl->free_strings)
-	{
-		delete[] pl->name;
-		delete[] pl->desc;
-		delete[] pl->version;
-	}
-	delete[] pl->filename;
 
 	plugin_list = g_slist_remove (plugin_list, pl);
 
@@ -197,7 +190,7 @@ xit:
 }
 
 static hexchat_plugin_internal *
-plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
+plugin_list_add (hexchat_context *ctx,  const char filename[], const char *name,
 					  const char *desc, const char *version, void *handle,
 					  plugin_deinit_func deinit_func, bool fake, bool free_strings)
 {
@@ -205,14 +198,26 @@ plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 
 	pl = new hexchat_plugin_internal();
 	pl->handle = handle;
-	pl->filename = filename;
+	if (filename)
+	{
+		pl->filename = filename;
+	}
 	pl->context = ctx;
-	pl->name = const_cast<char *>(name);
-	pl->desc = const_cast<char *>(desc);
-	pl->version = const_cast<char *>(version);
+	if (name)
+	{
+		pl->name = name;
+	}
+	if (desc)
+	{
+		pl->desc = desc;
+	}
+	if (version)
+	{
+		pl->version = version;
+	}
+	
 	pl->deinit_callback = deinit_func;
 	pl->fake = fake;
-	pl->free_strings = free_strings;	/* free() name,desc,version? */
 
 	plugin_list = g_slist_prepend (plugin_list, pl);
 
@@ -251,11 +256,7 @@ void
 plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func,
 				plugin_deinit_func deinit_func, char *arg, bool fake)
 {
-	char *file = nullptr;
-	if (filename)
-		file = new_strdup (filename);
-
-	auto pl = plugin_list_add (sess, file, file, NULL, NULL, handle, deinit_func,
+	auto pl = plugin_list_add (sess, filename, filename, NULL, NULL, handle, deinit_func,
 								 fake, false);
 
 	if (!fake)
@@ -309,11 +310,17 @@ plugin_add (session *sess, const char *filename, void *handle, plugin_init_func 
 		pl->hexchat_event_attrs_free = hexchat_event_attrs_free;
 
 		/* run hexchat_plugin_init, if it returns 0, close the plugin */
-		if ((init_func) (pl, &pl->name, &pl->desc, &pl->version, arg) == 0)
+		char* name;
+		char* desc;
+		char* version;
+		if ((init_func) (pl, &name, &desc, &version, arg) == 0)
 		{
 			plugin_free (pl, FALSE, FALSE);
 			return;
 		}
+		pl->name = name;
+		pl->desc = desc;
+		pl->version = version;
 	}
 
 #ifdef USE_PLUGIN
@@ -326,19 +333,20 @@ plugin_add (session *sess, const char *filename, void *handle, plugin_init_func 
 int
 plugin_kill (char *name, int by_filename)
 {
+	namespace bfs = boost::filesystem;
 	GSList *list;
-
+	
 	list = plugin_list;
 	while (list)
 	{
 		auto pl = static_cast<hexchat_plugin_internal*>(list->data);
 		/* static-plugins (plugin-timer.c) have a NULL filename */
-		if ((by_filename && pl->filename && g_ascii_strcasecmp (name, pl->filename) == 0) ||
-			 (by_filename && pl->filename && g_ascii_strcasecmp (name, file_part (pl->filename)) == 0) ||
-			(!by_filename && g_ascii_strcasecmp (name, pl->name) == 0))
+		if ((by_filename && !pl->filename.empty() && g_ascii_strcasecmp (name, pl->filename.c_str()) == 0) ||
+			 (by_filename && !pl->filename.empty() && g_ascii_strcasecmp (name, bfs::path(pl->filename).filename().string().c_str()) == 0) ||
+			(!by_filename && g_ascii_strcasecmp (name, pl->name.c_str()) == 0))
 		{
 			/* statically linked plugins have a NULL filename */
-			if (pl->filename != NULL && !pl->fake)
+			if (!pl->filename.empty() && !pl->fake)
 			{
 				if (plugin_free (pl, TRUE, TRUE))
 					return 1;
@@ -477,6 +485,7 @@ plugin_auto_load (session *sess)
 int
 plugin_reload (session *sess, const char *name, int by_filename)
 {
+	namespace bfs = boost::filesystem;
 	GSList *list;
 	char *filename;
 	const char *ret;
@@ -487,17 +496,17 @@ plugin_reload (session *sess, const char *name, int by_filename)
 	{
 		pl = static_cast<hexchat_plugin_internal*>(list->data);
 		/* static-plugins (plugin-timer.c) have a NULL filename */
-		if ((by_filename && pl->filename && g_ascii_strcasecmp (name, pl->filename) == 0) ||
-			 (by_filename && pl->filename && g_ascii_strcasecmp (name, file_part (pl->filename)) == 0) ||
-			(!by_filename && g_ascii_strcasecmp (name, pl->name) == 0))
+		if ((by_filename && !pl->filename.empty() && g_ascii_strcasecmp(name, pl->filename.c_str()) == 0) ||
+			(by_filename && !pl->filename.empty() && g_ascii_strcasecmp(name, bfs::path(pl->filename).filename().string().c_str()) == 0) ||
+			(!by_filename && g_ascii_strcasecmp(name, pl->name.c_str()) == 0))
 		{
+			
 			/* statically linked plugins have a NULL filename */
-			if (pl->filename != NULL && !pl->fake)
+			if (!pl->filename.empty() && !pl->fake)
 			{
-				filename = g_strdup (pl->filename);
+				auto filename = pl->filename;
 				plugin_free (pl, TRUE, FALSE);
-				ret = plugin_load (sess, filename, NULL);
-				g_free (filename);
+				ret = plugin_load (sess, filename.c_str(), NULL);
 				if (ret == NULL)
 					return 1;
 				else
@@ -1660,7 +1669,7 @@ hexchat_plugingui_add (hexchat_plugin *ph, const char *filename,
 							const char *version, char *reserved)
 {
 #ifdef USE_PLUGIN
-	ph = plugin_list_add (NULL, new_strdup (filename), new_strdup (name), new_strdup (desc),
+	ph = plugin_list_add (NULL, filename, name, desc,
 								 new_strdup (version), NULL, NULL, true, true);
 	fe_pluginlist_update ();
 #endif
@@ -1762,145 +1771,102 @@ hexchat_free (hexchat_plugin *ph, void *ptr)
 static int
 hexchat_pluginpref_set_str_real (hexchat_plugin *pl, const char *var, const char *value, int mode) /* mode: 0 = delete, 1 = save */
 {
+	namespace bfs = boost::filesystem;
 	FILE *fpIn;
 	int fhOut;
-	int prevSetting;
-	char *confname;
-	char *confname_tmp;
-	char *escaped_value;
 	char *buffer;
 	char *buffer_tmp;
 	char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
 	char *line_bufp = line_buffer;
-	char *canon;
 
-	canon = g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name);
-	canonalize_key (canon);
-	confname = g_strdup_printf ("addon_%s.conf", canon);
-	g_free (canon);
-	confname_tmp = g_strdup_printf ("%s.new", confname);
-
-	fhOut = hexchat_open_file (confname_tmp, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	fpIn = hexchat_fopen_file (confname, "r", 0);
+	glib_string canon(g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name.c_str()));
+	canonalize_key (canon.get());
+	glib_string confname(g_strdup_printf ("addon_%s.conf", canon));
+	glib_string confname_tmp(g_strdup_printf ("%s.new", confname));
+	auto config_dir = bfs::path(config::config_dir());
+	auto confpath = config_dir / confname.get();
+	auto confoldpath = config_dir / confname_tmp.get();
+	fhOut = hexchat_open_file (confname_tmp.get(), O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fpIn = hexchat_fopen_file (confname.get(), "r", 0);
 
 	if (fhOut == -1)		/* unable to save, abort */
 	{
-		g_free (confname);
-		g_free (confname_tmp);
 		if (fpIn)
 			fclose (fpIn);
-		return 0;
+		return FALSE;
 	}
 	else if (fpIn == NULL)	/* no previous config file, no parsing */
 	{
 		if (mode)
 		{
-			escaped_value = g_strescape (value, NULL);
-			buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
-			g_free (escaped_value);
-			write (fhOut, buffer, strlen (buffer));
-			g_free (buffer);
+			glib_string escaped_value(g_strescape (value, NULL));
+			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
+			write (fhOut, buffer.get(), strlen (buffer.get()));
 			close (fhOut);
 
-			buffer = g_build_filename (get_xdir (), confname, NULL);
-			g_free (confname);
-			buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
-			g_free (confname_tmp);
-
 #ifdef WIN32
-			g_unlink (buffer);
+			g_unlink (confpath.string().c_str());
 #endif
-
-			if (g_rename (buffer_tmp, buffer) == 0)
-			{
-				g_free (buffer);
-				g_free (buffer_tmp);
-				return 1;
-			}
-			else
-			{
-				g_free (buffer);
-				g_free (buffer_tmp);
-				return 0;
-			}
+			boost::system::error_code ec;
+			bfs::rename(confoldpath, confpath, ec);
+			return !ec ? TRUE : FALSE;
 		}
 		else
 		{
 			/* mode = 0, we want to delete but the config file and thus the given setting does not exist, we're ready */
 			close (fhOut);
-			g_free (confname);
-			g_free (confname_tmp);
-			return 1;
+			return TRUE;
 		}
 	}
 	else	/* existing config file, preserve settings and find & replace current var value if any */
 	{
-		prevSetting = 0;
+		bool prevSetting = false;
 
 		while (fscanf (fpIn, " %[^\n]", line_bufp) != EOF)	/* read whole lines including whitespaces */
 		{
-			buffer_tmp = g_strdup_printf ("%s ", var);	/* add one space, this way it works against var - var2 checks too */
-
-			if (strncmp (buffer_tmp, line_buffer, strlen (var) + 1) == 0)	/* given setting already exists */
+			glib_string buffer_tmp(g_strdup_printf ("%s ", var));	/* add one space, this way it works against var - var2 checks too */
+			glib_string buffer;
+			if (strncmp (buffer_tmp.get(), line_buffer, strlen (var) + 1) == 0)	/* given setting already exists */
 			{
 				if (mode)									/* overwrite the existing matching setting if we are in save mode */
 				{
-					escaped_value = g_strescape (value, NULL);
-					buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
-					g_free (escaped_value);
+					glib_string escaped_value(g_strescape (value, NULL));
+					buffer.reset(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
 				}
 				else										/* erase the setting in delete mode */
 				{
-					buffer = g_strdup ("");
+					buffer.reset(g_strdup (""));
 				}
 
-				prevSetting = 1;
+				prevSetting = true;
 			}
 			else
 			{
-				buffer = g_strdup_printf ("%s\n", line_buffer);	/* preserve the existing different settings */
+				buffer.reset(g_strdup_printf ("%s\n", line_buffer));	/* preserve the existing different settings */
 			}
 
-			write (fhOut, buffer, strlen (buffer));
-
-			g_free (buffer);
-			g_free (buffer_tmp);
+			write (fhOut, buffer.get(), strlen (buffer.get()));
 		}
 
 		fclose (fpIn);
 
 		if (!prevSetting && mode)	/* var doesn't exist currently, append if we're in save mode */
 		{
-			escaped_value = g_strescape (value, NULL);
-			buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
-			g_free (escaped_value);
-			write (fhOut, buffer, strlen (buffer));
-			g_free (buffer);
+			glib_string escaped_value(g_strescape (value, NULL));
+			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
+			write (fhOut, buffer.get(), strlen (buffer.get()));
 		}
 
 		close (fhOut);
 
-		buffer = g_build_filename (get_xdir (), confname, NULL);
-		g_free (confname);
-		buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
-		g_free (confname_tmp);
-
 #ifdef WIN32
-		g_unlink (buffer);
+		g_unlink (confpath.string().c_str());
 #endif
 
-		if (g_rename (buffer_tmp, buffer) == 0)
-		{
-			g_free (buffer);
-			g_free (buffer_tmp);
-			return 1;
-		}
-		else
-		{
-			g_free (buffer);
-			g_free (buffer_tmp);
-			return 0;
-		}
+		boost::system::error_code ec;
+		bfs::rename(confoldpath, confpath, ec);
+
+		return !ec ? TRUE : FALSE;
 	}
 }
 
@@ -1913,34 +1879,27 @@ hexchat_pluginpref_set_str (hexchat_plugin *pl, const char *var, const char *val
 static int
 hexchat_pluginpref_get_str_real (hexchat_plugin_internal *pl, const char *var, char *dest, int dest_len)
 {
-	char *confname, *canon, *cfg, *unescaped_value;
-	char buf[512];
+	glib_string canon(g_strdup (pl->name.c_str()));
+	canonalize_key (canon.get());
+	glib_string confname( g_strdup_printf ("%s%caddon_%s.conf", get_xdir(), G_DIR_SEPARATOR, canon));
 
-	canon = g_strdup (pl->name);
-	canonalize_key (canon);
-	confname = g_strdup_printf ("%s%caddon_%s.conf", get_xdir(), G_DIR_SEPARATOR, canon);
-	g_free (canon);
-
-	if (!g_file_get_contents (confname, &cfg, NULL, NULL))
+	char *cfg;
+	if (!g_file_get_contents (confname.get(), &cfg, NULL, NULL))
 	{
-		g_free (confname);
-		return 0;
+		return FALSE;
 	}
+	glib_string cfg_ptr(cfg);
 
-	g_free (confname);
-
+	char buf[512];
 	if (!cfg_get_str (cfg, var, buf, sizeof(buf)))
 	{
-		g_free (cfg);
-		return 0;
+		return FALSE;
 	}
 
-	unescaped_value = g_strcompress (buf);
-	g_strlcpy (dest, unescaped_value, dest_len);
+	glib_string unescaped_value(g_strcompress (buf));
+	g_strlcpy (dest, unescaped_value.get(), dest_len);
 
-	g_free (unescaped_value);
-	g_free (cfg);
-	return 1;
+	return TRUE;
 }
 
 int
@@ -1983,22 +1942,22 @@ hexchat_pluginpref_delete (hexchat_plugin *pl, const char *var)
 int
 hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 {
+	namespace bfs = boost::filesystem;
 	char confname[64];
 
 	{
-		glib_string token(g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name));
+		glib_string token(g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name.c_str()));
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
 	}
 
-	if (!io::fs::exists(confname)) /* no existing config file, no parsing */
+	boost::system::error_code ec;
+	if (!bfs::exists(confname, ec)) /* no existing config file, no parsing */
 		return 0;
 
 	/* clean up garbage */
 	strcpy(dest, "");
-	auto fd = io::fs::open_stream(confname, std::ios::in, 0, 0);
-	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor> buff(fd);
-	std::istream stream(&buff);
+	bfs::ifstream stream(confname, std::ios::in | std::ios::binary);
 	for (std::string line; std::getline(stream, line, '\n');)
 	{
 		auto eq = line.find_first_of('=');
