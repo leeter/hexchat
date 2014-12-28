@@ -521,7 +521,7 @@ namespace {
 			}
 			return *this;
 		}
-		void operator()(gchar** suggestions) BOOST_NOEXCEPT_OR_NOTHROW
+		void operator()(gchar** suggestions)
 		{
 			enchant_dict_free_suggestions(_dict, suggestions);
 		}
