@@ -1167,15 +1167,15 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	me->path = path;
 
 	if (label)
-		me->label.emplace(label);
+		me->label = std::string(label);
 	if (cmd)
-		me->cmd.emplace(cmd);
+		me->cmd = std::string(cmd);
 	if (ucmd)
-		me->ucmd.emplace(ucmd);
+		me->ucmd = std::string(ucmd);
 	if (group)
-		me->group.emplace(group);
+		me->group = std::string(group);
 	if (icon)
-		me->icon.emplace(icon);
+		me->icon = std::string(icon);
 
 	menu_list.emplace_back(std::move(me_ptr));
 	glib_string menu_label(fe_menu_add (me)); /* this is from pango */
