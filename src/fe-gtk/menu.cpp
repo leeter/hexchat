@@ -635,7 +635,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->account ? user->account : unknown);
 
-	users_country = user->hostname ? country(user->hostname.get_ptr()) : nullptr;
+	users_country = user->hostname ? country(user->hostname.get()) : nullptr;
 	if (users_country)
 	{
 		snprintf (buf, sizeof (buf), fmt, _ ("Country:"), users_country);

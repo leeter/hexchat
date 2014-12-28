@@ -25,19 +25,20 @@
 #define NOMINMAX
 #endif
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <istream>
 #include <limits>
 #include <locale>
 #include <sstream>
-#include <stdexcept>
 #include <string>
-#include <vector>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <cctype>
-#include <cerrno>
 #include <stdexcept>
+#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/filesystem.hpp>
@@ -53,8 +54,7 @@
 #include <unistd.h>
 #endif
 
-#include <ctime>
-#include <csignal>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -92,7 +92,7 @@ namespace fe_notify = hexchat::fe::notify;
 namespace bio = boost::iostreams;
 static const size_t TBUFSIZE = 4096;
 
-static void help (session *sess, char *tbuf, const char *helpcmd, int quiet);
+static void help (session *sess, char *tbuf, const char *helpcmd, bool quiet);
 static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
 static void handle_say (session *sess, char *text, int check_spch);
 
@@ -736,47 +736,44 @@ static int
 cmd_country (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	char *code = word[2];
-	if (*code)
+	if (!*code)
 	{
-		/* search? */
-		if (strcmp (code, "-s") == 0)
-		{
-			country_search(word[3], sess, PrintTextf);
-			return TRUE;
-		}
-
-		/* search, but forgot the -s */
-		if (strchr (code, '*'))
-		{
-			country_search(code, sess, PrintTextf);
-			return TRUE;
-		}
-
-		std::string code_buf(code);
-		sprintf (tbuf, "%s = %s\n", code, country (&code_buf));
-		PrintText (sess, tbuf);
+		return FALSE;
+	}
+	/* search? */
+	if (strcmp(code, "-s") == 0)
+	{
+		country_search(word[3], sess, PrintTextf);
 		return TRUE;
 	}
-	return FALSE;
+
+	/* search, but forgot the -s */
+	if (strchr(code, '*'))
+	{
+		country_search(code, sess, PrintTextf);
+		return TRUE;
+	}
+
+	std::string code_buf(code);
+	PrintTextf(sess, boost::format(_("%s = %s\n")) % code_buf % country(code_buf));
+	return TRUE;
 }
 
 static int
 cmd_cycle (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char *key = NULL;
 	char *chan = word[2];
-	session *chan_sess;
 
 	if (!*chan)
 		chan = sess->channel;
 
 	if (chan)
 	{
-		chan_sess = find_channel (*(sess->server), chan);
+		auto chan_sess = find_channel (*(sess->server), chan);
 
 		if (chan_sess && chan_sess->type == session::SESS_CHANNEL)
 		{
-			key = chan_sess->channelkey;
+			auto key = chan_sess->channelkey;
 			sess->server->p_cycle (chan, key);
 			return TRUE;
 		}
@@ -2152,7 +2149,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (*helpcmd && !longfmt)
 	{
-		help (sess, tbuf, helpcmd, FALSE);
+		help (sess, tbuf, helpcmd, false);
 	} else
 	{
 		struct popup *pop;
@@ -4032,7 +4029,7 @@ usercommand_show_help (session *sess, const char *name)
 }
 
 static void
-help (session *sess, char *tbuf, const char *helpcmd, int quiet)
+help (session *sess, char *tbuf, const char *helpcmd, bool quiet)
 {
 	const commands *cmd;
 
@@ -4539,27 +4536,40 @@ std::string command_insert_vars (session *sess,  const std::string& cmd)
 	return expanded.str();
 }
 
+namespace
+{
+	class command_counter
+	{
+		int & _command_level;
+	public:
+		command_counter(int & command_count)
+			:_command_level(command_count){};
+		~command_counter()
+		{
+			if (_command_level > 0)
+				--_command_level;
+		}
+	};
+}
 /* handle a command, without the '/' prefix */
 
-int
+bool
 handle_command (session *sess, char *cmd, bool check_spch)
 {
-	struct popup *pop;
-	bool user_cmd = false;
-	GSList *list;
-	char *word[PDIWORDS+1];
-	char *word_eol[PDIWORDS+1];
 	static int command_level = 0;
-	const struct commands *int_cmd;
-	int ret = TRUE;
 
 	if (command_level > 99)
 	{
 		fe_message (_("Too many recursive usercommands, aborting."), FE_MSG_ERROR);
-		return TRUE;
+		return true;
 	}
 	command_level++;
-	/* anything below MUST DEC command_level before returning */
+	command_counter counter(command_level);
+	// do not put any new logic above this line
+
+	bool user_cmd = false;
+	char *word[PDIWORDS + 1];
+	char *word_eol[PDIWORDS + 1];
 
 	auto len = strlen (cmd);
 	// TODO .. figure out another way to do this... ideally we should let commands do their own buffers
@@ -4576,7 +4586,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	word[PDIWORDS] = "\000\000";
 	word_eol[PDIWORDS] = "\000\000";
 
-	int_cmd = find_internal_command (word[1]);
+	auto int_cmd = find_internal_command (word[1]);
 	/* redo it without quotes processing, for some commands like /JOIN */
 	if (int_cmd && !int_cmd->handle_quotes)
 	{
@@ -4590,34 +4600,30 @@ handle_command (session *sess, char *cmd, bool check_spch)
 
 	if (plugin_emit_command (sess, word[1], word, word_eol))
 	{
-		command_level--;
-		return ret;
+		return true;
 	}
 
 	/* incase a plugin did /close */
 	if (!is_session (sess))
 	{
-		command_level--;
-		return ret;
+		return true;
 	}
 
 	/* first see if it's a userCommand */
-	list = command_list;
-	while (list)
+	for (auto list = command_list; list; list = g_slist_next(list))
 	{
-		pop = (struct popup *) list->data;
+		auto pop = static_cast<popup *>(list->data);
 		if (!g_ascii_strcasecmp (pop->name.c_str(), word[1]))
 		{
 			user_command (sess, &tbuf[0], pop->cmd, word, word_eol);
 			user_cmd = true;
 		}
-		list = list->next;
+		
 	}
 
 	if (user_cmd)
 	{
-		command_level--;
-		return ret;
+		return true;
 	}
 
 	/* now check internal commands */
@@ -4638,11 +4644,12 @@ handle_command (session *sess, char *cmd, bool check_spch)
 			switch (int_cmd->callback (sess, &tbuf[0], word, word_eol))
 			{
 				case FALSE:
-					help(sess, &tbuf[0], int_cmd->name, TRUE);
+					help(sess, &tbuf[0], int_cmd->name, true);
 					break;
 				case 2:
-					ret = FALSE;
-					return ret;
+					return false;
+				default:
+					break;
 			}
 		}
 	}
@@ -4659,18 +4666,16 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		}
 	}
 
-	command_level--;
-
-	return ret;
+	return true;
 }
 
 /* handle one line entered into the input box */
 
-static int
+static bool
 handle_user_input (session *sess, char *text, int history, int nocommand)
 {
 	if (*text == '\0')
-		return 1;
+		return true;
 
 	if (history)
 		sess->hist.add(text);
@@ -4679,14 +4684,14 @@ handle_user_input (session *sess, char *text, int history, int nocommand)
 	if (nocommand || text[0] != prefs.hex_input_command_char[0])
 	{
 		handle_say (sess, text, TRUE);
-		return 1;
+		return true;
 	}
 
 	/* check for // */
 	if (text[0] == prefs.hex_input_command_char[0] && text[1] == prefs.hex_input_command_char[0])
 	{
 		handle_say (sess, text + 1, TRUE);
-		return 1;
+		return true;
 	}
 
 #if 0 /* Who would remember all this? */

@@ -1099,16 +1099,16 @@ static const std::unordered_map<std::string, std::string> domain =
 }};
 
 const char *
-country (const std::string *hostname)
+country (const std::string &hostname)
 {
 	std::locale loc;
 
-	if (!hostname || !hostname->empty() || std::isdigit(hostname->operator[](hostname->size() - 1), loc))
+	if (!hostname.empty() || std::isdigit(hostname[hostname.size() - 1], loc))
 	{
 		return nullptr;
 	}
-	auto dot_loc = hostname->find_last_of('.');
-	std::string host = dot_loc != std::string::npos ? hostname->substr(dot_loc + 1) : *hostname;
+	auto dot_loc = hostname.find_last_of('.');
+	std::string host = dot_loc != std::string::npos ? hostname.substr(dot_loc + 1) : hostname;
 
 	boost::algorithm::to_upper(host, loc);
 	auto dom = domain.find(host);
