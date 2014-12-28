@@ -86,7 +86,7 @@ struct setting
 {
 	int type;
 	const char *label;
-	int offset;
+	unsigned int offset;
 	const char *tooltip;
 	char const *const *list;
 	int extra;
