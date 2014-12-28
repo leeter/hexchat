@@ -1,13 +1,14 @@
 ##AM_CPPFLAGS = $(COMMON_CFLAGS) $(DBUS_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 
 noinst_LIBRARIES = libhexchatdbus.a
+libhexchatdbus_a_CPPFLAGS = $(CPPFLAGS) $(DBUS_CFLAGS) $(COMMON_CFLAGS) -std=c++0x  -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
+libhexchatdbus_a_CFLAGS = $(CFLAGS) $(DBUS_CFLAGS) $(COMMON_CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
 libhexchatdbus_a_SOURCES =			\
 	dbus-plugin.c				\
 	dbus-plugin.h				\
 	dbus-client.cpp				\
 	dbus-client.h
-libhexchatdbus_a_CPPFLAGS = $(CPPFLAGS) $(DBUS_CFLAGS) $(COMMON_CFLAGS) -std=c++0x  -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
-libhexchatdbus_a_CFLAGS = $(CFLAGS) $(DBUS_CFLAGS) $(COMMON_CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir)/src/common
+
 
 EXTRA_DIST =				\
 	remote-object.xml		\
