@@ -24,7 +24,6 @@ EXTRA_DIST = \
 	inet.hpp \
 	make-te.cpp \
 	modes.hpp \
-	msproxy.hpp \
 	network.hpp \
 	notify.hpp \
 	outbound.hpp \
@@ -48,10 +47,6 @@ if USE_OPENSSL
 ssl_c = ssl.cpp
 endif
 
-if USE_MSPROXY
-msproxy_c = msproxy.cpp
-endif
-
 if USE_DBUS
 dbusdir = dbus
 libhexchatcommon_a_LIBADD =				\
@@ -69,7 +64,7 @@ make_te_SOURCES = make-te.cpp
 make_te_CPPFLAGS = $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 
 libhexchatcommon_a_SOURCES = base64.cpp cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp filesystem.cpp hexchat.cpp \
-	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp $(msproxy_c) network.cpp notify.cpp \
+	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp network.cpp notify.cpp \
 	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBPROXY_CFLAGS) $(CPPFLAGS)

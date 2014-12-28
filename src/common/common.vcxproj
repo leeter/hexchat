@@ -29,7 +29,6 @@
     <ClInclude Include="inet.hpp" />
     <ClInclude Include="marshal.h" />
     <ClInclude Include="modes.hpp" />
-    <ClInclude Include="msproxy.hpp" />
     <ClInclude Include="network.hpp" />
     <ClInclude Include="notify.hpp" />
     <ClInclude Include="outbound.hpp" />
@@ -71,7 +70,6 @@
     <ClCompile Include="inbound.cpp" />
     <ClCompile Include="marshal.c" />
     <ClCompile Include="modes.cpp" />
-    <ClCompile Include="msproxy.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="notify.cpp" />
     <ClCompile Include="outbound.cpp" />

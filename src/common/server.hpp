@@ -115,7 +115,6 @@ public:
 	int proxy_sok;				/* Additional information for MS Proxy beast */
 	int proxy_sok4;
 	int proxy_sok6;
-	struct msproxy_state_t msp_state;
 	int id;					/* unique ID number (for plugin API) */
 	std::unique_ptr<io::tcp::connection> server_connection;
 #ifdef USE_OPENSSL

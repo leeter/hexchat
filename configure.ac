@@ -40,7 +40,6 @@ AH_VERBATIM([PREFIX],[#undef PREFIX])
 AH_VERBATIM([HEXCHATLIBDIR],[#undef HEXCHATLIBDIR])
 AH_VERBATIM([HEXCHATSHAREDIR],[#undef HEXCHATSHAREDIR])
 AH_VERBATIM([SOCKS],[#undef SOCKS])
-AH_VERBATIM([USE_MSPROXY],[#undef USE_MSPROXY])
 AH_VERBATIM([USE_LIBPROXY],[#undef USE_LIBPROXY])
 AH_VERBATIM([HAVE_ISO_CODES],[#undef HAVE_ISO_CODES])
 AH_VERBATIM([HAVE_GTK_MAC],[#undef HAVE_GTK_MAC])
@@ -150,10 +149,6 @@ AC_ARG_ENABLE(libnotify,
 AC_ARG_ENABLE(libcanberra,
 	[AS_HELP_STRING([--disable-libcanberra],[disable libcanberra support])],
 		libcanberra=$enableval, libcanberra=yes)
-
-AC_ARG_ENABLE(ntlm,
-	[AS_HELP_STRING([--enable-ntlm],[enable Microsoft\'s NTLM auth (libntlm) library support (default: no)])],
-	ntlm=$enableval, ntlm=no)
 
 AC_ARG_ENABLE(libproxy,
 	[AS_HELP_STRING([--disable-libproxy],[disable libproxy support (default: auto)])],
@@ -643,20 +638,6 @@ if test "$socks" = yes; then
 fi
 
 dnl *********************************************************************
-dnl ** MS PROXY *********************************************************
-dnl *********************************************************************
-
-have_ntlm="no"
-if test "x$ntlm" = "xyes" ; then
-	have_ntlm="no"
-	AC_CHECK_LIB(ntlm, ntlm_smb_encrypt, have_ntlm=yes)
-	if test "$have_ntlm" = yes; then
-		LIBS="$LIBS -lntlm"
-		AC_DEFINE(USE_MSPROXY)
-	fi
-fi
-
-dnl *********************************************************************
 dnl ** GCC FLAGS ********************************************************
 dnl *********************************************************************
 
@@ -877,7 +858,6 @@ echo libnotify support ..... : $libnotify
 echo libcanberra support ... : $libcanberra
 echo Plugin interface ...... : $plugin
 echo IPv6 support .......... : $ipv6
-echo MS Proxy NTLM \(ISA\) ... : $have_ntlm
 echo libproxy support ...... : $libproxy
 echo
 echo Perl .................. : $perl

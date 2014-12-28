@@ -95,9 +95,6 @@
     <ClInclude Include="network.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="msproxy.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -212,9 +209,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="network.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="msproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="charset_helpers.cpp">

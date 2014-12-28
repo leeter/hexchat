@@ -14,14 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * MS Proxy (ISA server) support is (c) 2006 Pavel Fedin <sonic_amiga@rambler.ru>
- * based on Dante source code
- * Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006
- *      Inferno Nettverk A/S, Norway.  All rights reserved.
  */
-
-/*#define DEBUG_MSPROXY*/
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -80,10 +73,6 @@ namespace dcc = ::hexchat::dcc;
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
 #include "ssl.hpp"
-#endif
-
-#ifdef USE_MSPROXY
-#include "msproxy.hpp"
 #endif
 
 #ifdef WIN32
@@ -1146,23 +1135,7 @@ server::find_channel(const std::string &chan)
 //		break;
 //	case '4':						  /* success */
 //		waitline2 (source, tbuf, sizeof (tbuf));
-//#ifdef USE_MSPROXY
-//		serv->sok = strtol (tbuf, &p, 10);
-//		if (*p++ == ' ')
-//		{
-//			serv->proxy_sok = strtol (p, &p, 10);
-//			serv->msp_state.clientid = strtol (++p, &p, 10);
-//			serv->msp_state.serverid = strtol (++p, &p, 10);
-//			serv->msp_state.seq_sent = atoi (++p);
-//		} else
-//			serv->proxy_sok = -1;
-//#ifdef DEBUG_MSPROXY
-//		printf ("Parent got main socket: %d, proxy socket: %d\n", serv->sok, serv->proxy_sok);
-//		printf ("Client ID 0x%08x server ID 0x%08x seq_sent %d\n", serv->msp_state.clientid, serv->msp_state.serverid, serv->msp_state.seq_sent);
-//#endif
-//#else
 //		serv->sok = atoi (tbuf);
-//#endif
 //#ifdef USE_IPV6
 //		/* close the one we didn't end up using */
 //		if (serv->sok == serv->sok4)
@@ -1648,7 +1621,7 @@ traverse_http (int print_fd, int sok, char *serverAddr, int port)
 }
 
 static int
-traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, struct msproxy_state_t *state, netstore *ns_proxy, int csok4, int csok6, int *csok, char bound)
+traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port)
 {
 	switch (proxy_type)
 	{
@@ -1660,10 +1633,6 @@ traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, struc
 		return traverse_socks5 (print_fd, sok, ip, port);
 	case 4:
 		return traverse_http (print_fd, sok, ip, port);
-#ifdef USE_MSPROXY
-	case 5:
-		return traverse_msproxy (sok, ip, port, state, ns_proxy, csok4, csok6, csok, bound);
-#endif
 	}
 
 	return 1;
@@ -1821,15 +1790,9 @@ server_child (server * serv)
 		/* connect succeeded */
 		if (proxy_ip)
 		{
-			switch (traverse_proxy (proxy_type, serv->childwrite, psok, proxy_ip, port, &serv->msp_state, ns_proxy, serv->sok4, serv->sok6, &sok, bound))
+			switch (traverse_proxy (proxy_type, serv->childwrite, psok, proxy_ip, port))
 			{
 			case 0:	/* success */
-#ifdef USE_MSPROXY
-				if (!serv->dont_use_proxy && (proxy_type == 5))
-					snprintf (buf, sizeof (buf), "4\n%d %d %d %d %d\n", sok, psok, serv->msp_state.clientid, serv->msp_state.serverid,
-						serv->msp_state.seq_sent);
-				else
-#endif
 					snprintf (buf, sizeof (buf), "4\n%d\n", sok);	/* success */
 				write (serv->childwrite, buf, strlen (buf));
 				break;
@@ -2013,16 +1976,8 @@ server::connect (char *hostname, int port, bool no_login)
 
 	/* create both sockets now, drop one later */
 	net_sockets (&this->sok4, &this->sok6);
-#ifdef USE_MSPROXY
-	/* In case of MS Proxy we have a separate UDP control connection */
-	if (!this->dont_use_proxy && (this->proxy_type == 5))
-		udp_sockets (&this->proxy_sok4, &this->proxy_sok6);
-	else
-#endif
-	{
-		this->proxy_sok4 = -1;
-		this->proxy_sok6 = -1;
-	}
+	this->proxy_sok4 = -1;
+	this->proxy_sok6 = -1;
 
 #ifdef WIN32
 	std::thread server_thread(server_child, this);
@@ -2121,7 +2076,6 @@ server::server()
 	proxy_sok(),				/* Additional information for MS Proxy beast */
 	proxy_sok4(),
 	proxy_sok6(),
-	msp_state(),
 	id(),				/* unique ID number (for plugin API) */
 	ssl(),
 #ifdef USE_OPENSSL

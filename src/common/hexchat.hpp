@@ -363,13 +363,6 @@ enum lact{
 	LACT_CHAN		= 3,	/* channel with messages */
 	LACT_CHAN_DATA	= 4	/* channel with other data */
 };
-struct msproxy_state_t
-{
-	gint32				clientid;
-	gint32				serverid;
-	unsigned char		seq_recv;		/* seq number of last packet recv.	*/
-	unsigned char		seq_sent;		/* seq number of last packet sent.	*/
-};
 
 /* SASL Mechanisms */
 enum sasl_mech
