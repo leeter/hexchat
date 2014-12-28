@@ -4018,12 +4018,11 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 	char *orig = dest;
 
 	destlen--;
-
+	std::locale locale;
 	while (src[0])
 	{
 		if (src[0] == '%' || src[0] == '&')
 		{
-			std::locale locale;
 			if (std::isdigit<char>(src[1], locale))
 			{
 				if (std::isdigit<char>(src[2], locale) && std::isdigit<char>(src[3], locale))
