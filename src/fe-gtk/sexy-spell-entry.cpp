@@ -162,7 +162,7 @@ initialize_enchant ()
 {
 	GModule *enchant;
 
-	enchant = g_module_open("libenchant."G_MODULE_SUFFIX, GModuleFlags());
+	enchant = g_module_open("libenchant." G_MODULE_SUFFIX, GModuleFlags());
 	if (enchant == NULL)
 	{
 #ifndef WIN32
