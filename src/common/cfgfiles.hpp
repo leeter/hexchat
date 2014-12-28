@@ -86,7 +86,7 @@ enum pref_type : unsigned short{
 struct prefs
 {
 	const char *name;
-	unsigned short offset;
+	unsigned int offset;
 	unsigned short len;
 	pref_type type;
 };

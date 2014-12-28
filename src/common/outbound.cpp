@@ -1036,16 +1036,6 @@ cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 std::vector<std::unique_ptr<menu_entry> > menu_list;
-//GSList *menu_list = NULL;
-
-//menu_entry::~menu_entry()
-//{
-//	delete[] this->label;
-//	delete[] this->cmd;
-//	delete[] this->ucmd;
-//	delete[] this->group;
-//	delete[] this->icon;
-//}
 
 /* strings equal? but ignore underscores */
 bool menu_streq (const char s1[], const char s2[], bool def)
@@ -1073,14 +1063,11 @@ bool menu_streq (const char s1[], const char s2[], bool def)
 
 static menu_entry *menu_entry_find (const char path[], const char label[])
 {
-	for (auto & me : menu_list)// = menu_list; list; list = g_slist_next(list))
-	{
-		if (me->path == path)
-		{
-			if (me->label && label && (me->label && me->label.get() == label))
-				return me.get();
-		}
-	}
+	auto result = std::find_if(menu_list.cbegin(), menu_list.cend(), [path, label](const std::unique_ptr<menu_entry> &me){
+		return me->label && label && (me->label && me->label.get() == label);
+	});
+	if (result != menu_list.cend())
+		return result->get();
 	return nullptr;
 }
 
