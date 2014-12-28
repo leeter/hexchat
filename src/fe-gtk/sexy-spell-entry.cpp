@@ -18,17 +18,24 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <string>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <gtk/gtk.h>
 #include "sexy-spell-entry.hpp"
-#include <cstring>
 #include <fcntl.h>
-#include <cstdlib>
 #include <glib/gi18n.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -77,7 +84,7 @@ static void (*enchant_dict_store_replacement) (struct EnchantDict * dict, const 
 static char ** (*enchant_dict_suggest) (struct EnchantDict * dict, const char *const word, ssize_t len, size_t * out_n_suggs);
 static bool have_enchant = false;
 
-struct _SexySpellEntryPriv
+struct SexySpellEntryPriv
 {
 	struct EnchantBroker *broker;
 	PangoAttrList        *attr_list;
@@ -160,9 +167,7 @@ static T module_symbol(GModule* enchant, const gchar* name)
 static void
 initialize_enchant ()
 {
-	GModule *enchant;
-
-	enchant = g_module_open("libenchant." G_MODULE_SUFFIX, GModuleFlags());
+	GModule *enchant = g_module_open("libenchant." G_MODULE_SUFFIX, GModuleFlags());
 	if (enchant == NULL)
 	{
 #ifndef WIN32
@@ -207,17 +212,13 @@ initialize_enchant ()
 static void
 sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 {
-	GObjectClass *gobject_class;
-	GObjectClass *object_class;
-	GtkWidgetClass *widget_class;
-
 	initialize_enchant();
 
 	parent_class = static_cast<GtkEntryClass*>(g_type_class_peek_parent(klass));
 
-	gobject_class = G_OBJECT_CLASS(klass);
-	object_class  = G_OBJECT_CLASS(klass);
-	widget_class  = GTK_WIDGET_CLASS(klass);
+	auto gobject_class = G_OBJECT_CLASS(klass);
+	auto object_class  = G_OBJECT_CLASS(klass);
+	auto widget_class  = GTK_WIDGET_CLASS(klass);
 
 	if (have_enchant)
 		klass->word_check = default_word_check;
@@ -253,28 +254,22 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 }
 
 static void
-sexy_spell_entry_editable_init (GtkEditableClass *iface)
+sexy_spell_entry_editable_init (GtkEditableClass *)
 {
 }
 
 static gint
 gtk_entry_find_position (GtkEntry *entry, gint x)
 {
-	PangoLayout *layout;
-	PangoLayoutLine *line;
-	const gchar *text;
-	gint cursor_index;
-	gint index;
-	gint pos;
-	gboolean trailing;
-
 	x = x + entry->scroll_offset;
 
-	layout = gtk_entry_get_layout(entry);
-	text = pango_layout_get_text(layout);
-	cursor_index = g_utf8_offset_to_pointer(text, entry->current_pos) - text;
+	auto layout = gtk_entry_get_layout(entry);
+	auto text = pango_layout_get_text(layout);
+	auto cursor_index = g_utf8_offset_to_pointer(text, entry->current_pos) - text;
 
-	line = static_cast<PangoLayoutLine *>(pango_layout_get_lines(layout)->data);
+	auto line = static_cast<PangoLayoutLine *>(pango_layout_get_lines(layout)->data);
+	int index;
+	int trailing;
 	pango_layout_line_x_to_index(line, x * PANGO_SCALE, &index, &trailing);
 
 	if (index >= cursor_index && entry->preedit_length) {
@@ -282,14 +277,16 @@ gtk_entry_find_position (GtkEntry *entry, gint x)
 			index -= entry->preedit_length;
 		} else {
 			index = cursor_index;
-			trailing = FALSE;
+			trailing = 0;
 		}
 	}
 
-	pos = g_utf8_pointer_to_offset (text, text + index);
+	auto pos = g_utf8_pointer_to_offset (text, text + index);
 	pos += trailing;
+	if (pos > std::numeric_limits<gint>::max())
+		throw std::overflow_error("position is greater than a gint can hold and would overflow");
 
-	return pos;
+	return static_cast<gint>(pos);
 }
 
 static void
@@ -318,11 +315,8 @@ insert_hiddenchar (SexySpellEntry *entry, guint start, guint end)
 static void
 insert_underline_error (SexySpellEntry *entry, guint start, guint end)
 {
-	PangoAttribute *ucolor;
-	PangoAttribute *unline;
-
-	ucolor = pango_attr_underline_color_new (colors[COL_SPELL].red, colors[COL_SPELL].green, colors[COL_SPELL].blue);
-	unline = pango_attr_underline_new (PANGO_UNDERLINE_ERROR);
+	auto ucolor = pango_attr_underline_color_new (colors[COL_SPELL].red, colors[COL_SPELL].green, colors[COL_SPELL].blue);
+	auto unline = pango_attr_underline_new (PANGO_UNDERLINE_ERROR);
 
 	ucolor->start_index = start;
 	unline->start_index = start;
@@ -335,33 +329,27 @@ insert_underline_error (SexySpellEntry *entry, guint start, guint end)
 }
 
 static void
-insert_underline (SexySpellEntry *entry, guint start, gboolean toggle)
+insert_underline (SexySpellEntry *entry, guint start, bool toggle)
 {
-	PangoAttribute *uattr;
-
-	uattr = pango_attr_underline_new (toggle ? PANGO_UNDERLINE_NONE : PANGO_UNDERLINE_SINGLE);
+	PangoAttribute *uattr = pango_attr_underline_new (toggle ? PANGO_UNDERLINE_NONE : PANGO_UNDERLINE_SINGLE);
 	uattr->start_index = start;
 	uattr->end_index = PANGO_ATTR_INDEX_TO_TEXT_END;
 	pango_attr_list_change (entry->priv->attr_list, uattr);
 }
 
 static void
-insert_bold (SexySpellEntry *entry, guint start, gboolean toggle)
+insert_bold (SexySpellEntry *entry, guint start, bool toggle)
 {
-	PangoAttribute *battr;
-
-	battr = pango_attr_weight_new (toggle ? PANGO_WEIGHT_NORMAL : PANGO_WEIGHT_BOLD);
+	PangoAttribute *battr = pango_attr_weight_new (toggle ? PANGO_WEIGHT_NORMAL : PANGO_WEIGHT_BOLD);
 	battr->start_index = start;
 	battr->end_index = PANGO_ATTR_INDEX_TO_TEXT_END;
 	pango_attr_list_change (entry->priv->attr_list, battr);
 }
 
 static void
-insert_italic (SexySpellEntry *entry, guint start, gboolean toggle)
+insert_italic (SexySpellEntry *entry, guint start, bool toggle)
 {
-	PangoAttribute *iattr;
-
-	iattr  = pango_attr_style_new (toggle ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC); 
+	PangoAttribute *iattr  = pango_attr_style_new (toggle ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC); 
 	iattr->start_index = start;
 	iattr->end_index = PANGO_ATTR_INDEX_TO_TEXT_END;
 	pango_attr_list_change (entry->priv->attr_list, iattr);
@@ -404,28 +392,25 @@ insert_color (SexySpellEntry *entry, guint start, int fgcolor, int bgcolor)
 static void
 insert_reset (SexySpellEntry *entry, guint start)
 {
-	insert_bold (entry, start, TRUE);
-	insert_underline (entry, start, TRUE);
-	insert_italic (entry, start, TRUE);
+	insert_bold (entry, start, true);
+	insert_underline (entry, start, true);
+	insert_italic (entry, start, true);
 	insert_color (entry, start, -1, -1);
 }
 
 static void
 get_word_extents_from_position(SexySpellEntry *entry, gint *start, gint *end, guint position)
 {
-	const gchar *text;
-	gint i, bytes_pos;
-
 	*start = -1;
 	*end = -1;
 
 	if (entry->priv->words == NULL)
 		return;
 
-	text = gtk_entry_get_text(GTK_ENTRY(entry));
-	bytes_pos = (gint) (g_utf8_offset_to_pointer(text, position) - text);
+	auto text = gtk_entry_get_text(GTK_ENTRY(entry));
+	gint bytes_pos = (gint) (g_utf8_offset_to_pointer(text, position) - text);
 
-	for (i = 0; entry->priv->words[i]; i++) {
+	for (int i = 0; entry->priv->words[i]; i++) {
 		if (bytes_pos >= entry->priv->word_starts[i] &&
 			bytes_pos <= entry->priv->word_ends[i]) {
 			*start = entry->priv->word_starts[i];
@@ -438,21 +423,16 @@ get_word_extents_from_position(SexySpellEntry *entry, gint *start, gint *end, gu
 static void
 add_to_dictionary(GtkWidget *menuitem, SexySpellEntry *entry)
 {
-	char *word;
-	gint start, end;
-	struct EnchantDict *dict;
-
 	if (!have_enchant)
 		return;
 
+	gint start, end;
 	get_word_extents_from_position(entry, &start, &end, entry->priv->mark_character);
-	word = gtk_editable_get_chars(GTK_EDITABLE(entry), start, end);
+	glib_string word (gtk_editable_get_chars(GTK_EDITABLE(entry), start, end));
 
-	dict = (struct EnchantDict *) g_object_get_data(G_OBJECT(menuitem), "enchant-dict");
+	auto dict = static_cast<EnchantDict*>(g_object_get_data(G_OBJECT(menuitem), "enchant-dict"));
 	if (dict)
-		enchant_dict_add_to_personal(dict, word, -1);
-
-	g_free(word);
+		enchant_dict_add_to_personal(dict, word.get(), -1);
 
 	if (entry->priv->words) {
 		g_strfreev(entry->priv->words);
@@ -466,22 +446,17 @@ add_to_dictionary(GtkWidget *menuitem, SexySpellEntry *entry)
 static void
 ignore_all(GtkWidget *menuitem, SexySpellEntry *entry)
 {
-	char *word;
-	gint start, end;
-	GSList *li;
-
 	if (!have_enchant)
 		return;
 
+	gint start, end;
 	get_word_extents_from_position(entry, &start, &end, entry->priv->mark_character);
-	word = gtk_editable_get_chars(GTK_EDITABLE(entry), start, end);
+	glib_string word(gtk_editable_get_chars(GTK_EDITABLE(entry), start, end));
 
-	for (li = entry->priv->dict_list; li; li = g_slist_next (li)) {
-		struct EnchantDict *dict = (struct EnchantDict *) li->data;
-		enchant_dict_add_to_session(dict, word, -1);
+	for (auto li = entry->priv->dict_list; li; li = g_slist_next (li)) {
+		auto dict = static_cast<EnchantDict *>(li->data);
+		enchant_dict_add_to_session(dict, word.get(), -1);
 	}
-
-	g_free(word);
 
 	if (entry->priv->words) {
 		g_strfreev(entry->priv->words);
@@ -495,20 +470,14 @@ ignore_all(GtkWidget *menuitem, SexySpellEntry *entry)
 static void
 replace_word(GtkWidget *menuitem, SexySpellEntry *entry)
 {
-	char *oldword;
-	const char *newword;
-	gint start, end;
-	gint cursor;
-	struct EnchantDict *dict;
-
 	if (!have_enchant)
 		return;
-
+	gint start, end;
 	get_word_extents_from_position(entry, &start, &end, entry->priv->mark_character);
-	oldword = gtk_editable_get_chars(GTK_EDITABLE(entry), start, end);
-	newword = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child (GTK_BIN(menuitem))));
+	glib_string oldword(gtk_editable_get_chars(GTK_EDITABLE(entry), start, end));
+	auto newword = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child (GTK_BIN(menuitem))));
 
-	cursor = gtk_editable_get_position(GTK_EDITABLE(entry));
+	auto cursor = gtk_editable_get_position(GTK_EDITABLE(entry));
 	/* is the cursor at the end? If so, restore it there */
 	if (g_utf8_strlen(gtk_entry_get_text(GTK_ENTRY(entry)), -1) == cursor)
 		cursor = -1;
@@ -521,29 +490,53 @@ replace_word(GtkWidget *menuitem, SexySpellEntry *entry)
 							 &start);
 	gtk_editable_set_position(GTK_EDITABLE(entry), cursor);
 
-	dict = (struct EnchantDict *) g_object_get_data(G_OBJECT(menuitem), "enchant-dict");
+	auto dict = static_cast<EnchantDict *>(g_object_get_data(G_OBJECT(menuitem), "enchant-dict"));
 
-		if (dict)
+	if (dict)
+	{
 		enchant_dict_store_replacement(dict,
-						   oldword, -1,
-						   newword, -1);
+			oldword.get(), -1,
+			newword, -1);
+	}
+}
 
-	g_free(oldword);
+namespace {
+	class suggestion_deleter
+	{
+		EnchantDict* _dict;
+	public:
+		suggestion_deleter(EnchantDict* dict)
+			:_dict(dict)
+		{}
+		suggestion_deleter(suggestion_deleter && other)
+		{
+			this->operator=(std::forward<suggestion_deleter&&>(other));
+		}
+		suggestion_deleter & operator=(suggestion_deleter&& other)
+		{
+			if (this != &other)
+			{
+				this->_dict = other._dict;
+				other._dict = nullptr;
+			}
+			return *this;
+		}
+		void operator()(gchar** suggestions) BOOST_NOEXCEPT_OR_NOTHROW
+		{
+			enchant_dict_free_suggestions(_dict, suggestions);
+		}
+	};
 }
 
 static void
 build_suggestion_menu(SexySpellEntry *entry, GtkWidget *menu, struct EnchantDict *dict, const gchar *word)
 {
-	GtkWidget *mi;
-	gchar **suggestions;
-	size_t n_suggestions, i;
-
 	if (!have_enchant)
 		return;
-
-	suggestions = enchant_dict_suggest(dict, word, -1, &n_suggestions);
-
-	if (suggestions == NULL || n_suggestions == 0) {
+	size_t n_suggestions;
+	std::unique_ptr<gchar*[], suggestion_deleter> suggestions(enchant_dict_suggest(dict, word, -1, &n_suggestions), suggestion_deleter(dict));
+	GtkWidget *mi;
+	if (!suggestions || n_suggestions == 0) {
 		/* no suggestions.  put something in the menu anyway... */
 		GtkWidget *label = gtk_label_new("");
 		gtk_label_set_markup(GTK_LABEL(label), _("<i>(no suggestions)</i>"));
@@ -554,7 +547,7 @@ build_suggestion_menu(SexySpellEntry *entry, GtkWidget *menu, struct EnchantDict
 		gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), mi);
 	} else {
 		/* build a set of menus with suggestions */
-		for (i = 0; i < n_suggestions; i++) {
+		for (size_t i = 0; i < n_suggestions; i++) {
 			if ((i != 0) && (i % 10 == 0)) {
 				mi = gtk_separator_menu_item_new();
 				gtk_widget_show(mi);
@@ -575,52 +568,40 @@ build_suggestion_menu(SexySpellEntry *entry, GtkWidget *menu, struct EnchantDict
 			gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 		}
 	}
-
-	enchant_dict_free_suggestions(dict, suggestions);
 }
 
 static GtkWidget *
 build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 {
-	struct EnchantDict *dict;
-	GtkWidget *topmenu, *mi;
-	gchar *label;
-
 	if (!have_enchant)
-		return NULL;
+		return nullptr;
 
-	topmenu = gtk_menu_new();
+	auto topmenu = gtk_menu_new();
 
-	if (entry->priv->dict_list == NULL)
+	if (!entry->priv->dict_list)
 		return topmenu;
-
+	GtkWidget *mi;
 	/* Suggestions */
 	if (g_slist_length(entry->priv->dict_list) == 1) {
-		dict = (struct EnchantDict *) entry->priv->dict_list->data;
+		auto dict = static_cast<EnchantDict *>(entry->priv->dict_list->data);
 		build_suggestion_menu(entry, topmenu, dict, word);
 	} else {
-		GSList *li;
-		GtkWidget *menu;
-		gchar *lang, *lang_name;
-
-		for (li = entry->priv->dict_list; li; li = g_slist_next (li)) {
-			dict = (struct EnchantDict *) li->data;
-			lang = get_lang_from_dict(dict);
-			lang_name = sexy_spell_entry_get_language_name (entry, lang);
+		for (auto li = entry->priv->dict_list; li; li = g_slist_next (li)) {
+			auto dict = static_cast<EnchantDict *>(li->data);
+			glib_string lang(get_lang_from_dict(dict));
+			glib_string lang_name(sexy_spell_entry_get_language_name (entry, lang.get()));
 			if (lang_name)
 			{
-				mi = gtk_menu_item_new_with_label(lang_name);
-				g_free (lang_name);
+				mi = gtk_menu_item_new_with_label(lang_name.get());
 			}
 			else
 			{
-				mi = gtk_menu_item_new_with_label(lang);
+				mi = gtk_menu_item_new_with_label(lang.get());
 			}
-			g_free(lang);
 
 			gtk_widget_show(mi);
 			gtk_menu_shell_append(GTK_MENU_SHELL(topmenu), mi);
-			menu = gtk_menu_new();
+			auto menu = gtk_menu_new();
 			gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), menu);
 			build_suggestion_menu(entry, menu, dict, word);
 		}
@@ -632,38 +613,32 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 	gtk_menu_shell_append(GTK_MENU_SHELL(topmenu), mi);
 
 	/* + Add to Dictionary */
-	label = g_strdup_printf(_("Add \"%s\" to Dictionary"), word);
-	mi = gtk_image_menu_item_new_with_label(label);
-	g_free(label);
+	glib_string label(g_strdup_printf(_("Add \"%s\" to Dictionary"), word));
+	mi = gtk_image_menu_item_new_with_label(label.get());
 
 	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_MENU));
 
 	if (g_slist_length(entry->priv->dict_list) == 1) {
-		dict = (struct EnchantDict *) entry->priv->dict_list->data;
+		auto dict = static_cast<EnchantDict *>(entry->priv->dict_list->data);
 		g_object_set_data(G_OBJECT(mi), "enchant-dict", dict);
 		g_signal_connect(G_OBJECT(mi), "activate", G_CALLBACK(add_to_dictionary), entry);
 	} else {
-		GSList *li;
-		GtkWidget *menu, *submi;
-		gchar *lang, *lang_name;
-
-		menu = gtk_menu_new();
+		auto menu = gtk_menu_new();
 		gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), menu);
 
-		for (li = entry->priv->dict_list; li; li = g_slist_next(li)) {
-			dict = (struct EnchantDict *)li->data;
-			lang = get_lang_from_dict(dict);
-			lang_name = sexy_spell_entry_get_language_name (entry, lang);
+		for (auto li = entry->priv->dict_list; li; li = g_slist_next(li)) {
+			auto dict = static_cast<EnchantDict *>(li->data);
+			glib_string lang(get_lang_from_dict(dict));
+			glib_string lang_name(sexy_spell_entry_get_language_name (entry, lang.get()));
+			GtkWidget *submi;
 			if (lang_name)
 			{
-				submi = gtk_menu_item_new_with_label(lang_name);
-				g_free (lang_name);
+				submi = gtk_menu_item_new_with_label(lang_name.get());
 			}
 			else 
 			{
-				submi = gtk_menu_item_new_with_label(lang);
+				submi = gtk_menu_item_new_with_label(lang.get());
 			}
-			g_free(lang);
 			g_object_set_data(G_OBJECT(submi), "enchant-dict", dict);
 
 			g_signal_connect(G_OBJECT(submi), "activate", G_CALLBACK(add_to_dictionary), entry);
@@ -689,16 +664,12 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 static void
 sexy_spell_entry_populate_popup(SexySpellEntry *entry, GtkMenu *menu, gpointer data)
 {
-	GtkWidget *icon, *mi;
-	gint start, end;
-	gchar *word;
-
 	if ((have_enchant == FALSE) || (entry->priv->checked == FALSE))
 		return;
 
 	if (g_slist_length(entry->priv->dict_list) == 0)
 		return;
-
+	gint start, end;
 	get_word_extents_from_position(entry, &start, &end, entry->priv->mark_character);
 	if (start == end)
 		return;
@@ -706,19 +677,18 @@ sexy_spell_entry_populate_popup(SexySpellEntry *entry, GtkMenu *menu, gpointer d
 		return;
 
 	/* separator */
-	mi = gtk_separator_menu_item_new();
+	auto mi = gtk_separator_menu_item_new();
 	gtk_widget_show(mi);
 	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), mi);
 
 	/* Above the separator, show the suggestions menu */
-	icon = gtk_image_new_from_stock(GTK_STOCK_SPELL_CHECK, GTK_ICON_SIZE_MENU);
+	auto icon = gtk_image_new_from_stock(GTK_STOCK_SPELL_CHECK, GTK_ICON_SIZE_MENU);
 	mi = gtk_image_menu_item_new_with_label(_("Spelling Suggestions"));
 	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), icon);
 
-	word = gtk_editable_get_chars(GTK_EDITABLE(entry), start, end);
+	glib_string word(gtk_editable_get_chars(GTK_EDITABLE(entry), start, end));
 	g_assert(word != NULL);
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), build_spelling_menu(entry, word));
-	g_free(word);
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), build_spelling_menu(entry, word.get()));
 
 	gtk_widget_show_all(mi);
 	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), mi);
@@ -829,7 +799,6 @@ static gboolean
 default_word_check(SexySpellEntry *entry, const gchar *word)
 {
 	gboolean result = TRUE;
-	GSList *li;
 
 	if (!have_enchant)
 		return result;
@@ -838,8 +807,8 @@ default_word_check(SexySpellEntry *entry, const gchar *word)
 		/* We only want to check words */
 		return FALSE;
 	}
-	for (li = entry->priv->dict_list; li; li = g_slist_next (li)) {
-		struct EnchantDict *dict = (struct EnchantDict *) li->data;
+	for (auto li = entry->priv->dict_list; li; li = g_slist_next (li)) {
+		auto dict = static_cast<EnchantDict *>(li->data);
 		if (enchant_dict_check(dict, word, strlen(word)) == 0) {
 			result = FALSE;
 			break;
@@ -851,43 +820,36 @@ default_word_check(SexySpellEntry *entry, const gchar *word)
 static gboolean
 word_misspelled(SexySpellEntry *entry, int start, int end)
 {
-	const gchar *text;
-	gchar *word;
-	gboolean ret;
+	
 
 	if (start == end)
 		return FALSE;
-	text = gtk_entry_get_text(GTK_ENTRY(entry));
-	word = g_new0(gchar, end - start + 2);
+	auto text = gtk_entry_get_text(GTK_ENTRY(entry));
+	glib_string word(g_new0(gchar, end - start + 2));
 
-	g_strlcpy(word, text + start, end - start + 1);
-
-	g_signal_emit(entry, signals[WORD_CHECK], 0, word, &ret);
-
-	g_free(word);
+	g_strlcpy(word.get(), text + start, end - start + 1);
+	gboolean ret = FALSE;
+	g_signal_emit(entry, signals[WORD_CHECK], 0, word.get(), &ret);
 	return ret;
 }
 
 static void
 check_word(SexySpellEntry *entry, int start, int end)
 {
-	PangoAttrIterator *it;
-
 	/* Check to see if we've got any attributes at this position.
 	 * If so, free them, since we'll readd it if the word is misspelled */
-	it = pango_attr_list_get_iterator(entry->priv->attr_list);
-	if (it == NULL)
+	std::unique_ptr<PangoAttrIterator, decltype(&pango_attr_iterator_destroy)> it(pango_attr_list_get_iterator(entry->priv->attr_list), pango_attr_iterator_destroy);
+	if (!it)
 		return;
 	do {
 		gint s, e;
-		pango_attr_iterator_range(it, &s, &e);
+		pango_attr_iterator_range(it.get(), &s, &e);
 		if (s == start) {
-			GSList *attrs = pango_attr_iterator_get_attrs(it);
-			g_slist_foreach(attrs, (GFunc) pango_attribute_destroy, NULL);
+			GSList *attrs = pango_attr_iterator_get_attrs(it.get());
+			g_slist_foreach(attrs, (GFunc) pango_attribute_destroy, nullptr);
 			g_slist_free(attrs);
 		}
-	} while (pango_attr_iterator_next(it));
-	pango_attr_iterator_destroy(it);
+	} while (pango_attr_iterator_next(it.get()));
 
 	if (word_misspelled(entry, start, end))
 		insert_underline_error(entry, start, end);
@@ -896,18 +858,15 @@ check_word(SexySpellEntry *entry, int start, int end)
 static void
 check_attributes (SexySpellEntry *entry, const char *text, int len)
 {
-	gboolean bold = FALSE;
-	gboolean italic = FALSE;
-	gboolean underline = FALSE;
+	bool bold = false;
+	bool italic = false;
+	bool underline = false;
 	int parsing_color = 0;
-	char fg_color[3];
-	char bg_color[3];
-	int i, offset = 0;
+	char fg_color[3] = { 0 };
+	char bg_color[3] = { 0 };
+	int offset = 0;
 
-	memset (bg_color, 0, sizeof(bg_color));
-	memset (fg_color, 0, sizeof(fg_color));
-
-	for (i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		switch (text[i])
 		{
@@ -932,9 +891,9 @@ check_attributes (SexySpellEntry *entry, const char *text, int len)
 		case ATTR_RESET:
 			insert_hiddenchar (entry, i, i + 1);
 			insert_reset (entry, i);
-			bold = FALSE;
-			italic = FALSE;
-			underline = FALSE;
+			bold = false;
+			italic = false;
+			underline = false;
 			goto check_color;
 
 		case ATTR_HIDDEN:
@@ -1016,9 +975,8 @@ check_color:
 					insert_hiddenchar (entry, i - offset, i - offset + 1);
 					insert_color (entry, i, -1, -1);
 				}
-
-				memset (bg_color, 0, sizeof(bg_color));
-				memset (fg_color, 0, sizeof(fg_color));
+				std::fill(std::begin(bg_color), std::end(bg_color), 0);
+				std::fill(std::begin(fg_color), std::end(fg_color), 0);
 				parsing_color = 0;
 				offset = 0;
 				continue;
@@ -1030,13 +988,6 @@ check_color:
 static void
 sexy_spell_entry_recheck_all(SexySpellEntry *entry)
 {
-	GdkRectangle rect;
-	GtkAllocation allocation;
-	GtkWidget *widget = GTK_WIDGET(entry);
-	PangoLayout *layout;
-	int length, i, text_len;
-	const char *text;
-
 	/* Remove all existing pango attributes.  These will get readded as we check */
 	pango_attr_list_unref(entry->priv->attr_list);
 	entry->priv->attr_list = pango_attr_list_new();
@@ -1044,8 +995,8 @@ sexy_spell_entry_recheck_all(SexySpellEntry *entry)
 	if (entry->priv->parseattr)
 	{
 		/* Check for attributes */
-		text = gtk_entry_get_text (GTK_ENTRY (entry));
-		text_len = gtk_entry_get_text_length (GTK_ENTRY (entry));
+		auto text = gtk_entry_get_text (GTK_ENTRY (entry));
+		int text_len = gtk_entry_get_text_length (GTK_ENTRY (entry));
 		check_attributes (entry, text, text_len);
 	}
 
@@ -1053,25 +1004,27 @@ sexy_spell_entry_recheck_all(SexySpellEntry *entry)
 		&& g_slist_length (entry->priv->dict_list) != 0)
 	{
 		/* Loop through words */
-		for (i = 0; entry->priv->words[i]; i++)
+		for (int i = 0; entry->priv->words[i]; i++)
 		{
-			length = strlen (entry->priv->words[i]);
+			auto length = strlen (entry->priv->words[i]);
 			if (length == 0)
 				continue;
 			check_word (entry, entry->priv->word_starts[i], entry->priv->word_ends[i]);
 		}
 	}
 
-	layout = gtk_entry_get_layout(GTK_ENTRY(entry));
+	auto layout = gtk_entry_get_layout(GTK_ENTRY(entry));
 	pango_layout_set_attributes(layout, entry->priv->attr_list);
 
 	if (gtk_widget_get_realized (GTK_WIDGET(entry)))
 	{
+		GtkAllocation allocation;
 		gtk_widget_get_allocation (GTK_WIDGET(entry), &allocation);
-		
+		GdkRectangle rect;
 		rect.x = 0; rect.y = 0;
 		rect.width  = allocation.width;
 		rect.height = allocation.height;
+		auto widget = GTK_WIDGET(entry);
 		gdk_window_invalidate_rect(gtk_widget_get_window (widget), &rect, TRUE);
 	}
 }
@@ -1081,10 +1034,8 @@ sexy_spell_entry_expose(GtkWidget *widget, GdkEventExpose *event)
 {
 	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
 	GtkEntry *gtk_entry = GTK_ENTRY(widget);
-	PangoLayout *layout;
-
 	
-	layout = gtk_entry_get_layout(gtk_entry);
+	auto layout = gtk_entry_get_layout(gtk_entry);
 	pango_layout_set_attributes(layout, entry->priv->attr_list);
 
 	return GTK_WIDGET_CLASS(parent_class)->expose_event (widget, event);
@@ -1095,9 +1046,7 @@ sexy_spell_entry_button_press(GtkWidget *widget, GdkEventButton *event)
 {
 	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
 	GtkEntry *gtk_entry = GTK_ENTRY(widget);
-	gint pos;
-
-	pos = gtk_entry_find_position(gtk_entry, event->x);
+	auto pos = gtk_entry_find_position(gtk_entry, event->x);
 	entry->priv->mark_character = pos;
 
 	return GTK_WIDGET_CLASS(parent_class)->button_press_event (widget, event);
@@ -1115,20 +1064,15 @@ sexy_spell_entry_popup_menu(GtkWidget *widget, SexySpellEntry *entry)
 static void
 entry_strsplit_utf8(GtkEntry *entry, gchar ***set, gint **starts, gint **ends)
 {
-	PangoLayout   *layout;
-	const PangoLogAttr  *log_attrs;
-	const gchar   *text;
-	gint           n_attrs, n_strings, i, j;
-	PangoLogAttr a;
-
-	layout = gtk_entry_get_layout(GTK_ENTRY(entry));
-	text = gtk_entry_get_text(GTK_ENTRY(entry));
-	log_attrs = pango_layout_get_log_attrs_readonly (layout, &n_attrs);
-
+	auto layout = gtk_entry_get_layout(GTK_ENTRY(entry));
+	auto text = gtk_entry_get_text(GTK_ENTRY(entry));
+	gint n_attrs;
+	auto log_attrs = pango_layout_get_log_attrs_readonly (layout, &n_attrs);
+	gint n_strings = 0;
 	/* Find how many words we have */
-	for (i = 0, n_strings = 0; i < n_attrs; i++)
+	for (gint i = 0; i < n_attrs; i++)
 	{
-		a = log_attrs[i];
+		auto a = log_attrs[i];
 		if (a.is_word_start && a.is_word_boundary)
 			n_strings++;
 	}
@@ -1138,14 +1082,12 @@ entry_strsplit_utf8(GtkEntry *entry, gchar ***set, gint **starts, gint **ends)
 	*ends   = g_new0(gint, n_strings);
 
 	/* Copy out strings */
-	for (i = 0, j = 0; i < n_attrs; i++)
+	for (gint i = 0, j = 0; i < n_attrs; i++)
 	{
-		a = log_attrs[i];
+		auto a = log_attrs[i];
 		if (a.is_word_start && a.is_word_boundary)
 		{
-			gint cend, bytes;
-			gchar *start;
-
+			gint cend;
 			/* Find the end of this string */
 			for (cend = i; cend < n_attrs; cend++)
 			{
@@ -1155,8 +1097,8 @@ entry_strsplit_utf8(GtkEntry *entry, gchar ***set, gint **starts, gint **ends)
 			}
 
 			/* Copy sub-string */
-			start = g_utf8_offset_to_pointer(text, i);
-			bytes = (gint) (g_utf8_offset_to_pointer(text, cend) - start);
+			auto start = g_utf8_offset_to_pointer(text, i);
+			auto bytes = (g_utf8_offset_to_pointer(text, cend) - start);
 			(*set)[j]    = g_new0(gchar, bytes + 1);
 			(*starts)[j] = (gint) (start - text);
 			(*ends)[j]   = (gint) (start - text + bytes);
@@ -1183,17 +1125,16 @@ sexy_spell_entry_changed(GtkEditable *editable, gpointer data)
 	sexy_spell_entry_recheck_all(entry);
 }
 
-static gboolean
-enchant_has_lang(const gchar *lang, GSList *langs) {
-	GSList *i;
-	for (i = langs; i; i = g_slist_next(i))
+static bool
+enchant_has_lang(const std::string & lang, GSList *langs) {
+	for (auto i = langs; i; i = g_slist_next(i))
 	{
-		if (strcmp(lang, static_cast<const char*>(i->data)) == 0)
+		if (lang == static_cast<const char*>(i->data))
 		{
-			return TRUE;
+			return true;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
 /**
@@ -1221,7 +1162,7 @@ sexy_spell_entry_activate_default_languages(SexySpellEntry *entry)
 	std::istringstream langs(prefs.hex_text_spell_langs);
 	for (std::string lang; std::getline(langs, lang, ',');)
 	{
-		if (enchant_has_lang (lang.c_str(), enchant_langs))
+		if (enchant_has_lang (lang, enchant_langs))
 		{
 			sexy_spell_entry_activate_language_internal (entry, lang, nullptr);
 		}

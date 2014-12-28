@@ -18,12 +18,10 @@
 #ifndef _SEXY_SPELL_ENTRY_H_
 #define _SEXY_SPELL_ENTRY_H_
 
-typedef struct _SexySpellEntry      SexySpellEntry;
-typedef struct _SexySpellEntryClass SexySpellEntryClass;
-typedef struct _SexySpellEntryPriv  SexySpellEntryPriv;
-
 #include <gtk/gtk.h>
 
+struct SexySpellEntry;
+struct SexySpellEntryClass;
 #define SEXY_TYPE_SPELL_ENTRY            (sexy_spell_entry_get_type())
 #define SEXY_SPELL_ENTRY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), SEXY_TYPE_SPELL_ENTRY, SexySpellEntry))
 #define SEXY_SPELL_ENTRY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), SEXY_TYPE_SPELL_ENTRY, SexySpellEntryClass))
@@ -33,11 +31,12 @@ typedef struct _SexySpellEntryPriv  SexySpellEntryPriv;
 
 #define SEXY_SPELL_ERROR                 (sexy_spell_error_quark())
 
-typedef enum {
+enum SexySpellError{
 	SEXY_SPELL_ERROR_BACKEND,
-} SexySpellError;
+};
 
-struct _SexySpellEntry
+struct SexySpellEntryPriv;
+struct SexySpellEntry
 {
 	GtkEntry parent_object;
 
@@ -49,7 +48,7 @@ struct _SexySpellEntry
 	void (*gtk_reserved4)(void);
 };
 
-struct _SexySpellEntryClass
+struct SexySpellEntryClass
 {
 	GtkEntryClass parent_class;
 
@@ -61,8 +60,6 @@ struct _SexySpellEntryClass
 	void (*gtk_reserved3)(void);
 	void (*gtk_reserved4)(void);
 };
-
-G_BEGIN_DECLS
 
 GType      sexy_spell_entry_get_type(void);
 GtkWidget *sexy_spell_entry_new(void);
@@ -79,7 +76,5 @@ gboolean   sexy_spell_entry_is_checked(SexySpellEntry *entry);
 void       sexy_spell_entry_set_checked(SexySpellEntry *entry, gboolean checked);
 void       sexy_spell_entry_set_parse_attributes (SexySpellEntry *entry, gboolean parse);
 void       sexy_spell_entry_activate_default_languages(SexySpellEntry *entry);
-
-G_END_DECLS
 
 #endif
