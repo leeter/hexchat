@@ -6,6 +6,7 @@ localedir = $(datadir)/locale
 bin_PROGRAMS = hexchat
 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
+AM_CFLAGS = $(GUI_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
 
 hexchat_LDADD = ../common/libhexchatcommon.a ../libirc/libirc.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS) $(BOOST_REGEX_LIBS) $(BOOST_CHRONO_LIBS)
 
@@ -35,6 +36,7 @@ hexchat_SOURCES = ascii.cpp banlist.cpp chanlist.cpp chanview.cpp custom-list.cp
 	rawlog.cpp resources.c servlistgui.cpp setup.cpp $(iso_codes_c) \
 	sexy-spell-entry.cpp textgui.cpp urlgrab.cpp userlistgui.cpp xtext.cpp
 hexchat_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_builddir)/src/common -I$(top_builddir)/src/libirc
+hexchat_CFLAGS = $(AM_CFLAGS) -I$(top_builddir)/src/common -I$(top_builddir)/src/libirc
 hexchat_LDFLAGS = -Wl,-z,relro,-z,now $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_IOSTREAMS_LDFLAGS) $(BOOST_SYSTEM_LDFLAGS) $(BOOST_ASIO_LDFLAGS) $(BOOST_SIGNALS2_LDFLAGS) $(BOOST_REGEX_LDFLAGS) $(BOOST_THREAD_LDFLAGS) $(BOOST_CHRONO_LDFLAGS)
 hexchat_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS) $(BOOST_REGEX_LIBS)
 
