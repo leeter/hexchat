@@ -1281,8 +1281,8 @@ dcc_connect(::dcc::DCC *dcc)
 		/* possible problems with filenames containing spaces? */
 		if (dcc->type == ::dcc::DCC::dcc_type::TYPE_RECV)
 			snprintf(tbuf, sizeof(tbuf), strchr(dcc->file, ' ') ?
-			"DCC SEND \"%s\" %u %d %"DCC_SFMT" %d" :
-			"DCC SEND %s %u %d %"DCC_SFMT" %d", dcc->file,
+			"DCC SEND \"%s\" %u %d %" DCC_SFMT " %d" :
+			"DCC SEND %s %u %d %" DCC_SFMT " %d", dcc->file,
 			dcc->addr, dcc->port, dcc->size, dcc->pasvid);
 		else
 			snprintf(tbuf, sizeof(tbuf), "DCC CHAT chat %u %d %d",
@@ -1750,7 +1750,7 @@ dcc_add_file(session *sess, char *file, ::dcc::DCC_SIZE size, int port, char *ni
 		else
 			::fe::fe_dcc_add(dcc);
 	}
-	sprintf(tbuf, "%"DCC_SFMT, size);
+	sprintf(tbuf, "%" DCC_SFMT, size);
 	snprintf(tbuf + 24, 300, "%s:%d", net_ip(addr), port);
 	EMIT_SIGNAL(XP_TE_DCCSENDOFFER, sess->server->front_session, nick,
 		file, tbuf, tbuf + 24, 0);
@@ -2173,8 +2173,8 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 				else
 				{
 					snprintf (outbuf, sizeof (outbuf), (havespaces) ?
-							"DCC SEND \"%s\" %u %d %"DCC_SFMT :
-							"DCC SEND %s %u %d %"DCC_SFMT,
+							"DCC SEND \"%s\" %u %d %" DCC_SFMT :
+							"DCC SEND %s %u %d %" DCC_SFMT,
 							file_part (dcc->file), dcc->addr,
 							dcc->port, dcc->size);
 				}
@@ -2394,8 +2394,8 @@ dcc_resume (::dcc::DCC *dcc)
 		dcc->resume_sent = 1;
 		/* filename contains spaces? Quote them! */
 		snprintf (tbuf, sizeof (tbuf) - 10, strchr (dcc->file, ' ') ?
-					  "DCC RESUME \"%s\" %d %"DCC_SFMT :
-					  "DCC RESUME %s %d %"DCC_SFMT,
+					  "DCC RESUME \"%s\" %d %" DCC_SFMT :
+					  "DCC RESUME %s %d %" DCC_SFMT,
 					  dcc->file, dcc->port, dcc->resumable);
 
 		if (dcc->pasvid)
@@ -2494,18 +2494,18 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 				/* Checking if dcc is passive and if filename contains spaces */
 				if (dcc->pasvid)
 					snprintf (tbuf, sizeof (tbuf), strchr (file_part (dcc->file), ' ') ?
-							"DCC ACCEPT \"%s\" %d %"DCC_SFMT" %d" :
-							"DCC ACCEPT %s %d %"DCC_SFMT" %d",
+							"DCC ACCEPT \"%s\" %d %" DCC_SFMT " %d" :
+							"DCC ACCEPT %s %d %" DCC_SFMT " %d",
 							file_part (dcc->file), port, dcc->resumable, dcc->pasvid);
 				else
 					snprintf (tbuf, sizeof (tbuf), strchr (file_part (dcc->file), ' ') ?
-							"DCC ACCEPT \"%s\" %d %"DCC_SFMT :
-							"DCC ACCEPT %s %d %"DCC_SFMT,
+							"DCC ACCEPT \"%s\" %d %" DCC_SFMT :
+							"DCC ACCEPT %s %d %" DCC_SFMT,
 							file_part (dcc->file), port, dcc->resumable);
 
 				dcc->serv->p_ctcp (dcc->nick, tbuf);
 			}
-			sprintf (tbuf, "%"DCC_SFMT, dcc->pos);
+			sprintf (tbuf, "%" DCC_SFMT, dcc->pos);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_DCCRESUMEREQUEST, sess, nick,
 										  file_part (dcc->file), tbuf, NULL, 0,
 										  tags_data->timestamp);
@@ -2596,7 +2596,7 @@ dcc_show_list (struct session *sess)
 	{
 		dcc = (::dcc::DCC *) list->data;
 		i++;
-		PrintTextf (sess, " %s  %-10.10s %-7.7s %-7"DCC_SFMT" %-7"DCC_SFMT" %s\n",
+		PrintTextf (sess, " %s  %-10.10s %-7.7s %-7" DCC_SFMT " %-7" DCC_SFMT " %s\n",
 					 dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick,
 					 _(dccstat[dcc->dccstat].name), dcc->size, dcc->pos,
 					 file_part (dcc->file));
