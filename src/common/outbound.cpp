@@ -3401,10 +3401,10 @@ static int
 cmd_reload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 #ifdef USE_PLUGIN
-	gboolean by_file = FALSE;
+	bool by_file = false;
 
 	if (g_str_has_suffix (word[2], "." G_MODULE_SUFFIX))
-		by_file = TRUE;
+		by_file = true;
 
 	switch (plugin_reload (sess, word[2], by_file))
 	{

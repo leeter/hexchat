@@ -36,6 +36,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
@@ -143,7 +144,7 @@ extern struct prefs vars[];	/* cfgfiles.c */
 /* unload a plugin and remove it from our linked list */
 
 static int
-plugin_free(hexchat_plugin_internal *pl, int do_deinit, int allow_refuse)
+plugin_free(hexchat_plugin_internal *pl, bool do_deinit, bool allow_refuse)
 {
 	GSList *list, *next;
 	hexchat_hook *hook;
@@ -195,9 +196,7 @@ plugin_list_add (hexchat_context *ctx,  const char filename[], const char *name,
 					  const char *desc, const char *version, void *handle,
 					  plugin_deinit_func deinit_func, bool fake, bool free_strings)
 {
-	hexchat_plugin_internal *pl;
-
-	pl = new hexchat_plugin_internal();
+	auto pl = new hexchat_plugin_internal();
 	pl->handle = handle;
 	if (filename)
 	{
@@ -316,7 +315,7 @@ plugin_add (session *sess, const char *filename, void *handle, plugin_init_func 
 		char* version;
 		if ((init_func) (pl, &name, &desc, &version, arg) == 0)
 		{
-			plugin_free (pl, FALSE, FALSE);
+			plugin_free (pl, false, false);
 			return;
 		}
 		pl->name = name;
@@ -349,7 +348,7 @@ plugin_kill (char *name, int by_filename)
 			/* statically linked plugins have a NULL filename */
 			if (!pl->filename.empty() && !pl->fake)
 			{
-				if (plugin_free (pl, TRUE, TRUE))
+				if (plugin_free (pl, true, true))
 					return 1;
 				return 2;
 			}
@@ -373,7 +372,7 @@ plugin_kill_all (void)
 		auto pl = static_cast<hexchat_plugin_internal*>(list->data);
 		next = list->next;
 		if (!pl->fake)
-			plugin_free(pl, TRUE, FALSE);
+			plugin_free(pl, true, false);
 		list = next;
 	}
 }
@@ -483,19 +482,12 @@ plugin_auto_load (session *sess)
 	for_files (sub_dir.string().c_str(), "*." G_MODULE_SUFFIX, plugin_auto_load_cb);
 }
 
-int
-plugin_reload (session *sess, const char *name, int by_filename)
+int plugin_reload (session *sess, const char *name, bool by_filename)
 {
 	namespace bfs = boost::filesystem;
-	GSList *list;
-	char *filename;
-	const char *ret;
-	hexchat_plugin_internal *pl;
-
-	list = plugin_list;
-	while (list)
+	for(auto list = plugin_list; list; list = g_slist_next(list))
 	{
-		pl = static_cast<hexchat_plugin_internal*>(list->data);
+		auto pl = static_cast<hexchat_plugin_internal*>(list->data);
 		/* static-plugins (plugin-timer.c) have a NULL filename */
 		if ((by_filename && !pl->filename.empty() && g_ascii_strcasecmp(name, pl->filename.c_str()) == 0) ||
 			(by_filename && !pl->filename.empty() && g_ascii_strcasecmp(name, bfs::path(pl->filename).filename().string().c_str()) == 0) ||
@@ -506,8 +498,8 @@ plugin_reload (session *sess, const char *name, int by_filename)
 			if (!pl->filename.empty() && !pl->fake)
 			{
 				auto filename = pl->filename;
-				plugin_free (pl, TRUE, FALSE);
-				ret = plugin_load (sess, filename.c_str(), NULL);
+				plugin_free (pl, true, false);
+				auto ret = plugin_load (sess, filename.c_str(), NULL);
 				if (ret == NULL)
 					return 1;
 				else
@@ -516,7 +508,6 @@ plugin_reload (session *sess, const char *name, int by_filename)
 			else
 				return 2;
 		}
-		list = list->next;
 	}
 
 	return 0;
@@ -1001,11 +992,13 @@ hexchat_printf (hexchat_plugin *ph, const char *format, ...)
 void
 hexchat_command (hexchat_plugin *ph, const char *command)
 {
+	hexchat_plugin_internal * pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (!g_utf8_validate(command, -1, 0))
 	{
-		throw std::invalid_argument("command MUST be valid UTF-8");
+		PrintTextf(nullptr, boost::format(_("Plugin %s sent in a non UTF-8 string this has been ignored to prevent a crash\n")) % pi->name);
+		return;
 	}
-	hexchat_plugin_internal * pi = static_cast<hexchat_plugin_internal*>(ph);
+	
 	if (!is_session (pi->context))
 	{
 		DEBUG(PrintTextf(0, "%s\thexchat_command called without a valid context.\n", pi->name.c_str()));
@@ -1670,7 +1663,7 @@ void
 hexchat_plugingui_remove (hexchat_plugin *, void *handle)
 {
 #ifdef USE_PLUGIN
-	plugin_free (static_cast<hexchat_plugin_internal*>(handle), FALSE, FALSE);
+	plugin_free (static_cast<hexchat_plugin_internal*>(handle), false, false);
 #endif
 }
 

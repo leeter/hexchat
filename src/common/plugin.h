@@ -48,7 +48,7 @@ struct hexchat_plugin_internal : public hexchat_plugin
 //#endif
 
 const char *plugin_load (session *sess, const char *filename, char *arg);
-int plugin_reload (session *sess, const char *name, int by_filename);
+int plugin_reload (session *sess, const char *name, bool by_filename);
 void plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func, plugin_deinit_func deinit_func, char *arg, bool fake);
 int plugin_kill (char *name, int by_filename);
 void plugin_kill_all (void);
