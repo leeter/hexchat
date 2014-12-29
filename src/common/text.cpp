@@ -488,7 +488,7 @@ static boost::filesystem::path log_create_pathname (const char *servname, const 
 
 	/* create all the subdirectories */
 	boost::system::error_code ec;
-	bfs::create_directories(ret, ec);
+	bfs::create_directories(ret.parent_path(), ec);
 
 	return ret;
 }

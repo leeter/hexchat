@@ -22,19 +22,21 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
-#include <cstdint>
-#include <cstddef>
+
 #include <algorithm>
 #include <array>
-#include <string>
-#include <cstring>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
-#include <iostream>
+#include <cstring>
 #include <sstream>
-#include <vector>
+#include <string>
 #include <utility>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>  
+#include <vector>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/format.hpp>
 
 #include "hexchat.hpp"
 #include "session.hpp"
@@ -46,7 +48,6 @@
 #include "hexchatc.hpp"
 #include "filesystem.hpp"
 
-namespace bio = boost::iostreams;
 namespace {
 static bool chanopt_open = false;
 static bool chanopt_changed = false;
@@ -76,8 +77,7 @@ static const std::array<channel_options, 7> chanopt =
 
 #undef S_F
 
-static const char *
-chanopt_value (std::uint8_t val)
+static const char * chanopt_value (std::uint8_t val)
 {
 	switch (val)
 	{
@@ -92,15 +92,10 @@ chanopt_value (std::uint8_t val)
 }
 /* handle the /CHANOPT command */
 
-int
-chanopt_command (session *sess, char *tbuf, char *word[], char *[])
+int chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 {
-	int dots, j, p = 0;
-	std::uint8_t val;
 	int offset = 2;
-	char *find;
 	bool quiet = false;
-	int newval = -1;
 
 	if (!strcmp (word[2], "-quiet"))
 	{
@@ -108,8 +103,8 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 		offset++;
 	}
 
-	find = word[offset++];
-
+	const char* find = word[offset++];
+	int newval = -1;
 	if (word[offset][0])
 	{
 		if (!g_ascii_strcasecmp (word[offset], "ON"))
@@ -139,20 +134,19 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 
 			if (!quiet)	/* print value */
 			{
-				strcpy(tbuf, op.name);
-				p = strlen (tbuf);
+				std::ostringstream buf;
+				buf << op.name;
+				char t = 3;
+				buf.write(&t, 1);
+				buf << '2';
 
-				tbuf[p++] = 3;
-				tbuf[p++] = '2';
+				auto dots = 20 - std::strlen(op.name);
+				std::ostream_iterator<char> itr(buf);
+				for (size_t j = 0; j < dots; j++)
+					*itr++ = '.';
 
-				dots = 20 - strlen(op.name);
-
-				for (j = 0; j < dots; j++)
-					tbuf[p++] = '.';
-				tbuf[p++] = 0;
-
-				val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
-				PrintTextf (sess, "%s\0033:\017 %s", tbuf, chanopt_value (val));
+				auto val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
+				PrintTextf(sess, boost::format("%s\0033:\017 %s") % buf.str() % chanopt_value(val));
 			}
 		}
 	}
@@ -216,7 +210,6 @@ struct chanopt_in_memory
 	friend std::ostream& operator<< (std::ostream& o, const chanopt_in_memory& chanop);
 };
 
-
 /* network = <network name>
  * channel = <channel name>
  * alert_taskbar = <1/0>
@@ -263,7 +256,6 @@ operator>> (std::istream& i, chanopt_in_memory& chanop)
 	if (!i)
 	{
 		i.clear();
-		//i.unget();
 	}
 	return i;
 }
@@ -306,21 +298,9 @@ chanopt_find (const std::string & network, const std::string& channel)
 static void
 chanopt_load_all (void)
 {
-
-	chanopt_in_memory current;
-	bio::file_descriptor fd;
-	/* 1. load the old file into our vector */
-	try
-	{
-		fd = io::fs::open_stream("chanopt.conf", std::ios::in, 0, 0);
-	}
-	catch (const boost::exception&)
-	{
-		return; // nothing to load
-	}
-	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
-	std::istream stream(&fbuf);
-	while (stream >> current)
+	namespace bfs = boost::filesystem;
+	bfs::ifstream stream(io::fs::make_config_path("chanopt.conf"), std::ios::in | std::ios::binary);
+	for (chanopt_in_memory current; stream >> current;)
 	{
 		chanopts.push_back(current);
 		chanopt_changed = true;
@@ -331,13 +311,10 @@ chanopt_load_all (void)
 void
 chanopt_load (session *sess)
 {
-	std::uint8_t val;
-	const char *network;
-
 	if (sess->name.empty())
 		return;
 
-	network = sess->server->get_network(FALSE);
+	const char* network = sess->server->get_network(false);
 	if (!network)
 		return;
 
@@ -354,7 +331,7 @@ chanopt_load (session *sess)
 	/* fill in all the sess->xxxxx fields */
 	for (const auto & op : chanopt)
 	{
-		val = G_STRUCT_MEMBER(std::uint8_t, &(*itr), op.offset);
+		auto val = G_STRUCT_MEMBER(std::uint8_t, &(*itr), op.offset);
 		*(std::uint8_t *)G_STRUCT_MEMBER_P(sess, op.offset) = val;
 	}
 }
@@ -362,27 +339,21 @@ chanopt_load (session *sess)
 void
 chanopt_save (session *sess)
 {
-	std::uint8_t vals;
-	std::uint8_t valm;
-	chanopt_in_memory co;
-	const char *network;
-
 	if (sess->name.empty())
 		return;
 
-	network = sess->server->get_network(FALSE);
+	const char* network = sess->server->get_network(FALSE);
 	if (!network)
 		return;
 
 	/* 2. reconcile sess with what we loaded from disk */
-
 	auto itr = chanopt_find (network, sess->name);
-	co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->name);
+	auto co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->name);
 
 	for (const auto& op : chanopt)
 	{
-		vals = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
-		valm = G_STRUCT_MEMBER(std::uint8_t, &co, op.offset);
+		auto vals = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
+		auto valm = G_STRUCT_MEMBER(std::uint8_t, &co, op.offset);
 
 		if (vals != valm)
 		{
@@ -404,22 +375,15 @@ chanopt_save (session *sess)
 void
 chanopt_save_all (void)
 {
+	namespace bfs = boost::filesystem;
 	if (chanopts.empty() || !chanopt_changed)
 	{
 		return;
 	}
 
-	bio::file_descriptor fd;
-	try
-	{
-		fd = io::fs::open_stream("chanopt.conf", std::ios::trunc | std::ios::out, 0600, io::fs::XOF_DOMODE);
-	}
-	catch (const boost::exception&)
-	{
-		return;
-	} 
-	bio::stream_buffer<bio::file_descriptor> fbuf(fd);
-	std::ostream stream(&fbuf);
+	auto file_path = io::fs::make_config_path("chanopt.conf");
+	io::fs::create_file_with_mode(file_path, 0600);
+	bfs::ofstream stream(file_path, std::ios::trunc | std::ios::out | std::ios::binary);
 	for (const auto& co : chanopts)
 	{
 		stream << co;

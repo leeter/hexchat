@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include "sessfwd.hpp"
+#include "serverfwd.hpp"
 #include "history.hpp"
 
 struct session

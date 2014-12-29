@@ -24,12 +24,12 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
 
 namespace io
 {
 	namespace fs
 	{
+		boost::filesystem::path make_config_path(const boost::filesystem::path &);
 
 		boost::filesystem::path make_path(const std::string & path);
 		boost::filesystem::path make_path(const std::vector<std::string>& segments);
@@ -43,7 +43,9 @@ namespace io
 			open_stream(const std::string& file, std::ios::openmode flags, int mode, xof_flags xof_flags);
 		boost::iostreams::file_descriptor
 			open_stream(const boost::filesystem::path &file_path, std::ios::openmode flags);
-
+		
+		bool create_file_with_mode(const boost::filesystem::path&, int mode);
+		
 		bool exists(const std::string & path);
 	}
 }

@@ -301,7 +301,7 @@ get_xdir (void)
 				auto path = fs::canonical(exe_path);
 				path = path.remove_filename();
 				path /= L"config";
-				xdir = g_strdup(charset::narrow(path.wstring()).c_str());
+				xdir = g_strdup(path.string().c_str());
 			}
 			else
 				xdir = g_strdup (".\\config");
@@ -313,7 +313,7 @@ get_xdir (void)
 			fs::path roaming_path(roaming_path_wide);
 			roaming_path /= L"HexChat";
 
-			xdir = g_strdup(charset::narrow(roaming_path.wstring()).c_str());
+			xdir = g_strdup(roaming_path.string().c_str());
 		}
 #endif
 	}

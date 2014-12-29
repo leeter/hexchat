@@ -28,6 +28,7 @@
 #include <istream>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <fcntl.h>
@@ -1000,16 +1001,20 @@ hexchat_printf (hexchat_plugin *ph, const char *format, ...)
 void
 hexchat_command (hexchat_plugin *ph, const char *command)
 {
+	if (!g_utf8_validate(command, -1, 0))
+	{
+		throw std::invalid_argument("command MUST be valid UTF-8");
+	}
 	hexchat_plugin_internal * pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (!is_session (pi->context))
 	{
 		DEBUG(PrintTextf(0, "%s\thexchat_command called without a valid context.\n", pi->name.c_str()));
 		return;
 	}
-	size_t len = 0;
 	/* scripts/plugins continue to send non-UTF8... *sigh* */
-	glib_string conv(text_validate ((char **)&command, &len));
-	handle_command (pi->context, (char *)conv.get(), FALSE);
+	
+	glib_string mutable_command(g_strdup(command));
+	handle_command(pi->context, mutable_command.get(), FALSE);
 }
 
 void

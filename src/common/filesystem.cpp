@@ -44,6 +44,12 @@ namespace io
 {
 	namespace fs
 	{
+		bfs::path make_config_path(const bfs::path &path)
+		{
+			static bfs::path config_dir(config::config_dir());
+			return config_dir / path;
+		}
+
 		bfs::path make_path(const std::string & path)
 		{
 #ifdef WIN32
@@ -78,13 +84,7 @@ namespace io
 				file_path = make_path(config::config_dir()) / file_path;
 			if (xof_flags & XOF_DOMODE)
 			{
-				int tfd;
-#ifdef WIN32
-				tfd = _wopen(file_path.c_str(), _O_CREAT, mode);
-#else
-				tfd = open(file_path.c_str(), O_CREAT, mode);
-#endif
-				close(tfd);
+				create_file_with_mode(file_path, mode);
 			}
 
 			return open_stream(file_path, flags);
@@ -98,6 +98,19 @@ namespace io
 #else
 			return bio::file_descriptor(file_path.string(), flags | std::ios::binary);
 #endif
+		}
+
+		bool create_file_with_mode(const bfs::path& path, int mode)
+		{
+			int tfd;
+#ifdef WIN32
+			tfd = _wopen(path.c_str(), _O_CREAT, mode);
+#else
+			tfd = open(path.c_str(), O_CREAT, mode);
+#endif
+			bool succeeded = tfd != -1;
+			close(tfd);
+			return succeeded;
 		}
 
 		bool exists(const std::string & path)
