@@ -37,10 +37,12 @@
 
 #include "sessfwd.hpp"
 
+#ifndef NOEXCEPT
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define NOEXCEPT throw()
 #else
 #define NOEXCEPT noexcept
+#endif
 #endif
 
 #ifdef USE_OPENSSL
@@ -400,7 +402,7 @@ struct popup
 
 struct glib_deleter
 {
-	void operator()(gpointer ptr)
+	void operator()(gpointer ptr) NOEXCEPT
 	{
 		g_free(ptr);
 	}

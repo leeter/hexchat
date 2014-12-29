@@ -23,12 +23,16 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <iterator>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <cstring>
 #include <fcntl.h>
-#include <cctype>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -60,6 +64,7 @@
 #include "maingui.hpp"
 #include "textgui.hpp"
 #include "fkeys.hpp"
+#include "gtk_helpers.hpp"
 
 static void replace_handle (GtkWidget * wid);
 void key_action_tab_clean (void);
@@ -242,17 +247,15 @@ key_get_action_from_string (const std::string & text)
 }
 
 static void
-key_free (gpointer data)
+key_free (gpointer data) NOEXCEPT
 {
-	struct key_binding *kb = (struct key_binding*)data;
-
-	g_return_if_fail (kb != NULL);
+	g_return_if_fail(data != NULL);
+	std::unique_ptr<key_binding> kb(static_cast<key_binding*>(data));
 
 	if (kb->data1)
 		g_free (kb->data1);
 	if (kb->data2)
 		g_free (kb->data2);
-	delete kb;
 }
 
 /* Ok, here are the NOTES
@@ -309,13 +312,9 @@ key_modifier_get_valid (GdkModifierType mod)
 gboolean
 key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 {
-	struct key_binding *kb;
-	int n;
-	GSList *list;
-
 	/* where did this event come from? */
-	list = sess_list;
-	while (list)
+	auto list = sess_list;
+	for(; list; list = g_slist_next(list))
 	{
 		sess = static_cast<session*>(list->data);
 		if (sess->gui->input_box == wid)
@@ -324,7 +323,6 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 				sess = current_tab;
 			break;
 		}
-		list = list->next;
 	}
 	if (!list)
 		return FALSE;
@@ -337,10 +335,9 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 	if (!is_session (sess))
 		return 1;
 
-	list = keybind_list;
-	while (list)
+	for(auto list = keybind_list; list; list = g_slist_next(list))
 	{
-		kb = (struct key_binding*)list->data;
+		auto kb = static_cast<key_binding*>(list->data);
 
 		if (kb->keyval == evt->keyval && kb->mod == key_modifier_get_valid (static_cast<GdkModifierType>(evt->state)))
 		{
@@ -348,7 +345,7 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 				return 0;
 
 			/* Run the function */
-			n = key_actions[kb->action].handler (wid, evt, kb->data1,
+			int n = key_actions[kb->action].handler (wid, evt, kb->data1,
 															 kb->data2, sess);
 			switch (n)
 			{
@@ -360,7 +357,6 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 				return 1;
 			}
 		}
-		list = g_slist_next (list);
 	}
 
 	switch (evt->keyval)
@@ -388,8 +384,8 @@ enum
 
 static GtkWidget *key_dialog = NULL;
 
-static inline GtkTreeModel *
-get_store (void)
+static GtkTreeModel *
+get_store (void) NOEXCEPT
 {
 	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (key_dialog), "view")));
 }
@@ -406,88 +402,65 @@ key_dialog_print_text (GtkXText *xtext, char *text)
 
 static void
 key_dialog_set_key (GtkCellRendererAccel *accel, gchar *pathstr, guint accel_key, 
-					GdkModifierType accel_mods, guint hardware_keycode, gpointer userdata)
+					GdkModifierType accel_mods, guint hardware_keycode, gpointer userdata) NOEXCEPT
 {
 	GtkTreeModel *model = get_store ();
-	GtkTreePath *path = gtk_tree_path_new_from_string (pathstr);
+	GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
 	GtkTreeIter iter;
-	gchar *label_name, *accel_name;
 
 	/* Shift tab requires an exception, hopefully that list ends here.. */
 	if (accel_key == GDK_KEY_Tab && accel_mods & GDK_SHIFT_MASK)
 		accel_key = GDK_KEY_ISO_Left_Tab;
 
-	label_name = gtk_accelerator_get_label (accel_key, key_modifier_get_valid (accel_mods));
-	accel_name = gtk_accelerator_name (accel_key, key_modifier_get_valid (accel_mods));
+	glib_string label_name(gtk_accelerator_get_label (accel_key, key_modifier_get_valid (accel_mods)));
+	glib_string accel_name(gtk_accelerator_name (accel_key, key_modifier_get_valid (accel_mods)));
 
-	gtk_tree_model_get_iter (model, &iter, path);
-	gtk_list_store_set (GTK_LIST_STORE (model), &iter, KEY_COLUMN, label_name,
-						ACCEL_COLUMN, accel_name, -1);
-
-	gtk_tree_path_free (path);
-	g_free (label_name);
-	g_free (accel_name);
+	gtk_tree_model_get_iter (model, &iter, path.get());
+	gtk_list_store_set (GTK_LIST_STORE (model), &iter, KEY_COLUMN, label_name.get(),
+						ACCEL_COLUMN, accel_name.get(), -1);
 }
 
 static void
 key_dialog_combo_changed (GtkCellRendererCombo *combo, gchar *pathstr,
 						GtkTreeIter *new_iter, gpointer data)
 {
-	GtkTreeModel *model;
-	GtkXText *xtext;
+	auto xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
+	auto model = GTK_TREE_MODEL (data);
 	gchar *actiontext = NULL;
-	gint action;
-
-	xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
-	model = GTK_TREE_MODEL (data);
-
 	gtk_tree_model_get (model, new_iter, 0, &actiontext, -1);
-
+	glib_string actiontext_ptr(actiontext);
 	if (actiontext)
 	{
 #ifdef WIN32
 		/* We need to manually update the store */
-		GtkTreePath *path;
-		GtkTreeIter iter;
-
-		path = gtk_tree_path_new_from_string (pathstr);
+		GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
 		model = get_store ();
 
-		gtk_tree_model_get_iter (model, &iter, path);
+		GtkTreeIter iter;
+		gtk_tree_model_get_iter (model, &iter, path.get());
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter, ACTION_COLUMN, actiontext, -1);
-
-		gtk_tree_path_free (path);
 #endif
-
-		action = key_get_action_from_string (actiontext);
+		int action = key_get_action_from_string (actiontext);
 		key_dialog_print_text (xtext, key_actions[action].help);
-
-		g_free (actiontext);
 	}
 }
 
 static void
-key_dialog_entry_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpointer data)
+key_dialog_entry_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpointer data) NOEXCEPT
 {
 	GtkTreeModel *model = get_store ();
-	GtkTreePath *path = gtk_tree_path_new_from_string (pathstr);
+	GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
 	GtkTreeIter iter;
 	gint column = GPOINTER_TO_INT (data);
 
-	gtk_tree_model_get_iter (model, &iter, path);
+	gtk_tree_model_get_iter (model, &iter, path.get());
 	gtk_list_store_set (GTK_LIST_STORE (model), &iter, column, new_text, -1);
-
-	gtk_tree_path_free (path);
 }
 
 static gboolean
-key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
+key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
-	GtkTreeModel *store;
-	GtkTreeIter iter1, iter2;
-	GtkTreeSelection *sel;
-	GtkTreePath *path;
 	gboolean handled = FALSE;
 	int delta;
 
@@ -507,15 +480,16 @@ key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 
 	if (handled)
 	{
-		sel = gtk_tree_view_get_selection (view);
+		GtkTreeIter iter1, iter2;
+		auto sel = gtk_tree_view_get_selection (view);
+		GtkTreeModel *store;
 		gtk_tree_selection_get_selected (sel, &store, &iter1);
-		path = gtk_tree_model_get_path (store, &iter1);
+		GtkTreePathPtr path(gtk_tree_model_get_path (store, &iter1));
 		if (delta == 1)
-			gtk_tree_path_next (path);
+			gtk_tree_path_next (path.get());
 		else
-			gtk_tree_path_prev (path);
-		gtk_tree_model_get_iter (store, &iter2, path);
-		gtk_tree_path_free (path);
+			gtk_tree_path_prev (path.get());
+		gtk_tree_model_get_iter (store, &iter2, path.get());
 		gtk_list_store_swap (GTK_LIST_STORE (store), &iter1, &iter2);
 	}
 
@@ -527,28 +501,25 @@ key_dialog_selection_changed (GtkTreeSelection *sel, gpointer userdata)
 {
 	GtkTreeModel *model;
 	GtkTreeIter iter;
-	GtkXText *xtext;
-	char *actiontext;
-	int action;
-
+	
 	if (!gtk_tree_selection_get_selected (sel, &model, &iter) || model == NULL)
 		return;
 
-	xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
+	auto xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
+	char *actiontext;
 	gtk_tree_model_get (model, &iter, ACTION_COLUMN, &actiontext, -1);
-
+	glib_string actiontext_ptr(actiontext);
 	if (actiontext)
 	{
-		action = key_get_action_from_string (actiontext);
+		int action = key_get_action_from_string (actiontext);
 		key_dialog_print_text (xtext, key_actions[action].help);
-		g_free (actiontext);
 	}
 	else
 		key_dialog_print_text (xtext, _("Select a row to get help information on its Action."));
 }
 
 static void
-key_dialog_close (GtkWidget *wid, gpointer userdata)
+key_dialog_close (GtkWidget *wid, gpointer userdata) NOEXCEPT
 {
 	gtk_widget_destroy (key_dialog);
 	key_dialog = NULL;
@@ -557,10 +528,9 @@ key_dialog_close (GtkWidget *wid, gpointer userdata)
 static void
 key_dialog_save (GtkWidget *wid, gpointer userdata)
 {
-	GtkTreeModel *store = get_store ();
-	GtkTreeIter iter;
-	struct key_binding *kb;
-	char *data1, *data2, *accel, *actiontext;
+	
+	GtkTreeModel *store = get_store();
+	char *data1, *data2;
 	guint keyval;
 	GdkModifierType mod;
 
@@ -570,17 +540,21 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 		keybind_list = NULL;
 	}
 
+	GtkTreeIter iter;
 	if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
 	{
 		do
 		{
-			kb = new key_binding();
-
+			auto kb = new key_binding();
+			gchar* accel;
+			gchar* actiontext;
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, ACCEL_COLUMN, &accel,
 															ACTION_COLUMN, &actiontext,
 															D1_COLUMN, &data1,
 															D2_COLUMN, &data2,
 															-1);
+			glib_string accel_ptr(accel);
+			glib_string actiontext_ptr(actiontext);
 			kb->data1 = data1;
 			kb->data2 = data2;
 
@@ -590,14 +564,11 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 
 				kb->keyval = keyval;
 				kb->mod = key_modifier_get_valid (mod);
-
-				g_free (accel);
 			}
 
 			if (actiontext)
 			{
 				kb->action = key_get_action_from_string (actiontext);
-				g_free (actiontext);
 			}
 
 			if (!accel || !actiontext)
@@ -613,41 +584,36 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 }
 
 static void
-key_dialog_add (GtkWidget *wid, gpointer userdata)
+key_dialog_add (GtkWidget *wid, gpointer userdata) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
-	GtkTreeViewColumn *col;
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
-	GtkTreePath *path;
 
 	gtk_list_store_append (store, &iter);
 
 	/* make sure the new row is visible and selected */
-	path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
-	col = gtk_tree_view_get_column (view, ACTION_COLUMN);
-	gtk_tree_view_scroll_to_cell (view, path, NULL, FALSE, 0.0, 0.0);
-	gtk_tree_view_set_cursor (view, path, col, TRUE);
-	gtk_tree_path_free (path);
+	GtkTreePathPtr path (gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
+	auto col = gtk_tree_view_get_column (view, ACTION_COLUMN);
+	gtk_tree_view_scroll_to_cell (view, path.get(), NULL, FALSE, 0.0f, 0.0f);
+	gtk_tree_view_set_cursor (view, path.get(), col, TRUE);
 }
 
 static void
-key_dialog_delete (GtkWidget *wid, gpointer userdata)
+key_dialog_delete (GtkWidget *wid, gpointer userdata) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
 	GtkTreeIter iter;
-	GtkTreePath *path;
 
 	if (gtkutil_treeview_get_selected (view, &iter, -1))
 	{
 		/* delete this row, select next one */
 		if (gtk_list_store_remove (store, &iter))
 		{
-			path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
-			gtk_tree_view_scroll_to_cell (view, path, NULL, TRUE, 1.0, 0.0);
-			gtk_tree_view_set_cursor (view, path, NULL, FALSE);
-			gtk_tree_path_free (path);
+			GtkTreePathPtr path(gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
+			gtk_tree_view_scroll_to_cell (view, path.get(), NULL, TRUE, 1.0, 0.0);
+			gtk_tree_view_set_cursor (view, path.get(), NULL, FALSE);
 		}
 	}
 }
@@ -655,22 +621,15 @@ key_dialog_delete (GtkWidget *wid, gpointer userdata)
 static GtkWidget *
 key_dialog_treeview_new (GtkWidget *box)
 {
-	GtkWidget *scroll;
-	GtkListStore *store, *combostore;
-	GtkTreeViewColumn *col;
-	GtkWidget *view;
-	GtkCellRenderer *render;
-	int i;
-
-	scroll = gtk_scrolled_window_new (NULL, NULL);
+	auto scroll = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_IN);
 
-	store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+	auto store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
 								G_TYPE_STRING, G_TYPE_STRING);
 	g_return_val_if_fail (store != NULL, NULL);
 
-	view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
+	auto view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
 	gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), TRUE);
 	gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
 
@@ -681,7 +640,7 @@ key_dialog_treeview_new (GtkWidget *box)
 
 	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
 
-	render = gtk_cell_renderer_accel_new ();
+	auto render = gtk_cell_renderer_accel_new ();
 	g_object_set (render, "editable", TRUE,
 #ifndef WIN32
 					"accel-mode", GTK_CELL_RENDERER_ACCEL_MODE_OTHER,
@@ -701,13 +660,12 @@ key_dialog_treeview_new (GtkWidget *box)
 							"text", ACCEL_COLUMN,
 							NULL);
 
-	combostore = gtk_list_store_new (1, G_TYPE_STRING);
-	for (i = 0; i <= KEY_MAX_ACTIONS; i++)
+	auto combostore = gtk_list_store_new (1, G_TYPE_STRING);
+	for (int i = 0; i <= KEY_MAX_ACTIONS; i++)
 	{
-		GtkTreeIter iter;
-
 		if (key_actions[i].name[0])
 		{
+			GtkTreeIter iter;
 			gtk_list_store_append (combostore, &iter);
 			gtk_list_store_set (combostore, &iter, 0, key_actions[i].name, -1);
 		}
@@ -748,7 +706,7 @@ key_dialog_treeview_new (GtkWidget *box)
 							"text", D2_COLUMN,
 							NULL);
 
-	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), KEY_COLUMN);
+	auto col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), KEY_COLUMN);
 	gtk_tree_view_column_set_fixed_width (col, 200);
 	gtk_tree_view_column_set_resizable (col, TRUE);
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), ACCEL_COLUMN);
@@ -771,60 +729,48 @@ key_dialog_treeview_new (GtkWidget *box)
 }
 
 static void
-key_dialog_load (GtkListStore *store)
+key_dialog_load (GtkListStore *store) NOEXCEPT
 {
-	struct key_binding *kb = NULL;
-	char *label_text, *accel_text;
 	GtkTreeIter iter;
-	GSList *list = keybind_list;
-
-	while (list)
+	for(auto list = keybind_list; list; list = g_slist_next(list))
 	{
-		kb = (struct key_binding*)list->data;
+		auto kb = static_cast<key_binding*>(list->data);
 
-		label_text = gtk_accelerator_get_label (kb->keyval, kb->mod);
-		accel_text = gtk_accelerator_name (kb->keyval, kb->mod);
+		glib_string label_text( gtk_accelerator_get_label (kb->keyval, kb->mod));
+		glib_string accel_text(gtk_accelerator_name (kb->keyval, kb->mod));
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,
-							KEY_COLUMN, label_text,
-							ACCEL_COLUMN, accel_text,
+							KEY_COLUMN, label_text.get(),
+							ACCEL_COLUMN, accel_text.get(),
 							ACTION_COLUMN, key_actions[kb->action].name,
 							D1_COLUMN, kb->data1,
 							D2_COLUMN, kb->data2, -1);
-
-		g_free (accel_text);
-		g_free (label_text);
-
-		list = g_slist_next (list);
 	}
 }
 
 void
 key_dialog_show ()
 {
-	GtkWidget *vbox, *box;
-	GtkWidget *view, *xtext;
-	GtkListStore *store;
-
 	if (key_dialog)
 	{
 		mg_bring_tofront (key_dialog);
 		return;
 	}
 
+	GtkWidget *vbox = nullptr;
 	key_dialog = mg_create_generic_tab ("editkeys", _(DISPLAY_NAME": Keyboard Shortcuts"),
 		TRUE, FALSE, G_CALLBACK(key_dialog_close), NULL, 600, 360, &vbox, 0);
 
-	view = key_dialog_treeview_new (vbox);
-	xtext = gtk_xtext_new (colors, false);
+	auto view = key_dialog_treeview_new (vbox);
+	auto xtext = gtk_xtext_new (colors, false);
 	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
 	gtk_xtext_set_font (GTK_XTEXT (xtext), prefs.hex_text_font);
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);
 	g_object_set_data (G_OBJECT (key_dialog), "xtext", xtext);
 
-	box = gtk_hbutton_box_new ();
+	auto box = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
@@ -838,7 +784,7 @@ key_dialog_show ()
 	gtkutil_button(box, GTK_STOCK_SAVE, NULL, G_CALLBACK(key_dialog_save),
 					NULL, _("Save"));
 
-	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
+	auto store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
 	key_dialog_load (store);
 
 	gtk_widget_show_all (key_dialog);
@@ -847,27 +793,23 @@ key_dialog_show ()
 static int
 key_save_kbs (void)
 {
-	int fd;
-	char buf[512];
-	char *accel_text;
-	GSList *list = keybind_list;
-	struct key_binding *kb;
-
-	fd = hexchat_open_file ("keybindings.conf", O_CREAT | O_TRUNC | O_WRONLY,
+	int fd = hexchat_open_file ("keybindings.conf", O_CREAT | O_TRUNC | O_WRONLY,
 									 0x180, XOF_DOMODE);
 	if (fd < 0)
 		return 1;
+	
+	char buf[512];
+	GSList *list = keybind_list;
 	write (fd, buf, snprintf (buf, 510, "# HexChat key bindings config file\n\n"));
 
 	while (list)
 	{
-		kb = static_cast<key_binding *>(list->data);
+		auto kb = static_cast<key_binding *>(list->data);
 
-		accel_text = gtk_accelerator_name (kb->keyval, kb->mod);
+		glib_string accel_text(gtk_accelerator_name (kb->keyval, kb->mod));
 
-		snprintf (buf, 510, "ACCEL=%s\n%s\n", accel_text, key_actions[kb->action].name);
+		snprintf (buf, 510, "ACCEL=%s\n%s\n", accel_text.get(), key_actions[kb->action].name);
 		write (fd, buf, strlen (buf));
-		g_free (accel_text);
 
 		if (kb->data1 && kb->data1[0])
 			write (fd, buf, snprintf (buf, 510, "D1:%s\n", kb->data1));
@@ -935,35 +877,32 @@ static bool key_load_kbs_helper_mod (const std::string & inbuf, GdkModifierType 
 static int
 key_load_kbs (void)
 {
-	namespace bio = boost::iostreams;
-	guint keyval;
+	namespace bfs = boost::filesystem;
 	GdkModifierType mod = GdkModifierType();
 	std::stringstream istream;
-	
-	try
+	bfs::ifstream stream(io::fs::make_config_path("keybindings.conf"), std::ios::in | std::ios::binary);
+	if (!stream)
 	{
-		auto fd = io::fs::open_stream("keybindings.conf", std::ios::in, 0, 0);
-		bio::stream_buffer<bio::file_descriptor> buff(fd);
-		std::istream stream(&buff);
-		stream.seekg(std::ios::beg);
+		istream << default_kb_cfg;
+	}
+	else
+	{
 		std::copy(
 			std::istream_iterator<char>(stream),
 			std::istream_iterator<char>(),
 			std::ostream_iterator<char>(istream));
 	}
-	catch (const boost::exception&)
-	{
-		istream << default_kb_cfg;
-	}
+	
 	istream.seekg(std::ios::beg);
 	istream.seekp(std::ios::beg);
-	
 
 	if (keybind_list)
 	{
 		g_slist_free_full (keybind_list, key_free);
 		keybind_list = nullptr;
 	}
+
+	guint keyval;
 	kbstate state = kbstate();
 	std::unique_ptr<key_binding> kb;
 	for(std::string buf; std::getline(istream, buf, '\n');)
@@ -1096,19 +1035,17 @@ key_load_kbs (void)
 
 /* "Run command" */
 static int
-key_action_handle_command (GtkWidget * wid, GdkEventKey * evt, char *d1,
-									char *d2, struct session *sess)
+key_action_handle_command (GtkWidget *, GdkEventKey *, char *d1,
+									char *, struct session *sess)
 {
-	int ii, oi, len;
-	char out[2048], d = 0;
-
 	if (!d1)
 		return 0;
 
-	len = strlen (d1);
-
+	auto len = std::strlen (d1);
+	char out[2048], d = 0;
+	auto oi = std::begin(out);
 	/* Replace each "\n" substring with '\n' */
-	for (ii = oi = 0; ii < len; ii++)
+	for (size_t ii = 0; ii < len; ii++)
 	{
 		d = d1[ii];
 		if (d == '\\')
@@ -1116,19 +1053,19 @@ key_action_handle_command (GtkWidget * wid, GdkEventKey * evt, char *d1,
 			ii++;
 			d = d1[ii];
 			if (d == 'n')
-				out[oi++] = '\n';
+				*oi++ = '\n';
 			else if (d == '\\')
-				out[oi++] = '\\';
+				*oi++ = '\\';
 			else
 			{
-				out[oi++] = '\\';
-				out[oi++] = d;
+				*oi++ = '\\';
+				*oi++ = d;
 			}
 			continue;
 		}
-		out[oi++] = d;
+		*oi++ = d;
 	}
-	out[oi] = 0;
+	*oi = 0;
 
 	handle_multiline (sess, out, 0, 0);
 	return 0;
@@ -1140,7 +1077,7 @@ key_action_handle_command (GtkWidget * wid, GdkEventKey * evt, char *d1,
  * XXX: Consider moving this in a different file?
  */
 static int
-session_check_is_tab(session *sess)
+session_check_is_tab(session *sess) NOEXCEPT
 {
 	if (!sess || !sess->gui)
 		return FALSE;
@@ -1152,13 +1089,10 @@ static int
 key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 								char *d2, struct session *sess)
 {
-	session *newsess;
-	int len, i, num;
-
 	if (!d1)
 		return 1;
 
-	len = strlen (d1);
+	auto len = std::strlen (d1);
 	if (!len)
 		return 1;
 
@@ -1169,7 +1103,7 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 			return 1;
 
 		/* Obtain a session with recent activity */
-		newsess = lastact_getfirst(session_check_is_tab);
+		auto newsess = lastact_getfirst(session_check_is_tab);
 
 		if (newsess)
 		{
@@ -1186,7 +1120,7 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 			return 1;
 	}
 
-	for (i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		if (d1[i] < '0' || d1[i] > '9')
 		{
@@ -1197,7 +1131,7 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 		}
 	}
 
-	num = atoi (d1);
+	int num = atoi (d1);
 	if (!d2)
 		num--;
 	if (!d2 || d2[0] == 0)
@@ -1211,12 +1145,10 @@ int
 key_action_insert (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
 						 struct session *sess)
 {
-	int tmp_pos;
-
 	if (!d1)
 		return 1;
 
-	tmp_pos = SPELL_ENTRY_GET_POS (wid);
+	auto tmp_pos = SPELL_ENTRY_GET_POS (wid);
 	SPELL_ENTRY_INSERT (wid, d1, strlen (d1), &tmp_pos);
 	SPELL_ENTRY_SET_POS (wid, tmp_pos);
 	return 2;
@@ -1227,8 +1159,6 @@ static int
 key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
 								char *d2, struct session *sess)
 {
-	int value, end;
-	GtkAdjustment *adj;
 	enum scroll_type { PAGE_TOP, PAGE_BOTTOM, PAGE_UP, PAGE_DOWN, LINE_UP, LINE_DOWN };
 	int type = PAGE_DOWN;
 
@@ -1251,13 +1181,13 @@ key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
 	if (!sess)
 		return 0;
 
-	adj = gtk_range_get_adjustment (GTK_RANGE (sess->gui->vscrollbar));
-	end = gtk_adjustment_get_upper (adj) - gtk_adjustment_get_lower (adj) - gtk_adjustment_get_page_size (adj);
-
+	auto adj = gtk_range_get_adjustment (GTK_RANGE (sess->gui->vscrollbar));
+	auto end = gtk_adjustment_get_upper (adj) - gtk_adjustment_get_lower (adj) - gtk_adjustment_get_page_size (adj);
+	gdouble value = 0.0;
 	switch (type)
 	{
 	case PAGE_TOP:
-		value = 0;
+		value = 0.0;
 		break;
 
 	case PAGE_BOTTOM:
@@ -1265,11 +1195,11 @@ key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
 		break;
 
 	case PAGE_UP:
-		value = gtk_adjustment_get_value (adj) - (gtk_adjustment_get_page_size (adj) - 1);
+		value = gtk_adjustment_get_value (adj) - (gtk_adjustment_get_page_size (adj) - 1.0);
 		break;
 
 	case PAGE_DOWN:
-		value = gtk_adjustment_get_value (adj) + (gtk_adjustment_get_page_size (adj) - 1);
+		value = gtk_adjustment_get_value (adj) + (gtk_adjustment_get_page_size (adj) - 1.0);
 		break;
 
 	case LINE_UP:
@@ -1279,10 +1209,12 @@ key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
 	case LINE_DOWN:
 		value = gtk_adjustment_get_value (adj) + 1.0;
 		break;
+	default:
+		break;
 	}
 
-	if (value < 0)
-		value = 0;
+	if (value < 0.0)
+		value = 0.0;
 	if (value > end)
 		value = end;
 
@@ -1339,7 +1271,7 @@ static struct gcomp_data old_gcomp;
 
 /* work on the data, ie return only channels */
 static int
-double_chan_cb (session *lsess, GList **list)
+double_chan_cb (session *lsess, GList **list) NOEXCEPT
 {
 	if (lsess->type == session::SESS_CHANNEL)
 		*list = g_list_prepend(*list, lsess->channel);
@@ -1348,7 +1280,7 @@ double_chan_cb (session *lsess, GList **list)
 
 /* convert a slist -> list. */
 static GList *
-chanlist_double_list (GSList *inlist)
+chanlist_double_list (GSList *inlist) NOEXCEPT
 {
 	GList *list = NULL;
 	g_slist_foreach(inlist, (GFunc)double_chan_cb, &list);
@@ -1360,7 +1292,7 @@ static int
 double_cmd_cb (struct popup *pop, GList **list)
 {
 	// TODO: THIS is not particularly safe... but is safe in this instance because it's not modified
-	// we should still fix it to use a muteable pointer or better yet... another data structure
+	// we should still fix it to use a mutable pointer or better yet... another data structure
 	*list = g_list_prepend(*list, (gpointer) pop->name.c_str());
 	return TRUE;
 }
@@ -1395,7 +1327,7 @@ key_action_tab_clean(void)
 
 /* For use in sorting the user list for completion */
 static int
-talked_recent_cmp (struct User *a, struct User *b)
+talked_recent_cmp (struct User *a, struct User *b) NOEXCEPT
 {
 	if (a->lasttalk < b->lasttalk)
 		return -1;
@@ -1409,26 +1341,21 @@ talked_recent_cmp (struct User *a, struct User *b)
 /* Used in the followig completers */
 static const size_t COMP_BUF = 2048;
 
-static glong len_to_offset(const char str[], glong len)
+static glong len_to_offset(const char str[], glong len) NOEXCEPT
 {
 	return g_utf8_pointer_to_offset(str, str + len);
 }
 
-static glong offset_to_len(const char str[], glong offset)
+static glong offset_to_len(const char str[], glong offset) NOEXCEPT
 {
 	return g_utf8_offset_to_pointer(str, offset) - str;
 }
 
 namespace{
-	struct g_completion_deleter
-	{
-		void operator()(GCompletion * comp)
-		{
-			g_completion_free(comp);
-		}
-	};
-	typedef std::unique_ptr<GCompletion, g_completion_deleter> GCompletionPtr;
+	CUSTOM_PTR(GCompletion, g_completion_free)
 }
+
+
 
 static int
 key_action_tab_comp(GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,

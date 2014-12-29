@@ -20,17 +20,26 @@
 #define HEXCHAT_GTK_HELPERS_HPP
 #include <memory>
 #include <gtk/gtk.h>
-inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b)
+
+#ifndef NOEXCEPT
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define NOEXCEPT throw()
+#else
+#define NOEXCEPT noexcept
+#endif
+#endif
+
+inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
 {
 	return static_cast<GtkAttachOptions>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b)
+inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
 {
 	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
+inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
 {
 	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
 }
@@ -38,7 +47,7 @@ inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b)
 #define CUSTOM_PTR_DELETER(type, del) \
 	struct type##deleter \
 	{\
-		void operator()(type * ptr)\
+		void operator()(type * ptr) NOEXCEPT\
 		{\
 			del(ptr); \
 		}\
