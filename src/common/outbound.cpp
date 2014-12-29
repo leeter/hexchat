@@ -32,8 +32,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <deque>
-#include <istream>
+#include <iterator>
 #include <limits>
 #include <locale>
 #include <sstream>
@@ -42,9 +41,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/iostreams/stream.hpp>
 #include <boost/optional.hpp>
 
 #define WANTSOCKET
@@ -65,7 +62,6 @@
 #include "ignore.hpp"
 #include "util.hpp"
 #include "fe.hpp"
-#include "filesystem.hpp"
 #include "cfgfiles.hpp"			  /* hexchat_fopen_file() */
 #include "network.hpp"				/* net_ip() */
 #include "modes.hpp"
@@ -91,7 +87,6 @@ namespace notify{
 
 namespace dcc = hexchat::dcc;
 namespace fe_notify = hexchat::fe::notify;
-namespace bio = boost::iostreams;
 static const size_t TBUFSIZE = 4096;
 
 static void help (session *sess, char *tbuf, const char *helpcmd, bool quiet);
@@ -111,53 +106,14 @@ notc_msg (struct session *sess)
 	PrintText (sess, _("Not connected. Try /server <host> [<port>]\n"));
 }
 
-static std::string
-random_line (const std::string & file_name)
-{
-	if (!file_name.empty() || !boost::filesystem::native(file_name))
-		return file_name;
-
-	boost::iostreams::file_descriptor fd;
-	try
-	{
-		fd = io::fs::open_stream(file_name, std::ios::in, 0, 0);
-	}
-	catch (const boost::exception&)
-	{
-		return file_name;
-	}
-	bio::stream_buffer<bio::file_descriptor> buff(fd);
-	std::istream stream(&buff);
-
-	/* count number of lines in file */
-	auto lines = std::count(std::istreambuf_iterator<char>(stream),
-		std::istreambuf_iterator<char>(), '\n');
-
-	if (lines < 1)
-		return file_name;
-
-	/* go down a random number */
-	stream.clear();
-	stream.seekg(std::ios::beg);
-	int lines_from_back_of_file = RAND_INT (lines);
-	std::string buf;
-	while (lines > lines_from_back_of_file)
-	{
-		stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		lines--;
-	}
-	std::getline(stream, buf, '\n');
-	return buf;
-}
-
 void
 server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason)
 {
 	if (!reason)
 	{
-		std::string temp = random_line(prefs.hex_irc_part_reason);
-		serv.p_part (channel, temp);
-	} else
+		serv.p_part(channel, prefs.hex_irc_part_reason);
+	} 
+	else
 	{
 		/* reason set by /quit, /close argument */
 		serv.p_part (channel, reason.get());
@@ -171,8 +127,7 @@ server_sendquit (session * sess)
 	{
 		std::string colrea = prefs.hex_irc_quit_reason;
 		check_special_chars (&colrea[0], true);
-		std::string rea = random_line(colrea);
-		sess->server->p_quit (rea);
+		sess->server->p_quit(colrea);
 	} else
 	{
 		/* reason set by /quit, /close argument */
@@ -391,7 +346,7 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	std::string reason = word_eol[2];
 
-	if (!(reason[0]))
+	if (reason.empty())
 	{
 		if (sess->server->is_away)
 		{
@@ -399,13 +354,8 @@ cmd_away (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				PrintTextf (sess, boost::format(_("Already marked away: %s\n")) % sess->server->last_away_reason);
 			return FALSE;
 		}
-
-		if (sess->server->reconnect_away)
-			reason = sess->server->last_away_reason;
-		else
-		{
-			reason = random_line(prefs.hex_away_reason);
-	}
+		std::string prefs_reason(prefs.hex_away_reason);
+		reason = sess->server->reconnect_away ? sess->server->last_away_reason : prefs_reason;
 	}
 	sess->server->p_set_away (reason);
 
