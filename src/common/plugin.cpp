@@ -978,7 +978,7 @@ hexchat_print (hexchat_plugin *ph, const char *text)
 	hexchat_plugin_internal *pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (!is_session (pi->context))
 	{
-		DEBUG(PrintTextf(0, "%s\thexchat_print called without a valid context.\n", pi->name));
+		DEBUG(PrintTextf(0, "%s\thexchat_print called without a valid context.\n", pi->name.c_str()));
 		return;
 	}
 
@@ -1005,7 +1005,7 @@ hexchat_command (hexchat_plugin *ph, const char *command)
 	hexchat_plugin_internal * pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (!is_session (pi->context))
 	{
-		DEBUG(PrintTextf(0, "%s\thexchat_command called without a valid context.\n", pi->name));
+		DEBUG(PrintTextf(0, "%s\thexchat_command called without a valid context.\n", pi->name.c_str()));
 		return;
 	}
 
@@ -1148,7 +1148,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 	sess = pi->context;
 	if (!is_session (sess))
 	{
-		DEBUG(PrintTextf(0, "%s\thexchat_get_info called without a valid context.\n", pi->name));
+		DEBUG(PrintTextf(0, "%s\thexchat_get_info called without a valid context.\n", pi->name.c_str()));
 		return NULL;
 	}
 
