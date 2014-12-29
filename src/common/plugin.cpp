@@ -1000,39 +1000,34 @@ hexchat_printf (hexchat_plugin *ph, const char *format, ...)
 void
 hexchat_command (hexchat_plugin *ph, const char *command)
 {
-	char *conv;
-	size_t len = 0;
 	hexchat_plugin_internal * pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (!is_session (pi->context))
 	{
 		DEBUG(PrintTextf(0, "%s\thexchat_command called without a valid context.\n", pi->name.c_str()));
 		return;
 	}
-
+	size_t len = 0;
 	/* scripts/plugins continue to send non-UTF8... *sigh* */
-	conv = text_validate ((char **)&command, &len);
-	handle_command (pi->context, (char *)command, FALSE);
-	g_free (conv);
+	glib_string conv(text_validate ((char **)&command, &len));
+	handle_command (pi->context, (char *)conv.get(), FALSE);
 }
 
 void
 hexchat_commandf (hexchat_plugin *ph, const char *format, ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf(g_strdup_vprintf (format, args));
 	va_end (args);
 
-	hexchat_command (ph, buf);
-	g_free (buf);
+	hexchat_command (ph, buf.get());
 }
 
 int
 hexchat_nickcmp (hexchat_plugin *ph, const char *s1, const char *s2)
 {
-	return ((session *)static_cast<hexchat_plugin_internal*>(ph)->context)->server->p_cmp(s1, s2);
+	return static_cast<hexchat_plugin_internal*>(ph)->context->server->p_cmp(s1, s2);
 }
 
 hexchat_context *
@@ -1055,17 +1050,14 @@ hexchat_set_context (hexchat_plugin *ph, hexchat_context *context)
 hexchat_context *
 hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *channel)
 {
-	GSList *slist, *clist, *sessions = NULL;
-	server *serv;
-	session *sess;
-	auto pi = static_cast<hexchat_plugin_internal*>(ph);
 	if (servname == NULL && channel == NULL)
 		return current_sess;
 
-	slist = serv_list;
-	while (slist)
+	auto pi = static_cast<hexchat_plugin_internal*>(ph);
+	GSList *sessions = NULL;
+	for(auto slist = serv_list; slist; slist = g_slist_next(slist))
 	{
-		serv = static_cast<server*>(slist->data);
+		auto serv = static_cast<server*>(slist->data);
 		const char* netname = serv->get_network (true);
 
 		if (servname == NULL ||
@@ -1076,10 +1068,9 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 			if (channel == NULL)
 				return serv->front_session;
 
-			clist = sess_list;
-			while (clist)
+			for(auto clist = sess_list; clist; clist = g_slist_next(clist))
 			{
-				sess = static_cast<session*>(clist->data);
+				auto sess = static_cast<session*>(clist->data);
 				if (sess->server == serv)
 				{
 					if (rfc_casecmp (channel, sess->channel) == 0)
@@ -1094,16 +1085,14 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 						}
 					}
 				}
-				clist = clist->next;
 			}
 		}
-		slist = slist->next;
 	}
 
 	if (sessions)
 	{
 		sessions = g_slist_reverse (sessions);
-		sess = static_cast<session*>(sessions->data);
+		auto sess = static_cast<session*>(sessions->data);
 		g_slist_free (sessions);
 		return sess;
 	}
@@ -1114,9 +1103,6 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 const char *
 hexchat_get_info (hexchat_plugin *ph, const char *id)
 {
-	session *sess;
-	guint32 hash;
-
 	/*                 1234567890 */
 	if (!strncmp (id, "event_text", 10))
 	{
@@ -1125,7 +1111,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return text_find_format_string (e);
 	}
 
-	hash = str_hash (id);
+	auto hash = str_hash (id);
 	/* do the session independant ones first */
 	switch (hash)
 	{
@@ -1145,7 +1131,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 			return get_xdir ();
 	}
 	auto pi = static_cast<hexchat_plugin_internal*>(ph);
-	sess = pi->context;
+	auto sess = pi->context;
 	if (!is_session (sess))
 	{
 		DEBUG(PrintTextf(0, "%s\thexchat_get_info called without a valid context.\n", pi->name.c_str()));
@@ -1164,12 +1150,10 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 
 	case 0x2c0d614c: /* charset */
 		{
-			const char *locale;
-
 			if (sess->server->encoding)
 				return sess->server->encoding->c_str();
 
-			locale = NULL;
+			const char* locale = NULL;
 			g_get_charset (&locale);
 			return locale;
 		}

@@ -454,7 +454,7 @@ get_cpu_info (double *mhz, int *cpus)
 	sysctl(mib, 2, &ncpu, &len, NULL, 0);
 
 	len = sizeof(freq);
-        sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
+		sysctlbyname("hw.cpufrequency", &freq, &len, NULL, 0);
 
 	*cpus = ncpu;
 	*mhz = (freq / 1000000);
@@ -699,39 +699,39 @@ match(const char *mask, const char *string)
   /* Process the "head" of the mask, if any */
   while ((ch = *m++) && (ch != '*'))
 	{
-    switch (ch)
-    {
-      case '\\':
+	switch (ch)
+	{
+	  case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-      default:
+	  default:
 	if (rfc_tolower(*s) != rfc_tolower(ch))
 				return false;
-      case '?':
+	  case '?':
 	if (!*s++)
 				return false;
 		}
 	}
   if (!ch)
-    return !(*s);
+	return !(*s);
 
   /* We got a star: quickly find if/where we match the next char */
 got_star:
   bm = m;			/* Next try rollback here */
   while ((ch = *m++))
 	{
-    switch (ch)
-    {
-      case '?':
+	switch (ch)
+	{
+	  case '?':
 	if (!*s++)
 				return false;
-      case '*':
+	  case '*':
 	bm = m;
 	continue;		/* while */
-      case '\\':
+	  case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-      default:
+	  default:
 	goto break_while;	/* C is structured ? */
 		}
 	}
@@ -740,21 +740,21 @@ break_while:
 		return true;			/* mask ends with '*', we got it */
   ch = rfc_tolower(ch);
   while (rfc_tolower(*s++) != ch)
-    if (!*s)
+	if (!*s)
 			return false;
   bs = s;			/* Next try start from here */
 
   /* Check the rest of the "chunk" */
   while ((ch = *m++))
   {
-    switch (ch)
-    {
-      case '*':
+	switch (ch)
+	{
+	  case '*':
 	goto got_star;
-      case '\\':
+	  case '\\':
 	if (*m == '?' || *m == '*')
 	  ch = *m++;
-      default:
+	  default:
 	if (rfc_tolower(*s) != rfc_tolower(ch))
 	{
 	  if (!*s)
@@ -763,16 +763,16 @@ break_while:
 	  s = bs;
 	  goto got_star;
 			}
-      case '?':
+	  case '?':
 	if (!*s++)
 				return false;
 		}
 	}
   if (*s)
   {
-    m = bm;
-    s = bs;
-    goto got_star;
+	m = bm;
+	s = bs;
+	goto got_star;
   };
 	return true;
 }
@@ -1532,9 +1532,9 @@ safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 void
 canonalize_key (char *key)
 {
-	char *pos, token;
+	char token;
 
-	for (pos = key; (token = *pos) != 0; pos++)
+	for (auto pos = key; (token = *pos) != 0; pos++)
 	{
 		if (token != '_' && (token < '0' || token > '9') && (token < 'A' || token > 'Z') && (token < 'a' || token > 'z'))
 		{
@@ -1551,7 +1551,9 @@ bool
 portable_mode ()
 {
 #ifdef WIN32
-	return (_access("portable-mode", 0)) != -1;
+	namespace bfs = boost::filesystem;
+	boost::system::error_code ec;
+	return bfs::exists("portable-mode", ec);
 #else
 	return false;
 #endif
@@ -1592,7 +1594,7 @@ static std::string str_sha256hash (const std::string & string)
 	SHA256_Update (&sha256, string.c_str(), string.size());
 	SHA256_Final (hash, &sha256);
 
-	for (auto & i : hash)// int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
 	{
 		sprintf (buf + (i * 2), "%02x", hash[i]);
 	}
