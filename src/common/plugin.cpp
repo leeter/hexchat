@@ -1829,7 +1829,7 @@ hexchat_pluginpref_set_str_real(hexchat_plugin *pl, const char *var, const char 
 			glib_string buffer;
 			if (strncmp (buffer_tmp.get(), line_buffer, var_len + 1) == 0)	/* given setting already exists */
 			{
-				if (mode)									/* overwrite the existing matching setting if we are in save mode */
+				if (mode == set_mode::save)									/* overwrite the existing matching setting if we are in save mode */
 				{
 					glib_string escaped_value(g_strescape (value, NULL));
 					buffer.reset(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
@@ -1851,7 +1851,7 @@ hexchat_pluginpref_set_str_real(hexchat_plugin *pl, const char *var, const char 
 
 		fclose (fpIn);
 
-		if (!prevSetting && mode)	/* var doesn't exist currently, append if we're in save mode */
+		if (!prevSetting && mode == set_mode::save)	/* var doesn't exist currently, append if we're in save mode */
 		{
 			glib_string escaped_value(g_strescape (value, NULL));
 			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
@@ -1882,7 +1882,7 @@ hexchat_pluginpref_get_str_real (hexchat_plugin_internal *pl, const char *var, c
 {
 	glib_string canon(g_strdup (pl->name.c_str()));
 	canonalize_key (canon.get());
-	glib_string confname( g_strdup_printf ("%s%caddon_%s.conf", get_xdir(), G_DIR_SEPARATOR, canon));
+	glib_string confname( g_strdup_printf ("%s%caddon_%s.conf", get_xdir(), G_DIR_SEPARATOR, canon.get()));
 
 	char *cfg;
 	if (!g_file_get_contents (confname.get(), &cfg, NULL, NULL))
