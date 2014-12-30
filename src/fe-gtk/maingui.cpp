@@ -23,6 +23,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cctype>
+#include <locale>
 #include <exception>
 #include <sstream>
 #include <string>
@@ -1961,7 +1962,7 @@ mg_flagbutton_cb (GtkWidget *but, const char flag[])
 		return;
 
 	sess = current_sess;
-	mode = tolower ((unsigned char) flag[0]);
+	mode = std::tolower<char> (flag[0], std::locale());
 
 	switch (mode)
 	{

@@ -1533,7 +1533,7 @@ void
 canonalize_key (char *key)
 {
 	char token;
-
+	std::locale locale;
 	for (auto pos = key; (token = *pos) != 0; pos++)
 	{
 		if (token != '_' && (token < '0' || token > '9') && (token < 'A' || token > 'Z') && (token < 'a' || token > 'z'))
@@ -1542,7 +1542,7 @@ canonalize_key (char *key)
 		}
 		else
 		{
-			*pos = tolower(token);
+			*pos = std::tolower(token, locale);
 		}
 	}
 }
