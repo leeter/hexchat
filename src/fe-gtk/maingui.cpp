@@ -1081,8 +1081,8 @@ mg_tab_close (session *sess)
 		int i = 0;
 		for (auto list = sess_list; list; list = g_slist_next(list))
 		{
-			auto sess = static_cast<session*>(list->data);
-			if (sess->server == sess->server && (sess->type == session::SESS_CHANNEL || sess->type == session::SESS_DIALOG))
+			auto s = static_cast<session*>(list->data);
+			if (s->server == sess->server && (s->type == session::SESS_CHANNEL || s->type == session::SESS_DIALOG))
 				i++;
 		}
 		auto dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), static_cast<GtkDialogFlags>(0),
