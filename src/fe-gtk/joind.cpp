@@ -216,7 +216,6 @@ joind_show_dialog (server *serv)
 	gtk_widget_show (radiobutton3);
 	gtk_box_pack_start (GTK_BOX (vbox2), radiobutton3, FALSE, FALSE, 0);
 	gtk_radio_button_set_group (GTK_RADIO_BUTTON (radiobutton3), radiobutton1_group);
-	radiobutton1_group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (radiobutton3));
 
 	snprintf (buf, sizeof (buf), "<small>     %s</small>",
 				 _("Retrieving the Channel-List may take a minute or two."));
@@ -256,7 +255,6 @@ joind_show_dialog (server *serv)
 		if (g_ascii_strcasecmp(((ircnet*)serv->network)->name.c_str(), "freenode") == 0)
 		{
 			gtk_entry_set_text (GTK_ENTRY (entry1), "#hexchat");
-			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(radiobutton2), TRUE);
 		}
 
 	gtk_widget_grab_focus (okbutton1);

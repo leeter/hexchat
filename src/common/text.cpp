@@ -1809,7 +1809,6 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 		d = *input_itr++;
 		if (d == 'a')
 		{								  /* Hex value */
-			x = 0;
 			if (input_itr == end)
 				goto a_len_error;
 			d = *input_itr++;
