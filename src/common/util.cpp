@@ -1745,3 +1745,17 @@ strftime_utf8 (char *dest, gsize destsize, const char *format, time_t time)
 	auto result = g_date_strftime (dest, destsize, format, date.get());
 	return result;
 }
+
+std::vector<std::string> to_vector_strings(const char *const in[], size_t len)
+{
+	if (!in)
+		throw std::invalid_argument("inbound list of strings cannot be null");
+	std::vector<std::string> ret;
+	ret.reserve(len);
+	for (size_t i = 0; i < len; ++i)
+	{
+			ret.emplace_back(in[i] ? std::string(in[i]) : std::string());
+
+	}
+	return ret;
+}

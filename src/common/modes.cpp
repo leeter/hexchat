@@ -71,10 +71,9 @@ static int mode_chanmode_type(const server & serv, char mode);
    sign   - a char, e.g. '+' or '-'
    mode   - a mode, e.g. 'o' or 'v'	*/
 void
-send_channel_modes (session *sess, char *tbuf, const char * const word[], int wpos,
+send_channel_modes (session *sess, const std::vector<std::string> &word, int wpos,
 						  int end, char sign, char mode, int modes_per_line)
 {
-	int usable_modes, orig_len, len, wlen, i, max;
 	server *serv = sess->server;
 
 	/* sanity check. IRC RFC says three per line. */
@@ -85,49 +84,47 @@ send_channel_modes (session *sess, char *tbuf, const char * const word[], int wp
 
 	/* RFC max, minus length of "MODE %s " and "\r\n" and 1 +/- sign */
 	/* 512 - 6 - 2 - 1 - strlen(chan) */
-	max = 503 - strlen (sess->channel);
+	std::string channel(sess->channel);
+	auto max = 503 - channel.size();
 
 	while (wpos < end)
 	{
-		tbuf[0] = '\0';
-		orig_len = len = 0;
+		std::ostringstream buf;
+		std::ostream_iterator<char> tbuf(buf);
 
 		/* we'll need this many modechars too */
-		len += modes_per_line;
+		int len = modes_per_line;
 
 		/* how many can we fit? */
+		int i;
 		for (i = 0; i < modes_per_line; i++)
 		{
 			/* no more nicks left? */
 			if (wpos + i >= end)
 				break;
-			wlen = strlen (word[wpos + i]) + 1;
+			auto wlen = word.at(wpos + i).size() + 1;
 			if (wlen + len > max)
 				break;
 			len += wlen; /* length of our whole string so far */
 		}
 		if (i < 1)
 			return;
-		usable_modes = i;	/* this is how many we'll send on this line */
+		int usable_modes = i;	/* this is how many we'll send on this line */
 
 		/* add the +/-modemodemodemode */
-		len = orig_len;
-		tbuf[len] = sign;
-		len++;
-		for (i = 0; i < usable_modes; i++)
+		*tbuf++ = sign;
+		for (int i = 0; i < usable_modes; i++)
 		{
-			tbuf[len] = mode;
-			len++;
+			*tbuf++ = mode;
 		}
-		tbuf[len] = 0;	/* null terminate for the strcat() to work */
 
 		/* add all the nicknames */
 		for (i = 0; i < usable_modes; i++)
 		{
-			strcat (tbuf, " ");
-			strcat (tbuf, word[wpos + i]);
+			*tbuf++ = ' ';
+			buf << word[wpos + i];
 		}
-		serv->p_mode (sess->channel, tbuf);
+		serv->p_mode (channel, buf.str());
 
 		wpos += usable_modes;
 	}

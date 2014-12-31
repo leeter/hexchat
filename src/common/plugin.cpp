@@ -1733,9 +1733,8 @@ hexchat_gettext (hexchat_plugin *ph, const char *msgid)
 void
 hexchat_send_modes (hexchat_plugin *ph, const char **targets, int ntargets, int modes_per_line, char sign, char mode)
 {
-	char tbuf[514];	/* modes.c needs 512 + null */
-
-	send_channel_modes (static_cast<hexchat_plugin_internal*>(ph)->context, tbuf, (char **)targets, 0, ntargets, sign, mode, modes_per_line);
+	auto targets_v = to_vector_strings(targets, ntargets);
+	send_channel_modes (static_cast<hexchat_plugin_internal*>(ph)->context, targets_v, 0, ntargets, sign, mode, modes_per_line);
 }
 
 char *

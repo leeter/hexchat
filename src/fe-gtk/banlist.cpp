@@ -482,52 +482,39 @@ static int
 banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
 {
 	session *sess = banl->sess;
-	GtkTreeModel *model;
-	GtkTreeSelection *sel;
-	GtkTreeIter iter;
-	char tbuf[2048];
-	char **masks, *mask, *type;
-	int num_sel, i;
-
-
 	/* grab the list of selected items */
-	model = GTK_TREE_MODEL (get_store (sess));
-	sel = gtk_tree_view_get_selection (get_view (sess));
-
+	auto model = GTK_TREE_MODEL (get_store (sess));
+	GtkTreeIter iter;
 	if (!gtk_tree_model_get_iter_first (model, &iter))
 		return 0;
 
-	masks = static_cast<char**>(g_malloc (sizeof (char *) * banl->line_ct));
-	num_sel = 0;
+	auto sel = gtk_tree_view_get_selection(get_view(sess));
+	std::vector<std::string> masks;
+	masks.reserve(banl->line_ct);
 	do
 	{
 		if (gtk_tree_selection_iter_is_selected (sel, &iter))
 		{
+			char *mask, *type;
 			/* Get the mask part of this selected line */
 			gtk_tree_model_get (model, &iter, TYPE_COLUMN, &type, MASK_COLUMN, &mask, -1);
-
+			glib_string mask_ptr(mask);
+			glib_string type_ptr(type);
 			/* If it's the wrong type of mask, just continue */
 			if (strcmp (_(modes[mode_num].type.c_str()), type) != 0)
 				continue;
 
 			/* Otherwise add it to our array of mask pointers */
-			masks[num_sel++] = g_strdup (mask);
-			g_free (mask);
-			g_free (type);
+			masks.emplace_back(mask);
 		}
 	}
 	while (gtk_tree_model_iter_next (model, &iter));
 
 	/* and send to server */
-	if (num_sel)
-		send_channel_modes (sess, tbuf, const_cast<const char* const*>(masks), 0, num_sel, '-', modes[mode_num].letter, 0);
+	if (!masks.empty())
+		send_channel_modes (sess, masks, 0, masks.size(), '-', modes[mode_num].letter, 0);
 
-	/* now free everything */
-	for (i=0; i < num_sel; i++)
-		g_free (masks[i]);
-	g_free (masks);
-
-	return num_sel;
+	return masks.size();
 }
 
 static void

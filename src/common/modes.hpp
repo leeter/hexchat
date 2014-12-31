@@ -22,6 +22,8 @@
 #ifndef HEXCHAT_MODES_HPP
 #define HEXCHAT_MODES_HPP
 
+#include <string>
+#include <vector>
 #include "proto-irc.hpp"
 #include "serverfwd.hpp"
 
@@ -31,6 +33,6 @@ int mode_access (const server *serv, char mode, char *prefix);
 void inbound_005 (server &serv, char *word[], const message_tags_data *tags_data);
 void handle_mode (server &serv, char *word[], char *word_eol[], char *nick,
 						bool numeric_324, const message_tags_data *tags_data);
-void send_channel_modes (session *sess, char *tbuf, const char * const word[], int start, int end, char sign, char mode, int modes_per_line);
+void send_channel_modes(session *sess, const std::vector<std::string> &word, int start, int end, char sign, char mode, int modes_per_line);
 
 #endif

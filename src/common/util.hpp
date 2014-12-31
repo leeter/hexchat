@@ -37,6 +37,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <vector>
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
@@ -106,5 +107,7 @@ char* new_strdup(const char(&in)[N])
 {
 	return new_strdup(in, N - 1);
 }
+
+std::vector<std::string> to_vector_strings(const char *const in[], size_t len);
 
 #endif
