@@ -1074,18 +1074,18 @@ mg_tab_close_cb (GtkWidget *dialog, gint arg1, session *sess)
 void
 mg_tab_close (session *sess)
 {
-	GtkWidget *dialog;
-	GSList *list;
-	int i;
-
 	if (chan_remove(static_cast<chan *>(sess->res->tab), false))
 		mg_ircdestroy (sess);
 	else
 	{
-		for (i = 0, list = sess_list; list; list = list->next)
-			if (((session *)list->data)->server == sess->server)
+		int i = 0;
+		for (auto list = sess_list; list; list = g_slist_next(list))
+		{
+			auto sess = static_cast<session*>(list->data);
+			if (sess->server == sess->server && (sess->type == session::SESS_CHANNEL || sess->type == session::SESS_DIALOG))
 				i++;
-		dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), static_cast<GtkDialogFlags>(0),
+		}
+		auto dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), static_cast<GtkDialogFlags>(0),
 						GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL,
 						_("This server still has %d channels or dialogs associated with it. "
 						  "Close them all?"), i);
