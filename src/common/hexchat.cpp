@@ -456,6 +456,7 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	:server(serv),
 	logfd(-1),
 	scrollfd(-1),
+	scrollwritten(),
 	type(type),
 	alert_beep(SET_DEFAULT),
 	alert_taskbar(SET_DEFAULT),
