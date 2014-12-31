@@ -26,6 +26,7 @@
 #include <cstring>
 #include <iterator>
 #include <sstream>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -91,15 +92,44 @@ struct key_binding
 	guint keyval;					  /* keyval from gdk */
 	GdkModifierType mod;			  /* Modifier, always ran through key_modifier_get_valid() */
 	int action;						  /* Index into key_actions */
-	char *data1, *data2;			  /* Pointers to strings, these must be freed */
+	glib_string data1;
+	glib_string data2;
+	key_binding()
+		:keyval(),
+		mod(),
+		action()
+	{}
+	key_binding(key_binding && other) NOEXCEPT
+		:keyval(),
+		mod(),
+		action()
+	{
+		*this = std::forward<key_binding&&>(other);
+	}
+	
+	key_binding& operator=(key_binding && other) NOEXCEPT
+	{
+		if (this != &other)
+		{
+			std::swap(this->data1, other.data1);
+			std::swap(this->data2, other.data2);
+			std::swap(this->keyval, other.keyval);
+			std::swap(this->mod, other.mod);
+			std::swap(this->action, other.action);
+		}
+		return *this;
+	}
+private:
+	key_binding(const key_binding &) = delete;
+	key_binding& operator=(const key_binding&) = delete;
 };
 
 struct key_action
 {
 	int (*handler) (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
 						 struct session * sess);
-	char *name;
-	char *help;
+	const char *name;
+	const char *help;
 };
 
 struct gcomp_data
@@ -147,7 +177,7 @@ static int key_action_put_history (GtkWidget * wid, GdkEventKey * evt,
 												  char *d1, char *d2,
 												  struct session *sess);
 
-static GSList *keybind_list = nullptr;
+static std::vector<key_binding> keybind_list;
 
 static const struct key_action key_actions[KEY_MAX_ACTIONS + 1] = {
 
@@ -251,11 +281,6 @@ key_free (gpointer data) NOEXCEPT
 {
 	g_return_if_fail(data != NULL);
 	std::unique_ptr<key_binding> kb(static_cast<key_binding*>(data));
-
-	if (kb->data1)
-		g_free (kb->data1);
-	if (kb->data2)
-		g_free (kb->data2);
 }
 
 /* Ok, here are the NOTES
@@ -335,18 +360,16 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 	if (!is_session (sess))
 		return 1;
 
-	for(auto list = keybind_list; list; list = g_slist_next(list))
+	for(auto & kb : keybind_list)
 	{
-		auto kb = static_cast<key_binding*>(list->data);
-
-		if (kb->keyval == evt->keyval && kb->mod == key_modifier_get_valid (static_cast<GdkModifierType>(evt->state)))
+		if (kb.keyval == evt->keyval && kb.mod == key_modifier_get_valid (static_cast<GdkModifierType>(evt->state)))
 		{
-			if (kb->action < 0 || kb->action > KEY_MAX_ACTIONS)
+			if (kb.action < 0 || kb.action > KEY_MAX_ACTIONS)
 				return 0;
 
 			/* Run the function */
-			int n = key_actions[kb->action].handler (wid, evt, kb->data1,
-															 kb->data2, sess);
+			int n = key_actions[kb.action].handler (wid, evt, kb.data1.get(),
+															 kb.data2.get(), sess);
 			switch (n)
 			{
 			case 0:
@@ -391,12 +414,13 @@ get_store (void) NOEXCEPT
 }
 
 static void
-key_dialog_print_text (GtkXText *xtext, char *text)
+key_dialog_print_text (GtkXText *xtext,const char text[])
 {
 	unsigned int old = prefs.hex_stamp_text;
 	prefs.hex_stamp_text = 0;	/* temporarily disable stamps */
 	gtk_xtext_clear (GTK_XTEXT (xtext)->buffer, 0);
-	PrintTextRaw (GTK_XTEXT (xtext)->buffer, reinterpret_cast<unsigned char*>(text), 0, 0);
+	std::string mutable_buffer(text);
+	PrintTextRaw (GTK_XTEXT (xtext)->buffer, reinterpret_cast<unsigned char*>(&mutable_buffer[0]), 0, 0);
 	prefs.hex_stamp_text = old;
 }
 
@@ -497,7 +521,7 @@ key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata) NOEXCE
 }
 
 static void
-key_dialog_selection_changed (GtkTreeSelection *sel, gpointer userdata)
+key_dialog_selection_changed (GtkTreeSelection *sel, gpointer)
 {
 	GtkTreeModel *model;
 	GtkTreeIter iter;
@@ -519,35 +543,27 @@ key_dialog_selection_changed (GtkTreeSelection *sel, gpointer userdata)
 }
 
 static void
-key_dialog_close (GtkWidget *wid, gpointer userdata) NOEXCEPT
+key_dialog_close (GtkWidget *, gpointer) NOEXCEPT
 {
 	gtk_widget_destroy (key_dialog);
 	key_dialog = NULL;
 }
 
 static void
-key_dialog_save (GtkWidget *wid, gpointer userdata)
+key_dialog_save (GtkWidget *wid, gpointer)
 {
-	
 	GtkTreeModel *store = get_store();
-	char *data1, *data2;
-	guint keyval;
-	GdkModifierType mod;
-
-	if (keybind_list)
-	{
-		g_slist_free_full (keybind_list, key_free);
-		keybind_list = NULL;
-	}
+	keybind_list.clear();
 
 	GtkTreeIter iter;
 	if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
 	{
 		do
 		{
-			auto kb = new key_binding();
+			key_binding kb;
 			gchar* accel;
 			gchar* actiontext;
+			char *data1, *data2;
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, ACCEL_COLUMN, &accel,
 															ACTION_COLUMN, &actiontext,
 															D1_COLUMN, &data1,
@@ -555,26 +571,26 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 															-1);
 			glib_string accel_ptr(accel);
 			glib_string actiontext_ptr(actiontext);
-			kb->data1 = data1;
-			kb->data2 = data2;
+			kb.data1.reset(data1);
+			kb.data2.reset(data2);
 
 			if (accel)
 			{
+				GdkModifierType mod;
+				guint keyval;
 				gtk_accelerator_parse (accel, &keyval, &mod);
 
-				kb->keyval = keyval;
-				kb->mod = key_modifier_get_valid (mod);
+				kb.keyval = keyval;
+				kb.mod = key_modifier_get_valid (mod);
 			}
 
 			if (actiontext)
 			{
-				kb->action = key_get_action_from_string (actiontext);
+				kb.action = key_get_action_from_string (actiontext);
 			}
 
-			if (!accel || !actiontext)
-				key_free (kb);
-			else
-				keybind_list = g_slist_append (keybind_list, kb);
+			if (accel && actiontext)
+				keybind_list.emplace_back(std::move(kb));
 
 		} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
 	}
@@ -584,7 +600,7 @@ key_dialog_save (GtkWidget *wid, gpointer userdata)
 }
 
 static void
-key_dialog_add (GtkWidget *wid, gpointer userdata) NOEXCEPT
+key_dialog_add (GtkWidget *wid, gpointer) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
@@ -600,7 +616,7 @@ key_dialog_add (GtkWidget *wid, gpointer userdata) NOEXCEPT
 }
 
 static void
-key_dialog_delete (GtkWidget *wid, gpointer userdata) NOEXCEPT
+key_dialog_delete (GtkWidget *wid, gpointer) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
@@ -732,20 +748,18 @@ static void
 key_dialog_load (GtkListStore *store) NOEXCEPT
 {
 	GtkTreeIter iter;
-	for(auto list = keybind_list; list; list = g_slist_next(list))
+	for(auto & kb : keybind_list)
 	{
-		auto kb = static_cast<key_binding*>(list->data);
-
-		glib_string label_text( gtk_accelerator_get_label (kb->keyval, kb->mod));
-		glib_string accel_text(gtk_accelerator_name (kb->keyval, kb->mod));
+		glib_string label_text( gtk_accelerator_get_label (kb.keyval, kb.mod));
+		glib_string accel_text(gtk_accelerator_name (kb.keyval, kb.mod));
 
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,
 							KEY_COLUMN, label_text.get(),
 							ACCEL_COLUMN, accel_text.get(),
-							ACTION_COLUMN, key_actions[kb->action].name,
-							D1_COLUMN, kb->data1,
-							D2_COLUMN, kb->data2, -1);
+							ACTION_COLUMN, key_actions[kb.action].name,
+							D1_COLUMN, kb.data1.get(),
+							D2_COLUMN, kb.data2.get(), -1);
 	}
 }
 
@@ -799,31 +813,26 @@ key_save_kbs (void)
 		return 1;
 	
 	char buf[512];
-	GSList *list = keybind_list;
 	write (fd, buf, snprintf (buf, 510, "# HexChat key bindings config file\n\n"));
 
-	while (list)
+	for (auto & kb : keybind_list)
 	{
-		auto kb = static_cast<key_binding *>(list->data);
+		glib_string accel_text(gtk_accelerator_name (kb.keyval, kb.mod));
 
-		glib_string accel_text(gtk_accelerator_name (kb->keyval, kb->mod));
-
-		snprintf (buf, 510, "ACCEL=%s\n%s\n", accel_text.get(), key_actions[kb->action].name);
+		snprintf (buf, 510, "ACCEL=%s\n%s\n", accel_text.get(), key_actions[kb.action].name);
 		write (fd, buf, strlen (buf));
 
-		if (kb->data1 && kb->data1[0])
-			write (fd, buf, snprintf (buf, 510, "D1:%s\n", kb->data1));
+		if (kb.data1 && kb.data1[0])
+			write (fd, buf, snprintf (buf, 510, "D1:%s\n", kb.data1.get()));
 		else
 			write (fd, "D1!\n", 4);
 
-		if (kb->data2 && kb->data2[0])
-			write (fd, buf, snprintf (buf, 510, "D2:%s\n", kb->data2));
+		if (kb.data2 && kb.data2[0])
+			write (fd, buf, snprintf (buf, 510, "D2:%s\n", kb.data2.get()));
 		else
 			write (fd, "D2!\n", 4);
 
 		write (fd, "\n", 1);
-
-		list = g_slist_next (list);
 	}
 
 	close (fd);
@@ -896,15 +905,11 @@ key_load_kbs (void)
 	istream.seekg(std::ios::beg);
 	istream.seekp(std::ios::beg);
 
-	if (keybind_list)
-	{
-		g_slist_free_full (keybind_list, key_free);
-		keybind_list = nullptr;
-	}
+	keybind_list.clear();
 
 	guint keyval;
 	kbstate state = kbstate();
-	std::unique_ptr<key_binding> kb;
+	key_binding kb;
 	for(std::string buf; std::getline(istream, buf, '\n');)
 	{	
 		if (buf.empty())
@@ -915,7 +920,7 @@ key_load_kbs (void)
 		switch (state)
 		{
 		case kbstate::MOD:
-			kb.reset(new key_binding());
+			kb = key_binding();
 
 			/* New format */
 			if (boost::starts_with(buf, "ACCEL="))
@@ -925,8 +930,8 @@ key_load_kbs (void)
 				gtk_accelerator_parse (buf.c_str(), &keyval, &mod);
 
 
-				kb->keyval = keyval;
-				kb->mod = key_modifier_get_valid (mod);
+				kb.keyval = keyval;
+				kb.mod = key_modifier_get_valid (mod);
 
 				state = kbstate::ACT;
 				continue;
@@ -935,7 +940,7 @@ key_load_kbs (void)
 			if (key_load_kbs_helper_mod (buf, mod))
 				return 5; // corrupt file
 
-			kb->mod = mod;
+			kb.mod = mod;
 
 			state = kbstate::KEY;
 			continue;
@@ -949,7 +954,7 @@ key_load_kbs (void)
 				return 2;
 			}
 
-			kb->keyval = keyval;
+			kb.keyval = keyval;
 
 			state = kbstate::ACT;
 			continue;
@@ -957,9 +962,9 @@ key_load_kbs (void)
 		case kbstate::ACT:
 			boost::trim(buf);
 
-			kb->action = key_get_action_from_string (buf);
+			kb.action = key_get_action_from_string (buf);
 
-			if (kb->action == KEY_MAX_ACTIONS + 1)
+			if (kb.action == KEY_MAX_ACTIONS + 1)
 			{
 				return 3;
 			}
@@ -970,7 +975,10 @@ key_load_kbs (void)
 		case kbstate::DT1:
 		case kbstate::DT2:
 			if (state == kbstate::DT1)
-				kb->data1 = kb->data2 = nullptr;
+			{
+				kb.data1.reset();
+				kb.data2.reset();
+			}
 
 			boost::trim_left_if(buf, boost::is_any_of(" \t"));
 
@@ -998,19 +1006,19 @@ key_load_kbs (void)
 				/* skip 3 for the "Dx:" and leave one for null terminator */
 				if (state == kbstate::DT1)
 				{
-					kb->data1 = static_cast<char*>(g_malloc0 (buf.size() - 2));
-					std::copy(buf.cbegin() + 3, buf.cend(), kb->data1);
+					kb.data1.reset(static_cast<char*>(g_malloc0 (buf.size() - 2)));
+					std::copy(buf.cbegin() + 3, buf.cend(), kb.data1.get());
 				} else
 				{
-					kb->data2 = static_cast<char*>(g_malloc0(buf.size() - 2));
-					std::copy(buf.cbegin() + 3, buf.cend(), kb->data2);
+					kb.data2.reset(static_cast<char*>(g_malloc0(buf.size() - 2)));
+					std::copy(buf.cbegin() + 3, buf.cend(), kb.data2.get());
 				}
 			} else if (buf[2] == '!')
 			{
 				if (state == kbstate::DT1)
-					kb->data1 = NULL;
+					kb.data1.reset();
 				else
-					kb->data2 = NULL;
+					kb.data2.reset();
 			}
 			if (state == kbstate::DT1)
 			{
@@ -1018,7 +1026,7 @@ key_load_kbs (void)
 				continue;
 			} else
 			{
-				keybind_list = g_slist_append (keybind_list, kb.release());
+				keybind_list.emplace_back(std::move(kb));
 
 				state = kbstate::MOD;
 			}
