@@ -589,22 +589,19 @@ chanlist_copytopic (GtkWidget *item, server *serv)
 static gboolean
 chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 {
-	GtkWidget *menu;
-	GtkTreeSelection *sel;
-	GtkTreePath *path;
-
 	if (event->button != 3)
 		return FALSE;
 
+	GtkTreePath *path;
 	if (!gtk_tree_view_get_path_at_pos (tree, event->x, event->y, &path, 0, 0, 0))
 		return FALSE;
 	GtkTreePathPtr path_ptr(path);
 	/* select what they right-clicked on */
-	sel = gtk_tree_view_get_selection (tree);
+	auto sel = gtk_tree_view_get_selection (tree);
 	gtk_tree_selection_unselect_all (sel);
 	gtk_tree_selection_select_path (sel, path);
 
-	menu = gtk_menu_new ();
+	auto menu = gtk_menu_new ();
 	if (event->window)
 		gtk_menu_set_screen (GTK_MENU (menu), gdk_window_get_screen (event->window));
 	g_object_ref (menu);

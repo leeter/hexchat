@@ -28,7 +28,7 @@ gfloat userlist_get_value (GtkWidget *treeview);
 GtkWidget *userlist_create (GtkWidget *box);
 void *userlist_create_model (void);
 void userlist_show (session *sess);
-void userlist_select (session *sess, char *name);
+void userlist_select (session *sess, const char name[]);
 std::vector<std::string> userlist_selection_list (GtkWidget *widget);
 GdkPixbuf *get_user_icon (server *serv, struct User *user);
 

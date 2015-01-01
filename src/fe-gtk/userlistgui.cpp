@@ -129,29 +129,28 @@ fe_userlist_numbers (session &sess)
 static void
 scroll_to_iter (GtkTreeIter *iter, GtkTreeView *treeview, GtkTreeModel *model)
 {
-	GtkTreePath *path = gtk_tree_model_get_path (model, iter);
+	GtkTreePathPtr path(gtk_tree_model_get_path (model, iter));
 	if (path)
 	{
-		gtk_tree_view_scroll_to_cell (treeview, path, NULL, TRUE, 0.5, 0.5);
-		gtk_tree_path_free (path);
+		gtk_tree_view_scroll_to_cell (treeview, path.get(), NULL, TRUE, 0.5, 0.5);
 	}
 }
 
 /* select a row in the userlist by nick-name */
 
 void
-userlist_select (session *sess, char *name)
+userlist_select (session *sess, const char name[])
 {
 	GtkTreeIter iter;
 	GtkTreeView *treeview = GTK_TREE_VIEW (sess->gui->user_tree);
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
-	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-	struct User *row_user;
 
 	if (gtk_tree_model_get_iter_first (model, &iter))
 	{
+		GtkTreeSelection *selection = gtk_tree_view_get_selection(treeview);
 		do
 		{
+			struct User *row_user;
 			gtk_tree_model_get (model, &iter, COL_USER, &row_user, -1);
 			if (sess->server->p_cmp (row_user->nick, name) == 0)
 			{
@@ -173,15 +172,12 @@ std::vector<std::string>
 userlist_selection_list (GtkWidget *widget)
 {
 	GtkTreeIter iter;
-	GtkTreeView *treeview = (GtkTreeView *) widget;
+	GtkTreeView *treeview = GTK_TREE_VIEW(widget);
 	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
-	struct User *user;
-	int num_sel;
-	std::vector<std::string> nicks;
 
 	/* first, count the number of selections */
-	num_sel = 0;
+	int num_sel = 0;
 	if (gtk_tree_model_get_iter_first (model, &iter))
 	{
 		do
@@ -192,6 +188,7 @@ userlist_selection_list (GtkWidget *widget)
 		while (gtk_tree_model_iter_next (model, &iter));
 	}
 
+	std::vector<std::string> nicks;
 	if (num_sel < 1)
 		return nicks;
 
@@ -200,6 +197,7 @@ userlist_selection_list (GtkWidget *widget)
 	{
 		if (gtk_tree_selection_iter_is_selected (selection, &iter))
 		{
+			struct User *user;
 			gtk_tree_model_get (model, &iter, COL_USER, &user, -1);
 			nicks.emplace_back(user->nick);
 		}
@@ -215,7 +213,6 @@ fe_userlist_set_selected (struct session *sess)
 	GtkListStore *store = static_cast<GtkListStore *>( sess->res->user_model);
 	GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (sess->gui->user_tree));
 	GtkTreeIter iter;
-	struct User *user;
 
 	/* if it's not front-most tab it doesn't own the GtkTreeView! */
 	if (store != (GtkListStore*) gtk_tree_view_get_model (GTK_TREE_VIEW (sess->gui->user_tree)))
@@ -225,12 +222,13 @@ fe_userlist_set_selected (struct session *sess)
 	{
 		do
 		{
+			struct User *user;
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, COL_USER, &user, -1);
 
 			if (gtk_tree_selection_iter_is_selected (selection, &iter))
-				user->selected = 1;
+				user->selected = true;
 			else
-				user->selected = 0;
+				user->selected = false;
 				
 		} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
 	}
@@ -239,13 +237,13 @@ fe_userlist_set_selected (struct session *sess)
 static std::pair<GtkTreeIterPtr, bool> find_row (GtkTreeView *treeview, GtkTreeModel *model, const struct User *user)
 {
 	GtkTreeIter iter;
-	User *row_user;
 
 	bool selected = false;
 	if (gtk_tree_model_get_iter_first (model, &iter))
 	{
 		do
 		{
+			User *row_user;
 			gtk_tree_model_get (model, &iter, COL_USER, &row_user, -1);
 			if (row_user == user)
 			{
@@ -256,14 +254,13 @@ static std::pair<GtkTreeIterPtr, bool> find_row (GtkTreeView *treeview, GtkTreeM
 						selected = true;
 					}
 				}
-				;
 				return std::make_pair(GtkTreeIterPtr(gtk_tree_iter_copy(&iter)), selected);
 			}
 		}
 		while (gtk_tree_model_iter_next (model, &iter));
 	}
 
-	return std::pair<GtkTreeIterPtr, bool>(nullptr, selected); //  std::make_pair<GtkTreeIter*, bool>(nullptr, selected);
+	return std::pair<GtkTreeIterPtr, bool>(nullptr, selected);
 }
 
 void
@@ -311,13 +308,12 @@ fe_userlist_remove(session *sess, struct User const *user)
 void
 fe_userlist_rehash (session *sess, struct User const *user)
 {
-	int nick_color = 0;
-
 	auto result = find_row (GTK_TREE_VIEW (sess->gui->user_tree),
 			static_cast<GtkTreeModel*>(sess->res->user_model), user);
 	if (!result.first)
 		return;
 
+	int nick_color = 0;
 	if (prefs.hex_away_track && user->away)
 		nick_color = COL_AWAY;
 	else if (prefs.hex_gui_ulist_color)
@@ -401,38 +397,35 @@ userlist_dnd_drop (GtkTreeView *widget, GdkDragContext *context,
 						 guint info, guint ttime, gpointer userdata)
 {
 	struct User *user;
-	gchar *data;
 	GtkTreePath *path;
-	GtkTreeModel *model;
-	GtkTreeIter iter;
-
 	if (!gtk_tree_view_get_path_at_pos (widget, x, y, &path, NULL, NULL, NULL))
 		return;
 
-	model = gtk_tree_view_get_model (widget);
+	GtkTreePathPtr path_ptr(path);
+	auto model = gtk_tree_view_get_model (widget);
+	GtkTreeIter iter;
 	if (!gtk_tree_model_get_iter (model, &iter, path))
 		return;
 	gtk_tree_model_get (model, &iter, COL_USER, &user, -1);
 
-	data = (char *)gtk_selection_data_get_data (selection_data);
+	auto data = gtk_selection_data_get_data (selection_data);
 
 	if (data)
-		mg_dnd_drop_file (current_sess, user->nick, data);
+		mg_dnd_drop_file (current_sess, user->nick, reinterpret_cast<const char*>(data));
 }
 
 static gboolean
 userlist_dnd_motion (GtkTreeView *widget, GdkDragContext *context, gint x,
 							gint y, guint ttime, gpointer tree)
 {
-	GtkTreePath *path;
-	GtkTreeSelection *sel;
-
 	if (!tree)
 		return FALSE;
 
+	GtkTreePath *path;
 	if (gtk_tree_view_get_path_at_pos (widget, x, y, &path, NULL, NULL, NULL))
 	{
-		sel = gtk_tree_view_get_selection (widget);
+		GtkTreePathPtr path_ptr(path);
+		auto sel = gtk_tree_view_get_selection (widget);
 		gtk_tree_selection_unselect_all (sel);
 		gtk_tree_selection_select_path (sel, path);
 	}
@@ -457,10 +450,8 @@ userlist_create_model (void)
 static void
 userlist_add_columns (GtkTreeView * treeview)
 {
-	GtkCellRenderer *renderer;
-
 	/* icon column */
-	renderer = gtk_cell_renderer_pixbuf_new ();
+	auto renderer = gtk_cell_renderer_pixbuf_new ();
 	if (prefs.hex_gui_compact)
 		g_object_set (G_OBJECT (renderer), "ypad", 0, NULL);
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
@@ -492,9 +483,6 @@ userlist_add_columns (GtkTreeView * treeview)
 static gint
 userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
 {
-	GtkTreeSelection *sel;
-	GtkTreePath *path;
-
 	if (!event)
 		return FALSE;
 
@@ -520,11 +508,12 @@ userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
 			return TRUE;
 		}
 
-		sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (widget));
+		auto sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (widget));
+		GtkTreePath *path;
 		if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (widget),
 			 event->x, event->y, &path, 0, 0, 0))
 		{
-			std::unique_ptr<GtkTreePath, decltype(&gtk_tree_path_free)> raii_path(path, gtk_tree_path_free);
+			GtkTreePathPtr path_ptr(path);
 			gtk_tree_selection_unselect_all (sel);
 			gtk_tree_selection_select_path (sel, path);
 			nicks = userlist_selection_list (widget);
@@ -562,7 +551,6 @@ userlist_key_cb (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
 GtkWidget *
 userlist_create (GtkWidget *box)
 {
-	GtkWidget *sw, *treeview;
 	static const GtkTargetEntry dnd_dest_targets[] =
 	{
 		{"text/uri-list", 0, 1},
@@ -573,7 +561,7 @@ userlist_create (GtkWidget *box)
 		{"HEXCHAT_USERLIST", GTK_TARGET_SAME_APP, 75 }
 	};
 
-	sw = gtk_scrolled_window_new (NULL, NULL);
+	auto sw = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
 													 GTK_SHADOW_ETCHED_IN);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
@@ -584,7 +572,7 @@ userlist_create (GtkWidget *box)
 	gtk_box_pack_start (GTK_BOX (box), sw, TRUE, TRUE, 0);
 	gtk_widget_show (sw);
 
-	treeview = gtk_tree_view_new ();
+	auto treeview = gtk_tree_view_new ();
 	gtk_widget_set_name (treeview, "hexchat-userlist");
 	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (treeview), FALSE);
 	gtk_tree_selection_set_mode (gtk_tree_view_get_selection
@@ -642,11 +630,10 @@ fe_uselect (session *sess, char *word[], int do_clear, int scroll_to)
 	GtkTreeIter iter;
 	GtkTreeView *treeview = GTK_TREE_VIEW (sess->gui->user_tree);
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
-	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-	struct User *row_user;
 
 	if (gtk_tree_model_get_iter_first (model, &iter))
 	{
+		GtkTreeSelection *selection = gtk_tree_view_get_selection(treeview);
 		if (do_clear)
 			gtk_tree_selection_unselect_all (selection);
 
@@ -654,6 +641,7 @@ fe_uselect (session *sess, char *word[], int do_clear, int scroll_to)
 		{
 			if (*word[0])
 			{
+				struct User *row_user;
 				gtk_tree_model_get (model, &iter, COL_USER, &row_user, -1);
 				thisname = 0;
 				while ( *(name = word[thisname++]) )

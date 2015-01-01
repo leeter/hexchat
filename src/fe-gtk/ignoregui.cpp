@@ -30,6 +30,7 @@
 #include "../common/fe.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
+#include "gtk_helpers.hpp"
 
 enum
 {
@@ -207,34 +208,26 @@ ignore_delete_entry_clicked (GtkWidget * wid, struct session *sess)
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(ignorewin), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
 	GtkTreeIter iter;
-	GtkTreePath *path;
 	char *mask = NULL;
 
 	if (gtkutil_treeview_get_selected (view, &iter, 0, &mask, -1))
 	{
+		glib_string mask_ptr(mask);
 		/* delete this row, select next one */
 		if (gtk_list_store_remove (store, &iter))
 		{
-			path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
-			gtk_tree_view_scroll_to_cell (view, path, NULL, TRUE, 1.0, 0.0);
-			gtk_tree_view_set_cursor (view, path, NULL, FALSE);
-			gtk_tree_path_free (path);
+			GtkTreePathPtr path(gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
+			gtk_tree_view_scroll_to_cell (view, path.get(), NULL, TRUE, 1.0, 0.0);
+			gtk_tree_view_set_cursor (view, path.get(), NULL, FALSE);
 		}
 
 		ignore_del (mask);
-		g_free (mask);
 	}
 }
 
 static void
 ignore_store_new (int cancel, char *mask, gpointer data)
 {
-	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(ignorewin), "view"));
-	GtkListStore *store = GTK_LIST_STORE (get_store ());
-	GtkTreeIter iter;
-	GtkTreePath *path;
-	ignore::ignore_type flags = ignore::IG_DEFAULTS;
-
 	if (cancel)
 		return;
 	/* check if it already exists */
@@ -244,6 +237,11 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 		return;
 	}
 
+	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(ignorewin), "view"));
+	GtkListStore *store = GTK_LIST_STORE(get_store());
+	GtkTreeIter iter;
+	ignore::ignore_type flags = ignore::IG_DEFAULTS;
+
 	ignore_add (mask, flags, TRUE);
 
 	gtk_list_store_append (store, &iter);
@@ -251,10 +249,9 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	gtk_list_store_set (store, &iter, 0, mask, 1, TRUE, 2, TRUE, 3, TRUE,
 						4, TRUE, 5, TRUE, 6, TRUE, 7, FALSE, -1);
 	/* make sure the new row is visible and selected */
-	path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
-	gtk_tree_view_scroll_to_cell (view, path, NULL, TRUE, 1.0, 0.0);
-	gtk_tree_view_set_cursor (view, path, NULL, FALSE);
-	gtk_tree_path_free (path);
+	GtkTreePathPtr path (gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
+	gtk_tree_view_scroll_to_cell (view, path.get(), NULL, TRUE, 1.0, 0.0);
+	gtk_tree_view_set_cursor (view, path.get(), NULL, FALSE);
 }
 
 static void
@@ -262,7 +259,6 @@ ignore_clear_cb (GtkDialog *dialog, gint response)
 {
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
-	char *mask;
 
 	gtk_widget_destroy (GTK_WIDGET (dialog));
 
@@ -271,10 +267,10 @@ ignore_clear_cb (GtkDialog *dialog, gint response)
 		/* remove from ignore_list */
 		do
 		{
-			mask = NULL;
+			char* mask = nullptr;
 			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, MASK_COLUMN, &mask, -1);
+			glib_string mask_ptr(mask);
 			ignore_del (mask);
-			g_free (mask);
 		}
 		while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
 
@@ -286,9 +282,7 @@ ignore_clear_cb (GtkDialog *dialog, gint response)
 static void
 ignore_clear_entry_clicked (GtkWidget * wid)
 {
-	GtkWidget *dialog;
-
-	dialog = gtk_message_dialog_new (NULL, static_cast<GtkDialogFlags>(0),
+	auto dialog = gtk_message_dialog_new (NULL, static_cast<GtkDialogFlags>(0),
 								GTK_MESSAGE_QUESTION, GTK_BUTTONS_OK_CANCEL,
 					_("Are you sure you want to remove all ignores?"));
 	g_signal_connect (G_OBJECT (dialog), "response",
@@ -315,12 +309,11 @@ close_ignore_gui_callback ()
 static GtkWidget *
 ignore_stats_entry (GtkWidget * box, char *label, int value)
 {
-	GtkWidget *wid;
 	char buf[16];
 
 	sprintf (buf, "%d", value);
 	gtkutil_label_new (label, box);
-	wid = gtkutil_entry_new (16, box, 0, 0);
+	auto wid = gtkutil_entry_new (16, box, 0, 0);
 	gtk_widget_set_size_request (wid, 30, -1);
 	gtk_editable_set_editable (GTK_EDITABLE (wid), FALSE);
 	gtk_widget_set_sensitive (GTK_WIDGET (wid), FALSE);

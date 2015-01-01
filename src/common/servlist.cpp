@@ -813,7 +813,7 @@ servlist_cycle (server *serv)
 }
 
 ircserver *
-servlist_server_find (ircnet *net, char *name, int *pos)
+servlist_server_find (ircnet *net, const char name[], int *pos)
 {
 	GSList *list = net->servlist;
 	ircserver *serv;

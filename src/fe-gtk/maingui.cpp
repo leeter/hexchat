@@ -1621,7 +1621,7 @@ mg_tab_contextmenu_cb (chanview *cv, chan *ch, int tag, gpointer ud, GdkEventBut
 }
 
 void
-mg_dnd_drop_file (session *sess, char *target, char *uri)
+mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 {
 	char *p, *data, *next, *fname;
 
