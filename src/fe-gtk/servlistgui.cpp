@@ -190,7 +190,6 @@ static void
 servlist_select_and_show (GtkTreeView *treeview, GtkTreeIter *iter,
 								  GtkListStore *store)
 {
-	GtkTreePath *path;
 	GtkTreeSelection *sel;
 
 	sel = gtk_tree_view_get_selection (treeview);
@@ -198,12 +197,11 @@ servlist_select_and_show (GtkTreeView *treeview, GtkTreeIter *iter,
 	/* select this network */
 	gtk_tree_selection_select_iter (sel, iter);
 	/* and make sure it's visible */
-	path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), iter);
+	GtkTreePathPtr path{ gtk_tree_model_get_path(GTK_TREE_MODEL(store), iter) };
 	if (path)
 	{
-		gtk_tree_view_scroll_to_cell (treeview, path, NULL, TRUE, 0.5, 0.5);
-		gtk_tree_view_set_cursor (treeview, path, NULL, FALSE);
-		gtk_tree_path_free (path);
+		gtk_tree_view_scroll_to_cell (treeview, path.get(), NULL, TRUE, 0.5, 0.5);
+		gtk_tree_view_set_cursor (treeview, path.get(), NULL, FALSE);
 	}
 }
 

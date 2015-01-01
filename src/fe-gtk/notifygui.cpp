@@ -36,6 +36,7 @@
 #include "maingui.hpp"
 #include "palette.hpp"
 #include "notifygui.hpp"
+#include "gtk_helpers.hpp"
 
 namespace{
 /* model for the notify treeview */
@@ -164,7 +165,6 @@ notify_remove_clicked(GtkWidget * igad)
 	GtkTreeView *view;
 	GtkTreeModel *model;
 	GtkTreeIter iter;
-	GtkTreePath *path = NULL;
 	bool found = false;
 	char *name;
 
@@ -173,23 +173,22 @@ notify_remove_clicked(GtkWidget * igad)
 	{
 		model = gtk_tree_view_get_model(view);
 		found = (*name != 0);
+		GtkTreePathPtr path;
 		while (!found)	/* the real nick is some previous node */
 		{
 			g_free(name); /* it's useless to us */
 			if (!path)
-				path = gtk_tree_model_get_path(model, &iter);
-			if (!gtk_tree_path_prev(path))	/* arrgh! no previous node! */
+				path.reset(gtk_tree_model_get_path(model, &iter));
+			if (!gtk_tree_path_prev(path.get()))	/* arrgh! no previous node! */
 			{
 				g_warning("notify list state is invalid\n");
 				break;
 			}
-			if (!gtk_tree_model_get_iter(model, &iter, path))
+			if (!gtk_tree_model_get_iter(model, &iter, path.get()))
 				break;
 			gtk_tree_model_get(model, &iter, USER_COLUMN, &name, -1);
 			found = (*name != 0);
 		}
-		if (path)
-			gtk_tree_path_free(path);
 		if (!found)
 			return;
 

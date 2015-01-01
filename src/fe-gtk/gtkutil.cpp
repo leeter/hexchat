@@ -41,6 +41,7 @@
 #include "../common/typedef.h"
 #include "gtkutil.hpp"
 #include "pixmaps.hpp"
+#include "gtk_helpers.hpp"
 
 #ifdef WIN32
 #include <io.h>
@@ -687,11 +688,10 @@ gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
 gboolean
 gtkutil_treemodel_string_to_iter (GtkTreeModel *model, gchar *pathstr, GtkTreeIter *iter_ret)
 {
-	GtkTreePath *path = gtk_tree_path_new_from_string (pathstr);
+	GtkTreePathPtr path{ gtk_tree_path_new_from_string(pathstr) };
 	gboolean success;
 
-	success = gtk_tree_model_get_iter (model, iter_ret, path);
-	gtk_tree_path_free (path);
+	success = gtk_tree_model_get_iter (model, iter_ret, path.get());
 	return success;
 }
 
@@ -729,29 +729,22 @@ gtkutil_treeview_get_selected (GtkTreeView *view, GtkTreeIter *iter_ret, ...)
 gboolean
 gtkutil_find_font (const char *fontname)
 {
-	int i;
 	int n_families;
-	const char *family_name;
-	PangoFontMap *fontmap;
-	PangoFontFamily *family;
 	PangoFontFamily **families;
 
-	fontmap = pango_cairo_font_map_get_default ();
+	auto fontmap = pango_cairo_font_map_get_default ();
 	pango_font_map_list_families (fontmap, &families, &n_families);
-
-	for (i = 0; i < n_families; i++)
+	std::unique_ptr<PangoFontFamily*[], glib_deleter> familes_ptr{ families };
+	for (int i = 0; i < n_families; i++)
 	{
-		family = families[i];
-		family_name = pango_font_family_get_name (family);
+		auto family = familes_ptr[i];
+		auto family_name = pango_font_family_get_name (family);
 
 		if (!g_ascii_strcasecmp (family_name, fontname))
 		{
-			g_free (families);
 			return TRUE;
 		}
 	}
-
-	g_free (families);
 	return FALSE;
 }
 #endif

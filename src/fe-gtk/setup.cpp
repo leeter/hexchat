@@ -46,10 +46,6 @@
 #include "plugin-tray.hpp"
 #include "gtk_helpers.hpp"
 #include "setup.hpp"
-
-#ifdef WIN32
-#include "../common/fe.hpp"
-#endif
 #include "sexy-spell-entry.hpp"
 
 GtkStyle *create_input_style(GtkStyle *);
@@ -58,7 +54,7 @@ GtkStyle *create_input_style(GtkStyle *);
 
 static int last_selected_page = 0;
 static int last_selected_row = 0; /* sound row */
-static gboolean color_change;
+static bool color_change;
 static struct hexchatprefs setup_prefs;
 static GtkWidget *cancel_button;
 static GtkWidget *font_dialog = NULL;
@@ -727,8 +723,7 @@ setup_create_toggleR (GtkWidget *tab, int row, const setting *set)
 							G_CALLBACK (setup_toggle_cb), (gpointer)set);
 	if (set->tooltip)
 		gtk_widget_set_tooltip_text (wid, _(set->tooltip));
-	gtk_table_attach (GTK_TABLE (tab), wid, 4, 5, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (tab), wid, 4, 5, row, row + 1, GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 }
 
 static GtkWidget *
@@ -743,8 +738,7 @@ setup_create_toggleL (GtkWidget *tab, int row, const setting *set)
 							G_CALLBACK (setup_toggle_cb), (gpointer)set);
 	if (set->tooltip)
 		gtk_widget_set_tooltip_text (wid, _(set->tooltip));
-	gtk_table_attach (GTK_TABLE (tab), wid, 2, row==6 ? 6 : 4, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_table_attach (GTK_TABLE (tab), wid, 2, row==6 ? 6 : 4, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	return wid;
 }
@@ -777,12 +771,10 @@ setup_create_spin (GtkWidget *table, int row, const setting *set)
 
 	label = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (table), label, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_table_attach (GTK_TABLE (table), label, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	align = gtk_alignment_new (0.0, 0.5, 0.0, 0.0);
-	gtk_table_attach (GTK_TABLE (table), align, 3, 4, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (table), align, 3, 4, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
 	rbox = gtk_hbox_new (0, 0);
 	gtk_container_add (GTK_CONTAINER (align), rbox);
@@ -1005,17 +997,15 @@ static void
 setup_create_menu (GtkWidget *table, int row, const setting *set)
 {
 	GtkWidget *wid, *cbox, *box;
-	const char **text = (const char **)set->list;
-	int i;
+	auto text = set->list;
 
 	wid = gtk_label_new (_(set->label));
-	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_misc_set_alignment (GTK_MISC (wid), 0.0f, 0.5f);
+	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	cbox = gtk_combo_box_text_new ();
 
-	for (i = 0; text[i]; i++)
+	for (int i = 0; text[i]; i++)
 		gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (cbox), _(text[i]));
 
 	gtk_combo_box_set_active (GTK_COMBO_BOX (cbox),
@@ -1025,8 +1015,7 @@ setup_create_menu (GtkWidget *table, int row, const setting *set)
 
 	box = gtk_hbox_new (0, 0);
 	gtk_box_pack_start (GTK_BOX (box), cbox, 0, 0, 0);
-	gtk_table_attach (GTK_TABLE (table), box, 3, 4, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (table), box, 3, 4, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 }
 
 static void
@@ -1066,24 +1055,20 @@ setup_fontsel_destroy (GtkWidget *button, GtkFontSelectionDialog *dialog)
 static void
 setup_fontsel_cb (GtkWidget *button, GtkFontSelectionDialog *dialog)
 {
-	GtkWidget *entry;
-	char *font_name;
+	auto entry = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "e"));
+	glib_string font_name{ gtk_font_selection_dialog_get_font_name(dialog) };
 
-	entry = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(button), "e"));
-	font_name = gtk_font_selection_dialog_get_font_name (dialog);
+	gtk_entry_set_text (GTK_ENTRY (entry), font_name.get());
 
-	gtk_entry_set_text (GTK_ENTRY (entry), font_name);
-
-	g_free (font_name);
 	gtk_widget_destroy (GTK_WIDGET (dialog));
-	font_dialog = NULL;
+	font_dialog = nullptr;
 }
 
 static void
 setup_fontsel_cancel (GtkWidget *button, GtkFontSelectionDialog *dialog)
 {
 	gtk_widget_destroy (GTK_WIDGET (dialog));
-	font_dialog = NULL;
+	font_dialog = nullptr;
 }
 
 static void
@@ -1095,19 +1080,16 @@ setup_browsefolder_cb (GtkWidget *button, GtkEntry *entry)
 static void
 setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
 {
-	GtkFontSelection *sel;
-	GtkFontSelectionDialog *dialog;
-	GtkWidget *ok_button;
+	/* global var */
+	font_dialog = gtk_font_selection_dialog_new(_("Select font"));
+	auto dialog = GTK_FONT_SELECTION_DIALOG(font_dialog);
 
-	dialog = (GtkFontSelectionDialog *) gtk_font_selection_dialog_new (_("Select font"));
-	font_dialog = (GtkWidget *)dialog;	/* global var */
-
-	sel = (GtkFontSelection *) gtk_font_selection_dialog_get_font_selection (dialog);
+	auto sel = GTK_FONT_SELECTION(gtk_font_selection_dialog_get_font_selection (dialog));
 
 	if (gtk_entry_get_text (GTK_ENTRY (entry))[0])
 		gtk_font_selection_set_font_name (sel, gtk_entry_get_text (GTK_ENTRY (entry)));
 
-	ok_button = gtk_font_selection_dialog_get_ok_button (dialog);
+	auto ok_button = gtk_font_selection_dialog_get_ok_button (dialog);
 	g_object_set_data (G_OBJECT (ok_button), "e", entry);
 
 	g_signal_connect (G_OBJECT (dialog), "destroy",
@@ -1126,7 +1108,7 @@ setup_entry_cb (GtkEntry *entry, setting *set)
 	int size;
 	int pos;
 	int len = gtk_entry_get_text_length (entry);
-	unsigned char *p = (unsigned char*)gtk_entry_get_text (entry);
+	const unsigned char *p = reinterpret_cast<const unsigned char*>(gtk_entry_get_text (entry));
 
 	/* need to truncate? */
 	if (len >= set->extra)
@@ -1157,7 +1139,7 @@ setup_create_label (GtkWidget *table, int row, const setting *set)
 {
 	gtk_table_attach (GTK_TABLE (table), setup_create_italic_label (_(set->label)),
 							set->extra ? 1 : 3, 5, row, row + 1, GTK_FILL,
-							static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+							GTK_SHRINK | GTK_FILL, 0, 0);
 }
 
 static GtkWidget *
@@ -1169,7 +1151,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	label = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), label, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+		GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	wid = gtk_entry_new ();
 	g_object_set_data (G_OBJECT (wid), "lbl", label);
@@ -1363,7 +1345,7 @@ setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 		return;
 	}
 
-	color_change = TRUE;
+	color_change = true;
 
 	gtk_color_selection_get_current_color (GTK_COLOR_SELECTION (gtk_color_selection_dialog_get_color_selection (cdialog)), col);
 
@@ -1538,28 +1520,23 @@ extern std::array<std::string, NUM_XP> sound_files;
 static void
 setup_snd_populate (GtkTreeView * treeview)
 {
-	GtkListStore *store;
 	GtkTreeIter iter;
-	GtkTreeSelection *sel;
-	GtkTreePath *path;
-	int i;
 
-	sel = gtk_tree_view_get_selection (treeview);
-	store = (GtkListStore *)gtk_tree_view_get_model (treeview);
+	auto sel = gtk_tree_view_get_selection (treeview);
+	auto store = (GtkListStore *)gtk_tree_view_get_model (treeview);
 
-	for (i = NUM_XP-1; i >= 0; i--)
+	for (int i = NUM_XP-1; i >= 0; i--)
 	{
 		gtk_list_store_prepend (store, &iter);
 		gtk_list_store_set(store, &iter, 0, te[i].name, 1, sound_files[i].c_str(), 2, i, -1);
 		if (i == last_selected_row)
 		{
 			gtk_tree_selection_select_iter (sel, &iter);
-			path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
+			GtkTreePathPtr path{ gtk_tree_model_get_path(GTK_TREE_MODEL(store), &iter) };
 			if (path)
 			{
-				gtk_tree_view_scroll_to_cell (treeview, path, NULL, TRUE, 0.5, 0.5);
-				gtk_tree_view_set_cursor (treeview, path, NULL, FALSE);
-				gtk_tree_path_free (path);
+				gtk_tree_view_scroll_to_cell (treeview, path.get(), NULL, TRUE, 0.5, 0.5);
+				gtk_tree_view_set_cursor (treeview, path.get(), NULL, FALSE);
 			}
 		}
 	}
@@ -1641,7 +1618,7 @@ setup_snd_filereq_cb (GtkWidget *entry, char *file)
 static void
 setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
 {
-	char *sounds_dir = g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, NULL);
+	glib_string sounds_dir{ g_build_filename(get_xdir(), HEXCHAT_SOUND_DIR, NULL) };
 	char *filter = NULL;
 	int filter_type;
 #ifdef WIN32 /* win32 only supports wav, others could support anything */
@@ -1653,8 +1630,7 @@ setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
 #endif
 
 	gtkutil_file_req (_("Select a sound file"), (filereqcallback)setup_snd_filereq_cb, entry,
-						sounds_dir, filter, FRF_FILTERISINITIAL|filter_type);
-	g_free (sounds_dir);
+						sounds_dir.get(), filter, FRF_FILTERISINITIAL|filter_type);
 }
 
 static void
@@ -2064,84 +2040,84 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 }
 
 static void
-setup_apply (struct hexchatprefs *pr)
+setup_apply (struct hexchatprefs &pr)
 {
 #ifdef WIN32
 	PangoFontDescription *old_desc;
 	PangoFontDescription *new_desc;
 	char buffer[4 * FONTNAMELEN + 1];
 #endif
-	int new_pix = FALSE;
-	int noapply = FALSE;
-	int do_ulist = FALSE;
-	int do_layout = FALSE;
+	bool new_pix = false;
+	bool noapply = false;
+	bool do_ulist = false;
+	bool do_layout = false;
 
-	if (strcmp (pr->hex_text_background, prefs.hex_text_background) != 0)
-		new_pix = TRUE;
+	if (strcmp (pr.hex_text_background, prefs.hex_text_background) != 0)
+		new_pix = true;
 
-#define DIFF(a) (pr->a != prefs.a)
+#define DIFF(a) (pr.a != prefs.a)
 
 #ifdef WIN32
 	if (DIFF (hex_gui_lang))
-		noapply = TRUE;
+		noapply = true;
 #endif
 	if (DIFF (hex_gui_compact))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_input_icon))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_input_nick))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_lagometer))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_tab_icons))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_tab_server))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_tab_small))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_tab_sort))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_tab_trunc))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_throttlemeter))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_ulist_count))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_ulist_icons))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_ulist_resizable))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_ulist_show_hosts))
-		noapply = TRUE;
+		noapply = true;
 	if (DIFF (hex_gui_ulist_style))
-		noapply = TRUE;
+		noapply = true;
 
 	if (DIFF (hex_gui_tab_dots))
-		do_layout = TRUE;
+		do_layout = true;
 	if (DIFF (hex_gui_tab_layout))
-		do_layout = TRUE;
+		do_layout = true;
 
 	if (color_change || (DIFF (hex_gui_ulist_color)) || (DIFF (hex_away_size_max)) || (DIFF (hex_away_track)))
-		do_ulist = TRUE;
+		do_ulist = true;
 
-	if ((pr->hex_gui_tab_pos == 5 || pr->hex_gui_tab_pos == 6) &&
-		 pr->hex_gui_tab_layout == 2 && pr->hex_gui_tab_pos != prefs.hex_gui_tab_pos)
+	if ((pr.hex_gui_tab_pos == 5 || pr.hex_gui_tab_pos == 6) &&
+		 pr.hex_gui_tab_layout == 2 && pr.hex_gui_tab_pos != prefs.hex_gui_tab_pos)
 		fe_message (_("You cannot place the tree on the top or bottom!\n"
 						"Please change to the <b>Tabs</b> layout in the <b>View</b>"
 						" menu first."),
 						FE_MSG_WARN | FE_MSG_MARKUP);
-
-	memcpy (&prefs, pr, sizeof (prefs));
+#undef DIFF
+	prefs = pr;
 
 #ifdef WIN32
 	/* merge hex_font_main and hex_font_alternative into hex_font_normal */
 	old_desc = pango_font_description_from_string (prefs.hex_text_font_main);
-	sprintf (buffer, "%s,%s", pango_font_description_get_family (old_desc), prefs.hex_text_font_alternative);
+	snprintf (buffer, sizeof(buffer), "%s,%s", pango_font_description_get_family (old_desc), prefs.hex_text_font_alternative);
 	new_desc = pango_font_description_from_string (buffer);
 	pango_font_description_set_weight (new_desc, pango_font_description_get_weight (old_desc));
 	pango_font_description_set_style (new_desc, pango_font_description_get_style (old_desc));
 	pango_font_description_set_size (new_desc, pango_font_description_get_size (old_desc));
-	sprintf (prefs.hex_text_font, "%s", pango_font_description_to_string (new_desc));
+	snprintf (prefs.hex_text_font, sizeof(prefs.hex_text_font), "%s", pango_font_description_to_string (new_desc));
 
 	/* FIXME this is not required after pango_font_description_from_string()
 	g_free (old_desc);
@@ -2179,7 +2155,7 @@ static void
 setup_ok_cb (GtkWidget *but, GtkWidget *win)
 {
 	gtk_widget_destroy (win);
-	setup_apply (&setup_prefs);
+	setup_apply (setup_prefs);
 	save_config ();
 	palette_save ();
 }
@@ -2206,14 +2182,14 @@ setup_window_open (void)
 	gtk_box_set_spacing (GTK_BOX (hbbox), 4);
 	gtk_box_pack_end (GTK_BOX (vbox), hbbox, FALSE, FALSE, 0);
 
-	cancel_button = wid = gtk_button_new_from_stock (GTK_STOCK_CANCEL);
+	wid = gtk_button_new_with_mnemonic(_("_OK"));
+	g_signal_connect(G_OBJECT(wid), "clicked",
+		G_CALLBACK(setup_ok_cb), win);
+	gtk_box_pack_start(GTK_BOX(hbbox), wid, FALSE, FALSE, 0);
+
+	cancel_button = wid = gtk_button_new_with_mnemonic(_("_Cancel"));
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (gtkutil_destroy), win);
-	gtk_box_pack_start (GTK_BOX (hbbox), wid, FALSE, FALSE, 0);
-
-	wid = gtk_button_new_from_stock (GTK_STOCK_OK);
-	g_signal_connect (G_OBJECT (wid), "clicked",
-							G_CALLBACK (setup_ok_cb), win);
 	gtk_box_pack_start (GTK_BOX (hbbox), wid, FALSE, FALSE, 0);
 
 	gtk_widget_show_all (win);
@@ -2244,9 +2220,9 @@ setup_open (void)
 		return;
 	}
 
-	memcpy (&setup_prefs, &prefs, sizeof (prefs));
+	setup_prefs = prefs;
 
-	color_change = FALSE;
+	color_change = false;
 	setup_window = setup_window_open ();
 
 	g_signal_connect (G_OBJECT (setup_window), "destroy",
