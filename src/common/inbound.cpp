@@ -1215,7 +1215,7 @@ check_autojoin_channels (server &serv)
 	}
 
 	serv.joindelay_tag = 0;
-	fe_server_event (&serv, FE_SE_LOGGEDIN, i);
+	fe_server_event(&serv, fe_serverevents::LOGGEDIN, i);
 	return FALSE;
 }
 

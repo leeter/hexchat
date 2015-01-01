@@ -916,7 +916,7 @@ void fe_uselect (struct session *sess, char *word[], int do_clear, int scroll_to
 {
 }
 void
-fe_server_event (server *serv, int type, int arg)
+fe_server_event(server *, fe_serverevents, int)
 {
 }
 void

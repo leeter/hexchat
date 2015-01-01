@@ -532,7 +532,7 @@ server_connected1(server * serv, const boost::system::error_code & error)
 	}
 
 	serv->set_name(serv->servername);
-	fe_server_event(serv, FE_SE_CONNECT, 0);
+	fe_server_event(serv, fe_serverevents::CONNECT, 0);
 }
 
 static void
@@ -570,7 +570,7 @@ server_connected (server * serv)
 	}
 
 	serv->set_name (serv->servername);
-	fe_server_event (serv, FE_SE_CONNECT, 0);
+	fe_server_event(serv, fe_serverevents::CONNECT, 0);
 }
 
 #ifdef WIN32
@@ -633,7 +633,7 @@ server_stopconnecting (server * serv)
 	fe_progressbar_end (serv);
 
 	serv->connecting = false;
-	fe_server_event (serv, FE_SE_DISCONNECT, 0);
+	fe_server_event(serv, fe_serverevents::DISCONNECT, 0);
 }
 
 #ifdef USE_OPENSSL
@@ -983,7 +983,7 @@ server::auto_reconnect (bool send_quit, int err)
 	}
 
 	this->recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, this);
-	fe_server_event (this, FE_SE_RECONDELAY, del);
+	fe_server_event(this, fe_serverevents::RECONDELAY, del);
 }
 
 void
@@ -1273,7 +1273,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 		return;
 	}
 
-	fe_server_event (serv, FE_SE_DISCONNECT, 0);
+	fe_server_event(serv, fe_serverevents::DISCONNECT, 0);
 
 	// flush any outgoing messages
 	this->server_connection->poll();
@@ -1882,7 +1882,7 @@ server::connect (char *hostname, int port, bool no_login)
 	this->port = port;
 	this->no_login = no_login;
 
-	fe_server_event (this, FE_SE_CONNECTING, 0);
+	fe_server_event(this, fe_serverevents::CONNECTING, 0);
 	fe_set_away (*this);
 	this->flush_queue ();
 	this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
@@ -1957,7 +1957,7 @@ server::connect (char *hostname, int port, bool no_login)
 	this->port = port;
 	this->no_login = no_login;
 
-	fe_server_event (this, FE_SE_CONNECTING, 0);
+	fe_server_event (this, fe_serverevents::CONNECTING, 0);
 	fe_set_away (this);
 	this->flush_queue ();
 

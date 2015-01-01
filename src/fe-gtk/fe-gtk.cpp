@@ -1084,7 +1084,7 @@ fe_open_url (const char *url)
 }
 
 void
-fe_server_event (server *serv, int type, int arg)
+fe_server_event(server *serv, fe_serverevents type, int arg)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -1098,26 +1098,26 @@ fe_server_event (server *serv, int type, int arg)
 
 			switch (type)
 			{
-			case FE_SE_CONNECTING:	/* connecting in progress */
-			case FE_SE_RECONDELAY:	/* reconnect delay begun */
+			case fe_serverevents::CONNECTING:	/* connecting in progress */
+			case fe_serverevents::RECONDELAY:	/* reconnect delay begun */
 				/* enable Disconnect item */
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_DISCONNECT], 1);
 				break;
 
-			case FE_SE_CONNECT:
+			case fe_serverevents::CONNECT:
 				/* enable Disconnect and Away menu items */
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_AWAY], 1);
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_DISCONNECT], 1);
 				break;
 
-			case FE_SE_LOGGEDIN:	/* end of MOTD */
+			case fe_serverevents::LOGGEDIN:	/* end of MOTD */
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_JOIN], 1);
 				/* if number of auto-join channels is zero, open joind */
 				if (arg == 0)
 					joind_open (serv);
 				break;
 
-			case FE_SE_DISCONNECT:
+			case fe_serverevents::DISCONNECT:
 				/* disable Disconnect and Away menu items */
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_AWAY], 0);
 				gtk_widget_set_sensitive (gui->menu_item[MENU_ID_DISCONNECT], 0);

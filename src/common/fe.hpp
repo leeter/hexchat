@@ -169,12 +169,14 @@ void fe_open_url (const char *url);
 void fe_menu_del (menu_entry *);
 char *fe_menu_add (menu_entry *);
 void fe_menu_update (menu_entry *);
-#define FE_SE_CONNECT 0
-#define FE_SE_LOGGEDIN 1
-#define FE_SE_DISCONNECT 2
-#define FE_SE_RECONDELAY 3
-#define FE_SE_CONNECTING 4
-void fe_server_event (server *serv, int type, int arg);
+enum class fe_serverevents{
+	CONNECT,
+	LOGGEDIN,
+	DISCONNECT,
+	RECONDELAY,
+	CONNECTING,
+};
+void fe_server_event(server *serv, fe_serverevents type, int arg);
 /* pass NULL filename2 for default HexChat icon */
 void fe_tray_set_flash (const char *filename1, const char *filename2, int timeout);
 /* pass NULL filename for default HexChat icon */
