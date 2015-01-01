@@ -46,28 +46,33 @@ void menu_set_away (session_gui *gui, int away);
 void menu_set_fullscreen (session_gui *gui, int fullscreen);
 
 /* for menu_quick functions */
-#define XCMENU_DOLIST 1
-#define XCMENU_SHADED 1
-#define XCMENU_MARKUP 2
-#define XCMENU_MNEMONIC 4
+enum xcmenu_flags{
+	XCMENU_DOLIST = 1,
+	XCMENU_SHADED = 1,
+	XCMENU_MARKUP = 2,
+	XCMENU_MNEMONIC = 4
+};
 
+#define MENU_ID_HEXCHAT_DEF 14
 /* menu items we keep a GtkWidget* for (to change their state) */
-#define MENU_ID_AWAY 1
-#define MENU_ID_MENUBAR 2
-#define MENU_ID_TOPICBAR 3
-#define MENU_ID_USERLIST 4
-#define MENU_ID_ULBUTTONS 5
-#define MENU_ID_MODEBUTTONS 6
-#define MENU_ID_LAYOUT_TABS 7
-#define MENU_ID_LAYOUT_TREE 8
-#define MENU_ID_DISCONNECT 9
-#define MENU_ID_RECONNECT 10
-#define MENU_ID_JOIN 11
-#define MENU_ID_USERMENU 12
-#define MENU_ID_FULLSCREEN 13
-#define MENU_ID_HEXCHAT 14
+enum menu_id{
+	MENU_ID_AWAY = 1,
+	MENU_ID_MENUBAR = 2,
+	MENU_ID_TOPICBAR = 3,
+	MENU_ID_USERLIST = 4,
+	MENU_ID_ULBUTTONS = 5,
+	MENU_ID_MODEBUTTONS = 6,
+	MENU_ID_LAYOUT_TABS = 7,
+	MENU_ID_LAYOUT_TREE = 8,
+	MENU_ID_DISCONNECT = 9,
+	MENU_ID_RECONNECT = 10,
+	MENU_ID_JOIN = 11,
+	MENU_ID_USERMENU = 12,
+	MENU_ID_FULLSCREEN = 13,
+	MENU_ID_HEXCHAT = MENU_ID_HEXCHAT_DEF
+};
 
-#if (MENU_ID_NUM < MENU_ID_HEXCHAT)
+#if (MENU_ID_NUM < MENU_ID_HEXCHAT_DEF)
 #error MENU_ID_NUM is set wrong
 #endif
 
