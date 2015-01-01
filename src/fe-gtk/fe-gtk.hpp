@@ -85,7 +85,7 @@ struct server_gui
 	gboolean chanlist_match_wants_topic;	/* match in topic */
 
 	GRegex *chanlist_match_regex;	/* compiled regular expression here */
-	unsigned int have_regex;
+	bool have_regex;
 
 	guint chanlist_users_found_count;	/* users total for all channels */
 	guint chanlist_users_shown_count;	/* users total for displayed channels */
@@ -97,7 +97,7 @@ struct server_gui
 	int chanlist_minusers;
 	int chanlist_minusers_downloaded;	/* used by LIST IRC command */
 	int chanlist_search_type;		/* 0=simple 1=pattern/wildcard 2=regexp */
-	gboolean chanlist_caption_is_stale;
+	bool chanlist_caption_is_stale;
 };
 
 /* this struct is persistant even when delinking/relinking */

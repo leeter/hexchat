@@ -101,7 +101,7 @@ chanlist_update_caption (server_gui &gui)
 				 gui.chanlist_channels_found_count);
 
 	gtk_label_set_text (GTK_LABEL (gui.chanlist_label), tbuf);
-	gui.chanlist_caption_is_stale = FALSE;
+	gui.chanlist_caption_is_stale = false;
 }
 
 static void
@@ -208,14 +208,14 @@ chanlist_place_row_in_gui (server_gui &gui, chanlistrow *next_row, gboolean forc
 
 	if (next_row->users < gui.chanlist_minusers)
 	{
-		gui.chanlist_caption_is_stale = TRUE;
+		gui.chanlist_caption_is_stale = true;
 		return;
 	}
 
 	if (next_row->users > gui.chanlist_maxusers
 		 && gui.chanlist_maxusers > 0)
 	{
-		gui.chanlist_caption_is_stale = TRUE;
+		gui.chanlist_caption_is_stale = true;
 		return;
 	}
 
@@ -230,7 +230,7 @@ chanlist_place_row_in_gui (server_gui &gui, chanlistrow *next_row, gboolean forc
 			if (!chanlist_match (gui, next_row->chan)
 				&& !chanlist_match(gui, next_row->topic))
 			{
-				gui.chanlist_caption_is_stale = TRUE;
+				gui.chanlist_caption_is_stale = true;
 				return;
 			}
 		}
@@ -239,7 +239,7 @@ chanlist_place_row_in_gui (server_gui &gui, chanlistrow *next_row, gboolean forc
 		{
 			if (!chanlist_match(gui, next_row->chan))
 			{
-				gui.chanlist_caption_is_stale = TRUE;
+				gui.chanlist_caption_is_stale = true;
 				return;
 			}
 		}
@@ -248,7 +248,7 @@ chanlist_place_row_in_gui (server_gui &gui, chanlistrow *next_row, gboolean forc
 		{
 			if (!chanlist_match(gui, next_row->topic))
 			{
-				gui.chanlist_caption_is_stale = TRUE;
+				gui.chanlist_caption_is_stale = true;
 				return;
 			}
 		}
@@ -403,7 +403,7 @@ chanlist_find_cb (GtkWidget * wid, server *serv)
 	/* recompile the regular expression. */
 	if (serv->gui->have_regex)
 	{
-		serv->gui->have_regex = 0;
+		serv->gui->have_regex = false;
 		g_regex_unref (serv->gui->chanlist_match_regex);
 	}
 
@@ -411,7 +411,7 @@ chanlist_find_cb (GtkWidget * wid, server *serv)
 												G_REGEX_MATCH_NOTBOL, NULL);
 
 	if (serv->gui->chanlist_match_regex)
-		serv->gui->have_regex = 1;
+		serv->gui->have_regex = true;
 }
 
 static void
@@ -650,7 +650,7 @@ chanlist_destroy_widget (GtkWidget *, server_gui *gui)
 	if (gui->have_regex)
 	{
 		g_regex_unref (gui->chanlist_match_regex);
-		gui->have_regex = 0;
+		gui->have_regex = false;
 	}
 }
 
