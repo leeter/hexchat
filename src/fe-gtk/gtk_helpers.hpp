@@ -29,17 +29,25 @@
 #endif
 #endif
 
-inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
+#ifndef CONSTEXPR
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define CONSTEXPR
+#else
+#define CONSTEXPR constexpr
+#endif
+#endif
+
+CONSTEXPR inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
 {
 	return static_cast<GtkAttachOptions>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
+CONSTEXPR inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
 {
 	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
+CONSTEXPR inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
 {
 	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
 }
