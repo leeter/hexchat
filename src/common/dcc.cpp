@@ -58,7 +58,7 @@
 #include "outbound.hpp"
 #include "inbound.hpp"
 #include "network.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 #include "server.hpp"
 #include "text.hpp"
 #include "url.hpp"

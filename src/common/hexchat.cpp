@@ -50,7 +50,7 @@
 #include "cfgfiles.hpp"
 #include "chanopt.hpp"
 #include "ignore.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 #include "plugin-timer.hpp"
 #include "notify.hpp"
 #include "server.hpp"

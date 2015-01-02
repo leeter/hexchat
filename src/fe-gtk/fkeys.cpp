@@ -52,7 +52,7 @@
 #include "../common/outbound.hpp"
 #include "../common/util.hpp"
 #include "../common/text.hpp"
-#include "../common/plugin.h"
+#include "../common/plugin.hpp"
 #include "../common/typedef.h"
 #include "../common/server.hpp"
 #include "../common/filesystem.hpp"

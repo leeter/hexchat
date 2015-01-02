@@ -45,7 +45,7 @@
 #include "inbound.hpp"
 #include "modes.hpp"
 #include "notify.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 #include "server.hpp"
 #include "text.hpp"
 #include "outbound.hpp"

@@ -25,7 +25,7 @@
 #include "fe-gtk.hpp"
 
 #include "../common/hexchat.hpp"
-#include "../common/plugin.h"
+#include "../common/plugin.hpp"
 #include "../common/util.hpp"
 #include "../common/outbound.hpp"
 #include "../common/fe.hpp"

@@ -37,7 +37,7 @@
 #include "../common/hexchatc.hpp"
 #include "../common/outbound.hpp"
 #include "../common/inbound.hpp"
-#include "../common/plugin.h"
+#include "../common/plugin.hpp"
 #include "../common/modes.hpp"
 #include "../common/url.hpp"
 #include "../common/util.hpp"

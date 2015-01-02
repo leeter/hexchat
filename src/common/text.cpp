@@ -55,7 +55,7 @@
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "chanopt.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 #include "fe.hpp"
 #include "filesystem.hpp"
 #include "server.hpp"

@@ -61,7 +61,7 @@
 #include "session.hpp"
 
 #define PLUGIN_C
-#include "plugin.h"
+#include "plugin.hpp"
 #include "typedef.h"
 
 #include "hexchatc.hpp"

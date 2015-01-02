@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_PLUGIN_TRAY_HPP
 #define HEXCHAT_PLUGIN_TRAY_HPP
 
-#include "../common/plugin.h"
+#include "../common/plugin.hpp"
 
 int tray_plugin_init (hexchat_plugin *, char **, char **, char **, char *);
 int tray_plugin_deinit (hexchat_plugin *);

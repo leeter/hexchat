@@ -45,7 +45,7 @@
 #include "../common/text.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.hpp"
-#include "../common/plugin.h"
+#include "../common/plugin.hpp"
 #include "../common/server.hpp"
 #include "../common/url.hpp"
 #include "../common/dcc.hpp"

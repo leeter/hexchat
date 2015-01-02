@@ -58,7 +58,7 @@
 #include <fcntl.h>
 
 #include "hexchat.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 #include "ignore.hpp"
 #include "util.hpp"
 #include "fe.hpp"
