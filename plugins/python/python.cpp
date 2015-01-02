@@ -122,7 +122,7 @@ namespace{
 		ALLOW_THREADS = 1,
 		RESTORE_CONTEXT = 2
 	};
-}
+
 
 #ifdef WITH_THREAD
 #define ACQUIRE_XCHAT_LOCK() PyThread_acquire_lock(xchat_lock, 1)
@@ -365,7 +365,7 @@ static PyThread_type_lock xchat_lock = nullptr;
 
 static void Util_ReleaseThread(PyThreadState *tstate);
 
-namespace{
+
 	class py_plugin
 	{
 		PyObject * _plugin;
@@ -407,7 +407,7 @@ namespace{
 	};
 
 	typedef std::unique_ptr<PyObject, py_object_deleter> PyObjectPtr;
-}
+
 
 static const char usage[] = "\
 Usage: /PY LOAD   <filename>\n\
@@ -542,8 +542,6 @@ Util_Autoload()
 static char *
 Util_Expand(const char *filename)
 {
-	char *expanded;
-
 	/* Check if this is an absolute path. */
 	if (g_path_is_absolute(filename)) {
 		if (g_file_test(filename, G_FILE_TEST_EXISTS))
@@ -552,6 +550,7 @@ Util_Expand(const char *filename)
 			return nullptr;
 	}
 
+	char *expanded;
 	/* Check if it starts with ~/ and expand the home if positive. */
 	if (*filename == '~' && *(filename+1) == '/') {
 		expanded = g_build_filename(g_get_home_dir(),
@@ -586,7 +585,7 @@ static void
 Util_ReleaseThread(PyThreadState *tstate)
 {
 	PyThreadState *old_tstate;
-	if (tstate == nullptr)
+	if (!tstate)
 		Py_FatalError("PyEval_ReleaseThread: nullptr thread state");
 	old_tstate = PyThreadState_Swap(nullptr);
 	if (old_tstate != tstate && old_tstate != nullptr)
@@ -607,11 +606,11 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 	py_plugin plugin(hook->plugin);
 
 	PyObjectPtr word_list{ Util_BuildList(word) };
-	if (word_list == nullptr) {
+	if (!word_list) {
 		return 0;
 	}
 	PyObjectPtr word_eol_list{ Util_BuildList(word_eol) };
-	if (word_eol_list == nullptr) {
+	if (!word_eol_list) {
 		return 0;
 	}
 
@@ -2585,12 +2584,12 @@ Command_Unload(const char *const word[], const char *const word_eol[], void *use
 /* ===================================================================== */
 /* (De)initialization functions */
 
-static int initialized = 0;
-static int reinit_tried = 0;
+static bool initialized = false;
+static bool reinit_tried = false;
+}
 
 extern "C"{
-	void
-		hexchat_plugin_get_info(char **name, char **desc, char **version, void **reserved)
+	void hexchat_plugin_get_info(char **name, char **desc, char **version, void **reserved)
 	{
 		*name = "Python";
 		*version = VERSION;
@@ -2599,8 +2598,7 @@ extern "C"{
 			*reserved = nullptr;
 	}
 
-	int
-		hexchat_plugin_init(hexchat_plugin *plugin_handle,
+	int hexchat_plugin_init(hexchat_plugin *plugin_handle,
 		char **plugin_name,
 		char **plugin_desc,
 		char **plugin_version,
@@ -2615,14 +2613,14 @@ extern "C"{
 		ph = plugin_handle;
 
 		/* Block double initalization. */
-		if (initialized != 0) {
+		if (initialized) {
 			hexchat_print(ph, "Python interface already loaded");
 			/* deinit is called even when init fails, so keep track
 			 * of a reinit failure. */
-			reinit_tried++;
+			reinit_tried == true;
 			return 0;
 		}
-		initialized = 1;
+		initialized = false;
 
 		*plugin_name = "Python";
 		*plugin_version = VERSION;
@@ -2692,15 +2690,14 @@ extern "C"{
 		return 1;
 	}
 
-	int
-		hexchat_plugin_deinit()
+	int	hexchat_plugin_deinit()
 	{
 		GSList *list;
 
 		/* A reinitialization was tried. Just give up and live the
 		 * environment as is. We are still alive. */
 		if (reinit_tried) {
-			reinit_tried--;
+			reinit_tried = false;
 			return 1;
 		}
 
@@ -2744,7 +2741,7 @@ extern "C"{
 #endif
 
 		hexchat_print(ph, "Python interface unloaded\n");
-		initialized = 0;
+		initialized = false;
 
 		return 1;
 	}
