@@ -883,8 +883,7 @@ XChatOut_write(PyObject *self, PyObject *args)
 		g_string_erase(xchatout_buffer, 0, pos - xchatout_buffer->str + 1);
 	}
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 
@@ -980,8 +979,7 @@ Context_set(ContextObject *self, PyObject *args)
 {
 	PyObject *plugin = Plugin_GetCurrent();
 	Plugin_SetContext(plugin, self->context);
-	Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -990,13 +988,10 @@ Context_command(ContextObject *self, PyObject *args)
 	char *text;
 	if (!PyArg_ParseTuple(args, "s:command", &text))
 		return nullptr;
-	{
-		xchat_calls calls(ALLOW_THREADS);
-		hexchat_set_context(ph, self->context);
-		hexchat_command(ph, text);
-	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	xchat_calls calls(ALLOW_THREADS);
+	hexchat_set_context(ph, self->context);
+	hexchat_command(ph, text);
+	Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1008,8 +1003,7 @@ Context_prnt(ContextObject *self, PyObject *args)
 	xchat_calls calls(ALLOW_THREADS);
 	hexchat_set_context(ph, self->context);
 	hexchat_print(ph, text);
-	Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1050,8 +1044,7 @@ Context_get_info(ContextObject *self, PyObject *args)
 	hexchat_set_context(ph, self->context);
 	auto info = hexchat_get_info(ph, name);
 	if (info == nullptr) {
-		Py_INCREF(Py_None);
-		return Py_None;
+		Py_RETURN_NONE;
 	}
 	return PyUnicode_FromString(info);
 }
@@ -1624,12 +1617,9 @@ Module_hexchat_command(PyObject *self, PyObject *args)
 	char *text;
 	if (!PyArg_ParseTuple(args, "s:command", &text))
 		return nullptr;
-	{
-		xchat_calls calls(RESTORE_CONTEXT | ALLOW_THREADS);
-		hexchat_command(ph, text);
-	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	xchat_calls calls(RESTORE_CONTEXT | ALLOW_THREADS);
+	hexchat_command(ph, text);
+	Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1638,12 +1628,9 @@ Module_xchat_prnt(PyObject *self, PyObject *args)
 	char *text;
 	if (!PyArg_ParseTuple(args, "s:prnt", &text))
 		return nullptr;
-	{
-		xchat_calls calls(RESTORE_CONTEXT | ALLOW_THREADS);
-		hexchat_print(ph, text);
-	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	xchat_calls calls(RESTORE_CONTEXT | ALLOW_THREADS);
+	hexchat_print(ph, text);
+	Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1685,8 +1672,7 @@ Module_hexchat_get_info(PyObject *self, PyObject *args)
 		info = hexchat_get_info(ph, name);
 	}
 	if (info == nullptr) {
-		Py_INCREF(Py_None);
-		return Py_None;
+		Py_RETURN_NONE;
 	}
 	if (strcmp (name, "gtkwin_ptr") == 0)
 		return PyUnicode_FromFormat("%p", info); /* format as pointer */
@@ -1710,9 +1696,7 @@ Module_xchat_get_prefs(PyObject *self, PyObject *args)
 	}
 	switch (type) {
 		case 0:
-			Py_INCREF(Py_None);
-			res = Py_None;
-			break;
+			Py_RETURN_NONE;
 		case 1:
 			res = PyUnicode_FromString((char*)info);
 			break;
@@ -1738,8 +1722,7 @@ Module_hexchat_get_context(PyObject *self, PyObject *args)
 		return nullptr;
 	auto ctxobj = Context_FromContext(Plugin_GetContext(plugin));
 	if (ctxobj == nullptr) {
-		Py_INCREF(Py_None);
-		return Py_None;
+		Py_RETURN_NONE;
 	}
 	return ctxobj;
 }
@@ -1755,8 +1738,7 @@ Module_hexchat_find_context(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	auto ctxobj = Context_FromServerAndChannel(server, channel);
 	if (ctxobj == nullptr) {
-		Py_INCREF(Py_None);
-		return Py_None;
+		Py_RETURN_NONE;
 	}
 	return ctxobj;
 }
@@ -1820,8 +1802,7 @@ Module_hexchat_pluginpref_get(PyObject *self, PyObject *args)
 	}
 	else
 	{
-		Py_INCREF(Py_None);
-		ret = Py_None;
+		Py_RETURN_NONE;
 	}
 	return ret;
 }
@@ -2123,8 +2104,7 @@ Module_hexchat_unhook(PyObject *self, PyObject *args)
 		Plugin_RemoveHook(plugin, hook);
 	}	
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *
