@@ -2660,163 +2660,164 @@ Command_Unload(const char *const word[], const char *const word_eol[], void *use
 static int initialized = 0;
 static int reinit_tried = 0;
 
-void
-hexchat_plugin_get_info(char **name, char **desc, char **version, void **reserved)
-{
-	*name = "Python";
-	*version = VERSION;
-	*desc = "Python scripting interface";
-   if (reserved)
-	  *reserved = nullptr;
-}
+extern "C"{
+	void
+		hexchat_plugin_get_info(char **name, char **desc, char **version, void **reserved)
+	{
+		*name = "Python";
+		*version = VERSION;
+		*desc = "Python scripting interface";
+		if (reserved)
+			*reserved = nullptr;
+	}
 
-int
-hexchat_plugin_init(hexchat_plugin *plugin_handle,
-		  char **plugin_name,
-		  char **plugin_desc,
-		  char **plugin_version,
-		  char *arg)
-{
+	int
+		hexchat_plugin_init(hexchat_plugin *plugin_handle,
+		char **plugin_name,
+		char **plugin_desc,
+		char **plugin_version,
+		char *arg)
+	{
 #ifdef IS_PY3K
-	wchar_t *argv[] = { L"<hexchat>", 0 };
+		wchar_t *argv[] = { L"<hexchat>", 0 };
 #else
-	char *argv[] = { "<hexchat>", 0 };
+		char *argv[] = { "<hexchat>", 0 };
 #endif
 
-	ph = plugin_handle;
+		ph = plugin_handle;
 
-	/* Block double initalization. */
-	if (initialized != 0) {
-		hexchat_print(ph, "Python interface already loaded");
-		/* deinit is called even when init fails, so keep track
-		 * of a reinit failure. */
-		reinit_tried++;
-		return 0;
-	}
-	initialized = 1;
+		/* Block double initalization. */
+		if (initialized != 0) {
+			hexchat_print(ph, "Python interface already loaded");
+			/* deinit is called even when init fails, so keep track
+			 * of a reinit failure. */
+			reinit_tried++;
+			return 0;
+		}
+		initialized = 1;
 
-	*plugin_name = "Python";
-	*plugin_version = VERSION;
+		*plugin_name = "Python";
+		*plugin_version = VERSION;
 
-	/* FIXME You can't free this since it's used as long as the plugin's
-	 * loaded, but if you unload it, everything belonging to the plugin is
-	 * supposed to be freed anyway.
-	 */
-	*plugin_desc = g_strdup_printf ("Python %d scripting interface", PY_MAJOR_VERSION);
+		/* FIXME You can't free this since it's used as long as the plugin's
+		 * loaded, but if you unload it, everything belonging to the plugin is
+		 * supposed to be freed anyway.
+		 */
+		*plugin_desc = g_strdup_printf("Python %d scripting interface", PY_MAJOR_VERSION);
 
-	/* Initialize python. */
+		/* Initialize python. */
 #ifdef IS_PY3K
-	Py_SetProgramName(L"hexchat");
-	PyImport_AppendInittab("hexchat", PyInit_hexchat);
-	PyImport_AppendInittab("xchat", PyInit_xchat);
+		Py_SetProgramName(L"hexchat");
+		PyImport_AppendInittab("hexchat", PyInit_hexchat);
+		PyImport_AppendInittab("xchat", PyInit_xchat);
 #else
-	Py_SetProgramName("hexchat");
-	PyImport_AppendInittab("hexchat", inithexchat);
-	PyImport_AppendInittab("xchat", initxchat);
+		Py_SetProgramName("hexchat");
+		PyImport_AppendInittab("hexchat", inithexchat);
+		PyImport_AppendInittab("xchat", initxchat);
 #endif
-	Py_Initialize();
-	PySys_SetArgv(1, argv);
+		Py_Initialize();
+		PySys_SetArgv(1, argv);
 
-	xchatout = XChatOut_New();
-	if (xchatout == nullptr) {
-		hexchat_print(ph, "Can't allocate xchatout object");
-		return 0;
-	}
+		xchatout = XChatOut_New();
+		if (xchatout == nullptr) {
+			hexchat_print(ph, "Can't allocate xchatout object");
+			return 0;
+		}
 
 #ifdef WITH_THREAD
-	PyEval_InitThreads();
-	xchat_lock = PyThread_allocate_lock();
-	if (xchat_lock == nullptr) {
-		hexchat_print(ph, "Can't allocate hexchat lock");
-		Py_DECREF(xchatout);
-		xchatout = nullptr;
-		return 0;
-	}
+		PyEval_InitThreads();
+		xchat_lock = PyThread_allocate_lock();
+		if (xchat_lock == nullptr) {
+			hexchat_print(ph, "Can't allocate hexchat lock");
+			Py_DECREF(xchatout);
+			xchatout = nullptr;
+			return 0;
+		}
 #endif
 
-	main_tstate = PyEval_SaveThread();
+		main_tstate = PyEval_SaveThread();
 
-	interp_plugin = Plugin_New(nullptr, xchatout);
-	if (interp_plugin == nullptr) {
-		hexchat_print(ph, "Plugin_New() failed.\n");
+		interp_plugin = Plugin_New(nullptr, xchatout);
+		if (interp_plugin == nullptr) {
+			hexchat_print(ph, "Plugin_New() failed.\n");
 #ifdef WITH_THREAD
-		PyThread_free_lock(xchat_lock);
+			PyThread_free_lock(xchat_lock);
 #endif
-		Py_DECREF(xchatout);
-		xchatout = nullptr;
-		return 0;
-	}
+			Py_DECREF(xchatout);
+			xchatout = nullptr;
+			return 0;
+		}
 
 
-	hexchat_hook_command(ph, "", HEXCHAT_PRI_NORM, IInterp_Cmd, 0, 0);
-	hexchat_hook_command(ph, "PY", HEXCHAT_PRI_NORM, Command_Py, usage, 0);
-	hexchat_hook_command(ph, "LOAD", HEXCHAT_PRI_NORM, Command_Load, 0, 0);
-	hexchat_hook_command(ph, "UNLOAD", HEXCHAT_PRI_NORM, Command_Unload, 0, 0);
-	hexchat_hook_command(ph, "RELOAD", HEXCHAT_PRI_NORM, Command_Reload, 0, 0);
+		hexchat_hook_command(ph, "", HEXCHAT_PRI_NORM, IInterp_Cmd, 0, 0);
+		hexchat_hook_command(ph, "PY", HEXCHAT_PRI_NORM, Command_Py, usage, 0);
+		hexchat_hook_command(ph, "LOAD", HEXCHAT_PRI_NORM, Command_Load, 0, 0);
+		hexchat_hook_command(ph, "UNLOAD", HEXCHAT_PRI_NORM, Command_Unload, 0, 0);
+		hexchat_hook_command(ph, "RELOAD", HEXCHAT_PRI_NORM, Command_Reload, 0, 0);
 #ifdef WITH_THREAD
-	thread_timer = hexchat_hook_timer(ph, 300, Callback_ThreadTimer, nullptr);
+		thread_timer = hexchat_hook_timer(ph, 300, Callback_ThreadTimer, nullptr);
 #endif
 
-	hexchat_print(ph, "Python interface loaded\n");
+		hexchat_print(ph, "Python interface loaded\n");
 
-	Util_Autoload();
-	return 1;
-}
-
-int
-hexchat_plugin_deinit()
-{
-	GSList *list;
-
-	/* A reinitialization was tried. Just give up and live the
-	 * environment as is. We are still alive. */
-	if (reinit_tried) {
-		reinit_tried--;
+		Util_Autoload();
 		return 1;
 	}
 
-	list = plugin_list;
-	while (list != nullptr) {
-		PyObject *plugin = (PyObject *)list->data;
-		{
-			py_plugin p(plugin);
-			Plugin_Delete(plugin);
+	int
+		hexchat_plugin_deinit()
+	{
+		GSList *list;
+
+		/* A reinitialization was tried. Just give up and live the
+		 * environment as is. We are still alive. */
+		if (reinit_tried) {
+			reinit_tried--;
+			return 1;
 		}
-		list = list->next;
-	}
-	g_slist_free(plugin_list);
-	plugin_list = nullptr;
 
-	/* Reset xchatout buffer. */
-	g_free(xchatout_buffer);
-	xchatout_buffer = nullptr;
-	xchatout_buffer_size = 0;
-	xchatout_buffer_pos = 0;
+		list = plugin_list;
+		while (list != nullptr) {
+			PyObject *plugin = (PyObject *)list->data;
+			{
+				py_plugin p(plugin);
+				Plugin_Delete(plugin);
+			}
+			list = list->next;
+		}
+		g_slist_free(plugin_list);
+		plugin_list = nullptr;
 
-	if (interp_plugin) {
-		Py_DECREF(interp_plugin);
-		interp_plugin = nullptr;
-	}
+		/* Reset xchatout buffer. */
+		g_free(xchatout_buffer);
+		xchatout_buffer = nullptr;
+		xchatout_buffer_size = 0;
+		xchatout_buffer_pos = 0;
 
-	/* Switch back to the main thread state. */
-	if (main_tstate) {
-		PyEval_RestoreThread(main_tstate);
-		PyThreadState_Swap(main_tstate);
-		main_tstate = nullptr;
-	}
-	Py_Finalize();
+		if (interp_plugin) {
+			Py_DECREF(interp_plugin);
+			interp_plugin = nullptr;
+		}
+
+		/* Switch back to the main thread state. */
+		if (main_tstate) {
+			PyEval_RestoreThread(main_tstate);
+			PyThreadState_Swap(main_tstate);
+			main_tstate = nullptr;
+		}
+		Py_Finalize();
 
 #ifdef WITH_THREAD
-	if (thread_timer != nullptr) {
-		hexchat_unhook(ph, static_cast<hexchat_hook*>(thread_timer));
-		thread_timer = nullptr;
-	}
-	PyThread_free_lock(xchat_lock);
+		if (thread_timer != nullptr) {
+			hexchat_unhook(ph, static_cast<hexchat_hook*>(thread_timer));
+			thread_timer = nullptr;
+		}
+		PyThread_free_lock(xchat_lock);
 #endif
 
-	hexchat_print(ph, "Python interface unloaded\n");
-	initialized = 0;
+		hexchat_print(ph, "Python interface unloaded\n");
+		initialized = 0;
 
-	return 1;
+		return 1;
+	}
 }
-
