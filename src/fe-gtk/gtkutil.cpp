@@ -69,7 +69,7 @@ gtkutil_file_req_destroy (GtkWidget * wid, struct file_req *freq)
 }
 
 static void
-gtkutil_check_file (char *filename, struct file_req *freq)
+gtkutil_check_file (const char filename[], struct file_req *freq)
 {
 	bool axs = false;
 
@@ -157,15 +157,13 @@ gtkutil_file_req_done (GtkWidget * wid, struct file_req *freq)
 	{
 		if (freq->flags & FRF_CHOOSEFOLDER)
 		{
-			gchar *filename = gtk_file_chooser_get_current_folder (fs);
-			gtkutil_check_file (filename, freq);
-			g_free (filename);
+			glib_string filename{ gtk_file_chooser_get_current_folder(fs) };
+			gtkutil_check_file (filename.get(), freq);
 		}
 		else
 		{
-			gchar *filename = gtk_file_chooser_get_filename (fs);
-			gtkutil_check_file (gtk_file_chooser_get_filename (fs), freq);
-			g_free (filename);
+			glib_string filename{ gtk_file_chooser_get_filename(fs) };
+			gtkutil_check_file (filename.get(), freq);
 		}
 	}
 
