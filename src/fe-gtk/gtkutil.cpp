@@ -71,7 +71,7 @@ gtkutil_file_req_destroy (GtkWidget * wid, struct file_req *freq)
 static void
 gtkutil_check_file (char *filename, struct file_req *freq)
 {
-	int axs = FALSE;
+	bool axs = false;
 
 	GFile *file = g_file_new_for_path (filename);
 
@@ -84,7 +84,7 @@ gtkutil_check_file (char *filename, struct file_req *freq)
 		{
 			if (g_file_info_get_attribute_boolean (fi, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE))
 			{
-				axs = TRUE;
+				axs = true;
 			}
 
 			g_object_unref (fi);
@@ -100,7 +100,7 @@ gtkutil_check_file (char *filename, struct file_req *freq)
 		{
 			if (g_file_info_get_file_type (fi) != G_FILE_TYPE_DIRECTORY || (freq->flags & FRF_CHOOSEFOLDER))
 			{
-				axs = TRUE;
+				axs = true;
 			}
 
 			g_object_unref (fi);
