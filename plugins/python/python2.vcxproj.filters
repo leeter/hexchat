@@ -16,7 +16,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="python.c">
+    <ClCompile Include="python.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

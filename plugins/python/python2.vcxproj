@@ -99,7 +99,7 @@
     <None Include="python.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="python.c" />
+    <ClCompile Include="python.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
