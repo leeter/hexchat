@@ -33,14 +33,6 @@ GtkWidget *gtkutil_button (GtkWidget *box, const char *stock, const char *tip, G
 void gtkutil_label_new (const char *text, GtkWidget * box);
 GtkWidget *gtkutil_entry_new (int max, GtkWidget * box, GCallback callback,
 										gpointer userdata);
-GtkWidget *gtkutil_clist_new (int columns, char *titles[], GtkWidget * box,
-	int policy, GCallback select_callback,
-	gpointer select_userdata,
-	GCallback unselect_callback,
-	gpointer unselect_userdata, int selection_mode);
-int gtkutil_clist_selection (GtkWidget * clist);
-int gtkutil_clist_multiple_selection (GtkWidget * clist,
-													int ** rows, const int max_rows);
 void show_and_unfocus (GtkWidget * wid);
 void gtkutil_set_icon (GtkWidget *win);
 GtkWidget *gtkutil_window_new (const char *title, const char *role, int width, int height, int flags);
