@@ -227,28 +227,28 @@ static PyThreadState *pTempThread;
 /* ===================================================================== */
 /* Object definitions */
 
-typedef struct {
+struct XChatOutObject {
 	PyObject_HEAD
 	int softspace; /* We need it for print support. */
-} XChatOutObject;
+};
 
-typedef struct {
+struct ContextObject {
 	PyObject_HEAD
 	hexchat_context *context;
-} ContextObject;
+};
 
-typedef struct {
+struct AttributeObject {
 	PyObject_HEAD
 	PyObject *time;
-} AttributeObject;
+};
 
-typedef struct {
+struct ListItemObject {
 	PyObject_HEAD
 	const char *listname;
 	PyObject *dict;
-} ListItemObject;
+};
 
-typedef struct {
+struct PluginObject{
 	PyObject_HEAD
 	char *name;
 	char *version;
@@ -258,16 +258,16 @@ typedef struct {
 	PyThreadState *tstate;
 	hexchat_context *context;
 	void *gui;
-} PluginObject;
+};
 
-typedef struct {
+struct Hook {
 	int type;
 	PyObject *plugin;
 	PyObject *callback;
 	PyObject *userdata;
 	char *name;
 	void *data; /* A handle, when type == HOOK_XCHAT */
-} Hook;
+};
 
 
 /* ===================================================================== */
@@ -348,11 +348,11 @@ static int Command_Py(const char * const word[], const char * const word_eol[], 
 /* ===================================================================== */
 /* Static declarations and definitions */
 
-static PyTypeObject Plugin_Type;
-static PyTypeObject XChatOut_Type;
-static PyTypeObject Context_Type;
-static PyTypeObject ListItem_Type;
-static PyTypeObject Attribute_Type;
+//static PyTypeObject Plugin_Type;
+//static PyTypeObject XChatOut_Type;
+//static PyTypeObject Context_Type;
+//static PyTypeObject ListItem_Type;
+//static PyTypeObject Attribute_Type;
 
 static PyThreadState *main_tstate = NULL;
 static void *thread_timer = NULL;
@@ -366,6 +366,25 @@ static PyObject *xchatout = NULL;
 #ifdef WITH_THREAD
 static PyThread_type_lock xchat_lock = NULL;
 #endif
+
+static void Util_ReleaseThread(PyThreadState *tstate);
+
+namespace{
+	class py_plugin
+	{
+		PyObject * _plugin;
+	public:
+		py_plugin(PyObject * plugin)
+			:_plugin(plugin)
+		{
+			BEGIN_PLUGIN(_plugin);
+		}
+		~py_plugin()
+		{
+			END_PLUGIN(_plugin);
+		}
+	};
+}
 
 static const char usage[] = "\
 Usage: /PY LOAD   <filename>\n\
@@ -571,20 +590,16 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 	PyObject *word_list, *word_eol_list;
 	PyObject *attributes;
 	int ret = 0;
-	PyObject *plugin;
 
-	plugin = hook->plugin;
-	BEGIN_PLUGIN(plugin);
+	py_plugin plugin(hook->plugin);
 
 	word_list = Util_BuildList(word);
 	if (word_list == NULL) {
-		END_PLUGIN(plugin);
 		return 0;
 	}
 	word_eol_list = Util_BuildList(word_eol);
 	if (word_eol_list == NULL) {
 		Py_DECREF(word_list);
-		END_PLUGIN(plugin);
 		return 0;
 	}
 
@@ -610,8 +625,6 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 		PyErr_Print();
 	}
 
-	END_PLUGIN(plugin);
-
 	return ret;
 }
 
@@ -622,20 +635,16 @@ Callback_Command(const char * const word[], const char * const word_eol[], void 
 	PyObject *retobj;
 	PyObject *word_list, *word_eol_list;
 	int ret = 0;
-	PyObject *plugin;
 
-	plugin = hook->plugin;
-	BEGIN_PLUGIN(plugin);
+	py_plugin plugin(hook->plugin);
 
 	word_list = Util_BuildList(word);
 	if (word_list == NULL) {
-		END_PLUGIN(plugin);
 		return 0;
 	}
 	word_eol_list = Util_BuildList(word_eol);
 	if (word_eol_list == NULL) {
 		Py_DECREF(word_list);
-		END_PLUGIN(plugin);
 		return 0;
 	}
 
@@ -654,8 +663,6 @@ Callback_Command(const char * const word[], const char * const word_eol[], void 
 		PyErr_Print();
 	}
 
-	END_PLUGIN(plugin);
-
 	return ret;
 }
 
@@ -668,20 +675,15 @@ Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void
 	PyObject *word_eol_list;
 	PyObject *attributes;
 	int ret = 0;
-	PyObject *plugin;
-
-	plugin = hook->plugin;
-	BEGIN_PLUGIN(plugin);
+	py_plugin plugin(hook->plugin);
 
 	word_list = Util_BuildList(word);
 	if (word_list == NULL) {
-		END_PLUGIN(plugin);
 		return 0;
 	}
 	word_eol_list = Util_BuildEOLList(word);
 	if (word_eol_list == NULL) {
 		Py_DECREF(word_list);
-		END_PLUGIN(plugin);
 		return 0;
 	}
 
@@ -704,8 +706,6 @@ Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void
 		PyErr_Print();
 	}
 
-	END_PLUGIN(plugin);
-
 	return ret;
 }
 
@@ -717,20 +717,15 @@ Callback_Print(const char * const word[], void *userdata)
 	PyObject *word_list;
 	PyObject *word_eol_list;
 	int ret = 0;
-	PyObject *plugin;
-
-	plugin = hook->plugin;
-	BEGIN_PLUGIN(plugin);
+	py_plugin plugin(hook->plugin);
 
 	word_list = Util_BuildList(word);
 	if (word_list == NULL) {
-		END_PLUGIN(plugin);
 		return 0;
 	}
 	word_eol_list = Util_BuildEOLList(word);
 	if (word_eol_list == NULL) {
 		Py_DECREF(word_list);
-		END_PLUGIN(plugin);
 		return 0;
 	}
 
@@ -750,8 +745,6 @@ Callback_Print(const char * const word[], void *userdata)
 		PyErr_Print();
 	}
 
-	END_PLUGIN(plugin);
-
 	return ret;
 }
 
@@ -761,11 +754,7 @@ Callback_Timer(void *userdata)
 	Hook *hook = (Hook *) userdata;
 	PyObject *retobj;
 	int ret = 0;
-	PyObject *plugin;
-
-	plugin = hook->plugin;
-
-	BEGIN_PLUGIN(hook->plugin);
+	py_plugin plugin(hook->plugin);
 
 	retobj = PyObject_CallFunction(hook->callback, "(O)", hook->userdata);
 
@@ -778,9 +767,7 @@ Callback_Timer(void *userdata)
 
 	/* Returning 0 for this callback unhooks itself. */
 	if (ret == 0)
-		Plugin_RemoveHook(plugin, hook);
-
-	END_PLUGIN(plugin);
+		Plugin_RemoveHook(hook->plugin, hook);
 
 	return ret;
 }
@@ -807,6 +794,59 @@ Callback_ThreadTimer(void *userdata)
 static char *xchatout_buffer = NULL;
 static int xchatout_buffer_size = 0;
 static int xchatout_buffer_pos = 0;
+
+static PyMemberDef XChatOut_members[] = {
+	{ "softspace", T_INT, offsetof(XChatOutObject, softspace), 0 },
+	{ 0 }
+};
+
+static PyMethodDef XChatOut_methods[] = {
+	{ "write", XChatOut_write, METH_VARARGS },
+	{ NULL, NULL }
+};
+
+static PyTypeObject XChatOut_Type = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"hexchat.XChatOut",	/*tp_name*/
+	sizeof(XChatOutObject),	/*tp_basicsize*/
+	0,			/*tp_itemsize*/
+	XChatOut_dealloc,	/*tp_dealloc*/
+	0,			/*tp_print*/
+	0,			/*tp_getattr*/
+	0,			/*tp_setattr*/
+	0,			/*tp_compare*/
+	0,			/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,			/*tp_as_sequence*/
+	0,			/*tp_as_mapping*/
+	0,			/*tp_hash*/
+	0,                      /*tp_call*/
+	0,                      /*tp_str*/
+	PyObject_GenericGetAttr,/*tp_getattro*/
+	PyObject_GenericSetAttr,/*tp_setattro*/
+	0,                      /*tp_as_buffer*/
+	Py_TPFLAGS_DEFAULT,     /*tp_flags*/
+	0,                      /*tp_doc*/
+	0,                      /*tp_traverse*/
+	0,                      /*tp_clear*/
+	0,                      /*tp_richcompare*/
+	0,                      /*tp_weaklistoffset*/
+	0,                      /*tp_iter*/
+	0,                      /*tp_iternext*/
+	XChatOut_methods,       /*tp_methods*/
+	XChatOut_members,       /*tp_members*/
+	0,                      /*tp_getset*/
+	0,                      /*tp_base*/
+	0,                      /*tp_dict*/
+	0,                      /*tp_descr_get*/
+	0,                      /*tp_descr_set*/
+	0,                      /*tp_dictoffset*/
+	0,                      /*tp_init*/
+	PyType_GenericAlloc,    /*tp_alloc*/
+	PyType_GenericNew,      /*tp_new*/
+	PyObject_Del,          /*tp_free*/
+	0,                      /*tp_is_gc*/
+};
 
 static PyObject *
 XChatOut_New()
@@ -902,66 +942,11 @@ exit:
 	return Py_None;
 }
 
-#define OFF(x) offsetof(XChatOutObject, x)
 
-static PyMemberDef XChatOut_members[] = {
-	{"softspace", T_INT, OFF(softspace), 0},
-	{0}
-};
-
-static PyMethodDef XChatOut_methods[] = {
-	{"write", XChatOut_write, METH_VARARGS},
-	{NULL, NULL}
-};
-
-static PyTypeObject XChatOut_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0)
-	"hexchat.XChatOut",	/*tp_name*/
-	sizeof(XChatOutObject),	/*tp_basicsize*/
-	0,			/*tp_itemsize*/
-	XChatOut_dealloc,	/*tp_dealloc*/
-	0,			/*tp_print*/
-	0,			/*tp_getattr*/
-	0,			/*tp_setattr*/
-	0,			/*tp_compare*/
-	0,			/*tp_repr*/
-	0,			/*tp_as_number*/
-	0,			/*tp_as_sequence*/
-	0,			/*tp_as_mapping*/
-	0,			/*tp_hash*/
-		0,                      /*tp_call*/
-		0,                      /*tp_str*/
-		PyObject_GenericGetAttr,/*tp_getattro*/
-		PyObject_GenericSetAttr,/*tp_setattro*/
-		0,                      /*tp_as_buffer*/
-		Py_TPFLAGS_DEFAULT,     /*tp_flags*/
-		0,                      /*tp_doc*/
-		0,                      /*tp_traverse*/
-		0,                      /*tp_clear*/
-		0,                      /*tp_richcompare*/
-		0,                      /*tp_weaklistoffset*/
-		0,                      /*tp_iter*/
-		0,                      /*tp_iternext*/
-		XChatOut_methods,       /*tp_methods*/
-		XChatOut_members,       /*tp_members*/
-		0,                      /*tp_getset*/
-		0,                      /*tp_base*/
-		0,                      /*tp_dict*/
-		0,                      /*tp_descr_get*/
-		0,                      /*tp_descr_set*/
-		0,                      /*tp_dictoffset*/
-		0,                      /*tp_init*/
-		PyType_GenericAlloc,    /*tp_alloc*/
-		PyType_GenericNew,      /*tp_new*/
-		PyObject_Del,          /*tp_free*/
-		0,                      /*tp_is_gc*/
-};
 
 
 /* ===================================================================== */
 /* Attribute object */
-
-#undef OFF
 #define OFF(x) offsetof(AttributeObject, x)
 
 static PyMemberDef Attribute_members[] = {
@@ -1521,6 +1506,59 @@ Plugin_Delete(PyObject *plugin)
 	Py_EndInterpreter(tstate);
 }
 
+static void
+Plugin_dealloc(PluginObject *self)
+{
+	g_free(self->filename);
+	g_free(self->name);
+	g_free(self->version);
+	g_free(self->description);
+	Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static PyTypeObject Plugin_Type = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"hexchat.Plugin",		/*tp_name*/
+	sizeof(PluginObject),	/*tp_basicsize*/
+	0,			/*tp_itemsize*/
+	(destructor)Plugin_dealloc, /*tp_dealloc*/
+	0,			/*tp_print*/
+	0,			/*tp_getattr*/
+	0,			/*tp_setattr*/
+	0,			/*tp_compare*/
+	0,			/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,			/*tp_as_sequence*/
+	0,			/*tp_as_mapping*/
+	0,			/*tp_hash*/
+	0,                      /*tp_call*/
+	0,                      /*tp_str*/
+	PyObject_GenericGetAttr,/*tp_getattro*/
+	PyObject_GenericSetAttr,/*tp_setattro*/
+	0,                      /*tp_as_buffer*/
+	Py_TPFLAGS_DEFAULT,     /*tp_flags*/
+	0,                      /*tp_doc*/
+	0,                      /*tp_traverse*/
+	0,                      /*tp_clear*/
+	0,                      /*tp_richcompare*/
+	0,                      /*tp_weaklistoffset*/
+	0,                      /*tp_iter*/
+	0,                      /*tp_iternext*/
+	0,                      /*tp_methods*/
+	0,                      /*tp_members*/
+	0,                      /*tp_getset*/
+	0,                      /*tp_base*/
+	0,                      /*tp_dict*/
+	0,                      /*tp_descr_get*/
+	0,                      /*tp_descr_set*/
+	0,                      /*tp_dictoffset*/
+	0,                      /*tp_init*/
+	PyType_GenericAlloc,    /*tp_alloc*/
+	PyType_GenericNew,      /*tp_new*/
+	PyObject_Del,          /*tp_free*/
+	0,                      /*tp_is_gc*/
+};
+
 static PyObject *
 Plugin_New(const char *filepath, PyObject *xcoobj)
 {
@@ -1648,59 +1686,6 @@ error:
 
 	return NULL;
 }
-
-static void
-Plugin_dealloc(PluginObject *self)
-{
-	g_free(self->filename);
-	g_free(self->name);
-	g_free(self->version);
-	g_free(self->description);
-	Py_TYPE(self)->tp_free((PyObject *)self);
-}
-
-static PyTypeObject Plugin_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0)
-	"hexchat.Plugin",		/*tp_name*/
-	sizeof(PluginObject),	/*tp_basicsize*/
-	0,			/*tp_itemsize*/
-	(destructor)Plugin_dealloc, /*tp_dealloc*/
-	0,			/*tp_print*/
-	0,			/*tp_getattr*/
-	0,			/*tp_setattr*/
-	0,			/*tp_compare*/
-	0,			/*tp_repr*/
-	0,			/*tp_as_number*/
-	0,			/*tp_as_sequence*/
-	0,			/*tp_as_mapping*/
-	0,			/*tp_hash*/
-		0,                      /*tp_call*/
-		0,                      /*tp_str*/
-		PyObject_GenericGetAttr,/*tp_getattro*/
-		PyObject_GenericSetAttr,/*tp_setattro*/
-		0,                      /*tp_as_buffer*/
-		Py_TPFLAGS_DEFAULT,     /*tp_flags*/
-		0,                      /*tp_doc*/
-		0,                      /*tp_traverse*/
-		0,                      /*tp_clear*/
-		0,                      /*tp_richcompare*/
-		0,                      /*tp_weaklistoffset*/
-		0,                      /*tp_iter*/
-		0,                      /*tp_iternext*/
-		0,                      /*tp_methods*/
-		0,                      /*tp_members*/
-		0,                      /*tp_getset*/
-		0,                      /*tp_base*/
-		0,                      /*tp_dict*/
-		0,                      /*tp_descr_get*/
-		0,                      /*tp_descr_set*/
-		0,                      /*tp_dictoffset*/
-		0,                      /*tp_init*/
-		PyType_GenericAlloc,    /*tp_alloc*/
-		PyType_GenericNew,      /*tp_new*/
-		PyObject_Del,          /*tp_free*/
-		0,                      /*tp_is_gc*/
-};
 
 
 /* ===================================================================== */
@@ -2524,20 +2509,19 @@ IInterp_Exec(const char *command)
 	PyObject *m, *d, *o;
 	char *buffer;
 	int len;
-
-	BEGIN_PLUGIN(interp_plugin);
+	py_plugin plugin(interp_plugin);
 
 	m = PyImport_AddModule("__main__");
 	if (m == NULL) {
 		hexchat_print(ph, "Can't get __main__ module");
-		goto fail;
+		return;
 	}
 	d = PyModule_GetDict(m);
 	len = strlen(command);
 	buffer = (char *) g_malloc(len+2);
 	if (buffer == NULL) {
 		hexchat_print(ph, "Not enough memory for command buffer");
-		goto fail;
+		return;
 	}
 	memcpy(buffer, command, len);
 	buffer[len] = '\n';
@@ -2547,13 +2531,9 @@ IInterp_Exec(const char *command)
 	g_free(buffer);
 	if (o == NULL) {
 		PyErr_Print();
-		goto fail;
+		return;
 	}
 	Py_DECREF(o);
-
-fail:
-	END_PLUGIN(interp_plugin);
-	return;
 }
 
 static int
@@ -2618,9 +2598,10 @@ Command_PyUnload(const char *name)
 	if (!plugin) {
 		hexchat_print(ph, "Can't find a python plugin with that name");
 	} else {
-		BEGIN_PLUGIN(plugin);
-		Plugin_Delete((PyObject*)plugin);
-		END_PLUGIN(plugin);
+		{
+			py_plugin p((PyObject*)plugin);
+			Plugin_Delete((PyObject*)plugin);
+		}
 		plugin_list = g_slist_remove(plugin_list, plugin);
 	}
 }
@@ -2844,10 +2825,11 @@ hexchat_plugin_deinit()
 
 	list = plugin_list;
 	while (list != NULL) {
-		PyObject *plugin = (PyObject *) list->data;
-		BEGIN_PLUGIN(plugin);
-		Plugin_Delete(plugin);
-		END_PLUGIN(plugin);
+		PyObject *plugin = (PyObject *)list->data;
+		{
+			py_plugin p(plugin);
+			Plugin_Delete(plugin);
+		}
 		list = list->next;
 	}
 	g_slist_free(plugin_list);
@@ -2874,7 +2856,7 @@ hexchat_plugin_deinit()
 
 #ifdef WITH_THREAD
 	if (thread_timer != NULL) {
-		hexchat_unhook(ph, thread_timer);
+		hexchat_unhook(ph, static_cast<hexchat_hook*>(thread_timer));
 		thread_timer = NULL;
 	}
 	PyThread_free_lock(xchat_lock);
