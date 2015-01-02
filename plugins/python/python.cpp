@@ -53,13 +53,13 @@
 
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
+#include <memory>
+#include <sstream>
+#include <string>
 #include <sys/types.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#define strtok_r strtok_s
-#endif
 #ifdef WIN32
 #include <direct.h>
 #else
@@ -397,6 +397,16 @@ namespace{
 			END_XCHAT_CALLS();
 		}
 	};
+
+	struct py_object_deleter
+	{
+		void operator()(PyObject * obj)
+		{
+			Py_DECREF(obj);
+		}
+	};
+
+	typedef std::unique_ptr<PyObject, py_object_deleter> PyObjectPtr;
 }
 
 static const char usage[] = "\
@@ -419,7 +429,6 @@ Util_BuildList(const char * const word[])
 {
 	PyObject *list;
 	int listsize = 31;
-	int i;
 	/* Find the last valid array member; there may be intermediate NULLs that
 	 * would otherwise cause us to drop some members. */
 	while (listsize > 0 &&
@@ -430,7 +439,7 @@ Util_BuildList(const char * const word[])
 		PyErr_Print();
 		return nullptr;
 	}
-	for (i = 1; i <= listsize; i++) {
+	for (int i = 1; i <= listsize; i++) {
 		PyObject *o;
 		if (word[i] == nullptr) {
 			Py_INCREF(Py_None);
@@ -449,7 +458,6 @@ Util_BuildEOLList(const char * const word[])
 {
 	PyObject *list;
 	int listsize = 31;
-	int i;
 	char *accum = nullptr;
 	char *last = nullptr;
 
@@ -463,7 +471,8 @@ Util_BuildEOLList(const char * const word[])
 		PyErr_Print();
 		return nullptr;
 	}
-	for (i = listsize; i > 0; i--) {
+	for (int i = listsize; i > 0; i--) 
+	{
 		const char *part = word[i];
 		PyObject * uni_part;
 		if (accum == nullptr) {
@@ -494,11 +503,7 @@ Util_BuildEOLList(const char * const word[])
 static void
 Util_Autoload_from (const char *dir_name)
 {
-	gchar *oldcwd;
-	const char *entry_name;
-	GDir *dir;
-
-	oldcwd = g_get_current_dir ();
+	auto oldcwd = g_get_current_dir ();
 	if (oldcwd == nullptr)
 		return;
 	if (g_chdir(dir_name) != 0)
@@ -506,12 +511,13 @@ Util_Autoload_from (const char *dir_name)
 		g_free (oldcwd);
 		return;
 	}
-	dir = g_dir_open (".", 0, nullptr);
+	auto dir = g_dir_open (".", 0, nullptr);
 	if (dir == nullptr)
 	{
 		g_free (oldcwd);
 		return;
 	}
+	const char *entry_name;
 	while ((entry_name = g_dir_read_name (dir)))
 	{
 		if (g_str_has_suffix (entry_name, ".py"))
@@ -524,14 +530,11 @@ Util_Autoload_from (const char *dir_name)
 static void
 Util_Autoload()
 {
-	const char *xdir;
-	char *sub_dir;
 	/* we need local filesystem encoding for g_chdir, g_dir_open etc */
-
-	xdir = hexchat_get_info(ph, "configdir");
+	auto xdir = hexchat_get_info(ph, "configdir");
 
 	/* auto-load from subdirectory addons */
-	sub_dir = g_build_filename (xdir, "addons", nullptr);
+	auto sub_dir = g_build_filename (xdir, "addons", nullptr);
 	Util_Autoload_from(sub_dir);
 	g_free (sub_dir);
 }
@@ -598,42 +601,33 @@ Util_ReleaseThread(PyThreadState *tstate)
 static int
 Callback_Server(const char * const word[], const char * const word_eol[], hexchat_event_attrs *attrs, void *userdata)
 {
-	Hook *hook = (Hook *) userdata;
-	PyObject *retobj;
-	PyObject *word_list, *word_eol_list;
-	PyObject *attributes;
+	Hook *hook = static_cast<Hook*>(userdata);
 	int ret = 0;
 
 	py_plugin plugin(hook->plugin);
 
-	word_list = Util_BuildList(word);
+	PyObjectPtr word_list{ Util_BuildList(word) };
 	if (word_list == nullptr) {
 		return 0;
 	}
-	word_eol_list = Util_BuildList(word_eol);
+	PyObjectPtr word_eol_list{ Util_BuildList(word_eol) };
 	if (word_eol_list == nullptr) {
-		Py_DECREF(word_list);
 		return 0;
 	}
 
-	attributes = Attribute_New(attrs);
-
+	PyObjectPtr attributes{ Attribute_New(attrs) };
+	PyObjectPtr retobj;
 	if (hook->type == HOOK_XCHAT_ATTR)
-		retobj = PyObject_CallFunction(hook->callback, "(OOOO)", word_list,
-						   word_eol_list, hook->userdata, attributes);
+		retobj.reset(PyObject_CallFunction(hook->callback, "(OOOO)", word_list.get(),
+						   word_eol_list.get(), hook->userdata, attributes));
 	else
-		retobj = PyObject_CallFunction(hook->callback, "(OOO)", word_list,
-						   word_eol_list, hook->userdata);
-	Py_DECREF(word_list);
-	Py_DECREF(word_eol_list);
-	Py_DECREF(attributes);
+		retobj.reset(PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
+						   word_eol_list.get(), hook->userdata));
 
-	if (retobj == Py_None) {
+	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
-		Py_DECREF(retobj);
 	} else if (retobj) {
-		ret = PyLong_AsLong(retobj);
-		Py_DECREF(retobj);
+		ret = PyLong_AsLong(retobj.get());
 	} else {
 		PyErr_Print();
 	}
@@ -645,33 +639,25 @@ static int
 Callback_Command(const char * const word[], const char * const word_eol[], void *userdata)
 {
 	Hook *hook = (Hook *) userdata;
-	PyObject *retobj;
-	PyObject *word_list, *word_eol_list;
-	int ret = 0;
-
 	py_plugin plugin(hook->plugin);
 
-	word_list = Util_BuildList(word);
-	if (word_list == nullptr) {
+	PyObjectPtr word_list{ Util_BuildList(word) };
+	if (!word_list) {
 		return 0;
 	}
-	word_eol_list = Util_BuildList(word_eol);
-	if (word_eol_list == nullptr) {
-		Py_DECREF(word_list);
+	PyObjectPtr word_eol_list{ Util_BuildList(word_eol) };
+	if (!word_eol_list) {
 		return 0;
 	}
 
-	retobj = PyObject_CallFunction(hook->callback, "(OOO)", word_list,
-					   word_eol_list, hook->userdata);
-	Py_DECREF(word_list);
-	Py_DECREF(word_eol_list);
+	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
+		word_eol_list.get(), hook->userdata) };
 
-	if (retobj == Py_None) {
+	int ret = 0;
+	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
-		Py_DECREF(retobj);
 	} else if (retobj) {
-		ret = PyLong_AsLong(retobj);
-		Py_DECREF(retobj);
+		ret = PyLong_AsLong(retobj.get());
 	} else {
 		PyErr_Print();
 	}
@@ -683,38 +669,27 @@ static int
 Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void *userdata)
 {
 	Hook *hook = (Hook *) userdata;
-	PyObject *retobj;
-	PyObject *word_list;
-	PyObject *word_eol_list;
-	PyObject *attributes;
 	int ret = 0;
 	py_plugin plugin(hook->plugin);
 
-	word_list = Util_BuildList(word);
-	if (word_list == nullptr) {
+	PyObjectPtr word_list{ Util_BuildList(word) };
+	if (!word_list) {
 		return 0;
 	}
-	word_eol_list = Util_BuildEOLList(word);
-	if (word_eol_list == nullptr) {
-		Py_DECREF(word_list);
+	PyObjectPtr word_eol_list{ Util_BuildEOLList(word) };
+	if (!word_eol_list) {
 		return 0;
 	}
 
-	attributes = Attribute_New(attrs);
+	PyObjectPtr attributes{ Attribute_New(attrs) };
 
-	retobj = PyObject_CallFunction(hook->callback, "(OOOO)", word_list,
-						word_eol_list, hook->userdata, attributes);
+	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOOO)", word_list.get(),
+		word_eol_list.get(), hook->userdata, attributes.get()) };
 
-	Py_DECREF(word_list);
-	Py_DECREF(word_eol_list);
-	Py_DECREF(attributes);
-
-	if (retobj == Py_None) {
+	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
-		Py_DECREF(retobj);
 	} else if (retobj) {
-		ret = PyLong_AsLong(retobj);
-		Py_DECREF(retobj);
+		ret = PyLong_AsLong(retobj.get());
 	} else {
 		PyErr_Print();
 	}
@@ -725,35 +700,26 @@ Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void
 static int
 Callback_Print(const char * const word[], void *userdata)
 {
-	Hook *hook = (Hook *) userdata;
-	PyObject *retobj;
-	PyObject *word_list;
-	PyObject *word_eol_list;
-	int ret = 0;
+	Hook *hook = static_cast<Hook *>(userdata);
 	py_plugin plugin(hook->plugin);
 
-	word_list = Util_BuildList(word);
-	if (word_list == nullptr) {
+	PyObjectPtr word_list{ Util_BuildList(word) };
+	if (!word_list) {
 		return 0;
 	}
-	word_eol_list = Util_BuildEOLList(word);
-	if (word_eol_list == nullptr) {
-		Py_DECREF(word_list);
+	PyObjectPtr word_eol_list{ Util_BuildEOLList(word) };
+	if (!word_eol_list) {
 		return 0;
 	}
 
-	retobj = PyObject_CallFunction(hook->callback, "(OOO)", word_list,
-						   word_eol_list, hook->userdata);
+	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
+		word_eol_list.get(), hook->userdata) };
 
-	Py_DECREF(word_list);
-	Py_DECREF(word_eol_list);
-
-	if (retobj == Py_None) {
+	int ret = 0;
+	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
-		Py_DECREF(retobj);
 	} else if (retobj) {
-		ret = PyLong_AsLong(retobj);
-		Py_DECREF(retobj);
+		ret = PyLong_AsLong(retobj.get());
 	} else {
 		PyErr_Print();
 	}
@@ -765,15 +731,13 @@ static int
 Callback_Timer(void *userdata)
 {
 	Hook *hook = (Hook *) userdata;
-	PyObject *retobj;
 	int ret = 0;
 	py_plugin plugin(hook->plugin);
 
-	retobj = PyObject_CallFunction(hook->callback, "(O)", hook->userdata);
+	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(O)", hook->userdata) };
 
 	if (retobj) {
-		ret = PyObject_IsTrue(retobj);
-		Py_DECREF(retobj);
+		ret = PyObject_IsTrue(retobj.get());
 	} else {
 		PyErr_Print();
 	}
@@ -787,7 +751,7 @@ Callback_Timer(void *userdata)
 
 #ifdef WITH_THREAD
 static int
-Callback_ThreadTimer(void *userdata)
+Callback_ThreadTimer(void *)
 {
 	RELEASE_XCHAT_LOCK();
 #ifndef WIN32
@@ -1275,8 +1239,7 @@ static PyTypeObject ListItem_Type = {
 static PyObject *
 ListItem_New(const char *listname)
 {
-	ListItemObject *item;
-	item = PyObject_New(ListItemObject, &ListItem_Type);
+	ListItemObject *item = PyObject_New(ListItemObject, &ListItem_Type);
 	if (item != nullptr) {
 		/* listname parameter must be statically allocated. */
 		item->listname = listname;
@@ -1430,7 +1393,7 @@ Plugin_RemoveAllHooks(PyObject *plugin)
 {
 	GSList *list = Plugin_GetHooks(plugin);
 	while (list) {
-		Hook *hook = (Hook *) list->data;
+		Hook *hook = static_cast<Hook *>(list->data);
 		if (hook->type != HOOK_UNLOAD) {
 			/* This is an xchat hook. Unregister it. */
 			xchat_calls calls(NONE);
@@ -1451,14 +1414,11 @@ Plugin_Delete(PyObject *plugin)
 	PyThreadState *tstate = ((PluginObject*)plugin)->tstate;
 	GSList *list = Plugin_GetHooks(plugin);
 	while (list) {
-		Hook *hook = (Hook *) list->data;
+		Hook *hook = static_cast<Hook *>(list->data);
 		if (hook->type == HOOK_UNLOAD) {
-			PyObject *retobj;
-			retobj = PyObject_CallFunction(hook->callback, "(O)",
-							   hook->userdata);
-			if (retobj) {
-				Py_DECREF(retobj);
-			} else {
+			PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(O)",
+				hook->userdata) };
+			if (!retobj) {
 				PyErr_Print();
 				PyErr_Clear();
 			}
@@ -1883,22 +1843,20 @@ Module_hexchat_pluginpref_delete(PyObject *self, PyObject *args)
 static PyObject *
 Module_hexchat_pluginpref_list(PyObject *self, PyObject *args)
 {
-	PluginObject *plugin = (PluginObject*)Plugin_GetCurrent();
-	hexchat_plugin *prefph = Plugin_GetHandle(plugin);
 	char list[4096];
-	char* token, *context = nullptr;
 	int result;
-	PyObject *pylist;
-	pylist = PyList_New(0);
+	PyObject *pylist = PyList_New(0);
 	{
+		PluginObject *plugin = (PluginObject*)Plugin_GetCurrent();
+		hexchat_plugin *prefph = Plugin_GetHandle(plugin);
 		xchat_calls calls{ NONE };
 		result = hexchat_pluginpref_list(prefph, list);
 	}
 	if (result) {
-		token = strtok_r(list, ",", &context);
-		while (token != nullptr) {
-			PyList_Append(pylist, PyUnicode_FromString(token));
-			token = strtok_r (nullptr, ",", &context);
+		std::istringstream istream{ list };
+		for (std::string token; std::getline(istream, token, ',');)
+		{
+			PyList_Append(pylist, PyUnicode_FromString(token.c_str()));
 		}
 	}
 	return pylist;
@@ -2257,17 +2215,14 @@ error:
 static PyObject *
 Module_xchat_get_lists(PyObject *self, PyObject *args)
 {
-	PyObject *l, *o;
-	const char *const *fields;
-	int i;
 	/* This function is thread safe, and returns statically
 	 * allocated data. */
-	fields = hexchat_list_fields(ph, "lists");
-	l = PyList_New(0);
+	auto fields = hexchat_list_fields(ph, "lists");
+	auto l = PyList_New(0);
 	if (l == nullptr)
 		return nullptr;
-	for (i = 0; fields[i]; i++) {
-		o = PyUnicode_FromString(fields[i]);
+	for (int i = 0; fields[i]; i++) {
+		auto o = PyUnicode_FromString(fields[i]);
 		if (o == nullptr || PyList_Append(l, o) == -1) {
 			Py_DECREF(l);
 			Py_XDECREF(o);
@@ -2291,11 +2246,11 @@ static PyObject *
 Module_hexchat_strip(PyObject *self, PyObject *args)
 {
 	PyObject *result;
-	char *str, *str2;
+	char *str;
 	int len = -1, flags = 1 | 2;
 	if (!PyArg_ParseTuple(args, "s|ii:strip", &str, &len, &flags))
 		return nullptr;
-	str2 = hexchat_strip(ph, str, len, flags);
+	auto str2 = hexchat_strip(ph, str, len, flags);
 	result = PyUnicode_FromString(str2);
 	hexchat_free(ph, str2);
 	return result;
@@ -2382,7 +2337,7 @@ moduleinit_hexchat(void)
 {
 	PyObject *hm;
 #ifdef IS_PY3K
-		hm = PyModule_Create(&moduledef);
+	hm = PyModule_Create(&moduledef);
 #else
 	hm = Py_InitModule3("hexchat", Module_xchat_methods, "HexChat Scripting Interface");
 #endif
@@ -2458,9 +2413,7 @@ initxchat(void)
 static void
 IInterp_Exec(const char *command)
 {
-	PyObject *m, *d, *o;
-	char *buffer;
-	int len;
+	PyObject *m, *d;
 	py_plugin plugin(interp_plugin);
 
 	m = PyImport_AddModule("__main__");
@@ -2469,23 +2422,14 @@ IInterp_Exec(const char *command)
 		return;
 	}
 	d = PyModule_GetDict(m);
-	len = strlen(command);
-	buffer = (char *) g_malloc(len+2);
-	if (buffer == nullptr) {
-		hexchat_print(ph, "Not enough memory for command buffer");
-		return;
-	}
-	memcpy(buffer, command, len);
-	buffer[len] = '\n';
-	buffer[len+1] = 0;
+	std::string buffer{ command };
+	buffer.push_back('\n');
 	PyRun_SimpleString("import hexchat");
-	o = PyRun_StringFlags(buffer, Py_single_input, d, d, nullptr);
-	g_free(buffer);
-	if (o == nullptr) {
+	PyObjectPtr o{ PyRun_StringFlags(buffer.c_str(), Py_single_input, d, d, nullptr) };
+	if (!o) {
 		PyErr_Print();
 		return;
 	}
-	Py_DECREF(o);
 }
 
 static int
@@ -2535,9 +2479,8 @@ Command_PyList()
 static void
 Command_PyLoad(const char *filename)
 {
-	PyObject *plugin;
 	RELEASE_XCHAT_LOCK();
-	plugin = Plugin_New(filename, xchatout);
+	auto plugin = Plugin_New(filename, xchatout);
 	ACQUIRE_XCHAT_LOCK();
 	if (plugin)
 		plugin_list = g_slist_append(plugin_list, plugin);
@@ -2565,10 +2508,9 @@ Command_PyReload(const char *name)
 	if (!plugin) {
 		hexchat_print(ph, "Can't find a python plugin with that name");
 	} else {
-		char *filename = g_strdup(plugin->filename);
-		Command_PyUnload(filename);
-		Command_PyLoad(filename);
-		g_free(filename);
+		std::string filename = plugin->filename;
+		Command_PyUnload(filename.c_str());
+		Command_PyLoad(filename.c_str());
 	}
 }
 
@@ -2582,35 +2524,41 @@ static int
 Command_Py(const char *const word[], const char *const word_eol[], void *userdata)
 {
 	const char *cmd = word[2];
-	int ok = 0;
-	if (strcasecmp(cmd, "LIST") == 0) {
-		ok = 1;
+	bool ok = false;
+	if (g_ascii_strncasecmp(cmd, "LIST", 4) == 0) {
+		ok = true;
 		Command_PyList();
-	} else if (strcasecmp(cmd, "EXEC") == 0) {
+	}
+	else if (g_ascii_strncasecmp(cmd, "EXEC", 4) == 0) {
 		if (word[3][0]) {
-			ok = 1;
+			ok = true;
 			IInterp_Exec(word_eol[3]);
 		}
-	} else if (strcasecmp(cmd, "LOAD") == 0) {
+	}
+	else if (g_ascii_strncasecmp(cmd, "LOAD", 4) == 0) {
 		if (word[3][0]) {
-			ok = 1;
+			ok = true;
 			Command_PyLoad(word[3]);
 		}
-	} else if (strcasecmp(cmd, "UNLOAD") == 0) {
+	}
+	else if (g_ascii_strncasecmp(cmd, "UNLOAD", 6) == 0) {
 		if (word[3][0]) {
-			ok = 1;
+			ok = true;
 			Command_PyUnload(word[3]);
 		}
-	} else if (strcasecmp(cmd, "RELOAD") == 0) {
+	}
+	else if (g_ascii_strncasecmp(cmd, "RELOAD", 6) == 0) {
 		if (word[3][0]) {
-			ok = 1;
+			ok = true;
 			Command_PyReload(word[3]);
 		}
-	} else if (strcasecmp(cmd, "CONSOLE") == 0) {
-		ok = 1;
+	}
+	else if (g_ascii_strncasecmp(cmd, "CONSOLE", 7) == 0) {
+		ok = true;
 		hexchat_command(ph, "QUERY >>python<<");
-	} else if (strcasecmp(cmd, "ABOUT") == 0) {
-		ok = 1;
+	}
+	else if (g_ascii_strncasecmp(cmd, "ABOUT", 5) == 0) {
+		ok = true;
 		Command_PyAbout();
 	}
 	if (!ok)
@@ -2621,8 +2569,8 @@ Command_Py(const char *const word[], const char *const word_eol[], void *userdat
 static int
 Command_Load(const char *const word[], const char *const word_eol[], void *userdata)
 {
-	int len = strlen(word[2]);
-	if (len > 3 && strcasecmp(".py", word[2]+len-3) == 0) {
+	auto len = strlen(word[2]);
+	if (len > 3 && g_ascii_strncasecmp(".py", word[2] + len - 3, 3) == 0) {
 		Command_PyLoad(word[2]);
 		return HEXCHAT_EAT_HEXCHAT;
 	}
@@ -2632,8 +2580,8 @@ Command_Load(const char *const word[], const char *const word_eol[], void *userd
 static int
 Command_Reload(const char *const word[], const char *const word_eol[], void *userdata)
 {
-	int len = strlen(word[2]);
-	if (len > 3 && strcasecmp(".py", word[2]+len-3) == 0) {
+	auto len = strlen(word[2]);
+	if (len > 3 && g_ascii_strncasecmp(".py", word[2] + len - 3, 3) == 0) {
 	Command_PyReload(word[2]);
 	return HEXCHAT_EAT_HEXCHAT;
 	}
@@ -2643,8 +2591,8 @@ Command_Reload(const char *const word[], const char *const word_eol[], void *use
 static int
 Command_Unload(const char *const word[], const char *const word_eol[], void *userdata)
 {
-	int len = strlen(word[2]);
-	if (len > 3 && strcasecmp(".py", word[2]+len-3) == 0) {
+	auto len = strlen(word[2]);
+	if (len > 3 && g_ascii_strncasecmp(".py", word[2] + len - 3, 3) == 0) {
 		Command_PyUnload(word[2]);
 		return HEXCHAT_EAT_HEXCHAT;
 	}

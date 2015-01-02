@@ -73,6 +73,7 @@
       <ModuleDefinitionFile>python.def</ModuleDefinitionFile>
       <AdditionalDependencies>"$(Python3Lib).lib";$(DepLibs);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(DepsRoot)\lib;$(OutDir);$(Python3Path)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -93,6 +94,7 @@
       <ModuleDefinitionFile>python.def</ModuleDefinitionFile>
       <AdditionalDependencies>"$(Python3Lib).lib";$(DepLibs);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(DepsRoot)\lib;$(OutDir);$(Python3Path)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
