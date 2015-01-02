@@ -619,7 +619,7 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 	PyObjectPtr retobj;
 	if (hook->type == HOOK_XCHAT_ATTR)
 		retobj.reset(PyObject_CallFunction(hook->callback, "(OOOO)", word_list.get(),
-						   word_eol_list.get(), hook->userdata, attributes));
+						   word_eol_list.get(), hook->userdata, attributes.get()));
 	else
 		retobj.reset(PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
 						   word_eol_list.get(), hook->userdata));
