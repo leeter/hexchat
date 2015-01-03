@@ -53,11 +53,14 @@
 
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>
 #include <memory>
+#include <new>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <sys/types.h>
 
 #ifdef WIN32
@@ -150,6 +153,16 @@ namespace{
 #define BEGIN_XCHAT_CALLS(x)
 #define END_XCHAT_CALLS()
 #endif
+
+struct py_object_deleter
+{
+	void operator()(PyObject * obj)
+	{
+		Py_DECREF(obj);
+	}
+};
+
+typedef std::unique_ptr<PyObject, py_object_deleter> PyObjectPtr;
 
 #ifdef WITH_THREAD
 
@@ -263,10 +276,10 @@ struct PluginObject{
 };
 
 struct Hook {
-	int type;
+	hook_action type;
 	PyObject *plugin;
-	PyObject *callback;
-	PyObject *userdata;
+	PyObjectPtr callback;
+	PyObjectPtr userdata;
 	char *name;
 	void *data; /* A handle, when type == HOOK_XCHAT */
 };
@@ -306,7 +319,7 @@ static PyObject *Context_FromServerAndChannel(char *server, char *channel);
 static PyObject *Plugin_New(const char *filepath, PyObject *xcoobj);
 static PyObject *Plugin_GetCurrent();
 static PluginObject *Plugin_ByString(const char *str);
-static Hook *Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
+static Hook *Plugin_AddHook(hook_action type, PyObject *plugin, PyObject *callback,
 				PyObject *userdata, const char name[]);
 static Hook *Plugin_FindHook(PyObject *plugin, char *name);
 static void Plugin_RemoveHook(PyObject *plugin, Hook *hook);
@@ -354,7 +367,7 @@ static PyThreadState *main_tstate = nullptr;
 static void *thread_timer = nullptr;
 
 static hexchat_plugin *ph;
-static GSList *plugin_list = nullptr;
+//static GSList *plugin_list = nullptr;
 
 static PyObject *interp_plugin = nullptr;
 static PyObject *xchatout = nullptr;
@@ -397,18 +410,17 @@ static void Util_ReleaseThread(PyThreadState *tstate);
 			END_XCHAT_CALLS();
 		}
 	};
-
-	struct py_object_deleter
+	
+	static void Plugin_Delete(PyObject *plugin);
+	struct plugin_deleter
 	{
-		void operator()(PyObject * obj)
+		void operator()(PluginObject* plugin)
 		{
-			Py_DECREF(obj);
+			Plugin_Delete(reinterpret_cast<PyObject*>(plugin));
 		}
 	};
 
-	typedef std::unique_ptr<PyObject, py_object_deleter> PyObjectPtr;
-
-
+	static std::vector<std::unique_ptr<PluginObject, plugin_deleter> > plugin_list;
 static const char usage[] = "\
 Usage: /PY LOAD   <filename>\n\
 		   UNLOAD <filename|name>\n\
@@ -617,11 +629,11 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 	PyObjectPtr attributes{ Attribute_New(attrs) };
 	PyObjectPtr retobj;
 	if (hook->type == HOOK_XCHAT_ATTR)
-		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
-						   word_eol_list.get(), hook->userdata, attributes.get(), nullptr));
+		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback.get(), word_list.get(),
+						   word_eol_list.get(), hook->userdata.get(), attributes.get(), nullptr));
 	else
-		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
-						   word_eol_list.get(), hook->userdata, nullptr));
+		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback.get(), word_list.get(),
+						   word_eol_list.get(), hook->userdata.get(), nullptr));
 
 	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
@@ -649,8 +661,8 @@ Callback_Command(const char * const word[], const char * const word_eol[], void 
 		return 0;
 	}
 
-	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
-		word_eol_list.get(), hook->userdata, nullptr) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback.get(), word_list.get(),
+		word_eol_list.get(), hook->userdata.get(), nullptr) };
 
 	int ret = 0;
 	if (retobj.get() == Py_None) {
@@ -682,8 +694,8 @@ Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void
 
 	PyObjectPtr attributes{ Attribute_New(attrs) };
 
-	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
-		word_eol_list.get(), hook->userdata, attributes.get(), nullptr) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback.get(), word_list.get(),
+		word_eol_list.get(), hook->userdata.get(), attributes.get(), nullptr) };
 
 	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
@@ -711,8 +723,8 @@ Callback_Print(const char * const word[], void *userdata)
 		return 0;
 	}
 
-	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
-		word_eol_list.get(), hook->userdata, nullptr) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback.get(), word_list.get(),
+		word_eol_list.get(), hook->userdata.get(), nullptr) };
 
 	int ret = 0;
 	if (retobj.get() == Py_None) {
@@ -733,7 +745,7 @@ Callback_Timer(void *userdata)
 	int ret = 0;
 	py_plugin plugin(hook->plugin);
 
-	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, hook->userdata, nullptr) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback.get(), hook->userdata.get(), nullptr) };
 
 	if (retobj) {
 		ret = PyObject_IsTrue(retobj.get());
@@ -1298,27 +1310,25 @@ Plugin_GetHandle(PluginObject *plugin)
 static PluginObject *
 Plugin_ByString(const char *str)
 {
-	for (auto list = plugin_list; list; list = g_slist_next(list)){
-		auto plugin = static_cast<PluginObject *>(list->data);
-		auto basename = g_path_get_basename(plugin->filename);
+	for (auto & plugin : plugin_list)
+	{
+		std::unique_ptr<gchar[], decltype(&g_free)>  basename{ g_path_get_basename(plugin->filename), g_free };
 		if (basename == nullptr)
 			break;
 		if (strcasecmp(plugin->name, str) == 0 ||
 			strcasecmp(plugin->filename, str) == 0 ||
-			strcasecmp(basename, str) == 0) {
-			g_free(basename);
-			return plugin;
+			strcasecmp(basename.get(), str) == 0) {
+			return plugin.get();
 		}
-		g_free(basename);
 	}
 	return nullptr;
 }
 
 static Hook *
-Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
+Plugin_AddHook(hook_action type, PyObject *plugin, PyObject *callback,
 		   PyObject *userdata, const char name[])
 {
-	Hook *hook = (Hook *) g_malloc(sizeof(Hook));
+	Hook *hook = new(std::nothrow) Hook;
 	if (hook == nullptr) {
 		PyErr_NoMemory();
 		return nullptr;
@@ -1326,9 +1336,9 @@ Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
 	hook->type = type;
 	hook->plugin = plugin;
 	Py_INCREF(callback);
-	hook->callback = callback;
+	hook->callback.reset(callback);
 	Py_INCREF(userdata);
-	hook->userdata = userdata;
+	hook->userdata.reset(userdata);
 	hook->name = g_strdup (name);
 	hook->data = nullptr;
 	Plugin_SetHooks(plugin, g_slist_append(Plugin_GetHooks(plugin),
@@ -1373,10 +1383,8 @@ Plugin_RemoveHook(PyObject *plugin, Hook *hook)
 		Plugin_SetHooks(plugin,
 				g_slist_remove(Plugin_GetHooks(plugin),
 						   hook));
-		Py_DECREF(hook->callback);
-		Py_DECREF(hook->userdata);
 		g_free(hook->name);
-		g_free(hook);
+		delete hook;
 	}
 }
 
@@ -1391,10 +1399,8 @@ Plugin_RemoveAllHooks(PyObject *plugin)
 			xchat_calls calls(NONE);
 			hexchat_unhook(ph, (hexchat_hook*)hook->data);
 		}
-		Py_DECREF(hook->callback);
-		Py_DECREF(hook->userdata);
 		g_free(hook->name);
-		g_free(hook);
+		delete hook;
 		list = list->next;
 	}
 	Plugin_SetHooks(plugin, nullptr);
@@ -1408,7 +1414,7 @@ Plugin_Delete(PyObject *plugin)
 	while (list) {
 		Hook *hook = static_cast<Hook *>(list->data);
 		if (hook->type == HOOK_UNLOAD) {
-			PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, hook->userdata, nullptr) };
+			PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback.get(), hook->userdata.get(), nullptr) };
 			if (!retobj) {
 				PyErr_Print();
 				PyErr_Clear();
@@ -2429,16 +2435,14 @@ IInterp_Cmd(const char *const word[], const char *const word_eol[], void *userda
 static void
 Command_PyList()
 {
-	GSList *list;
-	list = plugin_list;
-	if (list == nullptr) {
+	if (plugin_list.empty()) {
 		hexchat_print(ph, "No python modules loaded");
 	} else {
 		hexchat_print(ph,
 		   "Name         Version  Filename             Description\n"
 		   "----         -------  --------             -----------\n");
-		while (list != nullptr) {
-			PluginObject *plg = (PluginObject *) list->data;
+		for(auto & plg : plugin_list) 
+		{
 			char *basename = g_path_get_basename(plg->filename);
 			hexchat_printf(ph, "%-12s %-8s %-20s %-10s\n",
 					 plg->name,
@@ -2448,7 +2452,6 @@ Command_PyList()
 					 *plg->description ? plg->description
 								  : "<none>");
 			g_free(basename);
-			list = list->next;
 		}
 		hexchat_print(ph, "\n");
 	}
@@ -2461,7 +2464,7 @@ Command_PyLoad(const char *filename)
 	auto plugin = Plugin_New(filename, xchatout);
 	ACQUIRE_XCHAT_LOCK();
 	if (plugin)
-		plugin_list = g_slist_append(plugin_list, plugin);
+		plugin_list.emplace_back(reinterpret_cast<PluginObject*>(plugin));
 }
 
 static void
@@ -2471,11 +2474,13 @@ Command_PyUnload(const char *name)
 	if (!plugin) {
 		hexchat_print(ph, "Can't find a python plugin with that name");
 	} else {
-		{
-			py_plugin p((PyObject*)plugin);
-			Plugin_Delete((PyObject*)plugin);
-		}
-		plugin_list = g_slist_remove(plugin_list, plugin);
+		py_plugin p(reinterpret_cast<PyObject*>(plugin));
+		plugin_list.erase(
+			std::remove_if(
+			plugin_list.begin(),
+			plugin_list.end(),
+			[plugin](const std::unique_ptr<PluginObject, plugin_deleter> & cand){ return cand.get() == plugin; }),
+			plugin_list.end());
 	}
 }
 
@@ -2700,17 +2705,7 @@ extern "C"{
 			return 1;
 		}
 
-		list = plugin_list;
-		while (list != nullptr) {
-			PyObject *plugin = (PyObject *)list->data;
-			{
-				py_plugin p(plugin);
-				Plugin_Delete(plugin);
-			}
-			list = list->next;
-		}
-		g_slist_free(plugin_list);
-		plugin_list = nullptr;
+		plugin_list.clear();
 
 		/* Reset xchatout buffer. */
 		g_free(xchatout_buffer);
