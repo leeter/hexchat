@@ -186,7 +186,7 @@ parse_dh(const std::string& str, dh_setup & setup)
 		BN_bin2bn(data.data(), size, nullptr),
 		BN_free);
 	if (!(DH_generate_key(dh.get())))
-		false;
+		return false;
 
 	std::vector<unsigned char> secret(DH_size(dh.get()));
 	int key_size = DH_compute_key(&secret[0], pubkey.get(), dh.get());
