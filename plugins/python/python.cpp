@@ -307,7 +307,7 @@ static PyObject *Plugin_New(const char *filepath, PyObject *xcoobj);
 static PyObject *Plugin_GetCurrent();
 static PluginObject *Plugin_ByString(const char *str);
 static Hook *Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
-				PyObject *userdata, char *name, void *data);
+				PyObject *userdata, const char name[]);
 static Hook *Plugin_FindHook(PyObject *plugin, char *name);
 static void Plugin_RemoveHook(PyObject *plugin, Hook *hook);
 static void Plugin_RemoveAllHooks(PyObject *plugin);
@@ -617,11 +617,11 @@ Callback_Server(const char * const word[], const char * const word_eol[], hexcha
 	PyObjectPtr attributes{ Attribute_New(attrs) };
 	PyObjectPtr retobj;
 	if (hook->type == HOOK_XCHAT_ATTR)
-		retobj.reset(PyObject_CallFunction(hook->callback, "(OOOO)", word_list.get(),
-						   word_eol_list.get(), hook->userdata, attributes.get()));
+		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
+						   word_eol_list.get(), hook->userdata, attributes.get(), nullptr));
 	else
-		retobj.reset(PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
-						   word_eol_list.get(), hook->userdata));
+		retobj.reset(PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
+						   word_eol_list.get(), hook->userdata, nullptr));
 
 	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
@@ -649,8 +649,8 @@ Callback_Command(const char * const word[], const char * const word_eol[], void 
 		return 0;
 	}
 
-	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
-		word_eol_list.get(), hook->userdata) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
+		word_eol_list.get(), hook->userdata, nullptr) };
 
 	int ret = 0;
 	if (retobj.get() == Py_None) {
@@ -682,8 +682,8 @@ Callback_Print_Attrs(const char * const word[], hexchat_event_attrs *attrs, void
 
 	PyObjectPtr attributes{ Attribute_New(attrs) };
 
-	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOOO)", word_list.get(),
-		word_eol_list.get(), hook->userdata, attributes.get()) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
+		word_eol_list.get(), hook->userdata, attributes.get(), nullptr) };
 
 	if (retobj.get() == Py_None) {
 		ret = HEXCHAT_EAT_NONE;
@@ -711,8 +711,8 @@ Callback_Print(const char * const word[], void *userdata)
 		return 0;
 	}
 
-	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(OOO)", word_list.get(),
-		word_eol_list.get(), hook->userdata) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, word_list.get(),
+		word_eol_list.get(), hook->userdata, nullptr) };
 
 	int ret = 0;
 	if (retobj.get() == Py_None) {
@@ -733,7 +733,7 @@ Callback_Timer(void *userdata)
 	int ret = 0;
 	py_plugin plugin(hook->plugin);
 
-	PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(O)", hook->userdata) };
+	PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, hook->userdata, nullptr) };
 
 	if (retobj) {
 		ret = PyObject_IsTrue(retobj.get());
@@ -1316,7 +1316,7 @@ Plugin_ByString(const char *str)
 
 static Hook *
 Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
-		   PyObject *userdata, char *name, void *data)
+		   PyObject *userdata, const char name[])
 {
 	Hook *hook = (Hook *) g_malloc(sizeof(Hook));
 	if (hook == nullptr) {
@@ -1408,8 +1408,7 @@ Plugin_Delete(PyObject *plugin)
 	while (list) {
 		Hook *hook = static_cast<Hook *>(list->data);
 		if (hook->type == HOOK_UNLOAD) {
-			PyObjectPtr retobj{ PyObject_CallFunction(hook->callback, "(O)",
-				hook->userdata) };
+			PyObjectPtr retobj{ PyObject_CallFunctionObjArgs(hook->callback, hook->userdata, nullptr) };
 			if (!retobj) {
 				PyErr_Print();
 				PyErr_Clear();
@@ -1868,7 +1867,7 @@ Module_hexchat_hook_command(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, name, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, name);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -1903,7 +1902,7 @@ Module_hexchat_hook_server(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, nullptr, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, nullptr);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -1937,7 +1936,7 @@ Module_hexchat_hook_server_attrs(PyObject *self, PyObject *args, PyObject *kwarg
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT_ATTR, plugin, callback, userdata, nullptr, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT_ATTR, plugin, callback, userdata, nullptr);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -1971,7 +1970,7 @@ Module_hexchat_hook_print(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, name, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, name);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -2005,7 +2004,7 @@ Module_hexchat_hook_print_attrs(PyObject *self, PyObject *args, PyObject *kwargs
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT_ATTR, plugin, callback, userdata, name, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT_ATTR, plugin, callback, userdata, name);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -2038,7 +2037,7 @@ Module_hexchat_hook_timer(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, nullptr, nullptr);
+	hook = Plugin_AddHook(HOOK_XCHAT, plugin, callback, userdata, nullptr);
 	if (hook == nullptr)
 		return nullptr;
 
@@ -2069,7 +2068,7 @@ Module_hexchat_hook_unload(PyObject *self, PyObject *args, PyObject *kwargs)
 		return nullptr;
 	}
 
-	hook = Plugin_AddHook(HOOK_UNLOAD, plugin, callback, userdata, nullptr, nullptr);
+	hook = Plugin_AddHook(HOOK_UNLOAD, plugin, callback, userdata, nullptr);
 	if (hook == nullptr)
 		return nullptr;
 
