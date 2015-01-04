@@ -41,6 +41,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 
@@ -2374,38 +2375,32 @@ load_perform_file (session *sess, char *file)
 static int
 cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char *file, *buf;
-#ifdef USE_PLUGIN
-	const char *error;
-	char *arg;
-#endif
+	namespace bfs = boost::filesystem;
 
 	if (!word[2][0])
 		return FALSE;
 
 	if (strcmp (word[2], "-e") == 0)
 	{
-		file = expand_homedir (word[3]);
-		if (!load_perform_file (sess, file))
+		glib_string file{ expand_homedir(word[3]) };
+		if (!load_perform_file (sess, file.get()))
 		{
-			buf = g_strdup_printf ("%s%c%s", get_xdir(), G_DIR_SEPARATOR, file);
-			PrintTextf (sess, _("Cannot access %s\n"), buf);
+			auto path = bfs::path(config::config_dir()) / file.get();
+			PrintTextf (sess, boost::format(_("Cannot access %s\n")) % path);
 			PrintText (sess, errorstring (errno));
-			g_free (buf);
 		}
-		free (file);
 		return TRUE;
 	}
 
 #ifdef USE_PLUGIN
 	if (g_str_has_suffix (word[2], "." G_MODULE_SUFFIX))
 	{
-		arg = NULL;
+		char* arg = NULL;
 		if (word_eol[3][0])
 			arg = word_eol[3];
 
 		glib_string file(expand_homedir (word[2]));
-		error = plugin_load (sess, file.get(), arg);
+		auto error = plugin_load (sess, file.get(), arg);
 
 		if (error)
 			PrintText (sess, error);
