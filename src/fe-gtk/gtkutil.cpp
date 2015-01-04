@@ -684,13 +684,10 @@ gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
 }
 
 gboolean
-gtkutil_treemodel_string_to_iter (GtkTreeModel *model, gchar *pathstr, GtkTreeIter *iter_ret)
+gtkutil_treemodel_string_to_iter (GtkTreeModel *model, const gchar pathstr[], GtkTreeIter *iter_ret)
 {
 	GtkTreePathPtr path{ gtk_tree_path_new_from_string(pathstr) };
-	gboolean success;
-
-	success = gtk_tree_model_get_iter (model, iter_ret, path.get());
-	return success;
+	return gtk_tree_model_get_iter(model, iter_ret, path.get());
 }
 
 /*gboolean

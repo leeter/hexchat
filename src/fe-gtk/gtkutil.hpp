@@ -40,7 +40,7 @@ void gtkutil_copy_to_clipboard (GtkWidget *widget, GdkAtom selection,
 								const gchar *str);
 GtkWidget *gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
 								 GtkTreeCellDataFunc mapper, ...);
-gboolean gtkutil_treemodel_string_to_iter (GtkTreeModel *model, gchar *pathstr, GtkTreeIter *iter_ret);
+gboolean gtkutil_treemodel_string_to_iter (GtkTreeModel *model, const gchar pathstr[], GtkTreeIter *iter_ret);
 gboolean gtkutil_treeview_get_selected_iter (GtkTreeView *view, GtkTreeIter *iter_ret);
 gboolean gtkutil_treeview_get_selected (GtkTreeView *view, GtkTreeIter *iter_ret, ...);
 
