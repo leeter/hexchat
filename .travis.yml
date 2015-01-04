@@ -8,7 +8,7 @@ before_script:
 script:
     - ./autogen.sh
     - ./configure --enable-textfe --with-theme-manager
-    - make V=1 -j$(nproc)
+    - make
 
 matrix:
      fast_finish: true
