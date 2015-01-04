@@ -1314,10 +1314,8 @@ mg_chan_remove (chan *ch)
 static void
 mg_close_gen (chan *ch, GtkWidget *box)
 {
-	char *title = static_cast<char*>(g_object_get_data (G_OBJECT (box), "title"));
+	glib_string title{ static_cast<char*>(g_object_get_data(G_OBJECT(box), "title")) };
 
-	if (title)
-		free (title);
 	if (!ch)
 		ch = static_cast<chan *>(g_object_get_data(G_OBJECT(box), "ch"));
 	if (ch)
@@ -2720,17 +2718,15 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 static void
 mg_place_userlist_and_chanview (session_gui *gui)
 {
-	GtkOrientation orientation;
 	GtkWidget *chanviewbox = NULL;
-	int pos;
 
 	mg_sanitize_positions (&prefs.hex_gui_tab_pos, &prefs.hex_gui_ulist_pos);
 
 	if (gui->chanview)
 	{
-		pos = prefs.hex_gui_tab_pos;
+		int pos = prefs.hex_gui_tab_pos;
 		chanview * view = static_cast<chanview*>(gui->chanview);
-		orientation = chanview_get_orientation(view);
+		auto orientation = chanview_get_orientation(view);
 		if ((pos == POS_BOTTOM || pos == POS_TOP) && orientation == GTK_ORIENTATION_VERTICAL)
 			chanview_set_orientation (view, FALSE);
 		else if ((pos == POS_TOPLEFT || pos == POS_BOTTOMLEFT || pos == POS_TOPRIGHT || pos == POS_BOTTOMRIGHT) && orientation == GTK_ORIENTATION_HORIZONTAL)
@@ -2762,11 +2758,12 @@ mg_inputbox_rightclick (GtkEntry *entry, GtkWidget *menu)
 }
 
 /* Search bar adapted from Conspire's by William Pitcock */
-
-#define SEARCH_CHANGE		1
-#define SEARCH_NEXT			2
-#define SEARCH_PREVIOUS		3
-#define SEARCH_REFRESH		4
+enum search_type{
+	SEARCH_CHANGE	=	1,
+	SEARCH_NEXT		=	2,
+	SEARCH_PREVIOUS	=	3,
+	SEARCH_REFRESH	=	4
+};
 
 static void
 search_handle_event(int search_type, session *sess)
@@ -2775,11 +2772,11 @@ search_handle_event(int search_type, session *sess)
 	const gchar *text = NULL;
 	gtk_xtext_search_flags flags;
 	GError *err = NULL;
-	gboolean backwards = FALSE;
+	bool backwards = false;
 
 	/* When just typing show most recent first */
 	if (search_type == SEARCH_PREVIOUS || search_type == SEARCH_CHANGE)
-		backwards = TRUE;
+		backwards = true;
 
 	flags = (gtk_xtext_search_flags)((prefs.hex_text_search_case_match == 1? case_match: 0) |
 				(backwards? backward: 0) |
@@ -3314,7 +3311,7 @@ mg_add_generic_tab (char *name, char *title, void *family, GtkWidget *box)
 	ch = chanview_add(static_cast<chanview*>(mg_gui->chanview), name, NULL, box, TRUE, TAG_UTIL, pix_tree_util);
 	chan_set_color (ch, plain_list);
 	/* FIXME: memory leak */
-	g_object_set_data (G_OBJECT (box), "title", strdup (title));
+	g_object_set_data (G_OBJECT (box), "title", g_strdup (title));
 	g_object_set_data (G_OBJECT (box), "ch", ch);
 
 	if (prefs.hex_gui_tab_newtofront)
@@ -3406,14 +3403,14 @@ fe_dlgbuttons_update (session *sess)
 void
 fe_update_mode_buttons (session *sess, char mode, char sign)
 {
-	int state, i;
+	int state;
 
 	if (sign == '+')
 		state = TRUE;
 	else
 		state = FALSE;
 
-	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
+	for (int i = 0; i < NUM_FLAG_WIDS - 1; i++)
 	{
 		if (chan_flags[i] == mode)
 		{
@@ -3615,13 +3612,10 @@ mg_move_tab_family (session *sess, int delta)
 void
 mg_set_title (GtkWidget *vbox, const char *title) /* for non-irc tab/window only */
 {
-	char *old;
-
-	old = static_cast<char*>(g_object_get_data(G_OBJECT(vbox), "title"));
+	glib_string old{ static_cast<char*>(g_object_get_data(G_OBJECT(vbox), "title")) };
 	if (old)
 	{
-		g_object_set_data (G_OBJECT (vbox), "title", new_strdup (title));
-		delete[] old;
+		g_object_set_data (G_OBJECT (vbox), "title", g_strdup (title));
 	} else
 	{
 		gtk_window_set_title (GTK_WINDOW (vbox), title);
