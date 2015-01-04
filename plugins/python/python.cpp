@@ -2620,7 +2620,7 @@ extern "C"{
 			hexchat_print(ph, "Python interface already loaded");
 			/* deinit is called even when init fails, so keep track
 			 * of a reinit failure. */
-			reinit_tried == true;
+			reinit_tried = true;
 			return 0;
 		}
 		initialized = false;
@@ -2695,8 +2695,6 @@ extern "C"{
 
 	int	hexchat_plugin_deinit()
 	{
-		GSList *list;
-
 		/* A reinitialization was tried. Just give up and live the
 		 * environment as is. We are still alive. */
 		if (reinit_tried) {
