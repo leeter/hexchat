@@ -149,7 +149,7 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 				host = user->hostname->substr(at_idx + 1);
 			}
 			if (user->account)
-				account = user->account;
+				account = user->account ? user->account->c_str() : nullptr;
 		}
 	}
 
@@ -611,7 +611,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 
 	if (user->realname)
 	{
-		auto real = strip_color (user->realname, static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
+		auto real = strip_color (user->realname.get(), static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
 		snprintf (buf, sizeof (buf), fmt, _("Real Name:"), real.c_str());
 	} else
 	{
@@ -620,7 +620,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
-							user->realname ? user->realname : unknown);
+							user->realname ? &(*user->realname)[0] : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("User:"),
 				 user->hostname ? user->hostname->c_str() : unknown);
@@ -630,11 +630,11 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							(gpointer)(user->hostname ? user->hostname->c_str() : unknown));
 	
 	snprintf (buf, sizeof (buf), fmt, _("Account:"),
-				 user->account ? user->account : unknown);
+				 user->account ? user->account->c_str() : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
-							user->account ? user->account : unknown);
+							user->account ? &(*user->account)[0] : unknown);
 
 	users_country = user->hostname ? country(user->hostname.get()) : nullptr;
 	if (users_country)
@@ -646,11 +646,11 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	}
 
 	snprintf (buf, sizeof (buf), fmt, _("Server:"),
-				 user->servername ? user->servername : unknown);
+				 user->servername ? user->servername->c_str() : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
-							user->servername ? user->servername : unknown);
+							user->servername ? &(*user->servername)[0] : unknown);
 
 	if (user->lasttalk)
 	{
@@ -1274,7 +1274,7 @@ static void
 menu_movetomarker (GtkWidget *wid, gpointer none)
 {
 	marker_reset_reason reason;
-	char *str;
+	const char *str;
 
 	if (!prefs.hex_text_show_marker)
 		PrintText (current_sess, _("Marker line disabled."));

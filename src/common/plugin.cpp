@@ -1499,7 +1499,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0xb9d38a2d: /* account */
-			return ((struct User *)data)->account;
+			return ((struct User *)data)->account ? ((struct User *)data)->account->c_str() : nullptr;
 		case 0x339763: /* nick */
 			return ((struct User *)data)->nick;
 		case 0x30f5a8: /* host */
@@ -1507,7 +1507,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0xc594b292: /* prefix */
 			return ((struct User *)data)->prefix;
 		case 0xccc6d529: /* realname */
-			return ((struct User *)data)->realname;
+			return ((struct User *)data)->realname ? ((struct User *)data)->realname->c_str() : nullptr;
 		}
 		break;
 	}

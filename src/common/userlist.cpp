@@ -35,19 +35,8 @@
 #include "userlist.hpp"
 #include "session.hpp"
 
-
-User::~User()
-{
-	free(this->realname);
-	free(this->servername);
-	free(this->account);
-}
-
 User::User()
 	:nick(),
-	realname(),
-	servername(),
-	account(),
 	lasttalk(),
 	access(),	/* axs bit field */
 	prefix(),	/* @ + % */
@@ -189,12 +178,10 @@ userlist_set_account (struct session *sess, const char nick[], const char accoun
 	auto user = userlist_find (sess, nick);
 	if (user)
 	{
-		free (user->account);
-			
 		if (strcmp (account, "*") == 0)
-			user->account = nullptr;
+			user->account = boost::none;
 		else
-			user->account = strdup (account);
+			user->account = std::string(account);
 			
 		/* gui doesnt currently reflect login status, maybe later
 		fe_userlist_rehash (sess, user); */
@@ -216,11 +203,11 @@ userlist_add_hostname (struct session *sess, const char nick[], const char hostn
 			user->hostname = hostname;
 		}
 		if (!user->realname && realname && *realname)
-			user->realname = strdup (realname);
+			user->realname = std::string(realname);
 		if (!user->servername && servername)
-			user->servername = strdup (servername);
+			user->servername = std::string(servername);
 		if (!user->account && account && strcmp (account, "0") != 0)
-			user->account = strdup (account);
+			user->account = std::string(account);
 		if (away != 0xff)
 		{
 			bool actually_away = !!away;
@@ -446,7 +433,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 
 	/* add it to our linked list */
 	if (hostname)
-		user->hostname = strdup (hostname);
+		user->hostname = std::string(hostname);
 	safe_strcpy (user->nick, name + prefix_chars);
 	/* is it me? */
 	if (!sess->server->p_cmp (user->nick, sess->server->nick))
@@ -455,9 +442,9 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	if (sess->server->have_extjoin)
 	{
 		if (account && *account)
-			user->account = strdup (account);
+			user->account = std::string (account);
 		if (realname && *realname)
-			user->realname = strdup (realname);
+			user->realname = std::string (realname);
 	}
 
 	User * user_ref = user.get();

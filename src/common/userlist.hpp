@@ -33,12 +33,11 @@
 struct User
 {
 	User();
-	~User();
 	char nick[NICKLEN];
 	boost::optional<std::string> hostname;
-	char *realname;
-	char *servername;
-	char *account;
+	boost::optional<std::string> realname;
+	boost::optional<std::string> servername;
+	boost::optional<std::string> account;
 	time_t lasttalk;
 	unsigned int access;	/* axs bit field */
 	char prefix[2]; /* @ + % */
