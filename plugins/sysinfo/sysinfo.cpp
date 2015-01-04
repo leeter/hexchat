@@ -189,7 +189,7 @@ namespace{
 			return "Error Code 2";
 		}
 
-		hres = pLoc->ConnectServer(_bstr_t(L"root\\CIMV2"), nullptr, nullptr, nullptr, 0, nullptr, nullptr, &pSvc);
+		hres = pLoc->ConnectServer(_bstr_t(L"root\\CIMV2").GetBSTR(), nullptr, nullptr, nullptr, 0, nullptr, nullptr, &pSvc);
 
 		if (FAILED(hres))
 		{
@@ -202,17 +202,17 @@ namespace{
 		{
 			return "Error Code 4";
 		}
-
+		static _bstr_t query_language{ L"WQL" };
 		switch (mode)
 		{
 		case wmi_info_mode::os:
-			hres = pSvc->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_OperatingSystem"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_OperatingSystem").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 		case wmi_info_mode::processor:
-			hres = pSvc->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_Processor"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_Processor").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 		case wmi_info_mode::vga:
-			hres = pSvc->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_VideoController"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_VideoController").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 
 		}
