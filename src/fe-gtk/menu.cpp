@@ -917,7 +917,7 @@ menu_middlemenu (session *sess, GdkEventButton *event)
 	GtkAccelGroup *accel_group;
 
 	accel_group = gtk_accel_group_new ();
-	menu = menu_create_main (accel_group, FALSE, sess->server->is_away, !sess->gui->is_tab, NULL);
+	menu = menu_create_main (accel_group, false, sess->server->is_away, !sess->gui->is_tab, NULL);
 	menu_popup (menu, event, accel_group);
 }
 
@@ -2212,7 +2212,7 @@ menu_add_plugin_items (GtkWidget *menu, char *root, char *target)
 /* === END STUFF FOR /MENU === */
 
 GtkWidget *
-menu_create_main (void *accel_group, int bar, int away, int toplevel,
+menu_create_main (void *accel_group, bool bar, int away, int toplevel,
 						GtkWidget **menu_widgets)
 {
 	int i = 0;
@@ -2304,8 +2304,8 @@ menu_create_main (void *accel_group, int bar, int away, int toplevel,
 
 	/* Away binding to ctrl-alt-a if the _Help menu conflicts (FR/PT/IT) */
 	{
-		char *help = _("_Help");
-		char *under = strchr (help, '_');
+		const char *help = _("_Help");
+		const char *under = strchr (help, '_');
 		if (under && (under[1] == 'a' || under[1] == 'A'))
 			away_mask = STATE_ALT | STATE_CTRL;
 	}

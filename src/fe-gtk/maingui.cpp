@@ -62,6 +62,7 @@
 #include "plugin-tray.hpp"
 #include "xtext.hpp"
 #include "sexy-spell-entry.hpp"
+#include "gtk_helpers.hpp"
 
 namespace dcc = hexchat::dcc;
 
@@ -3084,10 +3085,9 @@ mg_create_menu (session_gui *gui, GtkWidget *table, int away_state)
 										 accel_group);
 	g_object_unref (accel_group);
 
-	gui->menu = menu_create_main (accel_group, TRUE, away_state, !gui->is_tab,
+	gui->menu = menu_create_main (accel_group, true, away_state, !gui->is_tab,
 											gui->menu_item);
-	gtk_table_attach (GTK_TABLE (table), gui->menu, 0, 3, 0, 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (table), gui->menu, 0, 3, 0, 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 }
 
 static void
@@ -3097,8 +3097,7 @@ mg_create_irctab (session *sess, GtkWidget *table)
 	session_gui *gui = sess->gui;
 
 	vbox = gtk_vbox_new (FALSE, 0);
-	gtk_table_attach (GTK_TABLE (table), vbox, 1, 2, 2, 3,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (table), vbox, 1, 2, 2, 3, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 	mg_create_center (sess, gui, vbox);
 }
 

@@ -23,7 +23,7 @@
 #include <string>
 void nick_command_parse(session *sess, const std::string &cmd, const std::string &nick, const std::string &allnick);
 
-GtkWidget *menu_create_main (void *accel_group, int bar, int away, int toplevel, GtkWidget **menu_widgets);
+GtkWidget *menu_create_main (void *accel_group, bool bar, int away, int toplevel, GtkWidget **menu_widgets);
 void menu_urlmenu (GdkEventButton * event, const std::string& url);
 void menu_chanmenu (session *sess, GdkEventButton * event, char *chan);
 void menu_addfavoritemenu (server *serv, GtkWidget *menu, const char channel[], bool istree);
