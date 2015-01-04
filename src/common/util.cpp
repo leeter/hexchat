@@ -504,9 +504,9 @@ get_cpu_arch (void)
 const char * get_sys_str (bool with_cpu)
 {
 	static std::string sys_str;
-	if (sys_str.empty())
+	if (!sys_str.empty())
 		return sys_str.c_str();
-	std::ostringstream buffer("Windows", std::ios::ate);
+	std::ostringstream buffer("Windows ", std::ios::ate);
 
 	if (IsWindows8Point1OrGreater ())
 	{
