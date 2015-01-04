@@ -352,20 +352,19 @@ servlist_networks_populate (GtkWidget *treeview, GSList *netlist)
 static void
 servlist_server_row_cb (GtkTreeSelection *sel, gpointer user_data)
 {
-	GtkTreeModel *model;
-	GtkTreeIter iter;
-	ircserver *serv;
-	char *servname;
-	int pos;
-
 	if (!selected_net)
 		return;
 
+	GtkTreeModel *model;
+	GtkTreeIter iter;
+
 	if (gtk_tree_selection_get_selected (sel, &model, &iter))
 	{
+		char *servname;
+		int pos;
 		gtk_tree_model_get (model, &iter, 0, &servname, -1);
-		serv = servlist_server_find (selected_net, servname, &pos);
-		g_free (servname);
+		glib_string servname_ptr{ servname };
+		auto serv = servlist_server_find (selected_net, servname, &pos);
 		if (serv)
 			selected_net->selected = pos;
 		selected_serv = serv;
@@ -374,21 +373,20 @@ servlist_server_row_cb (GtkTreeSelection *sel, gpointer user_data)
 
 static void
 servlist_command_row_cb (GtkTreeSelection *sel, gpointer user_data)
-{
-	GtkTreeModel *model;
-	GtkTreeIter iter;
-	commandentry *cmd;
-	char *cmdname;
-	int pos;
-
+{	
 	if (!selected_net)
 		return;
 
+	GtkTreeModel *model;
+	GtkTreeIter iter;
+
 	if (gtk_tree_selection_get_selected (sel, &model, &iter))
 	{
+		char *cmdname;
+		int pos;
 		gtk_tree_model_get (model, &iter, 0, &cmdname, -1);
-		cmd = servlist_command_find (selected_net, cmdname, &pos);
-		g_free (cmdname);
+		glib_string cmdname_ptr{ cmdname };
+		auto cmd = servlist_command_find (selected_net, cmdname, &pos);
 		if (cmd)
 			selected_net->selected = pos;
 		selected_cmd = cmd;
@@ -398,20 +396,18 @@ servlist_command_row_cb (GtkTreeSelection *sel, gpointer user_data)
 static void
 servlist_channel_row_cb (GtkTreeSelection *sel, gpointer user_data)
 {
-	GtkTreeModel *model;
-	GtkTreeIter iter;
-	favchannel *channel;
-	char *channame;
-	int pos;
-
 	if (!selected_net)
 		return;
+	GtkTreeModel *model;
+	GtkTreeIter iter;	
 
 	if (gtk_tree_selection_get_selected (sel, &model, &iter))
 	{
+		char *channame;
+		int pos;
 		gtk_tree_model_get (model, &iter, 0, &channame, -1);
-		channel = servlist_favchan_find (selected_net, channame, &pos);
-		g_free (channame);
+		glib_string channame_ptr{ channame };
+		auto channel = servlist_favchan_find (selected_net, channame, &pos);
 		if (channel)
 			selected_net->selected = pos;
 		selected_chan = channel;
@@ -440,15 +436,13 @@ servlist_start_editing (GtkTreeView *tree)
 static void
 servlist_addserver (void)
 {
-	GtkTreeIter iter;
-	GtkListStore *store;
-
 	if (!selected_net)
 		return;
 
-	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (edit_trees[SERVER_TREE])));
+	auto store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (edit_trees[SERVER_TREE])));
 	servlist_server_add (selected_net, "newserver/6667");
 
+	GtkTreeIter iter;
 	gtk_list_store_append (store, &iter);
 	gtk_list_store_set (store, &iter, 0, "newserver/6667", 1, TRUE, -1);
 
@@ -1128,7 +1122,7 @@ servlist_connect_cb (GtkWidget *button, gpointer userdata)
 		}
 	}
 
-	servlist_connect (servlist_sess, selected_net, TRUE);
+	servlist_connect (servlist_sess, selected_net, true);
 
 	gtk_widget_destroy (serverlist_win);
 	serverlist_win = NULL;

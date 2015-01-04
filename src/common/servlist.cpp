@@ -602,7 +602,7 @@ servlist_favchan_copy (favchannel *fav)
 }
 
 void
-servlist_connect (session *sess, ircnet *net, gboolean join)
+servlist_connect (session *sess, ircnet *net, bool join)
 {
 	ircserver *ircserv;
 	GSList *list;
@@ -700,7 +700,7 @@ servlist_connect (session *sess, ircnet *net, gboolean join)
 }
 
 int
-servlist_connect_by_netname (session *sess, char *network, gboolean join)
+servlist_connect_by_netname (session *sess, char *network, bool join)
 {
 	ircnet *net;
 	GSList *list = network_list;
@@ -753,7 +753,7 @@ servlist_auto_connect (session *sess)
 
 		if (net->flags & FLAG_AUTO_CONNECT)
 		{
-			servlist_connect (sess, net, TRUE);
+			servlist_connect (sess, net, true);
 			ret = 1;
 		}
 
@@ -770,22 +770,18 @@ servlist_cycle_cb (server *serv)
 	{
 		PrintTextf (serv->server_session,
 			_("Cycling to next server in %s...\n"), serv->network->name.c_str());
-		servlist_connect(serv->server_session, static_cast<ircnet *>(serv->network), TRUE);
+		servlist_connect(serv->server_session, serv->network, true);
 	}
 
 	return 0;
 }
 
-int
-servlist_cycle (server *serv)
+bool servlist_cycle (server *serv)
 {
-	ircnet *net;
-	int max, del;
-
-	net = static_cast<ircnet *>(serv->network);
+	auto net = serv->network;
 	if (net)
 	{
-		max = g_slist_length (net->servlist);
+		int max = g_slist_length (net->servlist);
 		if (max > 0)
 		{
 			/* try the next server, if that option is on */
@@ -796,20 +792,20 @@ servlist_cycle (server *serv)
 					net->selected = 0;
 			}
 
-			del = prefs.hex_net_reconnect_delay * 1000;
+			int del = prefs.hex_net_reconnect_delay * 1000;
 			if (del < 1000)
 				del = 500;				  /* so it doesn't block the gui */
 
 			if (del)
 				serv->recondelay_tag = fe_timeout_add(del, (GSourceFunc)servlist_cycle_cb, serv);
 			else
-				servlist_connect (serv->server_session, net, TRUE);
+				servlist_connect (serv->server_session, net, true);
 
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 ircserver *

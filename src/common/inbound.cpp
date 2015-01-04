@@ -99,10 +99,7 @@ set_topic (session *sess, const std::string & topic, const std::string & strippe
 static session *
 find_session_from_nick (const char *nick, server &serv)
 {
-	session *sess;
-	GSList *list = sess_list;
-
-	sess = find_dialog (serv, nick);
+	auto sess = find_dialog (serv, nick);
 	if (sess)
 		return sess;
 
@@ -118,7 +115,7 @@ find_session_from_nick (const char *nick, server &serv)
 			return current_sess;
 	}
 
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
@@ -126,7 +123,6 @@ find_session_from_nick (const char *nick, server &serv)
 			if (userlist_find (sess, nick))
 				return sess;
 		}
-		list = list->next;
 	}
 	return 0;
 }
@@ -230,48 +226,43 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 
 /* used for Alerts section. Masks can be separated by commas and spaces. */
 
-gboolean
-alert_match_word (const char *word, const char *masks)
+bool alert_match_word (const char *word, const char *masks)
 {
-	std::unique_ptr<char[]> mutable_masks(new_strdup(masks));
-	std::unique_ptr<char[]> mutable_word(new_strdup(word));
-	char *p = mutable_masks.get();
-	char endchar;
-	int res;
+	if (!masks || masks[0] == 0)
+		return false;
 
-	if (masks[0] == 0)
-		return FALSE;
+	std::unique_ptr<char[]> mutable_masks(new_strdup(masks));
+	char *p = mutable_masks.get();
 
 	while (1)
 	{
 		/* if it's a 0, space or comma, the word has ended. */
 		if (*p == 0 || *p == ' ' || *p == ',')
 		{
-			endchar = *p;
+			auto endchar = *p;
 			*p = 0;
-			res = match (mutable_masks.get(), mutable_word.get());
+			bool res = match (mutable_masks.get(), word);
 			*p = endchar;
 
 			if (res)
-				return TRUE;	/* yes, matched! */
+				return true;	/* yes, matched! */
 
 			masks = p + 1;
 			if (*p == 0)
-				return FALSE;
+				return false;
 		}
 		p++;
 	}
 }
 
-gboolean
-alert_match_text (char *text, char *masks)
+bool alert_match_text (const char text[], const char masks[])
 {
-	unsigned char *p = (unsigned char*)text;
-	unsigned char endchar;
-	int res;
-
 	if (!masks || masks[0] == 0)
-		return FALSE;
+		return false;
+
+	std::unique_ptr<char[]> mutable_text(new_strdup(text));
+	unsigned char *p = reinterpret_cast<unsigned char*>(mutable_text.get());
+	char * i_text = mutable_text.get();
 
 	while (1)
 	{
@@ -296,17 +287,17 @@ alert_match_text (char *text, char *masks)
 			/* if it's anything BUT a letter, the word has ended. */
 			 (!g_unichar_isalpha (g_utf8_get_char ((const gchar*)p))))
 		{
-			endchar = *p;
+			auto endchar = *p;
 			*p = 0;
-			res = alert_match_word (text, masks);
+			bool res = alert_match_word(i_text, masks);
 			*p = endchar;
 
 			if (res)
-				return TRUE;	/* yes, matched! */
+				return true;	/* yes, matched! */
 
-			text = (char*)(p + g_utf8_skip [p[0]]);
+			i_text = (char*)(p + g_utf8_skip [p[0]]);
 			if (*p == 0)
-				return FALSE;
+				return false;
 		}
 
 		p += g_utf8_skip [p[0]];
@@ -314,16 +305,16 @@ alert_match_text (char *text, char *masks)
 }
 
 static bool
-is_hilight (char *from, char *text, session *sess, server &serv)
+is_hilight (const char from[], const char text[], session *sess, server &serv)
 {
 	if (alert_match_word (from, prefs.hex_irc_no_hilight))
 		return false;
 
 	auto temp = strip_color (text, STRIP_ALL);
 
-	if (alert_match_text (&temp[0], serv.nick) ||
-		alert_match_text(&temp[0], prefs.hex_irc_extra_hilight) ||
-		alert_match_word(&temp[0], prefs.hex_irc_nick_hilight))
+	if (alert_match_text(temp.c_str(), serv.nick) ||
+		alert_match_text(temp.c_str(), prefs.hex_irc_extra_hilight) ||
+		alert_match_word(temp.c_str(), prefs.hex_irc_nick_hilight))
 	{
 		if (sess != current_tab)
 		{
@@ -438,11 +429,6 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 					  char *text, bool fromme, bool id, 
 					  const message_tags_data *tags_data)
 {
-	struct User *user;
-	bool hilight = false;
-	char nickchar[2] = "\000";
-	char idtext[64];
-
 	if (!sess)
 	{
 		if (chan)
@@ -465,7 +451,8 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 		lastact_update (sess);
 	}
 
-	user = userlist_find (sess, from);
+	auto user = userlist_find (sess, from);
+	char nickchar[2] = "\000";
 	if (user)
 	{
 		if (user->account)
@@ -485,15 +472,13 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 		return;
 	}
 
+	char idtext[64];
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
-
-	if (is_hilight (from, text, sess, serv))
-		hilight = true;
 
 	if (sess->type == session::SESS_DIALOG)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, nullptr, 0,
 									  tags_data->timestamp);
-	else if (hilight)
+	else if (is_hilight(from, text, sess, serv))
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_HCHANMSG, sess, from, text, nickchar, idtext,
 									  0, tags_data->timestamp);
 	else
@@ -506,18 +491,15 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 					  const message_tags_data *tags_data)
 {
 	bool me = false;
-	session *sess;
-	GSList *list = sess_list;
-
 	if (!serv.p_cmp (nick, serv.nick))
 	{
 		me = true;
 		safe_strcpy (serv.nick, newnick, NICKLEN);
 	}
 
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 		{
 			if (userlist_change(sess, nick, newnick) || (me && sess->type == session::SESS_SERVER))
@@ -540,7 +522,6 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 			}
 			fe_set_title (*sess);
 		}
-		list = list->next;
 	}
 
 	dcc::dcc_change_nick (serv, nick, newnick);
@@ -553,18 +534,15 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 static session *
 find_unused_session (const server &serv)
 {
-	session *sess;
-	GSList *list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = (session *) list->data;
+		auto sess = static_cast<session *>(list->data);
 		if (sess->type == session::SESS_CHANNEL && sess->channel[0] == 0 &&
 			 sess->server == &serv)
 		{
 			if (sess->waitchannel[0] == 0)
 				return sess;
 		}
-		list = list->next;
 	}
 	return nullptr;
 }
@@ -572,17 +550,14 @@ find_unused_session (const server &serv)
 static session *
 find_session_from_waitchannel (const char *chan, const server &serv)
 {
-	session *sess;
-	GSList *list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = (session *) list->data;
+		auto sess = static_cast<session *>(list->data);
 		if (sess->server == &serv && sess->channel[0] == 0 && sess->type == session::SESS_CHANNEL)
 		{
 			if (!serv.p_cmp (chan, sess->waitchannel))
 				return sess;
 		}
-		list = list->next;
 	}
 	return nullptr;
 }
@@ -921,7 +896,7 @@ find_session_from_type (int type, server &serv)
 		if (sess->type == type && sess->server == &serv)
 			return sess;
 	}
-	return 0;
+	return nullptr;
 }
 
 void
@@ -1099,7 +1074,6 @@ inbound_nameslist_end (const server &serv, const std::string & chan,
 				sess->end_of_names = true;
 				sess->ignore_names = false;
 			}
-			list = list->next;
 		}
 		return true;
 	}
@@ -1355,16 +1329,11 @@ inbound_login_start (session *sess, char *nick, char *servname,
 static void
 inbound_set_all_away_status (const server &serv, const char *nick, bool away)
 {
-	GSList *list;
-	session *sess;
-
-	list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 			userlist_set_away (sess, nick, away);
-		list = list->next;
 	}
 }
 
@@ -1421,21 +1390,19 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 						 const message_tags_data *tags_data)
 {
 	server *serv = sess->server;
-	session *who_sess;
-	GSList *list;
-	char *uhost = nullptr;
+	glib_string uhost;
 
 	if (user && host)
 	{
-		uhost = static_cast<char*>(g_malloc (strlen (user) + strlen (host) + 2));
-		sprintf (uhost, "%s@%s", user, host);
+		uhost.reset(static_cast<char*>(g_malloc (strlen (user) + strlen (host) + 2)));
+		sprintf (uhost.get(), "%s@%s", user, host);
 	}
 
 	if (chan)
 	{
-		who_sess = find_channel (*serv, chan);
+		auto who_sess = find_channel (*serv, chan);
 		if (who_sess)
-			userlist_add_hostname (who_sess, nick, uhost, realname, servname, account, away);
+			userlist_add_hostname (who_sess, nick, uhost.get(), realname, servname, account, away);
 		else
 		{
 			if (serv->doing_dns && nick && host)
@@ -1445,21 +1412,18 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 	else
 	{
 		/* came from WHOIS, not channel specific */
-		for (list = sess_list; list; list = list->next)
+		for (auto list = sess_list; list; list = g_slist_next(list))
 		{
-			sess = static_cast<session*>(list->data);
+			auto sess = static_cast<session*>(list->data);
 			if (sess->type == session::SESS_CHANNEL && sess->server == serv)
 			{
-				userlist_add_hostname (sess, nick, uhost, realname, servname, account, away);
+				userlist_add_hostname (sess, nick, uhost.get(), realname, servname, account, away);
 			}
 		}
 	}
-
-	g_free (uhost);
 }
 
-int
-inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
+bool inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
 					  char *banner, int rplcode, const message_tags_data *tags_data)
 {
 	char *time_str = ctime (&stamp);
@@ -1489,22 +1453,21 @@ nowindow:
 
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_BANLIST, sess, chan, mask, banner, time_str,
 									  0, tags_data->timestamp);
-		return TRUE;
+		return true;
 	}
 
-	return TRUE;
+	return true;
 }
 
 /* execute 1 end-of-motd command */
 
-static int
-inbound_exec_eom_cmd (char *str, void *sess)
+static bool
+inbound_exec_eom_cmd (const char *str, session *sess)
 {
+	auto cmd = command_insert_vars (sess, (str[0] == '/') ? str + 1 : str);
+	handle_command (sess, &cmd[0], true);
 
-	auto cmd = command_insert_vars ((session*)sess, (str[0] == '/') ? str + 1 : str);
-	handle_command ((session*)sess, &cmd[0], true);
-
-	return 1;
+	return true;
 }
 
 static bool
@@ -1530,8 +1493,6 @@ inbound_nickserv_login (const server &serv)
 void
 inbound_login_end (session *sess, char *text, const message_tags_data *tags_data)
 {
-	GSList *cmdlist;
-	commandentry *cmd;
 	if (!sess->server)
 		throw std::runtime_error("Invalid server reference");
 	server &serv = *(sess->server);
@@ -1548,13 +1509,10 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 		if (serv.network)
 		{
 			/* there may be more than 1, separated by \n */
-
-			cmdlist = serv.network->commandlist;
-			while (cmdlist)
+			for(auto cmdlist = serv.network->commandlist; cmdlist; cmdlist = g_slist_next(cmdlist))
 			{
-				cmd = static_cast<commandentry*>(cmdlist->data);
+				auto cmd = static_cast<commandentry*>(cmdlist->data);
 				inbound_exec_eom_cmd (cmd->command, sess);
-				cmdlist = cmdlist->next;
 			}
 
 			/* send nickserv password */

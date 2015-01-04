@@ -59,7 +59,7 @@ void inbound_user_info (session *sess, char *chan, char *user, char *host,
 								unsigned int away, const message_tags_data *tags_data);
 void inbound_foundip (session *sess, char *ip, 
 							 const message_tags_data *tags_data);
-int inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
+bool inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
 							char *banner, int is_exemption,
 							const message_tags_data *tags_data);
 void inbound_ping_reply (session *sess, char *timestring, char *from,
@@ -101,7 +101,7 @@ int inbound_sasl_error (server &serv);
 void inbound_sasl_supportedmechs (server &serv, char *list);
 void do_dns (session *sess, const char nick[], const char host[],
 				 const message_tags_data *tags_data);
-gboolean alert_match_word (const char *word, const char *masks);
-gboolean alert_match_text (char *text, char *masks);
+bool alert_match_word (const char *word, const char *masks);
+bool alert_match_text (const char text[], const char masks[]);
 
 #endif
