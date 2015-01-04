@@ -596,10 +596,9 @@ Util_Expand(const char *filename)
 static void
 Util_ReleaseThread(PyThreadState *tstate)
 {
-	PyThreadState *old_tstate;
 	if (!tstate)
 		Py_FatalError("PyEval_ReleaseThread: nullptr thread state");
-	old_tstate = PyThreadState_Swap(nullptr);
+	auto old_tstate = PyThreadState_Swap(nullptr);
 	if (old_tstate != tstate && old_tstate != nullptr)
 		Py_FatalError("PyEval_ReleaseThread: wrong thread state");
 	PyEval_ReleaseLock();
