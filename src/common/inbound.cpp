@@ -830,18 +830,16 @@ void
 inbound_quit (server &serv, char *nick, char *ip, char *reason,
 				  const message_tags_data *tags_data)
 {
-	GSList *list = sess_list;
-	session *sess;
-	struct User *user;
 	bool was_on_front_session = false;
 
-	while (list)
+	for(auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = (session *) list->data;
+		auto sess = static_cast<session *>(list->data);
 		if (sess->server == &serv)
 		{
 			if (sess == current_sess)
 				was_on_front_session = true;
+			struct User *user;
 			if ((user = userlist_find (sess, nick)))
 			{
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, nick, reason, ip, nullptr, 0,
@@ -854,7 +852,6 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 											  tags_data->timestamp);
 			}
 		}
-		list = list->next;
 	}
 
 	notify_set_offline (serv, nick, was_on_front_session, tags_data);
@@ -864,16 +861,11 @@ void
 inbound_account (const server &serv, const char *nick, const char *account,
 					  const message_tags_data *tags_data)
 {
-	session *sess = nullptr;
-	GSList *list;
-
-	list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 			userlist_set_account (sess, nick, account);
-		list = list->next;
 	}
 }
 
@@ -923,14 +915,11 @@ inbound_ping_reply (session *sess, char *timestring, char *from,
 static session *
 find_session_from_type (int type, server &serv)
 {
-	session *sess;
-	GSList *list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->type == type && sess->server == &serv)
 			return sess;
-		list = list->next;
 	}
 	return 0;
 }
@@ -1040,9 +1029,6 @@ inbound_away (server &serv, char *nick, char *msg,
 				  const message_tags_data *tags_data)
 {
 	auto away_msg = serv.get_away_message(nick);
-	session *sess = nullptr;
-	GSList *list;
-
 	if (away_msg && away_msg->second == msg)	/* Seen the msg before? */
 	{
 		if (prefs.hex_away_show_once && !serv.inside_whois)
@@ -1052,6 +1038,7 @@ inbound_away (server &serv, char *nick, char *msg,
 		serv.save_away_message(nick, boost::make_optional<std::string>(msg != nullptr, msg));
 	}
 
+	session *sess = nullptr;
 	if (prefs.hex_irc_whois_front)
 		sess = serv.front_session;
 	else
@@ -1067,13 +1054,11 @@ inbound_away (server &serv, char *nick, char *msg,
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS5, sess, nick, msg, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 
-	list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 			userlist_set_away (sess, nick, true);
-		list = list->next;
 	}
 }
 
@@ -1081,13 +1066,9 @@ void
 inbound_away_notify (const server &serv, char *nick, char *reason,
 							const message_tags_data *tags_data)
 {
-	session *sess = nullptr;
-	GSList *list;
-
-	list = sess_list;
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 		if (sess->server == &serv)
 		{
 			userlist_set_away (sess, nick, reason ? true : false);
@@ -1101,7 +1082,6 @@ inbound_away_notify (const server &serv, char *nick, char *reason,
 												  nullptr, 0, tags_data->timestamp);
 			}
 		}
-		list = list->next;
 	}
 }
 
@@ -1109,15 +1089,11 @@ bool
 inbound_nameslist_end (const server &serv, const std::string & chan,
 							  const message_tags_data *tags_data)
 {
-	session *sess;
-	GSList *list;
-
 	if (chan == "*")
 	{
-		list = sess_list;
-		while (list)
+		for (auto list = sess_list; list; list = g_slist_next(list))
 		{
-			sess = static_cast<session*>(list->data);
+			auto sess = static_cast<session*>(list->data);
 			if (sess->server == &serv)
 			{
 				sess->end_of_names = true;
@@ -1127,7 +1103,7 @@ inbound_nameslist_end (const server &serv, const std::string & chan,
 		}
 		return true;
 	}
-	sess = find_channel (serv, chan);
+	auto sess = find_channel (serv, chan);
 	if (sess)
 	{
 		sess->end_of_names = true;
@@ -1137,25 +1113,21 @@ inbound_nameslist_end (const server &serv, const std::string & chan,
 	return false;
 }
 
-static gboolean
+static bool
 check_autojoin_channels (server &serv)
 {
-	int i = 0;
-	session *sess;
-	GSList *list = sess_list;
-	std::vector<favchannel> sess_channels;      /* joined channels that are not in the favorites list */		
-	favchannel *fav;
-
 	/* shouldn't really happen, the io tag is destroyed in server.c */
 	if (!is_server (&serv))
 	{
-		return FALSE;
+		return false;
 	}
 
+	std::vector<favchannel> sess_channels;      /* joined channels that are not in the favorites list */
+	int i = 0;
 	/* If there's a session (i.e. this is a reconnect), autojoin to everything that was open previously. */
-	while (list)
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		sess = static_cast<session*>(list->data);
+		auto sess = static_cast<session*>(list->data);
 
 		if (sess->server == &serv)
 		{
@@ -1164,7 +1136,7 @@ check_autojoin_channels (server &serv)
 				strcpy (sess->waitchannel, sess->willjoinchannel);
 				sess->willjoinchannel[0] = 0;
 
-				fav = servlist_favchan_find (serv.network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
+				auto fav = servlist_favchan_find (serv.network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
 
 				/* session->channelkey is initially unset for channels joined from the favorites. You have to fill them up manually from favorites settings. */
 				if (fav)
@@ -1188,8 +1160,6 @@ check_autojoin_channels (server &serv)
 				i++;
 			}
 		}
-
-		list = list->next;
 	}
 
 	if (!sess_channels.empty())
@@ -1211,7 +1181,7 @@ check_autojoin_channels (server &serv)
 
 	serv.joindelay_tag = 0;
 	fe_server_event(&serv, fe_serverevents::LOGGEDIN, i);
-	return FALSE;
+	return false;
 }
 
 void
