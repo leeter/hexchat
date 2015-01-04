@@ -663,8 +663,7 @@ setup_create_3oggle (GtkWidget *tab, int row, const setting *set)
 	{
 		gtk_widget_set_tooltip_text (label, _(set->tooltip));
 	}
-	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	wid = gtk_check_button_new ();
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
@@ -834,16 +833,14 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 
 	wid = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	wid = gtk_hscale_new_with_range (0., 255., 1.);
 	gtk_scale_set_value_pos (GTK_SCALE (wid), GTK_POS_RIGHT);
 	gtk_range_set_value (GTK_RANGE (wid), setup_get_int (&setup_prefs, set));
 	g_signal_connect (G_OBJECT(wid), "value_changed",
 							G_CALLBACK (setup_hscale_cb), (gpointer)set);
-	gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_FILL, 0, 0);
+	gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 
 #ifndef WIN32 /* Windows always supports this */
 	/* Only used for transparency currently */
@@ -893,12 +890,10 @@ setup_create_radio (GtkWidget *table, int row, const setting *set)
 
 	wid = gtk_label_new (_(set->label));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), LABEL_INDENT, 0);
+	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
 	hbox = gtk_hbox_new (0, 0);
-	gtk_table_attach (GTK_TABLE (table), hbox, 3, 4, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), static_cast<GtkAttachOptions>(GTK_SHRINK | GTK_FILL), 0, 0);
+	gtk_table_attach (GTK_TABLE (table), hbox, 3, 4, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
 	i = 0;
 	group = NULL;
@@ -1176,15 +1171,12 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 		gtk_widget_set_sensitive (wid, FALSE);
 
 	if (set->type == ST_ENTRY)
-		gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1,
-		static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_FILL, 0, 0);
+		gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 	else
 	{
-		gtk_table_attach (GTK_TABLE (table), wid, 3, 5, row, row + 1,
-			static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 0);
+		gtk_table_attach (GTK_TABLE (table), wid, 3, 5, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 		bwid = gtk_button_new_with_label (_("Browse..."));
-		gtk_table_attach (GTK_TABLE (table), bwid, 5, 6, row, row + 1,
-								GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
+		gtk_table_attach (GTK_TABLE (table), bwid, 5, 6, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
 		if (set->type == ST_EFILE)
 			g_signal_connect (G_OBJECT (bwid), "clicked",
 									G_CALLBACK (setup_browsefile_cb), wid);
@@ -1213,16 +1205,14 @@ setup_create_header (GtkWidget *table, int row, const char *labeltext)
 	label = gtk_label_new (NULL);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-	gtk_table_attach (GTK_TABLE (table), label, 0, 4, row, row + 1,
-							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
+	gtk_table_attach (GTK_TABLE (table), label, 0, 4, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
 }
 
 static void
 setup_create_button (GtkWidget *table, int row, const char *label, GCallback callback)
 {
 	GtkWidget *but = gtk_button_new_with_label (label);
-	gtk_table_attach (GTK_TABLE (table), but, 2, 3, row, row + 1,
-					GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
+	gtk_table_attach (GTK_TABLE (table), but, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
 	g_signal_connect (G_OBJECT (but), "clicked", callback, NULL);
 }
 
@@ -1405,7 +1395,7 @@ setup_create_color_button (GtkWidget *table, int num, int row, int col)
 		strcpy (buf, "<span size=\"x-small\"> </span>");
 	else
 						/* 12345678901 23456789 01  23456789 */
-		sprintf (buf, "<span size=\"x-small\">%d</span>", num);
+		snprintf (buf, sizeof(buf), _("<span size=\"x-small\">%d</span>"), num);
 	but = gtk_button_new_with_label (" ");
 	gtk_label_set_markup (GTK_LABEL (gtk_bin_get_child (GTK_BIN (but))), buf);
 	/* win32 build uses this to turn off themeing */
@@ -1448,7 +1438,6 @@ static GtkWidget *
 setup_create_color_page (void)
 {
 	GtkWidget *tab, *box, *label;
-	int i;
 
 	box = gtk_vbox_new (FALSE, 0);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 6);
@@ -1466,7 +1455,7 @@ setup_create_color_page (void)
 	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, 1, 2,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
-	for (i = 0; i < 16; i++)
+	for (int i = 0; i < 16; i++)
 		setup_create_color_button (tab, i, 1, i+3);
 
 	label = gtk_label_new (_("Local colors:"));
@@ -1474,7 +1463,7 @@ setup_create_color_page (void)
 	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, 2, 3,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0);
 
-	for (i = 16; i < 32; i++)
+	for (int i = 16; i < 32; i++)
 		setup_create_color_button (tab, i, 2, (i+3) - 16);
 
 	setup_create_other_color (_("Foreground:"), COL_FG, 3, tab);
@@ -1501,7 +1490,7 @@ setup_create_color_page (void)
 	gtk_table_attach (GTK_TABLE (tab), label, 2, 3, 16, 17,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, LABEL_INDENT, 0); */
 
-	for (i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		setup_create_toggleL (tab, i + 16, &color_settings[i]);
 	}

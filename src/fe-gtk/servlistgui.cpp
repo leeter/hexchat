@@ -600,11 +600,7 @@ servlist_compare (ircnet *net1, ircnet *net2)
 {
 	glib_string net1_casefolded(g_utf8_casefold(net1->name.c_str(), net1->name.size()));
 	glib_string net2_casefolded(g_utf8_casefold(net2->name.c_str(), net1->name.size()));
-
-	int result = g_utf8_collate(net1_casefolded.get(), net2_casefolded.get());
-
-	return result;
-
+	return g_utf8_collate(net1_casefolded.get(), net2_casefolded.get());
 }
 
 static void
@@ -627,16 +623,14 @@ servlist_has_selection (GtkTreeView *tree)
 }
 
 static void
-servlist_favor (GtkWidget *button, gpointer none)
+servlist_favor (GtkWidget *, gpointer)
 {
-	GtkTreeSelection *sel;
-	GtkTreeModel *model;
-	GtkTreeIter iter;
-
 	if (!selected_net)
 		return;
 
-	sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (networks_tree));
+	GtkTreeModel *model;
+	GtkTreeIter iter;
+	auto sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (networks_tree));
 	if (gtk_tree_selection_get_selected (sel, &model, &iter))
 	{
 		if (selected_net->flags & FLAG_FAVORITE)
@@ -776,15 +770,11 @@ servlist_editbutton_cb (GtkWidget *item, GtkNotebook *notebook)
 static void
 servlist_deleteserver_cb (void)
 {
-	GtkTreeSelection *sel;
-	GtkTreeModel *model;
 	GtkTreeIter iter;
 
-	
-
 	/* find the selected item in the GUI */
-	model = gtk_tree_view_get_model (GTK_TREE_VIEW (edit_trees[SERVER_TREE]));
-	sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (edit_trees[SERVER_TREE]));
+	auto model = gtk_tree_view_get_model (GTK_TREE_VIEW (edit_trees[SERVER_TREE]));
+	auto sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (edit_trees[SERVER_TREE]));
 
 	if (gtk_tree_selection_get_selected (sel, &model, &iter))
 	{
@@ -1095,31 +1085,29 @@ servlist_connect_cb (GtkWidget *button, gpointer userdata)
 	if (!is_session (servlist_sess))
 		servlist_sess = NULL;	/* open a new one */
 
+	session *chosen = servlist_sess;
+
+	servlist_sess = NULL;	/* open a new one */
+
+	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
-		session *chosen = servlist_sess;
-
-		servlist_sess = NULL;	/* open a new one */
-
-		for (auto list = sess_list; list; list = g_slist_next(list))
+		auto sess = static_cast<session*>(list->data);
+		if (sess->server->network == selected_net)
 		{
-			auto sess = static_cast<session*>(list->data);
-			if (sess->server->network == selected_net)
-			{
-				servlist_sess = sess;
-				if (sess->server->connected)
-					servlist_sess = NULL;	/* open a new one */
-				break;
-			}
+			servlist_sess = sess;
+			if (sess->server->connected)
+				servlist_sess = NULL;	/* open a new one */
+			break;
 		}
+	}
 
-		/* use the chosen one, if it's empty */
-		if (!servlist_sess &&
-			  chosen &&
-			 !chosen->server->connected &&
-			  chosen->server->server_session->channel[0] == 0)
-		{
-			servlist_sess = chosen;
-		}
+	/* use the chosen one, if it's empty */
+	if (!servlist_sess &&
+			chosen &&
+			!chosen->server->connected &&
+			chosen->server->server_session->channel[0] == 0)
+	{
+		servlist_sess = chosen;
 	}
 
 	servlist_connect (servlist_sess, selected_net, true);
@@ -1133,16 +1121,15 @@ static void
 servlist_celledit_cb (GtkCellRendererText *, gchar *arg1, gchar *arg2,
 							 gpointer user_data)
 {
-	GtkTreeModel *model = (GtkTreeModel *)user_data;
-	GtkTreeIter iter;
-	
-
 	if (!arg1 || !arg2)
 		return;
 
 	GtkTreePathPtr path( gtk_tree_path_new_from_string (arg1));
 	if (!path)
 		return;
+
+	GtkTreeModel *model = static_cast<GtkTreeModel *>(user_data);
+	GtkTreeIter iter;
 
 	if (!gtk_tree_model_get_iter (model, &iter, path.get()))
 	{
@@ -1201,7 +1188,7 @@ servlist_create_check (int num, int state, GtkWidget *table, int row, int col, c
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (but), state);
 	g_signal_connect (G_OBJECT (but), "toggled",
 							G_CALLBACK (servlist_check_cb), GINT_TO_POINTER (num));
-	gtk_table_attach(GTK_TABLE(table), but, col, col + 2, row, row + 1, static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), static_cast<GtkAttachOptions>(0), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
+	gtk_table_attach(GTK_TABLE(table), but, col, col + 2, row, row + 1, GTK_FILL | GTK_EXPAND, GtkAttachOptions(), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
 	gtk_widget_show (but);
 
 	return but;
@@ -1226,7 +1213,7 @@ servlist_create_entry (GtkWidget *table, char *labeltext, int row,
 	gtk_entry_set_text (GTK_ENTRY (entry), def ? def : "");
 	gtk_label_set_mnemonic_widget (GTK_LABEL (label), entry);
 
-	gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row + 1, static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), GtkAttachOptions(), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
+	gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row + 1, GTK_FILL | GTK_EXPAND, GtkAttachOptions(), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
 
 	return entry;
 }
