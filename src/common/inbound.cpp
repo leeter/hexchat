@@ -21,14 +21,16 @@
 #define NOMINMAX
 #endif
 #include <algorithm>
-#include <vector>
-#include <cstring>
 #include <cctype>
 #include <cstdlib>
 #include <cstdio>
-#include <stdexcept>
-#include <sys/types.h>
+#include <cstring>
 #include <ctime>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <sys/types.h>
 
 #ifdef WIN32
 #include <io.h>
@@ -684,13 +686,7 @@ void
 inbound_nameslist (server &serv, char *chan, char *names,
 						 const message_tags_data *tags_data)
 {
-	session *sess;
-	char **name_list;
-	char *host, *nopre_name;
-	char name[NICKLEN];
-	int i, offset;
-
-	sess = find_channel (serv, chan);
+	session *sess = find_channel (serv, chan);
 	if (!sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_USERSONCHAN, serv.server_session, chan,
@@ -707,19 +703,19 @@ inbound_nameslist (server &serv, char *chan, char *names,
 		userlist_clear (sess);
 	}
 
-	name_list = g_strsplit (names, " ", -1);
-	for (i = 0; name_list[i]; i++)
+	std::istringstream namesbuff{ names };
+	for (std::string token; std::getline(namesbuff, token, ' ');)
 	{
-		host = nullptr;
-		offset = sizeof(name);
-
-		if (name_list[i][0] == 0)
+		if (token.empty())
 			continue;
+
+		auto offset = size_t{ NICKLEN };
+		const char* host = nullptr;
 
 		if (serv.have_uhnames)
 		{
 			offset = 0;
-			nopre_name = name_list[i];
+			auto nopre_name = token.cbegin();
 
 			/* Ignore prefixes so '!' won't cause issues */
 			while (serv.nick_prefixes.find_first_of(*nopre_name) != std::string::npos)
@@ -728,16 +724,15 @@ inbound_nameslist (server &serv, char *chan, char *names,
 				offset++;
 			}
 
-			offset += strcspn (nopre_name, "!");
-			if (offset++ < strlen (name_list[i]))
-				host = name_list[i] + offset;
+			auto bang_loc = std::find(nopre_name, token.cend(), '!');
+			offset += std::distance(nopre_name, bang_loc);
+			if (offset++ < token.size())
+				host = token.c_str() + offset;
 		}
+		auto name = token.substr(0, std::min(offset, size_t{ NICKLEN - 1 }));
 
-		g_strlcpy (name, name_list[i], std::min<std::size_t>(offset, sizeof(name)));
-
-		userlist_add (sess, name, host, nullptr, nullptr, tags_data);
+		userlist_add (sess, name.c_str(), host, nullptr, nullptr, tags_data);
 	}
-	g_strfreev (name_list);
 }
 
 void
@@ -1860,7 +1855,7 @@ inbound_sasl_supportedmechs (server &serv, char *list)
 void
 inbound_sasl_authenticate (server &serv, char *data)
 {
-		ircnet *net = (ircnet*)serv.network;
+		ircnet *net = serv.network;
 		char *user;
 		const char *mech = sasl_mechanisms[serv.sasl_mech];
 
