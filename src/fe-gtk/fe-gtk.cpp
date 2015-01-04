@@ -721,7 +721,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 		lbuf->search_lnee = strlen (lbuf->search_nee);
 	}
 	lbuf->search_flags = flags;
-	lbuf->search_text = strdup (sstr);
+	lbuf->search_text = g_strdup (sstr);
 	gtk_xtext_lastlog (lbuf, buf);
 }
 

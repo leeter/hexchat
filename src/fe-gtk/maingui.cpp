@@ -622,11 +622,11 @@ mg_unpopulate (session *sess)
 	res->input_text = SPELL_ENTRY_GET_TEXT (gui->input_box);
 	res->topic_text = gtk_entry_get_text (GTK_ENTRY (gui->topic_entry));
 	res->limit_text = gtk_entry_get_text (GTK_ENTRY (gui->limit_entry));
-	res->key_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->key_entry)));
+	res->key_text = gtk_entry_get_text (GTK_ENTRY (gui->key_entry));
 	if (gui->laginfo)
 		res->lag_text = gtk_label_get_text (GTK_LABEL (gui->laginfo));
 	if (gui->throttleinfo)
-		res->queue_text = strdup (gtk_label_get_text (GTK_LABEL (gui->throttleinfo)));
+		res->queue_text = gtk_label_get_text (GTK_LABEL (gui->throttleinfo));
 
 	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
 		res->flag_wid_state[i] = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]));
@@ -1625,7 +1625,7 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 {
 	char *p, *data, *next, *fname;
 
-	p = data = strdup (uri);
+	p = data = g_strdup (uri);
 	while (*p)
 	{
 		next = strchr (p, '\r');
@@ -1652,7 +1652,7 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 		if (*p == '\n')
 			p++;
 	}
-	free (data);
+	g_free (data);
 
 }
 
