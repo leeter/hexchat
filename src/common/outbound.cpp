@@ -3903,15 +3903,13 @@ usercommand_show_help (session *sess, const char *name)
 static void
 help (session *sess, char *tbuf, const char *helpcmd, bool quiet)
 {
-	const commands *cmd;
-
 	if (plugin_show_help (sess, helpcmd))
 		return;
 
 	if (usercommand_show_help (sess, helpcmd))
 		return;
 
-	cmd = find_internal_command (helpcmd);
+	auto cmd = find_internal_command (helpcmd);
 	if (cmd)
 	{
 		if (cmd->help)

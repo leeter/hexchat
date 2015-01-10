@@ -2593,25 +2593,25 @@ mg_nickclick_cb (GtkWidget *button, gpointer userdata)
 /* make sure chanview and userlist positions are sane */
 
 static void
-mg_sanitize_positions (int *cv, int *ul)
+mg_sanitize_positions (int &cv, int &ul)
 {
 	if (prefs.hex_gui_tab_layout == 2)
 	{
 		/* treeview can't be on TOP or BOTTOM */
-		if (*cv == POS_TOP || *cv == POS_BOTTOM)
-			*cv = POS_TOPLEFT;
+		if (cv == POS_TOP || cv == POS_BOTTOM)
+			cv = POS_TOPLEFT;
 	}
 
 	/* userlist can't be on TOP or BOTTOM */
-	if (*ul == POS_TOP || *ul == POS_BOTTOM)
-		*ul = POS_TOPRIGHT;
+	if (ul == POS_TOP || ul == POS_BOTTOM)
+		ul = POS_TOPRIGHT;
 
 	/* can't have both in the same place */
-	if (*cv == *ul)
+	if (cv == ul)
 	{
-		*cv = POS_TOPRIGHT;
-		if (*ul == POS_TOPRIGHT)
-			*cv = POS_BOTTOMRIGHT;
+		cv = POS_TOPRIGHT;
+		if (ul == POS_TOPRIGHT)
+			cv = POS_BOTTOMRIGHT;
 	}
 }
 
@@ -2721,7 +2721,7 @@ mg_place_userlist_and_chanview (session_gui *gui)
 {
 	GtkWidget *chanviewbox = NULL;
 
-	mg_sanitize_positions (&prefs.hex_gui_tab_pos, &prefs.hex_gui_ulist_pos);
+	mg_sanitize_positions (prefs.hex_gui_tab_pos, prefs.hex_gui_ulist_pos);
 
 	if (gui->chanview)
 	{
