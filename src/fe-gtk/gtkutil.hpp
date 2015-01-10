@@ -25,7 +25,7 @@
 
 typedef void (*filereqcallback) (void *, char *file);
 
-void gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, char *filter, char *extensions, int flags);
+void gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, const char filter[], const char extensions[], int flags);
 void gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad);
 void gtkutil_destroy_on_esc (GtkWidget *win);
 GtkWidget *gtkutil_button (GtkWidget *box, const char *stock, const char *tip, GCallback callback,

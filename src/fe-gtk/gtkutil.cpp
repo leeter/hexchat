@@ -20,11 +20,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <boost/filesystem.hpp>
 
 #include "fe-gtk.hpp"
 
@@ -64,8 +66,8 @@ struct file_req
 static void
 gtkutil_file_req_destroy (GtkWidget * wid, struct file_req *freq)
 {
+	std::unique_ptr<file_req> freq_ptr{ freq };
 	freq->callback (freq->userdata, NULL);
-	delete freq;
 }
 
 static void
@@ -187,9 +189,11 @@ gtkutil_file_req_response (GtkWidget *dialog, gint res, struct file_req *freq)
 }
 
 void
-gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, char *filter, char *extensions,
+gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, const char filter[], const char extensions[],
 						int flags)
 {
+	namespace bfs = boost::filesystem;
+
 	struct file_req *freq;
 	GtkWidget *dialog;
 	GtkFileFilter *filefilter;
@@ -217,10 +221,9 @@ gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, ch
 	{
 		if (flags & FRF_WRITE)
 		{
-			char temp[1024];
-			path_part (filter, temp, sizeof (temp));
-			gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), temp);
-			gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), file_part (filter));
+			bfs::path path{ filter };
+			gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), path.parent_path().string().c_str());
+			gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), path.filename().string().c_str());
 		}
 		else
 			gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), filter);
@@ -297,22 +300,20 @@ gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad)
 static void
 gtkutil_get_str_response (GtkDialog *dialog, gint arg1, gpointer entry)
 {
-	void (*callback) (int cancel, const char text[], void *user_data);
-	void *user_data;
-
 	const char* text = gtk_entry_get_text (GTK_ENTRY (entry));
-	callback = reinterpret_cast<void(*)(int, const char [], void *)>(g_object_get_data(G_OBJECT(dialog), "cb"));
-	user_data = g_object_get_data (G_OBJECT (dialog), "ud");
+	std::unique_ptr<std::function<void(gboolean, const char[])> > box{ static_cast<std::function<void(gboolean, const char[])> *>(g_object_get_data(G_OBJECT(dialog), "ud")) };
 
 	switch (arg1)
 	{
 	case GTK_RESPONSE_REJECT:
-		callback (TRUE, text, user_data);
+		(*box)(TRUE, text);
 		gtk_widget_destroy (GTK_WIDGET (dialog));
 		break;
 	case GTK_RESPONSE_ACCEPT:
-		callback (FALSE, text, user_data);
+		(*box)(FALSE, text);
 		gtk_widget_destroy (GTK_WIDGET (dialog));
+		break;
+	default:
 		break;
 	}
 }
@@ -331,7 +332,8 @@ fe_get_str(char *msg, char *def, GSourceFunc callback, void *userdata)
 	GtkWidget *hbox;
 	GtkWidget *label;
 	extern GtkWidget *parent_window;
-
+	std::unique_ptr<std::function<void(gboolean, const char[])> > box{ new std::function < void(gboolean, const char[]) > };
+	*box = std::bind(reinterpret_cast<void(*)(gboolean, const char[], void *)>(callback), std::placeholders::_1, std::placeholders::_2, userdata);
 	dialog = gtk_dialog_new_with_buttons (msg, NULL, GtkDialogFlags(),
 										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -350,9 +352,7 @@ fe_get_str(char *msg, char *def, GSourceFunc callback, void *userdata)
 	}
 
 	hbox = gtk_hbox_new (TRUE, 0);
-
-	g_object_set_data (G_OBJECT (dialog), "cb", (void*)callback);
-	g_object_set_data(G_OBJECT(dialog), "ud", (void*)userdata);
+	g_object_set_data(G_OBJECT(dialog), "ud", (void*)box.release());
 
 	entry = gtk_entry_new ();
 	g_signal_connect (G_OBJECT (entry), "activate",

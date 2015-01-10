@@ -144,9 +144,9 @@ plugingui_load_cb (session *sess, const char *file)
 		std::string buf(strlen(file) + 9, '\0');
 
 		if (strchr (file, ' '))
-			sprintf(&buf[0], "LOAD \"%s\"", file);
+			snprintf(&buf[0], buf.size(), "LOAD \"%s\"", file);
 		else
-			sprintf(&buf[0], "LOAD %s", file);
+			snprintf(&buf[0], buf.size(), "LOAD %s", file);
 		handle_command (sess, &buf[0], FALSE);
 	}
 }
@@ -188,9 +188,9 @@ plugingui_unload (GtkWidget *, gpointer)
 		/* let python.so or perl.so handle it */
 		std::string buf(strlen(file) + 10, '\0');
 		if (strchr (file, ' '))
-			snprintf (&buf[0], buf.size(), _("UNLOAD \"%s\""), file);
+			snprintf (&buf[0], buf.size(), "UNLOAD \"%s\"", file);
 		else
-			snprintf(&buf[0], buf.size(), _("UNLOAD %s"), file);
+			snprintf(&buf[0], buf.size(), "UNLOAD %s", file);
 		handle_command(current_sess, &buf[0], FALSE);
 	}
 }

@@ -770,10 +770,10 @@ char * text_validate (char **text, size_t *len)
 void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
 {
 	// putting this in here to help track down places that are sending in invalid UTF-8
-	if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
+	/*if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
 	{
 		throw std::invalid_argument("text must be valid utf8");
-	}
+	}*/
 	if (!sess)
 	{
 		if (!sess_list)
@@ -782,19 +782,19 @@ void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestam
 	}
 	
 	std::string buf(text);
-
+	glib_string conv;
 	/* make sure it's valid utf8 */
 	if (buf.empty())
 	{
 		buf = "\n";
 		//buf.push_back(0);
 	}// else
-	//{
-	//	size_t len = 0;
-	//	//buf.push_back(0);
-	//	char* buf_ptr = &buf[0];
-	//	conv.reset(text_validate (&buf_ptr, &len));
-	//}
+	{
+		size_t len = 0;
+		//buf.push_back(0);
+		char* buf_ptr = &buf[0];
+		conv.reset(text_validate (&buf_ptr, &len));
+	}
 
 	log_write(*sess, buf, timestamp);
 	scrollback_save(*sess, buf);
