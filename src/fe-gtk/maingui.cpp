@@ -19,10 +19,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
-#include <cstdlib>
+#include <algorithm>
 #include <cstring>
-#include <cstdio>
-#include <cctype>
 #include <locale>
 #include <exception>
 #include <sstream>
@@ -358,7 +356,7 @@ static gboolean
 mg_spellcheck_cb (SexySpellEntry *entry, gchar *word, gpointer data)
 {
 	/* This can cause freezes on long words, nicks arn't very long anyway. */
-	if (strlen (word) > 20)
+	if (std::strlen (word) > 20)
 		return TRUE;
 
 	/* Ignore anything we think is a valid url */
@@ -429,7 +427,7 @@ fe_set_title (session &sess)
 		}
 		if (prefs.hex_gui_win_ucount)
 		{
-			snprintf (tbuf + strlen (tbuf), 9, " (%d)", sess.total);
+			snprintf (tbuf + std::strlen (tbuf), 9, " (%d)", sess.total);
 		}
 		break;
 	case session::SESS_NOTICES:
@@ -1451,7 +1449,6 @@ mg_create_color_menu (GtkWidget *menu, session *sess)
 	GtkWidget *submenu;
 	GtkWidget *subsubmenu;
 	char buf[256];
-	int i;
 
 	submenu = mg_submenu (menu, _("Insert Attribute or Color Code"));
 
@@ -1462,7 +1459,7 @@ mg_create_color_menu (GtkWidget *menu, session *sess)
 
 	subsubmenu = mg_submenu (submenu, _("Colors 0-7"));
 
-	for (i = 0; i < 8; i++)
+	for (int i = 0; i < 8; i++)
 	{
 		sprintf (buf, "<tt><sup>%02d</sup> <span background=\"#%02x%02x%02x\">"
 					"   </span></tt>",
@@ -1472,7 +1469,7 @@ mg_create_color_menu (GtkWidget *menu, session *sess)
 
 	subsubmenu = mg_submenu (submenu, _("Colors 8-15"));
 
-	for (i = 8; i < 16; i++)
+	for (int i = 8; i < 16; i++)
 	{
 		sprintf (buf, "<tt><sup>%02d</sup> <span background=\"#%02x%02x%02x\">"
 					"   </span></tt>",
@@ -1514,9 +1511,7 @@ mg_perchan_menu_item (char *label, GtkWidget *menu, guint8 *setting, guint globa
 static void
 mg_create_perchannelmenu (session *sess, GtkWidget *menu)
 {
-	GtkWidget *submenu;
-
-	submenu = menu_quick_sub (_("_Settings"), menu, NULL, XCMENU_MNEMONIC, -1);
+	GtkWidget *submenu = menu_quick_sub (_("_Settings"), menu, NULL, XCMENU_MNEMONIC, -1);
 
 	mg_perchan_menu_item (_("_Log to Disk"), submenu, &sess->text_logging, prefs.hex_irc_logging);
 	mg_perchan_menu_item (_("_Reload Scrollback"), submenu, &sess->text_scrollback, prefs.hex_text_replay);
@@ -1530,9 +1525,7 @@ mg_create_perchannelmenu (session *sess, GtkWidget *menu)
 static void
 mg_create_alertmenu (session *sess, GtkWidget *menu)
 {
-	GtkWidget *submenu;
-
-	submenu = menu_quick_sub (_("_Extra Alerts"), menu, NULL, XCMENU_MNEMONIC, -1);
+	GtkWidget *submenu = menu_quick_sub (_("_Extra Alerts"), menu, NULL, XCMENU_MNEMONIC, -1);
 
 	mg_perchan_menu_item (_("Beep on _Message"), submenu, &sess->alert_beep, prefs.hex_input_beep_chans);
 
@@ -1544,18 +1537,15 @@ mg_create_alertmenu (session *sess, GtkWidget *menu)
 static void
 mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 {
-	GtkWidget *menu, *item;
-	char buf[256];
-
-	menu = gtk_menu_new ();
+	auto menu = gtk_menu_new ();
 
 	if (sess)
 	{
-		char *name = g_markup_escape_text (sess->channel[0] ? sess->channel : _("<none>"), -1);
+		char buf[256];
+		glib_string name{ g_markup_escape_text(sess->channel[0] ? sess->channel : _("<none>"), -1) };
 		snprintf (buf, sizeof (buf), "<span foreground=\"#3344cc\"><b>%s</b></span>", name);
-		g_free (name);
 
-		item = gtk_menu_item_new_with_label ("");
+		auto item = gtk_menu_item_new_with_label ("");
 		gtk_label_set_markup (GTK_LABEL (gtk_bin_get_child (GTK_BIN (item))), buf);
 		gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 		gtk_widget_show (item);
@@ -1622,9 +1612,10 @@ mg_tab_contextmenu_cb (chanview *cv, chan *ch, int tag, gpointer ud, GdkEventBut
 void
 mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 {
-	char *p, *data, *next, *fname;
+	char *p, *next;
 
-	p = data = g_strdup (uri);
+	p = g_strdup (uri);
+	glib_string data{ p };
 	while (*p)
 	{
 		next = strchr (p, '\r');
@@ -1632,17 +1623,15 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 		{
 			if (next)
 				*next = 0;
-			fname = g_filename_from_uri (p, NULL, NULL);
+			glib_string fname{ g_filename_from_uri(p, NULL, NULL) };
 			if (fname)
 			{
 				/* dcc_send() expects utf-8 */
-				p = g_filename_to_utf8 (fname, -1, 0, 0, 0);
+				glib_string p{ g_filename_to_utf8(fname.get(), -1, 0, 0, 0) };
 				if (p)
 				{
-					dcc::dcc_send (sess, target, p, prefs.hex_dcc_max_send_cps, 0);
-					g_free (p);
+					dcc::dcc_send (sess, target, p.get(), prefs.hex_dcc_max_send_cps, 0);
 				}
-				g_free (fname);
 			}
 		}
 		if (!next)
@@ -1651,8 +1640,6 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 		if (*p == '\n')
 			p++;
 	}
-	g_free (data);
-
 }
 
 static void
@@ -1721,9 +1708,8 @@ mg_create_userlistbuttons (GtkWidget *box)
 	struct popup *pop;
 	GSList *list = button_list;
 	int a = 0, b = 0;
-	GtkWidget *tab;
 
-	tab = gtk_table_new (5, 2, FALSE);
+	auto tab = gtk_table_new (5, 2, FALSE);
 	gtk_box_pack_end (GTK_BOX (box), tab, FALSE, FALSE, 0);
 
 	while (list)
@@ -1749,13 +1735,11 @@ static void
 mg_topic_cb (GtkWidget *entry, gpointer userdata)
 {
 	session *sess = current_sess;
-	char *text;
-
 	if (sess->channel[0] && sess->server->connected && sess->type == session::SESS_CHANNEL)
 	{
-		text = (char *)gtk_entry_get_text (GTK_ENTRY (entry));
+		auto text = gtk_entry_get_text (GTK_ENTRY (entry));
 		if (text[0] == 0)
-			text = NULL;
+			text = nullptr;
 		sess->server->p_topic (sess->channel, text);
 	} else
 		gtk_entry_set_text (GTK_ENTRY (entry), "");
@@ -1909,15 +1893,12 @@ mg_change_flag (GtkWidget * wid, session *sess, char flag)
 static void
 flagl_hit (GtkWidget * wid, struct session *sess)
 {
-	char modes[512];
-	const char *limit_str;
 	server *serv = sess->server;
-
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (wid)))
 	{
 		if (serv->connected && sess->channel[0])
 		{
-			limit_str = gtk_entry_get_text (GTK_ENTRY (sess->gui->limit_entry));
+			auto limit_str = gtk_entry_get_text (GTK_ENTRY (sess->gui->limit_entry));
 			if (check_is_number ((char *)limit_str) == FALSE)
 			{
 				fe_message (_("User limit must be a number!\n"), FE_MSG_ERROR);
@@ -1925,6 +1906,7 @@ flagl_hit (GtkWidget * wid, struct session *sess)
 				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid), FALSE);
 				return;
 			}
+			char modes[512];
 			snprintf (modes, sizeof (modes), "+l %d", atoi (limit_str));
 			serv->p_mode (sess->channel, modes);
 			serv->p_join_info (sess->channel);
@@ -1936,11 +1918,11 @@ flagl_hit (GtkWidget * wid, struct session *sess)
 static void
 flagk_hit (GtkWidget * wid, struct session *sess)
 {
-	char modes[512];
 	server *serv = sess->server;
 
 	if (serv->connected && sess->channel[0])
 	{
+		char modes[512];
 		snprintf (modes, sizeof (modes), "-k %s", 
 			  gtk_entry_get_text (GTK_ENTRY (sess->gui->key_entry)));
 
@@ -1954,14 +1936,11 @@ flagk_hit (GtkWidget * wid, struct session *sess)
 static void
 mg_flagbutton_cb (GtkWidget *but, const char flag[])
 {
-	session *sess;
-	char mode;
-
 	if (ignore_chanmode)
 		return;
 
-	sess = current_sess;
-	mode = std::tolower<char> (flag[0], std::locale());
+	auto sess = current_sess;
+	auto mode = std::tolower<char> (flag[0], std::locale());
 
 	switch (mode)
 	{
@@ -2001,12 +1980,12 @@ mg_create_flagbutton (const char tip[], GtkWidget *box, const char face[])
 static void
 mg_key_entry_cb (GtkWidget * igad, gpointer)
 {
-	char modes[512];
 	session *sess = current_sess;
 	server *serv = sess->server;
 
 	if (serv->connected && sess->channel[0])
 	{
+		char modes[512];
 		snprintf (modes, sizeof (modes), "+k %s",
 				gtk_entry_get_text (GTK_ENTRY (igad)));
 		serv->p_mode (sess->channel, modes);
@@ -2017,7 +1996,6 @@ mg_key_entry_cb (GtkWidget * igad, gpointer)
 static void
 mg_limit_entry_cb (GtkWidget * igad, gpointer)
 {
-	char modes[512];
 	session *sess = current_sess;
 	server *serv = sess->server;
 
@@ -2030,6 +2008,7 @@ mg_limit_entry_cb (GtkWidget * igad, gpointer)
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sess->gui->flag_l), FALSE);
 			return;
 		}
+		char modes[512];
 		snprintf (modes, sizeof(modes), "+l %d", 
 				atoi (gtk_entry_get_text (GTK_ENTRY (igad))));
 		serv->p_mode (sess->channel, modes);
@@ -2100,7 +2079,7 @@ mg_dialog_button_cb (GtkWidget *wid, const char *cmd)
 
 	const char *host = "";
 	auto topic = gtk_entry_get_text (GTK_ENTRY (current_sess->gui->topic_entry));
-	topic = strrchr (topic, '@');
+	topic = std::strrchr (topic, '@');
 	if (topic)
 		host = topic + 1;
 
@@ -3347,16 +3326,16 @@ fe_clear_channel (session &sess)
 			{
 				/* truncate long channel names */
 				tbuf[0] = '(';
-				strcpy (tbuf + 1, sess.waitchannel);
+				std::strcpy (tbuf + 1, sess.waitchannel);
 				g_utf8_offset_to_pointer(tbuf, prefs.hex_gui_tab_trunc)[0] = 0;
-				strcat (tbuf, "..)");
+				std::strcat (tbuf, "..)");
 			} else
 			{
-				sprintf (tbuf, "(%s)", sess.waitchannel);
+				snprintf (tbuf, sizeof(tbuf), "(%s)", sess.waitchannel);
 			}
 		}
 		else
-			strcpy (tbuf, _("<none>"));
+			std::strcpy (tbuf, _("<none>"));
 		chan_rename(static_cast<chan *>(sess.res->tab), tbuf, prefs.hex_gui_tab_trunc);
 	}
 
@@ -3402,12 +3381,7 @@ fe_dlgbuttons_update (session *sess)
 void
 fe_update_mode_buttons (session *sess, char mode, char sign)
 {
-	int state;
-
-	if (sign == '+')
-		state = TRUE;
-	else
-		state = FALSE;
+	gboolean state = sign == '+' ? TRUE : FALSE;
 
 	for (int i = 0; i < NUM_FLAG_WIDS - 1; i++)
 	{
