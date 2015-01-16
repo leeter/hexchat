@@ -1543,7 +1543,7 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 	{
 		char buf[256];
 		glib_string name{ g_markup_escape_text(sess->channel[0] ? sess->channel : _("<none>"), -1) };
-		snprintf (buf, sizeof (buf), "<span foreground=\"#3344cc\"><b>%s</b></span>", name);
+		snprintf (buf, sizeof (buf), "<span foreground=\"#3344cc\"><b>%s</b></span>", name.get());
 
 		auto item = gtk_menu_item_new_with_label ("");
 		gtk_label_set_markup (GTK_LABEL (gtk_bin_get_child (GTK_BIN (item))), buf);
