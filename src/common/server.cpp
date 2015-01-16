@@ -1869,13 +1869,17 @@ server::connect (char *hostname, int port, bool no_login)
 	session *sess = this->server_session;
 	boost::asio::io_service io_service;
 	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
+	if (!resolved.first){
+		server_error(this, resolved.first);
+		return;
+	}
 	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
 	this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
 	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str()); });
 	this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
 	this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
 	this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
-	this->server_connection->connect(resolved);
+	this->server_connection->connect(resolved.second);
 	
 	this->reset_to_defaults();
 	this->connecting = true;

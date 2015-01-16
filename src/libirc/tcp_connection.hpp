@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
 #include <openssl/ssl.h>
@@ -45,7 +46,7 @@ namespace io
 			boost::signals2::signal<void(const SSL*)> on_ssl_handshakecomplete;
 		};
 
-		boost::asio::ip::tcp::resolver::iterator resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
+		std::pair<boost::system::error_code, boost::asio::ip::tcp::resolver::iterator> resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
 	}
 }
 #endif
