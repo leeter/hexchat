@@ -20,21 +20,24 @@
  * THE SOFTWARE.
  */
 
+#define STRICT
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <algorithm>
+#include <chrono>
+#include <codecvt>
+#include <locale>
+#include <memory>
+#include <mutex>
+#include <ratio>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <windows.h>
 #include <comutil.h>
 #include <comdef.h>
 #include <wbemidl.h>
-#include <string>
-#include <memory>
-#include <vector>
-#include <algorithm>
-#include <locale>
-#include <codecvt>
-#include <sstream>
-#include <chrono>
-#include <mutex>
 #pragma comment(lib, "comsuppw.lib")
 
 #include "hexchat-plugin.h"
@@ -109,6 +112,11 @@ namespace{
 		}
 	};
 
+	using gibi = std::ratio < 0x40000000, 1 >;
+	using mibi = std::ratio < 0x100000, 1 >;
+	using kibi = std::ratio < 0x400, 1 >;
+	using byte = std::ratio < 0x1, 1 > ;
+
 	static ::std::string
 		getCpuMhz(void)
 	{
@@ -140,7 +148,8 @@ namespace{
 
 		meminfo.dwLength = sizeof(meminfo);
 		GlobalMemoryStatusEx(&meminfo);
-		buffer << meminfo.ullTotalPhys / 1024 / 1024 << " MB Total (" << meminfo.ullAvailPhys / 1024 / 1024 << " MB Free)";
+
+		buffer << meminfo.ullTotalPhys / mibi::num << " MB Total (" << meminfo.ullAvailPhys / mibi::num << " MB Free)";
 		return buffer.str();
 	}
 
@@ -202,17 +211,17 @@ namespace{
 		{
 			return "Error Code 4";
 		}
-		static _bstr_t query_language{ L"WQL" };
+		static const _bstr_t query_language{ L"WQL" };
 		switch (mode)
 		{
 		case wmi_info_mode::os:
-			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_OperatingSystem").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language, _bstr_t(L"SELECT * FROM Win32_OperatingSystem"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 		case wmi_info_mode::processor:
-			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_Processor").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language, _bstr_t(L"SELECT * FROM Win32_Processor"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 		case wmi_info_mode::vga:
-			hres = pSvc->ExecQuery(query_language.GetBSTR(), _bstr_t(L"SELECT * FROM Win32_VideoController").GetBSTR(), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
+			hres = pSvc->ExecQuery(query_language, _bstr_t(L"SELECT * FROM Win32_VideoController"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr, &pEnumerator);
 			break;
 
 		}
