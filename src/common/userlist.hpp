@@ -33,7 +33,7 @@
 struct User
 {
 	User();
-	char nick[NICKLEN];
+	std::string nick;
 	boost::optional<std::string> hostname;
 	boost::optional<std::string> realname;
 	boost::optional<std::string> servername;
@@ -74,15 +74,15 @@ bool userlist_add_hostname (session *sess, const char nick[],
 									const char servername[], const char account[], unsigned int away);
 void userlist_set_away (session *sess, const char nick[], bool away);
 void userlist_set_account (session *sess, const char nick[], const char account[]);
-struct User *userlist_find (session *sess, const char name[]);
-struct User *userlist_find_global (server *serv, const char name[]);
+struct User *userlist_find (session *sess, const std::string & name);
+struct User *userlist_find_global (server *serv, const std::string & name);
 void userlist_clear (session *sess);
 void userlist_free (session &sess);
 void userlist_add (session *sess, const char name[], const char hostname[], const char account[],
 						const char realname[], const message_tags_data *tags_data);
 bool userlist_remove (session *sess, const char name[]);
 void userlist_remove_user (session *sess, struct User *user);
-bool userlist_change (session *sess, const char oldname[], const char newname[]);
+bool userlist_change (session *sess, const std::string & oldname, const std::string & newname);
 void userlist_update_mode (session *sess, const char name[], char mode, char sign);
 GSList *userlist_flat_list (session *sess);
 GList *userlist_double_list (session *sess);

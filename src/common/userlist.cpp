@@ -36,8 +36,7 @@
 #include "session.hpp"
 
 User::User()
-	:nick(),
-	lasttalk(),
+	:lasttalk(),
 	access(),	/* axs bit field */
 	prefix(),	/* @ + % */
 	op(),
@@ -68,42 +67,37 @@ namespace{
 					return 1;
 			}
 		}
-		auto nick1Len = std::strlen(user1.nick);
-		auto nick2Len = std::strlen(user2.nick);
 		auto& collate = std::use_facet<std::collate<char>>(locale);
-		return collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
+		return collate.compare(user1.nick.c_str(), user1.nick.c_str() + user1.nick.size(), user2.nick.c_str(), user2.nick.c_str() + user2.nick.size());
 	}
 
 	static int
 		nick_cmp_alpha(struct User *user1, struct User *user2, server *serv)
 	{
-		return serv->p_cmp(user1->nick, user2->nick);
+		return serv->compare(user1->nick, user2->nick);
 	}
 
 	static int
 		nick_cmp(const User &user1, const User &user2, const std::locale &locale)
 	{
-		auto nick1Len = std::strlen(user1.nick);
-		auto nick2Len = std::strlen(user2.nick);
 		auto& collate = std::use_facet<std::collate<char>>(locale);
 		switch (prefs.hex_gui_ulist_sort)
 		{
 		case 0:
 			return nick_cmp_az_ops(locale, user1, user2);
 		case 1:
-			return collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
+			return collate.compare(user1.nick.c_str(), user1.nick.c_str() + user1.nick.size(), user2.nick.c_str(), user2.nick.c_str() + user2.nick.size());
 		case 2:
 			return -1 * nick_cmp_az_ops(locale, user1, user2);
 		case 3:
-			return -1 * collate.compare(user1.nick, user1.nick + nick1Len, user2.nick, user2.nick + nick2Len);
+			return -1 * collate.compare(user1.nick.c_str(), user1.nick.c_str() + user1.nick.size(), user2.nick.c_str(), user2.nick.c_str() + user2.nick.size());
 		default:
 			return -1;
 		}
 	}
 
 
-	static int
-		userlist_resort(session & sess, const char nick[])
+	static int userlist_resort(session & sess, const std::string & nick)
 	{
 		std::sort(
 			sess.usertree.begin(),
@@ -117,15 +111,14 @@ namespace{
 			sess.usertree_alpha.begin(),
 			sess.usertree_alpha.end(),
 			[&sess](const User* a, const User* b){
-			return sess.server->p_cmp(a->nick, b->nick) < 0;
+			return sess.server->current_locale()(a->nick, b->nick);
 		});
-		if (!nick)
-			return 0;
+
 		auto result = std::find_if(
 			sess.usertree.cbegin(),
 			sess.usertree.cend(),
 			[nick, &sess](const std::unique_ptr<User> & ptr){
-			return sess.server->p_cmp(nick, ptr->nick) == 0;
+			return sess.server->compare(nick, ptr->nick) == 0;
 		});
 		return std::distance(sess.usertree.cbegin(), result);
 	}
@@ -141,14 +134,14 @@ namespace{
 			sess->usertree.cbegin(),
 			sess->usertree.cend(),
 			[sess, &newuser](const std::unique_ptr<User>& a){
-			return sess->server->p_cmp(a->nick, newuser->nick) == 0;
+			return sess->server->compare(a->nick, newuser->nick) == 0;
 		});
 		if (result != sess->usertree.cend())
 		{
 			return -1;
 		}
 
-		const char* nick = newuser->nick;
+		const std::string& nick = newuser->nick;
 		sess->usertree.emplace_back(std::move(newuser));
 		sess->usertree_alpha.emplace_back(sess->usertree.back().get());
 		return userlist_resort(*sess, nick);
@@ -248,13 +241,13 @@ userlist_clear (session *sess)
 }
 
 struct User *
-userlist_find (struct session *sess, const char name[])
+userlist_find (struct session *sess, const std::string & name)
 {
 	auto result = std::find_if(
 		sess->usertree_alpha.cbegin(),
 		sess->usertree_alpha.cend(),
 		[sess, name](const User* u){
-			return sess->server->p_cmp(name, u->nick) == 0;
+			return sess->server->compare(name, u->nick) == 0;
 		});
 	if (result != sess->usertree_alpha.cend())
 		return *result;
@@ -263,7 +256,7 @@ userlist_find (struct session *sess, const char name[])
 }
 
 struct User *
-userlist_find_global (struct server *serv, const char name[])
+userlist_find_global (struct server *serv, const std::string & name)
 {
 	GSList *list = sess_list;
 	while (list)
@@ -308,7 +301,7 @@ userlist_update_mode (session *sess, const char name[], char mode, char sign)
 		sess->usertree.begin(),
 		sess->usertree.end(),
 		[sess, name](const std::unique_ptr<User> &u){
-		return sess->server->p_cmp(name, u->nick) == 0;
+		return sess->server->compare(name, u->nick) == 0;
 	});
 	if (result == sess->usertree.end())
 		return;
@@ -352,19 +345,18 @@ userlist_update_mode (session *sess, const char name[], char mode, char sign)
 }
 
 bool
-userlist_change (struct session *sess, const char oldname[], const char newname[])
+userlist_change(struct session *sess, const std::string & oldname, const std::string & newname)
 {
 	auto user = std::find_if(
 		sess->usertree.begin(),
 		sess->usertree.end(),
 		[sess, oldname](const std::unique_ptr<User> &u){
-			return sess->server->p_cmp(oldname, u->nick) == 0;
+			return sess->server->compare(oldname, u->nick) == 0;
 		});
 	if (user == sess->usertree.end())
 		return false;
 
-
-	safe_strcpy(user->get()->nick, newname);
+	user->get()->nick = newname;
 	User* user_ref = user->get();
 	int pos = userlist_resort(*sess, user_ref->nick);
 	fe_userlist_move(sess, user_ref, pos);
@@ -434,9 +426,9 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	/* add it to our linked list */
 	if (hostname)
 		user->hostname = std::string(hostname);
-	safe_strcpy (user->nick, name + prefix_chars);
+	user->nick = (name + prefix_chars);
 	/* is it me? */
-	if (!sess->server->p_cmp (user->nick, sess->server->nick))
+	if (!sess->server->compare (user->nick, sess->server->nick))
 		user->me = true;
 	/* extended join info */
 	if (sess->server->have_extjoin)
@@ -548,14 +540,11 @@ public:
 			return nick_cmp(*a, *b, this->locale_) < 0;
 		});
 
-		auto& collate = std::use_facet<std::collate<char>>(locale_);
 		std::sort(
 			this->users_alpha_.begin(),
 			this->users_alpha_.end(),
-			[&collate](const User* a, const User* b){
-				auto nick1Len = std::strlen(a->nick);
-				auto nick2Len = std::strlen(b->nick);
-				return collate.compare(a->nick, a->nick + nick1Len, b->nick, b->nick + nick2Len);
+			[this](const User* a, const User* b){
+			return locale_(a->nick, b->nick);
 			}
 		);
 	}
@@ -566,14 +555,14 @@ public:
 			this->users_.cbegin(),
 			this->users_.cend(),
 			[&user, this](const std::unique_ptr<User>& a){
-				return locale_(std::string(a->nick), std::string(user->nick));
+				return locale_(a->nick, user->nick);
 			});
 		if (result != this->users_.cend())
 		{
 			return std::make_pair(false, 0);
 		}
 
-		const char* nick = user->nick;
+		const std::string & nick = user->nick;
 		this->users_.emplace_back(std::move(user));
 		this->users_alpha_.emplace_back(this->users_.back().get());
 		this->sort();
@@ -587,7 +576,7 @@ public:
 			users_alpha_.cbegin(),
 			users_alpha_.cend(),
 			[&nick, this](const User* u){
-			return this->locale_(nick, std::string(u->nick));
+			return this->locale_(nick, u->nick);
 		});
 		if (result != users_alpha_.cend())
 			return boost::optional<const User&>(*(*result));

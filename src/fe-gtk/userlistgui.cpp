@@ -152,7 +152,7 @@ userlist_select (session *sess, const char name[])
 		{
 			struct User *row_user;
 			gtk_tree_model_get (model, &iter, COL_USER, &row_user, -1);
-			if (sess->server->p_cmp (row_user->nick, name) == 0)
+			if (sess->server->compare (row_user->nick, name) == 0)
 			{
 				if (gtk_tree_selection_iter_is_selected (selection, &iter))
 					gtk_tree_selection_unselect_iter (selection, &iter);
@@ -403,7 +403,7 @@ userlist_dnd_drop (GtkTreeView *widget, GdkDragContext *context,
 	auto data = gtk_selection_data_get_data (selection_data);
 
 	if (data)
-		mg_dnd_drop_file (current_sess, user->nick, reinterpret_cast<const char*>(data));
+		mg_dnd_drop_file (current_sess, user->nick.c_str(), reinterpret_cast<const char*>(data));
 }
 
 static gboolean
@@ -638,7 +638,7 @@ fe_uselect (session *sess, char *word[], int do_clear, int scroll_to)
 				thisname = 0;
 				while ( *(name = word[thisname++]) )
 				{
-					if (sess->server->p_cmp (row_user->nick, name) == 0)
+					if (sess->server->compare (row_user->nick, name) == 0)
 					{
 						gtk_tree_selection_select_iter (selection, &iter);
 						if (scroll_to)

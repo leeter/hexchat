@@ -395,13 +395,10 @@ create_mask(session * sess, std::string mask, const std::string &mode, const std
 	const char *p2;
 	std::ostringstream buf;
 
-	user = userlist_find (sess, mask.c_str());
+	user = userlist_find (sess, mask);
 	if (user && user->hostname)  /* it's a nickname, let's find a proper ban mask */
 	{
-		if (deop)
-			p2 = user->nick;
-		else
-			p2 = "";
+		const std::string & p2 = deop ? user->nick : std::string{};
 
 		mask = user->hostname.get();
 
@@ -1295,7 +1292,7 @@ cmd_dns (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			if (user->hostname)
 			{
-				do_dns (sess, user->nick, user->hostname->c_str(), &no_tags);
+				do_dns (sess, user->nick.c_str(), user->hostname->c_str(), &no_tags);
 			} else
 			{
 				sess->server->p_get_ip (nick);
@@ -3554,41 +3551,39 @@ cmd_userlist (struct session *sess, char *, char *[],
 }
 
 static int
-cmd_wallchop (struct session *sess, char *tbuf, char *word[],
+cmd_wallchop (struct session *sess, char *, char *[],
 				  char *word_eol[])
 {
 	if (!(*word_eol[2]))
 		return FALSE;
 
-	strcpy (tbuf, "NOTICE ");
-
 	const char * reason = word_eol[2];
 	int i = 0;
-
+	std::ostringstream outbuf("NOTICE ", std::ios::ate);
 	for (auto & user : sess->usertree)
 	{
 		if (user->op)
 		{
 			if (i)
-				strcat(tbuf, ",");
-			strcat(tbuf, user->nick);
+				outbuf << ',';
+			outbuf << user->nick;
 			i++;
 		}
 		if (i == 5)
 		{
 			i = 0;
-			sprintf(tbuf + strlen(tbuf),
-				" :[@%s] %s", sess->channel, reason);
-			sess->server->p_raw(tbuf);
-			strcpy(tbuf, "NOTICE ");
+			outbuf << boost::format(" :[@%s] %s") % sess->channel % reason;
+			sess->server->p_raw(outbuf.str());
+			outbuf.str("");
+			outbuf.clear();
+			outbuf << "NOTICE ";
 		}
 	}
 
 	if (i)
 	{
-		sprintf (tbuf + strlen (tbuf),
-					" :[@%s] %s", sess->channel, word_eol[2]);
-		sess->server->p_raw (tbuf);
+		outbuf << boost::format(" :[@%s] %s") % sess->channel % word_eol[2];
+		sess->server->p_raw (outbuf.str());
 	}
 
 	return TRUE;
@@ -4195,12 +4190,12 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 				{
 					int lenu;
 
-					if (!rfc_ncasecmp(user->nick, nick, len))
+					if (!rfc_ncasecmp(user->nick.c_str(), nick, len))
 					{
-						lenu = strlen(user->nick);
+						lenu = user->nick.size();
 						if (lenu == len)
 						{
-							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick, space - 1);
+							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick.c_str(), space - 1);
 							len = -1;
 							break;
 						}
@@ -4217,7 +4212,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 
 				if (best)
 				{
-					snprintf (tbuf, TBUFSIZE, "%s%s", best->nick, space - 1);
+					snprintf (tbuf, TBUFSIZE, "%s%s", best->nick.c_str(), space - 1);
 					return;
 				}
 			}

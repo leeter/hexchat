@@ -1318,7 +1318,7 @@ static char *
 gcomp_nick_func (char *data)
 {
 	if (data)
-		return ((struct User *)data)->nick;
+		return &((struct User *)data)->nick[0];
 	return "";
 }
 

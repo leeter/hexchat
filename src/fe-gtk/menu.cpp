@@ -138,7 +138,7 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 			host = buf + 1;
 	} else*/
 	{
-		user = userlist_find (sess, nick.c_str());
+		user = userlist_find (sess, nick);
 		if (user)
 		{
 			if (user->hostname)
@@ -693,7 +693,7 @@ fe_userlist_update (session *sess, struct User *user)
 		return;
 
 	/* not the same nick as the menu? */
-	if (sess->server->p_cmp (user->nick, str_copy.get()))
+	if (sess->server->p_cmp (user->nick.c_str(), str_copy.get()))
 		return;
 
 	/* get rid of the "show" signal */
@@ -731,9 +731,9 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
 	} else
 	{
-		user = userlist_find (sess, nick.c_str());	/* lasttalk is channel specific */
+		user = userlist_find (sess, nick);	/* lasttalk is channel specific */
 		if (!user)
-			user = userlist_find_global (current_sess->server, nick.c_str());
+			user = userlist_find_global (current_sess->server, nick);
 		if (user)
 		{
 			nick_submenu = submenu = menu_quick_sub (nick.c_str(), menu, NULL, XCMENU_DOLIST, -1);

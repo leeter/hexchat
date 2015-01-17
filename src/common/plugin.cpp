@@ -1501,7 +1501,7 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0xb9d38a2d: /* account */
 			return ((struct User *)data)->account ? ((struct User *)data)->account->c_str() : nullptr;
 		case 0x339763: /* nick */
-			return ((struct User *)data)->nick;
+			return ((struct User *)data)->nick.c_str();
 		case 0x30f5a8: /* host */
 			return ((struct User *)data)->hostname ? ((struct User *)data)->hostname->c_str() : nullptr;
 		case 0xc594b292: /* prefix */
