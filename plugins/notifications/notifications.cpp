@@ -22,6 +22,7 @@
 
 #include <SDKDDKVer.h>
 
+#define STRICT
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT_TYPED_ITEMIDS
@@ -182,28 +183,30 @@ namespace
 			auto toastTemplate =
 				Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
 					Windows::UI::Notifications::ToastTemplateType::ToastText04);
-			auto node_list = toastTemplate->GetElementsByTagName(L"text");
+			auto node_list = toastTemplate->GetElementsByTagName(Platform::StringReference(L"text"));
 			UINT node_count = node_list->Length;
 
 			// put the channel name first
+			auto message_source = widen(server_name + " - " + channel);
 			node_list->GetAt(0)->AppendChild(
-				toastTemplate->CreateTextNode(
-					ref new Platform::String(widen(server_name + " - " + channel).c_str())));
+				toastTemplate->CreateTextNode(Platform::StringReference(message_source.c_str(), message_source.size())));
 
 			// this should be the nick
 			auto wide_nick = widen(word[1]);
 			auto bang_loc = wide_nick.find_first_of(L'!');
 			if (bang_loc != std::wstring::npos)
+			{
 				wide_nick.erase(bang_loc, std::wstring::npos);
+			}
 			wide_nick.erase(0, 1);
 			node_list->GetAt(1)->AppendChild(
 				toastTemplate->CreateTextNode(
-					ref new Platform::String(wide_nick.c_str())));
+				Platform::StringReference(wide_nick.c_str(), wide_nick.size())));
 
 			// then the message
 			auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
 			std::unique_ptr<char, decltype(sanitizer_del)> sanitized(
-				hexchat_strip(ph, word_eol[4], static_cast<int>(strlen(word_eol[4])), 7 /*STRIP_ALL*/),
+				hexchat_strip(ph, word_eol[4], static_cast<int>(std::strlen(word_eol[4])), 7 /*STRIP_ALL*/),
 				sanitizer_del);
 			auto widen_str = widen(sanitized.get());
 			widen_str.erase(0, 1);
@@ -213,7 +216,7 @@ namespace
 			auto node2 = node_list->GetAt(2);
 			node2->AppendChild(
 				toastTemplate->CreateTextNode(
-					ref new Platform::String(widen_str.c_str())));
+				Platform::StringReference(widen_str.c_str(), widen_str.size())));
 
 			auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
 			notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
