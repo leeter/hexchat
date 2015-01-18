@@ -1275,8 +1275,11 @@ server::disconnect (session * sess, bool sendquit, int err)
 
 	fe_server_event(serv, fe_serverevents::DISCONNECT, 0);
 
-	// flush any outgoing messages
-	this->server_connection->poll();
+	if (this->server_connection)
+	{
+		// flush any outgoing messages
+		this->server_connection->poll();
+	}
 
 	/* close all sockets & io tags */
 	switch (serv->cleanup ())
