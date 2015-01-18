@@ -39,7 +39,7 @@
 
 CONSTEXPR inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
 {
-	return static_cast<GtkAttachOptions>(static_cast<std::underlying_type<GtkAttachOptions>::type >(a) | static_cast<std::underlying_type<GtkAttachOptions>::type>(b));
+	return static_cast<GtkAttachOptions>(static_cast<int >(a) | static_cast<int>(b));
 }
 
 CONSTEXPR inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
