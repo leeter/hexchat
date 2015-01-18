@@ -1872,7 +1872,7 @@ server::connect (char *hostname, int port, bool no_login)
 	session *sess = this->server_session;
 	boost::asio::io_service io_service;
 	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
-	if (!resolved.first){
+	if (resolved.first){
 		server_error(this, resolved.first);
 		return;
 	}
