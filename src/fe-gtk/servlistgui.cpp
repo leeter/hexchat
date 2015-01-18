@@ -291,7 +291,7 @@ servlist_commands_populate (ircnet *net, GtkWidget *treeview)
 	{
 		entry = static_cast<commandentry*>(list->data);
 		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, entry->command, 1, 1, -1);
+		gtk_list_store_set (store, &iter, 0, entry->command.c_str(), 1, 1, -1);
 
 		if (net->selected == i)
 		{
@@ -1263,16 +1263,16 @@ servlist_sanitize_hostname (char *host)
 }
 
 /* remove leading slash */
-static char *
-servlist_sanitize_command (char *cmd)
+static std::string
+servlist_sanitize_command (const std::string& cmd)
 {
 	if (cmd[0] == '/')
 	{
-		return (g_strdup (cmd + 1));
+		return cmd.substr(1);
 	}
 	else
 	{
-		return (g_strdup (cmd));
+		return cmd;
 	}
 }
 
@@ -1341,10 +1341,8 @@ servlist_editcommand_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, 
 			return;
 		}
 
-		cmd = entry->command;
 		entry->command = servlist_sanitize_command (newval);
-		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, entry->command, -1);
-		free (cmd);
+		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, entry->command.c_str(), -1);
 	}
 }
 

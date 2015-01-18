@@ -1462,9 +1462,9 @@ nowindow:
 /* execute 1 end-of-motd command */
 
 static bool
-inbound_exec_eom_cmd (const char *str, session *sess)
+inbound_exec_eom_cmd (const std::string & str, session *sess)
 {
-	auto cmd = command_insert_vars (sess, (str[0] == '/') ? str + 1 : str);
+	auto cmd = command_insert_vars (sess, (str[0] == '/') ? str.substr(1) : str);
 	handle_command (sess, &cmd[0], true);
 
 	return true;

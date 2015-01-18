@@ -873,7 +873,7 @@ servlist_command_find (ircnet *net, char *cmd, int *pos)
 	while (list)
 	{
 		entry = static_cast<commandentry*>(list->data);
-		if (strcmp (entry->command, cmd) == 0)
+		if (entry->command == cmd)
 		{
 			if (pos)
 			{
@@ -959,10 +959,8 @@ servlist_server_add (ircnet *net, const char *name)
 commandentry *
 servlist_command_add (ircnet *net, const char *cmd)
 {
-	commandentry *entry;
-
-	entry = new commandentry();
-	entry->command = new_strdup (cmd);
+	commandentry *entry = new commandentry();
+	entry->command = cmd;
 
 	net->commandlist = g_slist_append (net->commandlist, entry);
 
@@ -1033,7 +1031,6 @@ servlist_server_remove_all (ircnet *net)
 void
 servlist_command_free (commandentry *entry)
 {
-	delete entry->command;
 	delete entry;
 }
 
@@ -1355,11 +1352,11 @@ servlist_save (void)
 	GSList *cmdlist;
 	GSList *favlist;
 #ifndef WIN32
-	int first = FALSE;
+	bool first = false;
 
 	gchar * buf = g_build_filename (get_xdir (), "servlist.conf", NULL);
 	if (g_access (buf, F_OK) != 0)
-		first = TRUE;
+		first = true;
 #endif
 
 	fp = hexchat_fopen_file ("servlist.conf", "w", 0);
@@ -1423,7 +1420,7 @@ servlist_save (void)
 		while (cmdlist)
 		{
 			cmd = static_cast<commandentry*>(cmdlist->data);
-			fprintf (fp, "C=%s\n", cmd->command);
+			fprintf (fp, "C=%s\n", cmd->command.c_str());
 			cmdlist = cmdlist->next;
 		}
 

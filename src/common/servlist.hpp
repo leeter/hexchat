@@ -30,7 +30,7 @@ struct ircserver
 
 struct commandentry
 {
-	char *command;
+	std::string command;
 };
 
 struct favchannel
