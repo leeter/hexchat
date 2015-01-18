@@ -70,20 +70,22 @@ extern GSList *network_list;
 #define FLAG_COUNT				7
 
 /* Login methods. Use server password by default - if we had a NickServ password, it'd be set to 2 already by servlist_load() */
-#define LOGIN_DEFAULT_REAL		LOGIN_PASS		/* this is to set the default login method for unknown servers */
-#define LOGIN_DEFAULT			0				/* this is for the login type dropdown, doesn't serve any other purpose */
-#define LOGIN_MSG_NICKSERV		1
-#define LOGIN_NICKSERV			2
+enum login_method{
+	LOGIN_PASS = 7,
+	LOGIN_DEFAULT_REAL	=	LOGIN_PASS,		/* this is to set the default login method for unknown servers */
+	LOGIN_DEFAULT		=	0,				/* this is for the login type dropdown, doesn't serve any other purpose */
+	LOGIN_MSG_NICKSERV	=	1,
+	LOGIN_NICKSERV		=	2,
 #if 0
-#define LOGIN_NS				3
-#define LOGIN_MSG_NS			4
-#define LOGIN_AUTH				5
+	LOGIN_NS			=	3,
+	LOGIN_MSG_NS		=	4,
+	LOGIN_AUTH			=	5,
 #endif
-#define LOGIN_SASL				6
-#define LOGIN_PASS				7
-#define LOGIN_CHALLENGEAUTH		8
-#define LOGIN_CUSTOM			9
-#define LOGIN_SASLEXTERNAL		10
+	LOGIN_SASL			=	6,
+	LOGIN_CHALLENGEAUTH	=	8,
+	LOGIN_CUSTOM		=	9,
+	LOGIN_SASLEXTERNAL	=	10,
+};
 
 #define CHALLENGEAUTH_ALGO		"HMAC-SHA-256"
 #define CHALLENGEAUTH_NICK		"Q@CServe.quakenet.org"

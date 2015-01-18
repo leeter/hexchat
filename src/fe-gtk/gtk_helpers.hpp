@@ -19,6 +19,7 @@
 #ifndef HEXCHAT_GTK_HELPERS_HPP
 #define HEXCHAT_GTK_HELPERS_HPP
 #include <memory>
+#include <type_traits>
 #include <gtk/gtk.h>
 
 #ifndef NOEXCEPT
@@ -39,17 +40,17 @@
 
 CONSTEXPR inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
 {
-	return static_cast<GtkAttachOptions>(static_cast<int>(a) | static_cast<int>(b));
+	return static_cast<GtkAttachOptions>(static_cast<std::underlying_type<GtkAttachOptions>::type >(a) | static_cast<std::underlying_type<GtkAttachOptions>::type>(b));
 }
 
 CONSTEXPR inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
 {
-	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
+	return static_cast<GdkGCValuesMask>(static_cast<std::underlying_type<GdkGCValuesMask>::type>(a) | static_cast<std::underlying_type<GdkGCValuesMask>::type>(b));
 }
 
 CONSTEXPR inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
 {
-	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
+	return static_cast<GSignalFlags>(static_cast<std::underlying_type<GSignalFlags>::type>(a) | static_cast<std::underlying_type<GSignalFlags>::type>(b));
 }
 
 #define CUSTOM_PTR_DELETER(type, del) \
