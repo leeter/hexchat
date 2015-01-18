@@ -3447,7 +3447,7 @@ url_join_only (server *serv, char *, const char channel[], const char key[])
 	if (key)
 		serv->p_join (channel_name, key);
 	else
-		serv->p_join (channel_name, "");
+		serv->p_join(channel_name, std::string{});
 }
 
 static int
@@ -3459,12 +3459,12 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		char *port = NULL;
 		char *channel = NULL;
 		char *key = NULL;
-		char *url = g_strdup (word[2]);
+		glib_string url{ g_strdup(word[2]) };
 		bool use_ssl = false;
 		void *net;
 		server *serv;
 
-		if (parse_irc_url (url, &server_name, &port, &channel, &key, use_ssl))
+		if (parse_irc_url (url.get(), &server_name, &port, &channel, &key, use_ssl))
 		{
 			/* maybe we're already connected to this net */
 
@@ -3481,7 +3481,6 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				if (serv)
 				{
 					url_join_only (serv, tbuf, channel, key);
-					g_free (url);
 					return TRUE;
 				}
 			}
@@ -3492,7 +3491,6 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				if (serv)
 				{
 					url_join_only (serv, tbuf, channel, key);
-					g_free (url);
 					return TRUE;
 				}
 			}
@@ -3502,7 +3500,6 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 		} else
 			fe_open_url (word[2]);
-		g_free (url);
 		return TRUE;
 	}
 
@@ -3590,7 +3587,7 @@ cmd_wallchop (struct session *sess, char *, char *[],
 }
 
 static int
-cmd_wallchan (struct session *sess, char *tbuf, char *word[],
+cmd_wallchan (struct session *sess, char *, char *[],
 				  char *word_eol[])
 {
 	GSList *list;
