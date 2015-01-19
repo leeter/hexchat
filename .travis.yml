@@ -1,7 +1,7 @@
 language: cpp
 compiler:
     - gcc
-	- clang
+    - clang
 before_install:
     - sudo add-apt-repository ppa:boost-latest/ppa
     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
