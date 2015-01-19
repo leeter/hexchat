@@ -827,14 +827,12 @@ void PrintTextf (session *sess, const char format[], ...)
 void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)
 {
 	va_list args;
-	char *buf;
 
 	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
+	glib_string buf{ g_strdup_vprintf(format, args) };
 	va_end (args);
 
-	PrintTextTimeStamp (sess, buf, timestamp);
-	g_free (buf);
+	PrintTextTimeStamp (sess, buf.get(), timestamp);
 }
 
 /* Print Events stuff here --AGL */
