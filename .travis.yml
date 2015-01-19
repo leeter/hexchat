@@ -3,7 +3,7 @@ compiler:
     - gcc
     - clang
 before_install:
-    - sudo add-apt-repository ppa:boost-latest/ppa
+    - sudo add-apt-repository ppa:boost-latest/ppa  -y
     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     - sudo apt-get update -qq
     - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
