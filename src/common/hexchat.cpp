@@ -222,7 +222,7 @@ session * find_dialog(const server &serv, const boost::string_ref &nick)
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv && sess->type == session::SESS_DIALOG)
 		{
-			if (!serv.compare (nick, sess->channel))
+			if (!serv.p_cmp (nick.data(), sess->channel))
 				return (sess);
 		}
 		list = list->next;
@@ -239,7 +239,7 @@ session *find_channel(const server &serv, const boost::string_ref &chan)
 		sess = static_cast<session*>(list->data);
 		if ((&serv == sess->server) && sess->type == session::SESS_CHANNEL)
 		{
-			if (!serv.compare(chan, sess->channel))
+			if (!serv.p_cmp(chan.data(), sess->channel))
 				return sess;
 		}
 		list = list->next;
