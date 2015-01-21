@@ -23,6 +23,7 @@
 #include <string>
 #include <ctime>
 #include <boost/format/format_fwd.hpp>
+#include <boost/utility/string_ref.hpp>
 #include "textenums.h"
 
 /* timestamp is non-zero if we are using server-time */
@@ -44,7 +45,7 @@ void scrollback_load (session &sess);
 
 int text_word_check (char *word, int len);
 void PrintText(session *sess, const std::string & text);
-void PrintTextTimeStamp (session *sess, const std::string & text, time_t timestamp);
+void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t timestamp);
 void PrintTextf(session * sess, const boost::format & fmt);
 void PrintTextf (session *sess, const char *format, ...) G_GNUC_PRINTF (2, 3);
 void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...) G_GNUC_PRINTF (3, 4);

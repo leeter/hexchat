@@ -768,7 +768,7 @@ char * text_validate (char **text, size_t *len)
 	return utf;
 }
 
-void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestamp)
+void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t timestamp)
 {
 	// putting this in here to help track down places that are sending in invalid UTF-8
 	/*if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
@@ -782,7 +782,7 @@ void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestam
 		sess = static_cast<session *>(sess_list->data);
 	}
 	
-	std::string buf(text);
+	std::string buf = text.to_string();
 	glib_string conv;
 	/* make sure it's valid utf8 */
 	if (buf.empty())
