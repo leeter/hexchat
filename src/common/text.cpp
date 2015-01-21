@@ -41,6 +41,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
+#include <boost/utility/string_ref.hpp>
 
 
 #ifdef WIN32
@@ -788,7 +789,8 @@ void PrintTextTimeStamp (session *sess, const std::string& text, time_t timestam
 	{
 		buf = "\n";
 		//buf.push_back(0);
-	}// else
+	}
+	if (!g_utf8_validate(buf.c_str(), buf.size(), nullptr))
 	{
 		size_t len = 0;
 		//buf.push_back(0);

@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <memory>
 #include <boost/filesystem.hpp>
+#include <boost/utility/string_ref.hpp>
 #include "fe-gtk.hpp"
 
 
@@ -437,7 +438,7 @@ fe_new_server (struct server *serv)
 }
 
 void
-fe_message (const std::string& msg, int flags)
+fe_message(const boost::string_ref & msg, int flags)
 {
 	GtkWidget *dialog;
 	GtkMessageType type = GTK_MESSAGE_WARNING;
@@ -448,9 +449,9 @@ fe_message (const std::string& msg, int flags)
 		type = GTK_MESSAGE_INFO;
 
 	dialog = gtk_message_dialog_new (GTK_WINDOW (parent_window), GtkDialogFlags(), type,
-												GTK_BUTTONS_OK, "%s", msg.c_str());
+												GTK_BUTTONS_OK, "%s", msg.data());
 	if (flags & FE_MSG_MARKUP)
-		gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), msg.c_str());
+		gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), msg.data());
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (gtk_widget_destroy), 0);
 	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);

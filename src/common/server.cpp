@@ -34,6 +34,7 @@
 #include <cstdarg>
 #include <cerrno>
 #include <fcntl.h>
+#include <boost/utility/string_ref.hpp>
 #include <tcp_connection.hpp>
 
 #define WANTSOCKET
@@ -2032,10 +2033,10 @@ void server::imbue(const std::locale& other)
 	this->locale_ = other;
 }
 
-int server::compare(const std::string &lhs, const std::string &rhs) const
+int server::compare(const boost::string_ref & lhs, const boost::string_ref &rhs) const
 {
 	auto& collate = std::use_facet<std::collate<char>>(locale_);
-	return collate.compare(lhs.c_str(), lhs.c_str() + lhs.size(), rhs.c_str(), rhs.c_str() + rhs.size());
+	return collate.compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
 }
 
 const std::locale & server::current_locale() const

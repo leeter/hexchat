@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <locale>
+#include <boost/utility/string_ref.hpp>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -597,7 +598,7 @@ fe_new_server (struct server *serv)
 }
 
 void
-fe_message (const std::string& msg, int flags)
+fe_message(const boost::string_ref & msg, int)
 {
 	std::cout << msg << "\n";
 }

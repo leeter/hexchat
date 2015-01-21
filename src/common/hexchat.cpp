@@ -31,6 +31,7 @@
 #include <new>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/utility/string_ref.hpp>
 
 #define WANTSOCKET
 #include "inet.hpp"

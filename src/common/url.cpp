@@ -28,6 +28,8 @@
 #include <string>
 #include <sstream>
 #include <set>
+#include <boost/utility/string_ref.hpp>
+
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"

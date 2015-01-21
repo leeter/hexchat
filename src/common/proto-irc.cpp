@@ -32,6 +32,7 @@
 #include <stdexcept>
 
 #include <boost/config.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
 #include <unistd.h>

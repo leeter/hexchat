@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <string>
 #include <boost/optional.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 #include "sessfwd.hpp"
 struct User;
 
@@ -66,7 +67,7 @@ enum fe_msg
 	FE_MSG_ERROR = 8,
 	FE_MSG_MARKUP = 16
 };
-void fe_message (const std::string & msg, int flags);
+void fe_message(const boost::string_ref & msg, int flags);
 typedef int fia_flags;
 enum fia : fia_flags
 {

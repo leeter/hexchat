@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <boost/utility/string_ref.hpp>
 
 #include "hexchat.hpp"
 #include "modes.hpp"
@@ -240,8 +241,7 @@ userlist_clear (session *sess)
 	fe_userlist_numbers (*sess);
 }
 
-struct User *
-userlist_find (struct session *sess, const std::string & name)
+struct User * userlist_find(struct session *sess, const boost::string_ref & name)
 {
 	auto result = std::find_if(
 		sess->usertree_alpha.cbegin(),

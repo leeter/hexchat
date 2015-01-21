@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctime>
+#include <boost/utility/string_ref.hpp>
 
 #define WANTSOCKET
 #define WANTARPA

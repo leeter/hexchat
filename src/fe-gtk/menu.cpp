@@ -32,6 +32,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <boost/optional.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <windows.h>
@@ -122,7 +123,7 @@ nick_command (session * sess, char *cmd)
 /* fill in the %a %s %n etc and execute the command */
 
 void
-nick_command_parse (session *sess, const std::string & cmd, const std::string& nick, const std::string& allnick)
+nick_command_parse(session *sess, const boost::string_ref & cmd, const boost::string_ref & nick, const boost::string_ref & allnick)
 {
 	// use string_ref when available
 	std::string host(_("Host unknown"));
@@ -157,9 +158,9 @@ nick_command_parse (session *sess, const std::string & cmd, const std::string& n
 	len = cmd.length() + nick.length() + allnick.length() + 512;
 	std::string buf(len, '\0');
 
-	auto_insert (&buf[0], len, (const unsigned char*)cmd.c_str(), 0, 0, allnick.c_str(), sess->channel, "",
+	auto_insert (&buf[0], len, (const unsigned char*)cmd.data(), 0, 0, allnick.data(), sess->channel, "",
 		sess->server->get_network(true), host.c_str(),
-					 sess->server->nick, nick.c_str(), account);
+					 sess->server->nick, nick.data(), account);
 
 	nick_command(sess, &buf[0]);
 }

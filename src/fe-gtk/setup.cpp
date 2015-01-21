@@ -28,6 +28,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <boost/utility/string_ref.hpp>
 
 #include "../common/hexchat.hpp"
 #include "../common/cfgfiles.hpp"

@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #include "fe-gtk.hpp"
 

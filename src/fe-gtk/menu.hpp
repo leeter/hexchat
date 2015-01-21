@@ -21,7 +21,8 @@
 #define HEXCHAT_MENU_HPP
 
 #include <string>
-void nick_command_parse(session *sess, const std::string &cmd, const std::string &nick, const std::string &allnick);
+#include <boost/utility/string_ref.hpp>
+void nick_command_parse(session *sess, const boost::string_ref &cmd, const boost::string_ref &nick, const boost::string_ref &allnick);
 
 GtkWidget *menu_create_main (void *accel_group, bool bar, int away, int toplevel, GtkWidget **menu_widgets);
 void menu_urlmenu (GdkEventButton * event, const std::string& url);

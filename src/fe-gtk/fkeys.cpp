@@ -34,6 +34,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <io.h>

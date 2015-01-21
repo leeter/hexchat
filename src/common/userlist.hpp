@@ -74,7 +74,7 @@ bool userlist_add_hostname (session *sess, const char nick[],
 									const char servername[], const char account[], unsigned int away);
 void userlist_set_away (session *sess, const char nick[], bool away);
 void userlist_set_account (session *sess, const char nick[], const char account[]);
-struct User *userlist_find (session *sess, const std::string & name);
+struct User *userlist_find(session *sess, const boost::string_ref & name);
 struct User *userlist_find_global (server *serv, const std::string & name);
 void userlist_clear (session *sess);
 void userlist_free (session &sess);

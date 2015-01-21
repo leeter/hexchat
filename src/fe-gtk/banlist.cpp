@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <ctime>
 #include <iomanip>
+#include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
 #include <unistd.h>

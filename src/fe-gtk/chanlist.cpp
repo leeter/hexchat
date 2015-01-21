@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <ctime>
 #include <stdexcept>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <io.h>

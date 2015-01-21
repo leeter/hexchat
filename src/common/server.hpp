@@ -28,6 +28,7 @@ extern GSList *serv_list;
 #include <locale>
 #include <boost/chrono.hpp>
 #include <boost/optional.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 #include <tcpfwd.hpp>
 
 struct server
@@ -93,7 +94,7 @@ public:
 	/*	void (*p_set_away)(struct server *);*/
 	bool p_raw(const std::string & raw);
 	int(*p_cmp)(const char *s1, const char *s2);
-	int compare(const std::string & lhs, const std::string & rhs) const;
+	int compare(const boost::string_ref & lhs, const boost::string_ref & rhs) const;
 	const std::locale & current_locale() const;
 
 	void set_name(const std::string& name);

@@ -25,6 +25,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <utility>
+#include <boost/utility/string_ref.hpp>
 
 #include "fe-gtk.hpp"
 

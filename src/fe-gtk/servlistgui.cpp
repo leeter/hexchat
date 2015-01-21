@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <boost/utility/string_ref.hpp>
 
 #include <gdk/gdkkeysyms.h>
 

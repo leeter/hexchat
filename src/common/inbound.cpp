@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <sys/types.h>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <io.h>

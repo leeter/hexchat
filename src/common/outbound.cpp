@@ -44,6 +44,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #define WANTSOCKET
 #define WANTARPA

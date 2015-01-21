@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstdio>
+#include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
 #include <unistd.h>

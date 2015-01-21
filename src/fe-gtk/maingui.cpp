@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #include <gdk/gdkkeysyms.h>
 

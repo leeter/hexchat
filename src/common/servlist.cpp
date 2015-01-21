@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
