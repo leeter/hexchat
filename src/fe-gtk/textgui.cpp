@@ -193,7 +193,7 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 
 	std::string buf(text, len);
 	buf.push_back('\n');
-	check_special_chars (&buf[0], true);
+	buf = check_special_chars (buf, true);
 
 	PrintTextRaw(xtext->buffer, (unsigned char*)&buf[0], 0, 0);
 
@@ -314,8 +314,7 @@ pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 	{
 		std::string out(_(pntevts_text[n].c_str()));
 		out.push_back('\n');
-		out.push_back(0);
-		check_special_chars (&out[0], true);
+		out = check_special_chars (out, true);
 		PrintTextRaw (GTK_XTEXT (twid)->buffer, (unsigned char*)&out[0], 0, 0);
 	}
 }

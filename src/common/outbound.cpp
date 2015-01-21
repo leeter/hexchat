@@ -127,8 +127,7 @@ server_sendquit (session * sess)
 {
 	if (sess->quitreason.empty())
 	{
-		std::string colrea = prefs.hex_irc_quit_reason;
-		check_special_chars (&colrea[0], true);
+		auto colrea = check_special_chars(boost::string_ref{ prefs.hex_irc_quit_reason }, true);
 		sess->server->p_quit(colrea);
 	} else
 	{
@@ -4080,17 +4079,20 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 	return 1;
 }
 
-void
-check_special_chars (char *cmd, bool do_ascii) /* check for %X */
+void check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 {
-	int occur = 0;
-	auto len = strlen (cmd);
-	char tbuf[4];
-	size_t i = 0, j = 0;
-	gsize utf_len;
+	auto result = check_special_chars(boost::string_ref{ cmd }, do_ascii);
+	std::copy(result.cbegin(), result.cend(), cmd);
+}
 
-	if (!len)
-		return;
+std::string check_special_chars(const boost::string_ref & cmd, bool do_ascii) /* check for %X */
+{
+	if (cmd.empty())
+		return std::string{};
+
+	int occur = 0;
+	auto len = cmd.size();
+	size_t i = 0, j = 0;
 
 	std::string buf(len + 1, '\0');
 	std::locale locale;
@@ -4100,16 +4102,18 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 		{
 		case '%':
 			occur++;
-			if (	do_ascii &&
-					j + 3 < len &&
+			if (do_ascii &&
+				j + 3 < len &&
 				(std::isdigit(cmd[j + 1], locale) && std::isdigit(cmd[j + 2], locale) &&
 				std::isdigit(cmd[j + 3], locale)))
 			{
+				char tbuf[4];
 				tbuf[0] = cmd[j + 1];
 				tbuf[1] = cmd[j + 2];
 				tbuf[2] = cmd[j + 3];
 				tbuf[3] = 0;
-				buf[i] = atoi (tbuf);
+				buf[i] = atoi(tbuf);
+				gsize utf_len;
 				glib_string utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
 				if (utf)
 				{
@@ -4117,7 +4121,8 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 					i += (utf_len - 1);
 				}
 				j += 3;
-			} else
+			}
+			else
 			{
 				switch (cmd[j + 1])
 				{
@@ -4153,7 +4158,7 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 				j++;
 				break;
 		default:
-				buf[i] = cmd[j];
+			buf[i] = cmd[j];
 			}
 		}
 		j++;
@@ -4162,8 +4167,15 @@ check_special_chars (char *cmd, bool do_ascii) /* check for %X */
 	buf[i] = 0;
 	if (occur)
 	{
-		std::copy(buf.cbegin(), buf.cend(), cmd);
+		auto zero = buf.find_first_of('\0');
+		if (zero != std::string::npos)
+		{
+			buf.erase(zero);
+		}
+
+		return buf;
 	}
+	return cmd.to_string();
 }
 
 static void

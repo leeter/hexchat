@@ -1767,15 +1767,13 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 	char o[4096], d;
 	int output_index, max = -1, x;
 
-	auto len = input.size();
-	std::string buf(input);
-	check_special_chars (&buf[0], true);
+	std::string buf = check_special_chars (input, true);
 
-	len = strlen (buf.c_str());
+	auto len = buf.size();
 
 	clen = output_index = 0;
 	auto input_itr = buf.cbegin();
-	auto end = buf.cbegin() + len;
+	auto end = buf.cend();
 	for (;;)
 	{
 		if (input_itr == end)
