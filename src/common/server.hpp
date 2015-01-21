@@ -102,7 +102,7 @@ public:
 	// BUGBUG return const!!!
 	char *get_network(bool fallback) const;
 	// BUGBUG return const!!!
-	boost::optional<session&> find_channel(const std::string &chan);
+	boost::optional<session&> find_channel(const boost::string_ref &chan);
 	bool is_channel_name(const std::string &chan) const;
 	boost::optional<const std::pair<bool, std::string>& > get_away_message(const std::string & nick) const NOEXCEPT;
 	void save_away_message(const std::string& nick, const boost::optional<std::string>& message);

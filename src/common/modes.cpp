@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <stdexcept>
+#include <boost/utility/string_ref.hpp>
 
 #include "hexchat.hpp"
 #include "hexchatc.hpp"

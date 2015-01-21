@@ -24,6 +24,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <string>
+#include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
 #include <unistd.h>

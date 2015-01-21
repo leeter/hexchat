@@ -37,6 +37,7 @@
 #include <cerrno>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <boost/utility/string_ref.hpp>
 
 #define WANTSOCKET
 #define WANTARPA

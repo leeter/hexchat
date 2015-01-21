@@ -212,8 +212,7 @@ is_session (session * sess)
 	return g_slist_find(sess_list, sess) != nullptr;
 }
 
-session *
-find_dialog (const server &serv, const char *nick)
+session * find_dialog(const server &serv, const boost::string_ref &nick)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -223,16 +222,15 @@ find_dialog (const server &serv, const char *nick)
 		sess = static_cast<session*>(list->data);
 		if (sess->server == &serv && sess->type == session::SESS_DIALOG)
 		{
-			if (!serv.p_cmp (nick, sess->channel))
+			if (!serv.compare (nick, sess->channel))
 				return (sess);
 		}
 		list = list->next;
 	}
-	return 0;
+	return nullptr;
 }
 
-session *
-find_channel (const server &serv, const std::string &chan)
+session *find_channel(const server &serv, const boost::string_ref &chan)
 {
 	session *sess;
 	GSList *list = sess_list;
@@ -241,7 +239,7 @@ find_channel (const server &serv, const std::string &chan)
 		sess = static_cast<session*>(list->data);
 		if ((&serv == sess->server) && sess->type == session::SESS_CHANNEL)
 		{
-			if (!serv.p_cmp(chan.c_str(), sess->channel))
+			if (!serv.compare(chan, sess->channel))
 				return sess;
 		}
 		list = list->next;

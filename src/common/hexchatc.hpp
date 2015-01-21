@@ -21,6 +21,7 @@
 #define HEXCHAT_C_HPP
 #include <atomic>
 #include <string>
+#include <boost/utility/string_ref_fwd.hpp>
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
 
@@ -50,8 +51,8 @@ extern GSList *urlhandler_list;
 extern GSList *tabmenu_list;
 extern GList *sess_list_by_lastact[];
 
-session * find_channel (const server &serv, const std::string &chan);
-session * find_dialog (const server &serv, const char *nick);
+session * find_channel(const server &serv, const boost::string_ref &chan);
+session * find_dialog(const server &serv, const boost::string_ref &nick);
 void lastact_update (session * sess);
 session * lastact_getfirst (int (*filter) (session *sess));
 bool is_session (session * sess);

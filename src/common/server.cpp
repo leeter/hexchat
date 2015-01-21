@@ -997,7 +997,7 @@ server::flush_queue ()
 }
 
 boost::optional<session&> 
-server::find_channel(const std::string &chan)
+server::find_channel(const boost::string_ref &chan)
 {
 	session *sess;
 	GSList *list = sess_list;
@@ -1006,7 +1006,7 @@ server::find_channel(const std::string &chan)
 		sess = static_cast<session*>(list->data);
 		if ((this == sess->server) && sess->type == session::SESS_CHANNEL)
 		{
-			if (!this->p_cmp(chan.c_str(), sess->channel))
+			if (!this->compare(chan, sess->channel))
 				return *sess;
 		}
 		list = list->next;
