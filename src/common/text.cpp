@@ -1890,7 +1890,7 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 
 static const char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
-int text_color_of (const std::string &name)
+int text_color_of(const boost::string_ref &name)
 {
 	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
 	sum %= sizeof (rcolors) / sizeof (char);
@@ -2062,7 +2062,7 @@ void sound_beep (session *sess)
 	}
 }
 
-void sound_play (const std::string & file, bool quiet)
+void sound_play(const boost::string_ref & file, bool quiet)
 {
 	namespace bfs = boost::filesystem;
 
@@ -2079,11 +2079,11 @@ void sound_play (const std::string & file, bool quiet)
 	if (file[0] == '/')
 #endif
 	{
-		wavfile = file;
+		wavfile = file.to_string();
 	}
 	else
 	{
-		wavfile = bfs::path(config::config_dir()) / HEXCHAT_SOUND_DIR / file;
+		wavfile = bfs::path(config::config_dir()) / HEXCHAT_SOUND_DIR / file.to_string();
 	}
 
 	if (g_access (wavfile.string().c_str(), R_OK) == 0)

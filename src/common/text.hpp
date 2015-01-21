@@ -23,7 +23,7 @@
 #include <string>
 #include <ctime>
 #include <boost/format/format_fwd.hpp>
-#include <boost/utility/string_ref.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 #include "textenums.h"
 
 /* timestamp is non-zero if we are using server-time */
@@ -56,7 +56,7 @@ void pevent_save (const char file_name[]);
 int pevt_build_string(const std::string& input, std::string & output, int &max_arg);
 int pevent_load (const char *filename);
 void pevent_make_pntevts (void);
-int text_color_of (const std::string& name);
+int text_color_of(const boost::string_ref & name);
 void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		time_t timestamp);
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
@@ -66,7 +66,7 @@ gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 const char *text_find_format_string (const char name[]);
  
-void sound_play (const std::string & file, bool quiet);
+void sound_play (const boost::string_ref & file, bool quiet);
 void sound_play_event (int i);
 void sound_beep (session *);
 void sound_load ();
