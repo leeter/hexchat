@@ -1006,7 +1006,7 @@ server::find_channel(const boost::string_ref &chan)
 		sess = static_cast<session*>(list->data);
 		if ((this == sess->server) && sess->type == session::SESS_CHANNEL)
 		{
-			if (!this->compare(chan, sess->channel))
+			if (!this->p_cmp(chan.data(), sess->channel))
 				return *sess;
 		}
 		list = list->next;
