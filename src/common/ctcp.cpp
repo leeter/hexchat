@@ -20,9 +20,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
-#include <cstdio>
 #include <cstring>
-#include <cstdlib>
 #include <string>
 #include <boost/utility/string_ref.hpp>
 
@@ -69,11 +67,11 @@ static bool
 	struct popup *pop;
 	GSList *list = ctcp_list;
 
-	po = strchr(ctcp, '\001');
+	po = std::strchr(ctcp, '\001');
 	if (po)
 		*po = 0;
 
-	po = strchr(word_eol[5], '\001');
+	po = std::strchr(word_eol[5], '\001');
 	if (po)
 		*po = 0;
 
@@ -160,7 +158,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 	{
 		if (!g_ascii_strncasecmp (msg, "SOUND", 5))
 		{
-			po = strchr (word[5], '\001');
+			po = std::strchr (word[5], '\001');
 			if (po)
 				po[0] = 0;
 
@@ -181,9 +179,9 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 
 			/* don't let IRCers specify path */
 #ifdef WIN32
-			if (strchr (word[5], '/') == NULL && strchr (word[5], '\\') == NULL)
+			if (std::strchr (word[5], '/') == NULL && std::strchr (word[5], '\\') == NULL)
 #else
-			if (strchr (word[5], '/') == NULL)
+			if (std::strchr (word[5], '/') == NULL)
 #endif
 				sound_play (word[5], true);
 			return;
@@ -191,7 +189,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 	}
 
 generic:
-	po = strchr (msg, '\001');
+	po = std::strchr (msg, '\001');
 	if (po)
 		po[0] = 0;
 
