@@ -63,8 +63,8 @@ public:
 	void p_inline(char *buf, int len);
 	void p_invite(const std::string& channel, const std::string &nick);
 	void p_cycle(const std::string& channel, const std::string& key);
-	void p_ctcp(const std::string & to, const std::string & msg);
-	void p_nctcp(const std::string & to, const std::string & msg);
+	void p_ctcp(const boost::string_ref & to, const boost::string_ref & msg);
+	void p_nctcp(const boost::string_ref & to, const boost::string_ref & msg);
 	void p_quit(const std::string& reason);
 	void p_kick(const std::string& channel, const std::string &nick, const std::string & reason);
 	void p_part(const std::string& channel, const std::string & reason);
@@ -92,7 +92,7 @@ public:
 	void p_names(const std::string & channel);
 	void p_ping(const std::string & to, const std::string & timestring);
 	/*	void (*p_set_away)(struct server *);*/
-	bool p_raw(const std::string & raw);
+	bool p_raw(const boost::string_ref & raw);
 	int(*p_cmp)(const char *s1, const char *s2);
 	int compare(const boost::string_ref & lhs, const boost::string_ref & rhs) const;
 	const std::locale & current_locale() const;

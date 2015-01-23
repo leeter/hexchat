@@ -1163,9 +1163,9 @@ make_ping_time (void)
 int
 rfc_casecmp (const char *s1, const char *s2)
 {
-	register unsigned char *str1 = (unsigned char *) s1;
-	register unsigned char *str2 = (unsigned char *) s2;
-	register int res;
+	unsigned char *str1 = (unsigned char *) s1;
+	unsigned char *str2 = (unsigned char *) s2;
+	int res;
 
 	while ((res = rfc_tolower (*str1) - rfc_tolower (*str2)) == 0)
 	{
@@ -1180,9 +1180,9 @@ rfc_casecmp (const char *s1, const char *s2)
 int
 rfc_ncasecmp (const char *str1, const char *str2, size_t n)
 {
-	register const unsigned char *s1 = (unsigned char *) str1;
-	register const unsigned char *s2 = (unsigned char *) str2;
-	register int res;
+	const unsigned char *s1 = (unsigned char *) str1;
+	const unsigned char *s2 = (unsigned char *) str2;
+	int res;
 
 	while ((res = rfc_tolower (*s1) - rfc_tolower (*s2)) == 0)
 	{

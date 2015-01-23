@@ -61,7 +61,7 @@ void
 server::p_login(const std::string& user, const std::string& realname)
 {
 	tcp_send(*this, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
-	this->sent_capend = FALSE;	/* track if we have finished */
+	this->sent_capend = false;	/* track if we have finished */
 
 	if (this->password[0] && this->loginmethod == LOGIN_PASS)
 	{
@@ -315,15 +315,15 @@ server::p_set_away (const std::string & reason)
 
 // TODO: split appropriately
 void
-server::p_ctcp(const std::string & to, const std::string & msg)
+server::p_ctcp(const boost::string_ref & to, const boost::string_ref &msg)
 {
-	tcp_sendf (*this, "PRIVMSG %s :\001%s\001\r\n", to.c_str(), msg.c_str());
+	tcp_sendf (*this, "PRIVMSG %s :\001%s\001\r\n", to.data(), msg.data());
 }
 
 void
-server::p_nctcp(const std::string & to, const std::string & msg)
+server::p_nctcp(const boost::string_ref & to, const boost::string_ref & msg)
 {
-	tcp_sendf (*this, "NOTICE %s :\001%s\001\r\n", to.c_str(), msg.c_str());
+	tcp_sendf (*this, "NOTICE %s :\001%s\001\r\n", to.data(), msg.data());
 }
 
 void
@@ -474,14 +474,14 @@ server::p_ping(const std::string & to, const std::string & timestring)
 }
 
 bool
-server::p_raw(const std::string &raw)
+server::p_raw(const boost::string_ref &raw)
 {
 	char tbuf[4096];
 	if (!raw.empty())
 	{
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
-			auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
+			auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.data());
 			if (len < 0)
 			{
 				PrintText(current_sess, _("Unable to send message to server, and error has occurred"));
