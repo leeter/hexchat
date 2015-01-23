@@ -56,7 +56,6 @@ struct mode_run
 
 static int is_prefix_char (const server * serv, char c);
 static void record_chan_mode (session *sess, char sign, char mode, char *arg);
-static char *mode_cat (char *str, const char *addition);
 static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 										  char *chan, char *arg, bool quiet, bool is_324,
 										  const message_tags_data *tags_data);
@@ -133,7 +132,7 @@ send_channel_modes (session *sess, const std::vector<std::string> &word, int wpo
 
 /* does 'chan' have a valid prefix? e.g. # or & */
 bool
-server::is_channel_name(const std::string & chan) const
+server::is_channel_name(const boost::string_ref & chan) const
 {
 	return this->chantypes.find_first_of(chan[0]) != std::string::npos;
 }
