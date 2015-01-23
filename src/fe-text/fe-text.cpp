@@ -755,7 +755,7 @@ fe_session_callback (struct session *sess)
 void
 fe_server_callback (struct server *serv)
 {
-    delete serv->gui;
+	delete serv->gui;
 }
 void
 fe_url_add (const std::string &)
