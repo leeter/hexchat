@@ -1203,8 +1203,7 @@ namespace
 		int do_compare(const char * low1, const char * high1,
 			const char * low2, const char* high2) const
 		{
-			auto len = std::min(high1 - low1, high2 - low2);
-			return rfc_ncasecmp(low1, low2, len);
+			return rfc_casecmp(low1, low2);
 		}
 	};
 

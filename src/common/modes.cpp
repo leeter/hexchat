@@ -771,8 +771,7 @@ namespace
 		int do_compare(const char * low1, const char * high1,
 			const char * low2, const char* high2) const
 		{
-			auto len = std::min(high1 - low1, high2 - low2);
-			return g_ascii_strncasecmp(low1, low2, len);
+			return g_ascii_strcasecmp(low1, low2);
 		}
 	};
 }
