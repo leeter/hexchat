@@ -28,6 +28,7 @@
 #include <vector>
 #include <boost/algorithm/string/iter_find.hpp>
 #include <boost/algorithm/string/finder.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -152,14 +153,13 @@ open_rawlog (struct server *serv)
 }
 
 void
-fe_add_rawlog (server *serv, const char *text, size_t len, bool outbound)
+fe_add_rawlog(server *serv, const boost::string_ref &text, bool outbound)
 {
 	if (!serv->gui->rawlog_window)
 		return;
 
 	std::vector<std::string> split_strings;
-	std::string text_buf(text, len);
-	for (auto & it : boost::iter_split(split_strings, text_buf, boost::algorithm::first_finder("\r\n")))
+	for (auto & it : boost::iter_split(split_strings, text, boost::algorithm::first_finder("\r\n")))
 	{
 		if (it.empty())
 			break;

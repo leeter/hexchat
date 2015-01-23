@@ -216,12 +216,13 @@ public:
 	int sasl_mech;			/* mechanism for sasl auth */
 };
 /* eventually need to keep the tcp_* functions isolated to server.c */
-int tcp_send_len (server &serv, const char *buf, size_t len);
+int tcp_send_len(server &serv, const boost::string_ref & buf);
 template<size_t N>
 int tcp_send(server & serv, const char (&buf)[N])
 {
-	return tcp_send_len(serv, buf, N - 1);
+	return tcp_send_len(serv, boost::string_ref{ buf, N - 1 });
 }
+
 void tcp_sendf (server &serv, const char *fmt, ...) G_GNUC_PRINTF (2, 3);
 int tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server *);
 

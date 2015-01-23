@@ -482,11 +482,16 @@ server::p_raw(const std::string &raw)
 		if (raw.size() < sizeof (tbuf) - 3)
 		{
 			auto len = snprintf(tbuf, sizeof(tbuf), "%s\r\n", raw.c_str());
-			tcp_send_len (*this, tbuf, len);
+			if (len < 0)
+			{
+				PrintText(current_sess, _("Unable to send message to server, and error has occurred"));
+				return false;
+			}
+			tcp_send_len(*this, boost::string_ref{ tbuf, static_cast<std::size_t>(len)});
 		} else
 		{
-			tcp_send_len (*this, raw.c_str(), raw.size());
-			tcp_send_len (*this, "\r\n", 2);
+			tcp_send_len (*this, raw);
+			tcp_send_len(*this, boost::string_ref{ "\r\n", 2 });
 		}
 		return true;
 	}

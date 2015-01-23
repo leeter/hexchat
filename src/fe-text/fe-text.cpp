@@ -617,7 +617,7 @@ fe_beep (session *sess)
 }
 
 void
-fe_add_rawlog (struct server *, const char *, size_t, bool)
+fe_add_rawlog(struct server *, const boost::string_ref &, bool)
 {
 }
 void fe_set_topic(session *, const std::string &, const std::string&)

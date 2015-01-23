@@ -163,14 +163,14 @@ tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const ch
 }
 
 static int
-server_send_real (server &serv, const char *buf, size_t len)
+server_send_real (server &serv, const boost::string_ref & buf)
 {
-	fe_add_rawlog (&serv, buf, len, true);
+	fe_add_rawlog (&serv, buf, true);
 
-	url_check_line (buf, len);
+	url_check_line(buf.data(), buf.size());
 
 	return tcp_send_real (serv.ssl, serv.sok, serv.encoding ? serv.encoding->c_str() : nullptr, serv.using_irc,
-								 buf, len, &serv);
+		buf.data(), buf.size(), &serv);
 }
 
 /* new throttling system, uses the same method as the Undernet
@@ -180,84 +180,79 @@ server_send_real (server &serv, const char *buf, size_t len)
 static int
 tcp_send_queue (server *serv)
 {
-	const char *p;
-	int  i;
-	time_t now = time (0);
-
 	/* did the server close since the timeout was added? */
 	if (!is_server (serv))
 		return 0;
+
+	const char *p;
+	int  i;
+	time_t now = time(0);
 
 	/* try priority 2,1,0 */
 	while (!serv->outbound_queue.empty())
 	{
 		auto & top = serv->outbound_queue.top();
 
-				if (serv->next_send < now)
-					serv->next_send = now;
-				if (serv->next_send - now >= 10)
-				{
-					/* check for clock skew */
-					if (now >= serv->prev_now)
-						return 1;		  /* don't remove the timeout handler */
-					/* it is skewed, reset to something sane */
-					serv->next_send = now;
-				}
+		if (serv->next_send < now)
+			serv->next_send = now;
+		if (serv->next_send - now >= 10)
+		{
+			/* check for clock skew */
+			if (now >= serv->prev_now)
+				return 1;		  /* don't remove the timeout handler */
+			/* it is skewed, reset to something sane */
+			serv->next_send = now;
+		}
 
-		for (p = top.second.c_str(), i = top.second.size(); i && *p != ' '; p++, i--);
-				serv->next_send += (2 + i / 120);
+		for (p = top.second.c_str(), i = top.second.size(); i && *p != ' '; p++, i--){}
+
+		serv->next_send += (2 + i / 120);
 		serv->sendq_len -= top.second.size();
-				serv->prev_now = now;
-				fe_set_throttle (serv);
+		serv->prev_now = now;
+		fe_set_throttle (serv);
 
-		server_send_real(*serv, top.second.c_str(), top.second.size());
+		server_send_real(*serv, top.second);
 
 		serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
-			}
+	}
 	return 0;						  /* remove the timeout handler */
 }
 
 int
-tcp_send_len (server &serv, const char *buf, size_t len)
+tcp_send_len (server &serv, const boost::string_ref & buf)
 {
 	bool noqueue = serv.outbound_queue.empty();
 
 	if (!prefs.hex_net_throttle)
-		return server_send_real (serv, buf, len);
-	std::string dbuf(buf, len);
+		return server_send_real (serv, buf);
+
 	int priority = 2;	/* pri 2 for most things */
 
 	/* privmsg and notice get a lower priority */
-	if (g_ascii_strncasecmp (dbuf.c_str() + 1, "PRIVMSG", 7) == 0 ||
-		 g_ascii_strncasecmp (dbuf.c_str() + 1, "NOTICE", 6) == 0)
+	if (g_ascii_strncasecmp (buf.data() + 1, "PRIVMSG", 7) == 0 ||
+		 g_ascii_strncasecmp (buf.data() + 1, "NOTICE", 6) == 0)
 	{
 		priority = 1;
 	}
 	else
 	{
 		/* WHO/MODE get the lowest priority */
-		if (g_ascii_strncasecmp(dbuf.c_str() + 1, "WHO ", 4) == 0 ||
+		if (g_ascii_strncasecmp(buf.data() + 1, "WHO ", 4) == 0 ||
 		/* but only MODE queries, not changes */
-		(g_ascii_strncasecmp(dbuf.c_str() + 1, "MODE", 4) == 0 &&
-			 dbuf.find_first_of('-') == std::string::npos &&
-			 dbuf.find_first_of('+') == std::string::npos))
+		(g_ascii_strncasecmp(buf.data() + 1, "MODE", 4) == 0 &&
+			 buf.find_first_of('-') == boost::string_ref::npos &&
+			 buf.find_first_of('+') == boost::string_ref::npos))
 			priority = 0;
 	}
 
-	serv.outbound_queue.emplace(std::make_pair(priority, dbuf));
-	serv.sendq_len += len; /* tcp_send_queue uses strlen */
+	serv.outbound_queue.emplace(std::make_pair(priority, buf.to_string()));
+	serv.sendq_len += buf.size(); /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (&serv) && noqueue)
 		fe_timeout_add(500, (GSourceFunc)tcp_send_queue, &serv);
 
 	return 1;
 }
-
-/*int
-tcp_send (server *serv, char *buf)
-{
-	return tcp_send_len (serv, buf, strlen (buf));
-}*/
 
 void
 tcp_sendf (server &serv, const char *fmt, ...)
@@ -266,17 +261,16 @@ tcp_sendf (server &serv, const char *fmt, ...)
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
 	  string shorter, so allow alot more than 512 for now. */
 	static char send_buf[1540];	/* good code hey (no it's not overflowable) */
-	int len;
 
 	va_start (args, fmt);
-	len = std::vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
+	auto len = std::vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
 	va_end (args);
 
 	send_buf[sizeof (send_buf) - 1] = '\0';
 	if (len < 0 || len > (sizeof (send_buf) - 1))
-		len = strlen (send_buf);
+		len = std::strlen (send_buf);
 
-	tcp_send_len (serv, send_buf, len);
+	tcp_send_len(serv, boost::string_ref{ send_buf, static_cast<std::size_t>( len ) });
 }
 
 static int
@@ -298,7 +292,7 @@ close_socket (int sok)
 static void
 server_inline (server *serv, char *line, size_t len)
 {
-	char *utf_line_allocated = nullptr;
+	glib_string utf_line_allocated;
 
 	/* Checks whether we're set to use UTF-8 charset */
 	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
@@ -312,7 +306,7 @@ server_inline (server *serv, char *line, size_t len)
 		UTF-8 charset, and if we fail to convert, we assume
 		it to be ISO-8859-1 (see text_validate). */
 
-		utf_line_allocated = text_validate (&line, &len);
+		utf_line_allocated.reset(text_validate (&line, &len));
 
 	} else
 	{
@@ -331,14 +325,13 @@ server_inline (server *serv, char *line, size_t len)
 
 		if (encoding != nullptr)
 		{
-			char *conv_line; /* holds a copy of the original string */
 			size_t conv_len; /* tells g_convert how much of line to convert */
 			gsize utf_len;
 			gsize read_len;
 			bool retry;
 
-			conv_line = static_cast<char*>(g_malloc (len + 1));
-			memcpy (conv_line, line, len);
+			std::unique_ptr<char[]> conv_line{ new char[len + 1] };
+			std::copy_n(line, len, conv_line.get());
 			conv_line[len] = 0;
 			conv_len = len;
 
@@ -351,7 +344,7 @@ server_inline (server *serv, char *line, size_t len)
 			{
 				GError *err = nullptr;
 				retry = false;
-				utf_line_allocated = g_convert_with_fallback (conv_line, conv_len, "UTF-8", encoding, "?", &read_len, &utf_len, &err);
+				utf_line_allocated.reset(g_convert_with_fallback (conv_line.get(), conv_len, "UTF-8", encoding, "?", &read_len, &utf_len, &err));
 				if (err != nullptr)
 				{
 					std::unique_ptr<GError, decltype(&g_error_free)> err_ptr(err, g_error_free);
@@ -359,20 +352,18 @@ server_inline (server *serv, char *line, size_t len)
 					{
 						/* Make our best bet by removing the erroneous char.
 						   This will work for casual 8-bit strings with non-standard chars. */
-						memmove (conv_line + read_len, conv_line + read_len + 1, conv_len - read_len -1);
+						std::memmove (conv_line.get() + read_len, conv_line.get() + read_len + 1, conv_len - read_len -1);
 						conv_len--;
 						retry = true;
 					}
 				}
 			} while (retry);
 
-			g_free (conv_line);
-
 			/* If any conversion has occured at all. Conversion might fail
 			due to errors other than invalid sequences, e.g. unknown charset. */
 			if (utf_line_allocated != nullptr)
 			{
-				line = utf_line_allocated;
+				line = utf_line_allocated.get();
 				len = utf_len;
 				if (serv->using_cp1255 && len > 0)
 					len--;
@@ -380,18 +371,15 @@ server_inline (server *serv, char *line, size_t len)
 			else
 			{
 				/* If all fails, treat as UTF-8 with fallback to ISO-8859-1. */
-				utf_line_allocated = text_validate (&line, &len);
+				utf_line_allocated.reset(text_validate (&line, &len));
 			}
 		}
 	}
 
-	fe_add_rawlog (serv, line, len, false);
+	fe_add_rawlog(serv, boost::string_ref{ line, len }, false);
 
 	/* let proto-irc.c handle it */
 	serv->p_inline (line, len);
-
-	if (utf_line_allocated != nullptr) /* only if a special copy was allocated */
-		g_free (utf_line_allocated);
 }
 
 /* read data from socket */
