@@ -311,7 +311,7 @@ static char *commands[] = {
 //#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
 
 template<typename T, size_t N>
-BOOST_CONSTEXPR inline size_t array_size(const T(&buf)[N])
+BOOST_CONSTEXPR inline size_t array_size(const T(&)[N])
 {
 	return N;
 }
