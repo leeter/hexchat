@@ -22,7 +22,8 @@
 
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>
+#include <boost/optional/optional_fwd.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 #include "serverfwd.hpp"
 
 extern int ignored_ctcp;
@@ -60,11 +61,11 @@ enum class flood_check_type
 };
 
 const std::vector<ignore>& get_ignore_list();
-boost::optional<ignore &> ignore_exists (const std::string& mask);
+boost::optional<ignore &> ignore_exists (const boost::string_ref& mask);
 int ignore_add(const std::string& mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
 bool ignore_del(const std::string& mask);
-bool ignore_check(const std::string& mask, ignore::ignore_type type);
+bool ignore_check(const boost::string_ref& mask, ignore::ignore_type type);
 void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);

@@ -25,6 +25,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -58,10 +60,10 @@ static int ignored_total = 0;
  *          NULL, otherwise
  */
 boost::optional<ignore &>
-ignore_exists (const std::string& mask)
+ignore_exists (const boost::string_ref& mask)
 {
 	auto res = std::find_if(ignores.begin(), ignores.end(), [&mask](const ignore & ig){
-		return !rfc_casecmp(ig.mask.c_str(), mask.c_str());
+		return !rfc_casecmp(ig.mask.c_str(), mask.data());
 	});
 	return res != ignores.end() ? boost::make_optional<ignore&>(*res) : boost::none;
 }
@@ -182,8 +184,7 @@ ignore_del(const std::string& mask)
 
 /* check if a msg should be ignored by browsing our ignore list */
 
-bool
-ignore_check(const std::string& mask, ignore::ignore_type type)
+bool ignore_check(const boost::string_ref& mask, ignore::ignore_type type)
 {
 	/* check if there's an UNIGNORE first, they take precendance. */
 	for(const auto & ig : ignores)
@@ -192,7 +193,7 @@ ignore_check(const std::string& mask, ignore::ignore_type type)
 		{
 			if (ig.type & type)
 			{
-				if (match (ig.mask.c_str(), mask.c_str()))
+				if (match (ig.mask.c_str(), mask.data()))
 					return false;
 			}
 		}
@@ -202,7 +203,7 @@ ignore_check(const std::string& mask, ignore::ignore_type type)
 	{
 		if (ig.type & type)
 		{
-			if (match (ig.mask.c_str(), mask.c_str()))
+			if (match (ig.mask.c_str(), mask.data()))
 			{
 				ignored_total++;
 				if (type & ignore::IG_PRIV)
