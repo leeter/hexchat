@@ -56,7 +56,7 @@ static void
 close_rawlog (GtkWidget *wid, server *serv)
 {
 	if (is_server (serv))
-		serv->gui->rawlog_window = 0;
+		serv->gui->rawlog_window = nullptr;
 }
 
 static void
@@ -120,7 +120,7 @@ open_rawlog (struct server *serv)
 		return;
 	}
 
-	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME": Raw Log (%s)"), serv->servername);
+	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME ": Raw Log (%s)"), serv->servername);
 	serv->gui->rawlog_window =
 		mg_create_generic_tab("RawLog", tbuf, FALSE, TRUE, G_CALLBACK(close_rawlog), serv,
 							 640, 320, &vbox, serv);
