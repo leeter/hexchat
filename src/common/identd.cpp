@@ -27,6 +27,7 @@
 #include <thread>
 #include <unordered_map>
 #include <boost/asio.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #include "identd.hpp"
 #include "inet.hpp"

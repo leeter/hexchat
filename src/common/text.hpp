@@ -44,7 +44,7 @@ void scrollback_close (session &sess);
 void scrollback_load (session &sess);
 
 int text_word_check (char *word, int len);
-void PrintText(session *sess, const std::string & text);
+void PrintText(session *sess, const boost::string_ref & text);
 void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t timestamp);
 void PrintTextf(session * sess, const boost::format & fmt);
 void PrintTextf (session *sess, const char *format, ...) G_GNUC_PRINTF (2, 3);
@@ -61,7 +61,7 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		time_t timestamp);
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
 					   char *a, char *b, char *c, char *d);
-char *text_validate (char **text, size_t *len);
+std::string text_validate (const boost::string_ref &);
 gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 const char *text_find_format_string (const char name[]);

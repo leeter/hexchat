@@ -292,8 +292,7 @@ close_socket (int sok)
 static void
 server_inline (server *serv, char *line, size_t len)
 {
-	glib_string utf_line_allocated;
-
+	std::string outline;
 	/* Checks whether we're set to use UTF-8 charset */
 	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
 		(serv->encoding && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
@@ -306,7 +305,7 @@ server_inline (server *serv, char *line, size_t len)
 		UTF-8 charset, and if we fail to convert, we assume
 		it to be ISO-8859-1 (see text_validate). */
 
-		utf_line_allocated.reset(text_validate (&line, &len));
+		outline = text_validate(boost::string_ref{ line, len });
 
 	} else
 	{
@@ -339,7 +338,7 @@ server_inline (server *serv, char *line, size_t len)
 				Works around SF bug #1122089 */
 			if (serv->using_cp1255)
 				conv_len++;
-
+			glib_string utf_line_allocated;
 			do
 			{
 				GError *err = nullptr;
@@ -363,23 +362,22 @@ server_inline (server *serv, char *line, size_t len)
 			due to errors other than invalid sequences, e.g. unknown charset. */
 			if (utf_line_allocated != nullptr)
 			{
-				line = utf_line_allocated.get();
-				len = utf_len;
-				if (serv->using_cp1255 && len > 0)
-					len--;
+				if (serv->using_cp1255 && utf_len > 0)
+					utf_len--;
+				outline = std::string{ utf_line_allocated.get(), utf_len };
 			}
 			else
 			{
 				/* If all fails, treat as UTF-8 with fallback to ISO-8859-1. */
-				utf_line_allocated.reset(text_validate (&line, &len));
+				outline = text_validate(boost::string_ref{ line, len });
 			}
 		}
 	}
 
-	fe_add_rawlog(serv, boost::string_ref{ line, len }, false);
+	fe_add_rawlog(serv, outline, false);
 
 	/* let proto-irc.c handle it */
-	serv->p_inline (line, len);
+	serv->p_inline (outline);
 }
 
 /* read data from socket */

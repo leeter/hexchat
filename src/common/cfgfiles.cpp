@@ -35,6 +35,7 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #include "cfgfiles.hpp"
 #include "util.hpp"

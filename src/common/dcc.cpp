@@ -376,8 +376,6 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	session *sess;
 	char *word[PDIWORDS];
 	char *po;
-	char *utf;
-	char *conv;
 	int ret, i;
 	size_t len;
 	gsize utf_len;
@@ -388,16 +386,17 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	if (dcc->serv->using_cp1255)
 		len++;	/* include the NUL terminator */
 
+	glib_string utf;
 	if (dcc->serv->using_irc) /* using "IRC" encoding (CP1252/UTF-8 hybrid) */
-		utf = NULL;
+		utf = nullptr;
 	else if (dcc->serv->encoding)     /* system */
-		utf = g_locale_to_utf8(line, len, NULL, &utf_len, NULL);
+		utf.reset(g_locale_to_utf8(line, len, NULL, &utf_len, NULL));
 	else
-		utf = g_convert(line, len, "UTF-8", dcc->serv->encoding->c_str(), 0, &utf_len, 0);
+		utf.reset(g_convert(line, len, "UTF-8", dcc->serv->encoding->c_str(), 0, &utf_len, 0));
 
 	if (utf)
 	{
-		line = utf;
+		line = utf.get();
 		len = utf_len;
 	}
 
@@ -405,7 +404,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 		len--;
 
 	/* we really need valid UTF-8 now */
-	conv = text_validate(&line, &len);
+	auto conv = text_validate(boost::string_ref{ line, len });
 
 	sess = find_dialog(*(dcc->serv), dcc->nick);
 	if (!sess)
@@ -417,7 +416,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	word[1] = net_ip(dcc->addr);
 	word[2] = portbuf;
 	word[3] = dcc->nick;
-	word[4] = line;
+	word[4] = &conv[0];
 	for (i = 5; i < PDIWORDS; i++)
 		word[i] = "\000";
 
@@ -426,20 +425,12 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	/* did the plugin close it? */
 	if (!g_slist_find(dcc_list, dcc))
 	{
-		if (utf)
-			g_free(utf);
-		if (conv)
-			g_free(conv);
 		return 1;
 	}
 
 	/* did the plugin eat the event? */
 	if (ret)
 	{
-		if (utf)
-			g_free(utf);
-		if (conv)
-			g_free(conv);
 		return 0;
 	}
 
@@ -457,10 +448,6 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 	{
 		inbound_privmsg(*(dcc->serv), dcc->nick, "", line, FALSE, &no_tags);
 	}
-	if (utf)
-		g_free(utf);
-	if (conv)
-		g_free(conv);
 	return 0;
 }
 

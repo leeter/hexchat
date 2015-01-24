@@ -71,9 +71,6 @@ xtext_get_stamp_str (time_t tim, char **ret)
 static void
 PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, time_t timet)
 {
-	unsigned char *tab;
-	std::ptrdiff_t leftlen;
-
 	if (len == 0)
 		len = 1;
 
@@ -98,10 +95,10 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 		return;
 	}
 
-	tab = (unsigned char*)strchr ((char*)text, '\t');
+	auto tab = std::char_traits<unsigned char>::find(text, len, '\t');
 	if (tab && tab < (text + len))
 	{
-		leftlen = tab - text;
+		auto leftlen = tab - text;
 		gtk_xtext_append_indent (xtbuf,
 										 text, leftlen, tab + 1, len - (leftlen + 1), timet);
 	} else

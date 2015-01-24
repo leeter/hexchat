@@ -32,6 +32,7 @@
 #include <vector>
 #include <sys/types.h>
 #include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -691,21 +692,16 @@ inbound_nameslist (server &serv, char *chan, char *names,
 		if (serv.have_uhnames)
 		{
 			offset = 0;
-			auto nopre_name = token.cbegin();
 
-			/* Ignore prefixes so '!' won't cause issues */
-			while (serv.nick_prefixes.find_first_of(*nopre_name) != std::string::npos)
+			auto bang_loc = token.find_last_of('!');
+			if (bang_loc != std::string::npos)
 			{
-				nopre_name++;
-				offset++;
+				offset += bang_loc;
+				if (offset++ < token.size())
+					host = token.c_str() + offset;
 			}
-
-			auto bang_loc = std::find(nopre_name, token.cend(), '!');
-			offset += std::distance(nopre_name, bang_loc);
-			if (offset++ < token.size())
-				host = token.c_str() + offset;
 		}
-		auto name = token.substr(0, std::min(offset, size_t{ NICKLEN - 1 }));
+		auto name = token.substr(0, std::min({ offset - 1, size_t{ NICKLEN - 1 }, token.size() }));
 
 		userlist_add (sess, name.c_str(), host, nullptr, nullptr, tags_data);
 	}

@@ -60,7 +60,7 @@ public:
 	void flush_queue();
 	void auto_reconnect(bool send_quit, int err);
 	/* irc protocol functions (in proto*.c) */
-	void p_inline(char *buf, int len);
+	void p_inline(const boost::string_ref & text);
 	void p_invite(const std::string& channel, const std::string &nick);
 	void p_cycle(const std::string& channel, const std::string& key);
 	void p_ctcp(const boost::string_ref & to, const boost::string_ref & msg);

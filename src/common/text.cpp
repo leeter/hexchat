@@ -635,8 +635,7 @@ static void log_write (session &sess, const std::string & text, time_t ts)
 /*           5. Uses ISO-8859-1 (which matches CP1252) for everything else.  */
 /*           6. This routine measured 3x faster than g_convert :)            */
 
-static unsigned char *
-iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
+static std::string iso_8859_1_to_utf8 (const boost::string_ref & in)
 {
 	typedef std::basic_ostringstream<unsigned char> utf8ostringstream;
 	//unsigned char *res, *output;
@@ -683,8 +682,8 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 		0x82ac  /* a4 ISO-8859-15 Euro. */
 	};
 
-	if (len == -1)
-		len = std::char_traits<unsigned char>::length(text);
+	auto len = in.size();
+	const unsigned char* text = reinterpret_cast<const unsigned char*>(in.data());
 
 	/* worst case scenario: every byte turns into 3 bytes */
 	utf8ostringstream output_stream;
@@ -725,47 +724,29 @@ iso_8859_1_to_utf8 (const unsigned char *text, int len, gsize *bytes_written)
 		len--;
 	}
 	//*output = 0;	/* terminate */
-	*bytes_written = output_stream.tellp();
-
-	return (unsigned char*)g_strdup((const char*)output_stream.str().c_str());
+	auto str = output_stream.str();
+	return std::string{ str.cbegin(), str.cend() };
 }
 
 // deprecated should be removed as soon as possible... we should be using UTF-8 everywhere
-char * text_validate (char **text, size_t *len)
+std::string text_validate(const boost::string_ref & text)
 {
-	char *utf;
-	gsize utf_len;
-
 	/* valid utf8? */
-	if (g_utf8_validate (*text, *len, 0))
-		return NULL;
+	if (g_utf8_validate (text.data(), text.size(), 0))
+		return text.to_string();
 
-#ifdef WIN32
-	if (GetACP () == 1252) /* our routine is better than iconv's 1252 */
-#else
-	if (prefs.utf8_locale)
-#endif
-		/* fallback to iso-8859-1 */
-		utf = (char*)iso_8859_1_to_utf8 ((unsigned char*) *text, *len, &utf_len);
-	else
-	{
-		/* fallback to locale */
-		utf = g_locale_to_utf8 (*text, *len, 0, &utf_len, NULL);
-		if (!utf)
-			utf = (char*)iso_8859_1_to_utf8((unsigned char*)*text, *len, &utf_len);
-	}
+	gsize utf_len;
+	/* fallback to locale */
+	glib_string utf{ g_locale_to_utf8(text.data(), text.size(), 0, &utf_len, NULL) };
+	if (!utf)
+		return iso_8859_1_to_utf8(text);
 
 	if (!utf) 
 	{
-		*text = g_strdup ("%INVALID%");
-		*len = 9;
-	} else
-	{
-		*text = utf;
-		*len = utf_len;
-	}
-
-	return utf;
+		return "%INVALID%";
+	} 
+	
+	return std::string{ utf.get(), utf_len };
 }
 
 void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t timestamp)
@@ -783,19 +764,14 @@ void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t ti
 	}
 	
 	std::string buf = text.to_string();
-	glib_string conv;
-	/* make sure it's valid utf8 */
 	if (buf.empty())
 	{
 		buf = "\n";
-		//buf.push_back(0);
 	}
+	/* make sure it's valid utf8 */
 	if (!g_utf8_validate(buf.c_str(), buf.size(), nullptr))
 	{
-		size_t len = 0;
-		//buf.push_back(0);
-		char* buf_ptr = &buf[0];
-		conv.reset(text_validate (&buf_ptr, &len));
+		buf = text_validate (buf);
 	}
 
 	log_write(*sess, buf, timestamp);
@@ -803,7 +779,7 @@ void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t ti
 	fe_print_text(*sess, &buf[0], timestamp, FALSE);
 }
 
-void PrintText (session *sess, const std::string & text)
+void PrintText (session *sess, const boost::string_ref & text)
 {
 	PrintTextTimeStamp (sess, text, 0);
 }
@@ -820,10 +796,14 @@ void PrintTextf (session *sess, const char format[], ...)
 	va_list args;
 
 	va_start (args, format);
-	glib_string buf(g_strdup_vprintf (format, args));
+	gchar* str = nullptr;
+	auto len = g_vasprintf(&str, format, args);
+	glib_string buf{ str };
 	va_end (args);
+	if (len < 0)
+		return;
 
-	PrintText (sess, buf.get());
+	PrintText(sess, boost::string_ref{ buf.get(), static_cast<size_t>(len) });
 }
 
 void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], ...)

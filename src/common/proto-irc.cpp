@@ -33,6 +33,8 @@
 
 #include <boost/config.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -1450,24 +1452,22 @@ get_timezone(void)
  * See http://ircv3.atheme.org/extensions/server-time-3.2
  */
 static void
-handle_message_tag_time (const char *time, message_tags_data *tags_data)
+handle_message_tag_time (const std::string & time, message_tags_data &tags_data)
 {
 	/* The time format defined in the ircv3.2 specification is
 	 *       YYYY-MM-DDThh:mm:ss.sssZ
 	 * but znc simply sends a unix time (with 3 decimal places for miliseconds)
 	 * so we might as well support both.
 	 */
-	if (!*time)
+	if (time.empty())
 		return;
-	
-	if (time[strlen (time) - 1] == 'Z')
+	if (time[time.size() - 1] == 'Z')
 	{
 		/* as defined in the specification */
 		struct tm t;
-		int z;
-
+		
 		/* we ignore the milisecond part */
-		z = sscanf (time, "%d-%d-%dT%d:%d:%d", &t.tm_year, &t.tm_mon, &t.tm_mday,
+		auto z = sscanf (time.c_str(), "%d-%d-%dT%d:%d:%d", &t.tm_year, &t.tm_mon, &t.tm_mday,
 					&t.tm_hour, &t.tm_min, &t.tm_sec);
 
 		if (z != 6)
@@ -1477,16 +1477,16 @@ handle_message_tag_time (const char *time, message_tags_data *tags_data)
 		t.tm_mon -= 1;
 		t.tm_isdst = 0; /* day light saving time */
 
-		tags_data->timestamp = mktime (&t);
+		tags_data.timestamp = mktime (&t);
 
-		if (tags_data->timestamp < 0)
+		if (tags_data.timestamp < 0)
 		{
-			tags_data->timestamp = 0;
+			tags_data.timestamp = 0;
 			return;
 		}
 
 		/* get rid of the local time (mktime() receives a local calendar time) */
-		tags_data->timestamp -= get_timezone();
+		tags_data.timestamp -= get_timezone();
 	}
 	else
 	{
@@ -1494,10 +1494,10 @@ handle_message_tag_time (const char *time, message_tags_data *tags_data)
 		long long int t;
 
 		/* we ignore the milisecond part */
-		if (sscanf (time, "%lld", &t) != 1)
+		if (sscanf (time.c_str(), "%lld", &t) != 1)
 			return;
 
-		tags_data->timestamp = (time_t) t;
+		tags_data.timestamp = (time_t) t;
 	}
 }
 
@@ -1506,71 +1506,67 @@ handle_message_tag_time (const char *time, message_tags_data *tags_data)
  * See http://ircv3.atheme.org/specification/message-tags-3.2 
  */
 static void
-handle_message_tags (const server &serv, const char *tags_str,
-							message_tags_data *tags_data)
+handle_message_tags (const server &serv, const boost::string_ref & tags_str,
+							message_tags_data &tags_data)
 {
-	char **tags;
-	int i;
-
 	/* FIXME We might want to avoid the allocation overhead here since 
 	 * this might be called for every message from the server.
 	 */
-	tags = g_strsplit (tags_str, ";", 0);
-
-	for (i=0; tags[i]; i++)
+	std::istringstream inbuf{ tags_str.to_string() };
+	for (std::string tag; std::getline(inbuf, tag, ';');)
 	{
-		char *key = tags[i];
-		char *value = strchr (tags[i], '=');
-
-		if (!value)
+		auto value_loc = tag.find_first_of('=');
+		if (value_loc == std::string::npos)
 			continue;
 
-		*value = '\0';
-		value++;
+		auto key = tag.substr(0, value_loc - 1);
+		auto value = tag.substr(value_loc + 1);
 
-		if (serv.have_server_time && !strcmp (key, "time"))
+		if (serv.have_server_time && key == "time")
 			handle_message_tag_time (value, tags_data);
 	}
-	
-	g_strfreev (tags);
 }
 
 /* irc_inline() - 1 single line received from serv */
 void
-server::p_inline (char *buf, int len)
+server::p_inline (const boost::string_ref& text)
 {
 	session *sess;
-	char *type, *text;
+	char *type;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
 	message_tags_data tags_data = message_tags_data();
 
-	std::string pdibuf(len, '\0');
+	std::string pdibuf(text.size(), '\0');
 
 	sess = this->front_session;
 
 	/* Python relies on this */
 	word[PDIWORDS] = NULL;
 	word_eol[PDIWORDS] = NULL;
-
-	if (*buf == '@')
+	std::string buf;
+	if (text.starts_with('@'))
 	{
-		const char *tags = buf + 1; /* skip the '@' */
-		char *sep = strchr (buf, ' ');
-
-		if (!sep)
+		auto sep = text.find_first_of(' ');
+		if (sep == boost::string_ref::npos)
 			return;
 		
-		*sep = '\0';
-		buf = sep + 1;
+		/* skip the '@' */
+		auto tags = text.substr(1, sep - 1);
+		
+		buf = text.substr(sep + 1).to_string();
 
-		handle_message_tags(*this, tags, &tags_data);
+		handle_message_tags(*this, tags, tags_data);
+	}
+	else
+	{
+		buf = text.to_string();
 	}
 
-	url_check_line(buf, len);
+	url_check_line(buf.data(), buf.size());
 
 	/* split line into words and words_to_end_of_line */
-	process_data_init (&pdibuf[0], buf, word, word_eol, false, false);
+	process_data_init (&pdibuf[0], &buf[0], word, word_eol, false, false);
 
 	if (buf[0] == ':')
 	{
@@ -1586,7 +1582,7 @@ server::p_inline (char *buf, int len)
 		type = word[2];
 
 		word[0] = type;
-		word_eol[1] = buf;	/* keep the ":" for plugins */
+		word_eol[1] = &buf[0];	/* keep the ":" for plugins */
 
 		if (plugin_emit_server(sess, type, word, word_eol,
 			tags_data.timestamp))
@@ -1595,7 +1591,7 @@ server::p_inline (char *buf, int len)
 		}
 
 		word[1]++;
-		word_eol[1] = buf + 1;	/* but not for HexChat internally */
+		word_eol[1] = &buf[1];	/* but not for HexChat internally */
 
 	} else
 	{
@@ -1610,7 +1606,7 @@ server::p_inline (char *buf, int len)
 
 	if (buf[0] != ':')
 	{
-		process_named_servermsg (sess, buf, word[0], word_eol, &tags_data);
+		process_named_servermsg (sess, &buf[0], word[0], word_eol, &tags_data);
 		return;
 	}
 
@@ -1618,11 +1614,11 @@ server::p_inline (char *buf, int len)
 	std::locale locale;
 	if (std::isdigit (word[2][0], locale))
 	{
-		text = word_eol[4];
-		if (*text == ':')
-			text++;
+		char* t = word_eol[4];
+		if (*t == ':')
+			t++;
 
-		process_numeric (sess, atoi (word[2]), word, word_eol, text, &tags_data);
+		process_numeric (sess, atoi (word[2]), word, word_eol, t, &tags_data);
 	} else
 	{
 		process_named_msg (sess, type, word, word_eol, &tags_data);

@@ -3004,7 +3004,7 @@ cmd_recv (struct session *sess, char *, char *[], char *word_eol[])
 {
 	if (*word_eol[2])
 	{
-		sess->server->p_inline (word_eol[2], strlen (word_eol[2]));
+		sess->server->p_inline (word_eol[2]);
 		return TRUE;
 	}
 
