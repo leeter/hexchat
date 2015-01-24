@@ -166,7 +166,7 @@ joind_show_dialog (server *serv)
 	gtk_box_pack_start (GTK_BOX (hbox1), vbox2, TRUE, TRUE, 0);
 
 	snprintf (buf2, sizeof (buf2), _("Connection to %s complete."),
-				 serv->get_network (true));
+				 serv->get_network (true).data());
 	snprintf (buf, sizeof (buf), "\n<b>%s</b>", buf2);
 	label = gtk_label_new (buf);
 	gtk_widget_show (label);

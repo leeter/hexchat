@@ -404,11 +404,11 @@ fe_set_title (session &sess)
 	{
 	case session::SESS_DIALOG:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s %s @ %s",
-			_("Dialog with"), sess.channel, sess.server->get_network(true));
+			_("Dialog with"), sess.channel, sess.server->get_network(true).data());
 		break;
 	case session::SESS_SERVER:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s",
-			sess.server->nick, sess.server->get_network(true));
+			sess.server->nick, sess.server->get_network(true).data());
 		break;
 	case session::SESS_CHANNEL:
 		/* don't display keys in the titlebar */
@@ -416,14 +416,14 @@ fe_set_title (session &sess)
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
-						 sess.server->nick, sess.server->get_network(true),
+						 sess.server->nick, sess.server->get_network(true).data(),
 						 sess.channel, sess.current_modes.c_str());
 		}
 		else
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s",
-						 sess.server->nick, sess.server->get_network(true),
+						 sess.server->nick, sess.server->get_network(true).data(),
 						 sess.channel);
 		}
 		if (prefs.hex_gui_win_ucount)
@@ -434,7 +434,7 @@ fe_set_title (session &sess)
 	case session::SESS_NOTICES:
 	case session::SESS_SNOTICES:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s (notices)",
-			sess.server->nick, sess.server->get_network(true));
+			sess.server->nick, sess.server->get_network(true).data());
 		break;
 	default:
 	def:

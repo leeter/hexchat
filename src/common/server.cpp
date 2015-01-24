@@ -2227,7 +2227,7 @@ server::get_network (bool fallback) const
 	if (fallback)
 		return this->servername; // DANGER WE NEED TO FIX THE CALLERS
 
-	return boost::string_ref{"", 0};
+	return boost::string_ref{};
 }
 
 void

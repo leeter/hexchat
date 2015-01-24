@@ -64,7 +64,7 @@ static bool notify_do_network (struct notify *notify, const server &serv)
 {
 	if (notify->networks.empty())	/* ALL networks for this nick */
 		return true;
-	std::string serv_str(serv.get_network(true));
+	std::string serv_str = serv.get_network(true).to_string();
 	serv_str.erase(
 		std::remove_if(
 		serv_str.begin(),
