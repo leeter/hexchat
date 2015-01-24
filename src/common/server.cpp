@@ -2213,21 +2213,21 @@ server::reset_to_defaults()
 	this->have_invite = false;
 }
 
-char *
+boost::string_ref
 server::get_network (bool fallback) const
 {
 	/* check the network list */
 	if (this->network)
-		return &(this->network->name)[0];
+		return this->network->name;
 
 	/* check the network name given in 005 NETWORK=... */
 	if (this->server_session && *this->server_session->channel)
 		return this->server_session->channel;
 
 	if (fallback)
-		return const_cast<char*>(this->servername); // DANGER WE NEED TO FIX THE CALLERS
+		return this->servername; // DANGER WE NEED TO FIX THE CALLERS
 
-	return nullptr;
+	return boost::string_ref{"", 0};
 }
 
 void

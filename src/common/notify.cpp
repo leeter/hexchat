@@ -186,9 +186,10 @@ static void notify_announce_offline (server & serv, struct notify_per_server *se
 	std::string mutable_nick(nick);
 	if (!quiet)
 	{
+		auto net = serv.get_network(true).to_string();
 		session *sess = serv.front_session;
 		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
-			serv.get_network(true), NULL, 0,
+			&net[0], NULL, 0,
 			tags_data->timestamp);
 	}
 	fe_notify_update(&mutable_nick);
@@ -208,8 +209,9 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	servnot.laston = time (0);
 	std::string mutable_nick = nick;
 	mutable_nick.push_back(0);
+	auto mutable_net = serv.get_network(true).to_string();
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
-					 serv.get_network (true), NULL, 0,
+					 &mutable_net[0], NULL, 0,
 					 tags_data->timestamp);
 	fe_notify_update (&mutable_nick);
 	fe_notify_update (nullptr);

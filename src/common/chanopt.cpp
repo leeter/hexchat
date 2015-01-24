@@ -37,6 +37,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #include "hexchat.hpp"
 #include "session.hpp"
@@ -119,7 +120,7 @@ int chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 
 	if (!quiet)
 		PrintTextf (sess, "\002Network\002: %s \002Channel\002: %s\n",
-						sess->server->network ? sess->server->get_network (TRUE) : _("<none>"),
+						sess->server->network ? sess->server->get_network (true).data() : _("<none>"),
 						sess->channel[0] ? sess->channel : _("<none>"));
 
 	for(const auto & op : chanopt)
@@ -194,7 +195,7 @@ struct chanopt_in_memory
 		text_logging(SET_DEFAULT),
 		text_scrollback(SET_DEFAULT),
 		text_strip(SET_DEFAULT){}
-	chanopt_in_memory(const std::string & network, const std::string & channel)
+	chanopt_in_memory(std::string network, const std::string & channel)
 		:alert_beep(SET_DEFAULT),
 		alert_taskbar(SET_DEFAULT),
 		alert_tray(SET_DEFAULT),
@@ -283,13 +284,13 @@ operator<< (std::ostream& o, const chanopt_in_memory& chanop)
 static std::vector<chanopt_in_memory> chanopts;
 
 static std::vector<chanopt_in_memory>::iterator 
-chanopt_find (const std::string & network, const std::string& channel)
+chanopt_find (const boost::string_ref & network, const std::string& channel)
 {
 	return std::find_if(
 		chanopts.begin(), chanopts.end(),
 		[&network, &channel](const chanopt_in_memory& c){
 		return !g_ascii_strcasecmp(c.channel.c_str(), channel.c_str()) &&
-			!g_ascii_strcasecmp(c.network.c_str(), network.c_str());
+			!g_ascii_strcasecmp(c.network.c_str(), network.data());
 		});
 }
 
@@ -314,8 +315,8 @@ chanopt_load (session *sess)
 	if (sess->name.empty())
 		return;
 
-	const char* network = sess->server->get_network(false);
-	if (!network)
+	auto network = sess->server->get_network(false);
+	if (network.empty())
 		return;
 
 	if (!chanopt_open)
@@ -342,13 +343,13 @@ chanopt_save (session *sess)
 	if (sess->name.empty())
 		return;
 
-	const char* network = sess->server->get_network(FALSE);
-	if (!network)
+	auto network = sess->server->get_network(FALSE);
+	if (network.empty())
 		return;
 
 	/* 2. reconcile sess with what we loaded from disk */
 	auto itr = chanopt_find (network, sess->name);
-	auto co = itr != chanopts.end() ? *itr : chanopt_in_memory(network, sess->name);
+	auto co = itr != chanopts.end() ? *itr : chanopt_in_memory(network.to_string(), sess->name);
 
 	for (const auto& op : chanopt)
 	{

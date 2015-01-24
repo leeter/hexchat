@@ -54,7 +54,7 @@ static void
 	/* process %C %B etc */
 	auto confs = check_special_chars(conf, true);
 	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
-		sess->server->get_network(true), "", "", nick, "");
+		sess->server->get_network(true).data(), "", "", nick, "");
 	handle_command(sess, tbuf, FALSE);
 }
 

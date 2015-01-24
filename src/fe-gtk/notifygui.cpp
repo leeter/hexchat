@@ -16,11 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
-#include <time.h>
+#include <ctime>
+#include <boost/utility/string_ref.hpp>
 
 #include "fe-gtk.hpp"
 
@@ -295,7 +296,7 @@ notify_gui_update (void)
 	struct notify_per_server *servnot;
 	GSList *list = notify_list;
 	GSList *slist;
-	const gchar *name, *status, * server, *seen;
+	const gchar *name, *status, *seen;
 	int servcount, lastseenminutes;
 	bool online;
 	time_t lastseen;
@@ -318,7 +319,7 @@ notify_gui_update (void)
 		notify = (struct notify *) list->data;
 		name = notify->name.c_str();
 		status = _("Offline");
-		server = "";
+		boost::string_ref server{ "", 0 };
 
 		online = false;
 		lastseen = 0;
@@ -352,7 +353,7 @@ notify_gui_update (void)
 			if (!valid)	/* create new tree row if required */
 				gtk_list_store_append (store, &iter);
 			gtk_list_store_set (store, &iter, 0, name, 1, status,
-								2, server, 3, seen, 4, &colors[4], 5, NULL, -1);
+								2, server.data(), 3, seen, 4, &colors[4], 5, NULL, -1);
 			if (valid)
 				valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
@@ -377,7 +378,7 @@ notify_gui_update (void)
 					if (!valid)	/* create new tree row if required */
 						gtk_list_store_append (store, &iter);
 					gtk_list_store_set (store, &iter, 0, name, 1, status,
-										2, server, 3, seen, 4, &colors[3], 5, servnot, -1);
+										2, server.data(), 3, seen, 4, &colors[3], 5, servnot, -1);
 					if (valid)
 						valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 

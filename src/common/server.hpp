@@ -99,8 +99,7 @@ public:
 
 	void set_name(const std::string& name);
 	void set_encoding(const char* new_encoding);
-	// BUGBUG return const!!!
-	char *get_network(bool fallback) const;
+	boost::string_ref get_network(bool fallback) const;
 	// BUGBUG return const!!!
 	boost::optional<session&> find_channel(const boost::string_ref &chan);
 	bool is_channel_name(const boost::string_ref &chan) const;

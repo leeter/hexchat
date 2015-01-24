@@ -4238,7 +4238,7 @@ user_command (session * sess, char *, const std::string & cmd, char *word[],
 {
 	char buf[2048] = { 0 };
 	if (!auto_insert (buf, 2048, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
-		sess->server->get_network(true), "",
+		sess->server->get_network(true).data(), "",
 							sess->server->nick, "", ""))
 	{
 		PrintText (sess, _("Bad arguments for user command.\n"));

@@ -80,10 +80,10 @@ static std::string log_create_filename (const std::string& channame);
 static boost::optional<boost::filesystem::path> scrollback_get_filename (const session &sess)
 {
 	namespace bfs = boost::filesystem;
-	const char * net = sess.server->get_network(false);
-	if (!net)
+	auto net = sess.server->get_network(false);
+	if (net.empty())
 		return boost::none;
-	bfs::path path = bfs::path( config::config_dir() ) / "scrollback" / net / "";
+	bfs::path path = bfs::path( config::config_dir() ) / "scrollback" / net.to_string() / "";
 	boost::system::error_code ec;
 	bfs::create_directories(path, ec);
 
@@ -521,11 +521,11 @@ static void log_open (session &sess)
 
 	log_close (sess);
 	sess.logfd = log_open_file (sess.server->servername, sess.channel,
-		sess.server->get_network(false));
+		sess.server->get_network(false).data());
 
 	if (!log_error && sess.logfd == -1)
 	{
-		auto path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false));
+		auto path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false).data());
 		std::ostringstream message;
 		message << boost::format(_("* Can't open log file(s) for writing. Check the\npermissions on %s")) % path;
 
@@ -598,13 +598,13 @@ static void log_write (session &sess, const std::string & text, time_t ts)
 
 	/* change to a different log file? */
 	auto file = log_create_pathname (sess.server->servername, sess.channel,
-		sess.server->get_network(false));
+		sess.server->get_network(false).data());
 	boost::system::error_code ec;
 	if (!boost::filesystem::exists(file, ec))
 	{
 		close(sess.logfd);
 		sess.logfd = log_open_file(sess.server->servername, sess.channel,
-			sess.server->get_network(false));
+			sess.server->get_network(false).data());
 	}
 
 	if (prefs.hex_stamp_log)
