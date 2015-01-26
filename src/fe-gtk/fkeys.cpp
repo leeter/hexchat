@@ -1319,7 +1319,7 @@ static char *
 gcomp_nick_func (char *data)
 {
 	if (data)
-		return &((struct User *)data)->nick[0];
+		return &(reinterpret_cast<User *>(data)->nick)[0];
 	return "";
 }
 
