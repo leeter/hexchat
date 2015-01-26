@@ -1461,16 +1461,19 @@ struct session *sess)
 	}
 	else
 	{
+		gcomp.reset(g_completion_new(nullptr));
 		if (is_nick)
 		{
-			gcomp.reset(g_completion_new((GCompletionFunc)gcomp_nick_func));
-			tmp_list = userlist_double_list(sess); /* create a temp list so we can free the memory */
+			std::vector < User* > tmp_vec { sess->usertree_alpha };
 			if (prefs.hex_completion_sort == 1)	/* sort in last-talk order? */
-				tmp_list = g_list_sort (tmp_list, (GCompareFunc)talked_recent_cmp);
+				std::sort(tmp_vec.begin(), tmp_vec.end(), talked_recent_cmp);
+			for (auto usr : tmp_vec)
+			{
+				tmp_list = g_list_prepend(tmp_list, const_cast<char*>(usr->nick.c_str()));
+			}
 		}
 		else
 		{
-			gcomp.reset(g_completion_new (NULL));
 			if (is_cmd)
 			{
 				tmp_list = cmdlist_double_list (command_list);
