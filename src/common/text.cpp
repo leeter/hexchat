@@ -762,16 +762,11 @@ void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t ti
 			return;
 		sess = static_cast<session *>(sess_list->data);
 	}
-	
-	std::string buf = text.to_string();
+	/* make sure it's valid utf8 */
+	std::string buf = text_validate(text);
 	if (buf.empty())
 	{
 		buf = "\n";
-	}
-	/* make sure it's valid utf8 */
-	if (!g_utf8_validate(buf.c_str(), buf.size(), nullptr))
-	{
-		buf = text_validate (buf);
 	}
 
 	log_write(*sess, buf, timestamp);
