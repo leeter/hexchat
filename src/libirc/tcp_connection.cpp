@@ -320,7 +320,7 @@ namespace io{
 #ifdef WIN32
 				w32::crypto::seed_openssl_random();
 #endif
-				return sutter::make_unique<ssl_connection>(new ssl_context(0));
+				return sutter::make_unique<ssl_connection>(new ssl_context(security == connection_security::enforced ? boost::asio::ssl::verify_peer : boost::asio::ssl::verify_none));
 			}
 			return sutter::make_unique<tcp_connection>(new context());
 		}
