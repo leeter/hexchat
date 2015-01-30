@@ -23,7 +23,6 @@
 #include <memory>
 #include <boost/optional.hpp>
 #include "tcpfwd.hpp"
-#include "irc_client.hpp"
 
 namespace io
 {

@@ -11,8 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="connection.hpp" />
     <ClInclude Include="irc_ctype.hpp" />
     <ClInclude Include="message.hpp" />
+    <ClInclude Include="server.hpp" />
     <ClInclude Include="sutter.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
@@ -22,6 +24,7 @@
   <ItemGroup>
     <ClCompile Include="irc_ctype.cpp" />
     <ClCompile Include="message.cpp" />
+    <ClCompile Include="server.cpp" />
     <ClCompile Include="tcp_connection.cpp" />
     <ClCompile Include="throttled_queue.cpp" />
     <ClCompile Include="w32crypt_seed.cpp" />
