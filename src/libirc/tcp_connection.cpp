@@ -308,8 +308,8 @@ namespace io{
 
 		std::pair<boost::system::error_code, boost::asio::ip::tcp::resolver::iterator> resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port)
 		{
-			boost::asio::ip::tcp::resolver::query query(host, std::to_string(port));
-			boost::asio::ip::tcp::resolver res(io_service);
+			boost::asio::ip::tcp::resolver::query query{ host, std::to_string(port) };
+			boost::asio::ip::tcp::resolver res{ io_service };
 			boost::system::error_code ec;
 			auto result = res.resolve(query, ec);
 			return std::make_pair(ec, result);
