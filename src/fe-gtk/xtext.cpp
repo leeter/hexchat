@@ -22,7 +22,7 @@
 */
 
 #define GDK_MULTIHEAD_SAFE
-#define MARGIN 2						/* dont touch. */
+enum{ MARGIN = 2 };					/* dont touch. */
 #define REFRESH_TIMEOUT 20
 #define WORDWRAP_LIMIT 24
 
@@ -3679,7 +3679,7 @@ namespace{
 		int width;
 		int height;
 		int subline;
-		int drawing = FALSE;
+		bool drawing = false;
 
 		if (xtext->buffer->indent < MARGIN)
 			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
@@ -3710,7 +3710,7 @@ namespace{
 					break;
 				if (tmp_ent == entb)
 				{
-					drawing = TRUE;
+					drawing = true;
 					break;
 				}
 				tmp_ent = tmp_ent->next;
@@ -3721,7 +3721,7 @@ namespace{
 		while (ent)
 		{
 			if (entb && ent == enta)
-				drawing = TRUE;
+				drawing = true;
 
 			if (drawing || ent == entb || ent == enta)
 			{
@@ -3758,15 +3758,8 @@ namespace{
 
 	static void
 		gtk_xtext_render_page(GtkXText * xtext)
-	{
-		textentry *ent;
-		int line;
-		int lines_max;
-		int width;
-		int height;
-		int subline;
+	{		
 		int startline = xtext->adj->value;
-		int pos, overlap;
 
 		if (!gtk_widget_get_realized(GTK_WIDGET(xtext)))
 			return;
@@ -3774,6 +3767,8 @@ namespace{
 		if (xtext->buffer->indent < MARGIN)
 			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
 
+		int width;
+		int height;
 		gdk_drawable_get_size(GTK_WIDGET(xtext)->window, &width, &height);
 
 		if (width < 34 || height < xtext->fontsize || width < xtext->buffer->indent + 32)
@@ -3781,8 +3776,9 @@ namespace{
 
 		xtext->pixel_offset = (xtext->adj->value - startline) * xtext->fontsize;
 
-		subline = line = 0;
-		ent = xtext->buffer->text_first;
+		int subline = 0;
+		int line = 0;
+		auto ent = xtext->buffer->text_first;
 
 		if (startline > 0)
 			ent = gtk_xtext_nth(xtext, startline, &subline);
@@ -3794,12 +3790,12 @@ namespace{
 		if (xtext->buffer->num_lines <= xtext->adj->page_size)
 			dontscroll(xtext->buffer);
 
-		pos = xtext->adj->value * xtext->fontsize;
-		overlap = xtext->buffer->last_pixel_pos - pos;
+		auto pos = static_cast<int>(xtext->adj->value) * xtext->fontsize;
+		auto overlap = xtext->buffer->last_pixel_pos - pos;
 		xtext->buffer->last_pixel_pos = pos;
 
 #ifndef __APPLE__
-		if (!xtext->pixmap && abs(overlap) < height)
+		if (!xtext->pixmap && std::abs(overlap) < height)
 		{
 			GdkRectangle area;
 
@@ -3807,11 +3803,9 @@ namespace{
 			gdk_gc_set_exposures(xtext->fgc, TRUE);
 			if (overlap < 1)	/* DOWN */
 			{
-				int remainder;
-
 				gdk_draw_drawable(xtext->draw_buf, xtext->fgc, xtext->draw_buf,
 					0, -overlap, 0, 0, width, height + overlap);
-				remainder = ((height - xtext->font->descent) % xtext->fontsize) +
+				auto remainder = ((height - xtext->font->descent) % xtext->fontsize) +
 					xtext->font->descent;
 				area.y = (height + overlap) - remainder;
 				area.height = remainder - overlap;
@@ -3837,7 +3831,7 @@ namespace{
 #endif
 
 		width -= MARGIN;
-		lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
+		auto lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
 
 		while (ent)
 		{
@@ -4466,7 +4460,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		float value;
 
 		buf->pagetop_ent = NULL;
-		for (value = 0, ent = buf->text_first;
+		for (value = 0.0f, ent = buf->text_first;
 			ent && ent != buf->hintsearch; ent = ent->next)
 		{
 			value += ent->sublines.size();
@@ -4478,9 +4472,9 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		else if ((flags & backward) && ent)
 		{
 			value -= adj->page_size - ent->sublines.size();
-			if (value < 0)
+			if (value < 0.0f)
 			{
-				value = 0;
+				value = 0.0f;
 			}
 		}
 		gtk_adjustment_set_value(adj, value);
@@ -4541,7 +4535,7 @@ namespace {
 
 		ent->stamp = stamp;
 		if (stamp == 0)
-			ent->stamp = time(0);
+			ent->stamp = time(nullptr);
 		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
 		ent->mark_start = -1;
 		ent->mark_end = -1;
