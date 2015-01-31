@@ -15,15 +15,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <array>
-#include <string>
-#include <vector>
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iterator>
 #include <sstream>
+#include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -62,10 +63,9 @@ enum
 };
 
 /* this is only used in xtext.c for indented timestamping */
-int
-xtext_get_stamp_str (time_t tim, char **ret)
+std::string xtext_get_stamp_str (time_t tim)
 {
-	return get_stamp_str (prefs.hex_stamp_text_format, tim, ret);
+	return get_stamp_str (prefs.hex_stamp_text_format, tim);
 }
 
 static void
@@ -78,20 +78,16 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 	{
 		if (prefs.hex_stamp_text)
 		{
-			int stamp_size;
-			char *stamp;
-
 			if (timet == 0)
 				timet = time (0);
 
-			stamp_size = get_stamp_str (prefs.hex_stamp_text_format, timet, &stamp);
-			glib_string stamp_ptr(stamp);
-			std::vector<unsigned char> new_text(len + stamp_size + 1);
-			std::copy_n(stamp, stamp_size, new_text.begin());
-			std::copy_n(text, len, new_text.begin() + stamp_size);
-			gtk_xtext_append (xtbuf, new_text.data(), len + stamp_size, timet);
+			std::ostringstream out;
+			out << get_stamp_str(prefs.hex_stamp_text_format, timet);
+			std::ostream_iterator<unsigned char> o{ out };
+			std::copy_n(text, len, o);
+			gtk_xtext_append (xtbuf, out.str(), timet);
 		} else
-			gtk_xtext_append (xtbuf, text, len, timet);
+			gtk_xtext_append(xtbuf, boost::string_ref{ reinterpret_cast<const char*>(text), static_cast<size_t>(len) }, timet);
 		return;
 	}
 

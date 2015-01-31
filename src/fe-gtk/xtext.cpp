@@ -40,6 +40,8 @@
 #include <vector>
 #include <locale>
 
+#include <boost/utility/string_ref.hpp>
+
 #include "../../config.h"
 #include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
@@ -65,9 +67,10 @@
 #endif
 
 char *nocasestrstr(const char *text, const char *tofind);	/* util.c */
-int xtext_get_stamp_str(time_t, char **);
+std::string xtext_get_stamp_str(time_t);
 
 typedef std::basic_string<unsigned char> ustring;
+typedef boost::basic_string_ref<unsigned char> ustring_ref;
 
 /* For use by gtk_xtext_strip_color() and its callers -- */
 struct offlen_t {
@@ -2116,10 +2119,8 @@ namespace {
 				/* include timestamp? */
 				if (ent->mark_start == 0 && xtext->mark_stamp)
 				{
-					char *time_str;
-					int stamp_size = xtext_get_stamp_str(ent->stamp, &time_str);
-					g_free(time_str);
-					len += stamp_size;
+					auto time_str = xtext_get_stamp_str(ent->stamp);
+					len += time_str.size();
 				}
 
 				if (ent->mark_end - ent->mark_start > 0)
@@ -2154,11 +2155,9 @@ namespace {
 					/* include timestamp? */
 					if (ent->mark_start == 0 && xtext->mark_stamp)
 					{
-						char *time_str;
-						int stamp_size = xtext_get_stamp_str(ent->stamp, &time_str);
-						glib_string time_str_ptr(time_str);
-						std::copy_n(time_str, stamp_size, pos);
-						pos += stamp_size;
+						auto time_str = xtext_get_stamp_str(ent->stamp);
+						std::copy(time_str.cbegin(), time_str.cend(), pos);
+						pos += time_str.size();
 					}
 
 					std::copy_n(ent->str.cbegin() + ent->mark_start, ent->mark_end - ent->mark_start, pos);
@@ -3266,7 +3265,7 @@ namespace{
 
 	static void
 		gtk_xtext_render_stamp(GtkXText * xtext, textentry * ent,
-		char *text, int len, int line, int win_width)
+		const boost::string_ref & text, int line, int win_width)
 	{
 		
 		int jo, ji, hs;
@@ -3288,18 +3287,18 @@ namespace{
 			if (tmp_ent.mark_start == 0)
 			{
 				tmp_ent.mark_start = 0;
-				tmp_ent.mark_end = len;
+				tmp_ent.mark_end = text.size();
 			}
 			else
 			{
 				tmp_ent.mark_start = -1;
 				tmp_ent.mark_end = -1;
 			}
-			tmp_ent.str = (unsigned char*)text;
+			tmp_ent.str = ustring{ text.cbegin(), text.cend() };
 		}
 
 		y = (xtext->fontsize * line) + xtext->font->ascent - xtext->pixel_offset;
-		gtk_xtext_render_str(xtext, y, &tmp_ent, (unsigned char*)text, len,
+		gtk_xtext_render_str(xtext, y, &tmp_ent, (const unsigned char*)text.data(), text.size(),
 			win_width, 2, line, true, &xsize, &emphasis);
 
 		/* restore everything back to how it was */
@@ -3341,12 +3340,8 @@ namespace{
 		if (xtext->auto_indent && xtext->buffer->time_stamp &&
 			(!xtext->skip_stamp || xtext->mark_stamp || xtext->force_stamp))
 		{
-			char *time_str;
-			int len;
-
-			len = xtext_get_stamp_str(ent->stamp, &time_str);
-			gtk_xtext_render_stamp(xtext, ent, time_str, len, line, win_width);
-			g_free(time_str);
+			auto time_str = xtext_get_stamp_str(ent->stamp);
+			gtk_xtext_render_stamp(xtext, ent, time_str, line, win_width);
 		}
 
 		/* draw each line one by one */
@@ -3485,11 +3480,9 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 	xtext->fontsize = xtext->font->ascent + xtext->font->descent;
 
 	{
-		char *time_str;
-		int stamp_size = xtext_get_stamp_str(time(0), &time_str);
-		glib_string time_str_ptr(time_str);
+		auto time_str = xtext_get_stamp_str(time(0));
 		xtext->stamp_width =
-			gtk_xtext_text_width(xtext, (unsigned char*)time_str, stamp_size) + MARGIN;
+			gtk_xtext_text_width(xtext, (const unsigned char*)time_str.c_str(), time_str.size()) + MARGIN;
 	}
 
 	gtk_xtext_fix_indent(xtext->buffer);
@@ -4683,24 +4676,20 @@ time_t stamp)
 }
 
 void
-gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp)
+gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 {
 	textentry *ent;
 
-	if (len == -1)
-		len = std::char_traits<unsigned char>::length(text);
+	if (text.back() == '\n')
+		text.remove_suffix(text.size() - 1);
 
-	if (text[len - 1] == '\n')
-		len--;
-
-	if (len >= sizeof(buf->xtext->scratch_buffer))
-		len = sizeof(buf->xtext->scratch_buffer) - 1;
+	if (text.size() >= sizeof(buf->xtext->scratch_buffer))
+		text.remove_suffix(sizeof(buf->xtext->scratch_buffer) - 1);
 
 	ent = new textentry;
-	if (len)
+	if (!text.empty())
 	{
-		ent->str.resize(len - 1, '\0');
-		std::copy_n(text, len - 1 , ent->str.begin());
+		ent->str = ustring{ text.cbegin(), text.cend() };
 	}
 	ent->indent = 0;
 	ent->left_len = -1;
@@ -4740,7 +4729,7 @@ gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 			}
 			else
 			{
-				gtk_xtext_append(out, ent->str.c_str(), ent->str.size(), 0);
+				gtk_xtext_append(out, boost::string_ref{ reinterpret_cast<const char*>(ent->str.c_str()), ent->str.size() }, 0);
 			}
 
 			out->text_last->stamp = ent->stamp;

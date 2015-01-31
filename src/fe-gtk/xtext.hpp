@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_XTEXT_HPP
 #define HEXCHAT_XTEXT_HPP
 
+#include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
@@ -254,7 +255,7 @@ struct GtkXTextClass
 };
 
 GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
-void gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp);
+void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
 	const unsigned char left_text[], int left_len,
 	const unsigned char right_text[], int right_len,

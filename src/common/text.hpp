@@ -62,7 +62,7 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
 					   char *a, char *b, char *c, char *d);
 std::string text_validate (const boost::string_ref &);
-gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
+std::string get_stamp_str (const char fmt[], time_t tim);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 const char *text_find_format_string (const char name[]);
  

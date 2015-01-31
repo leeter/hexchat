@@ -165,6 +165,6 @@ fe_add_rawlog(server *serv, const boost::string_ref &text, bool outbound)
 			break;
 		std::string new_text((outbound ? "\0034<<\017 " : "\0033>>\017 ") + it);
 
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, reinterpret_cast<const unsigned char*>(new_text.c_str()), new_text.size(), 0);
+		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, new_text, 0);
 	}
 }

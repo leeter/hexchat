@@ -552,7 +552,7 @@ void log_open_or_close (session *sess)
 	}
 }
 
-gsize get_stamp_str (const char fmt[], time_t tim, char **ret)
+std::string get_stamp_str (const char fmt[], time_t tim)
 {
 	glib_string loc;
 
@@ -572,12 +572,15 @@ gsize get_stamp_str (const char fmt[], time_t tim, char **ret)
 	if (len)
 	{
 		if (prefs.utf8_locale)
-			*ret = g_strdup (dest);
+			return{ dest, len };
 		else
-			*ret = g_locale_to_utf8 (dest, len, 0, &len, 0);
+		{
+			glib_string tmp{ g_locale_to_utf8(dest, len, 0, &len, 0) };
+			return{ tmp.get(), len };
+		}
 	}
 
-	return len;
+	return{};
 }
 
 static void log_write (session &sess, const std::string & text, time_t ts)
@@ -610,12 +613,10 @@ static void log_write (session &sess, const std::string & text, time_t ts)
 	if (prefs.hex_stamp_log)
 	{
 		if (!ts) ts = time(0);
-		char* stamp;
-		auto len = get_stamp_str (prefs.hex_stamp_log_format, ts, &stamp);
-		if (len)
+		auto stamp = get_stamp_str (prefs.hex_stamp_log_format, ts);
+		if (!stamp.empty())
 		{
-			glib_string stamp_ptr(stamp);
-			write (sess.logfd, stamp, len);
+			write (sess.logfd, stamp.c_str(), stamp.size());
 		}
 	}
 	auto temp = strip_color (text, STRIP_ALL);
