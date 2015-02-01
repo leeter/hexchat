@@ -2663,11 +2663,10 @@ namespace{
 	static int
 		gtk_xtext_search_offset(xtext_buffer *buf, textentry *ent, unsigned int off)
 	{
-		GList *gl;
 		offsets_t o;
 		int flags = 0;
 
-		for (gl = g_list_first(ent->marks); gl; gl = g_list_next(gl))
+		for (auto gl = g_list_first(ent->marks); gl; gl = g_list_next(gl))
 		{
 			o.u = GPOINTER_TO_UINT(gl->data);
 			if (off < o.o.start || off > o.o.end)
@@ -3114,22 +3113,19 @@ namespace{
 		find_next_wrap(GtkXText * xtext, textentry * ent, const unsigned char str[],
 		int win_width, int indent)
 	{
+		/* single liners */
+		if (win_width >= ent->str_width + ent->indent)
+			return ent->str.size();
+
 		const unsigned char *last_space = str;
 		const unsigned char *orig_str = str;
 		int str_width = indent;
 		int rcol = 0, bgcol = 0;
 		bool hidden = false;
-		int mbl;
-		int char_width;
 		int ret;
 		int limit_offset = 0;
 		int emphasis = 0;
 		std::locale locale;
-
-		/* single liners */
-		if (win_width >= ent->str_width + ent->indent)
-			return ent->str.size();
-
 		/* it does happen! */
 		if (win_width < 1)
 		{
@@ -3193,8 +3189,9 @@ namespace{
 					break;
 				default:
 				def :
-					mbl = charlen(str);
-					char_width = backend_get_text_width_emph(xtext, str, mbl, emphasis);
+				{
+					int mbl = static_cast<int>(charlen(str));
+					int char_width = backend_get_text_width_emph(xtext, str, mbl, emphasis);
 					if (!hidden) str_width += char_width;
 					if (str_width > win_width)
 					{
@@ -3225,6 +3222,7 @@ namespace{
 
 					/* progress to the next char */
 					str += mbl;
+				} // switch statement scope
 
 				}
 			}
@@ -3395,9 +3393,7 @@ namespace{
 void
 gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[])
 {
-	int i;
-
-	for (i = (XTEXT_COLS - 1); i >= 0; i--)
+	for (int i = (XTEXT_COLS - 1); i >= 0; i--)
 	{
 		xtext->palette[i] = palette[i];
 	}
@@ -3419,12 +3415,10 @@ namespace {
 	static void
 		gtk_xtext_fix_indent(xtext_buffer *buf)
 	{
-		int j;
-
 		/* make indent a multiple of the space width */
 		if (buf->indent && buf->xtext->space_width)
 		{
-			j = 0;
+			int j = 0;
 			while (j < buf->indent)
 			{
 				j += buf->xtext->space_width;
@@ -3438,10 +3432,8 @@ namespace {
 	static void
 		gtk_xtext_recalc_widths(xtext_buffer *buf, bool do_str_width)
 	{
-		textentry *ent;
-
 		/* since we have a new font, we have to recalc the text widths */
-		ent = buf->text_first;
+		auto ent = buf->text_first;
 		while (ent)
 		{
 			if (do_str_width)
