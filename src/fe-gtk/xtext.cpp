@@ -2193,7 +2193,7 @@ namespace {
 			GdkAtom encoding;
 			gint format;
 			gint new_length;
-			gchar* new_text;
+			guchar* new_text;
 
 			gdk_x11_display_string_to_compound_text(display, stripped.c_str(), &encoding,
 				&format, &new_text, &new_length);
