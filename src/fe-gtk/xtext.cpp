@@ -1621,7 +1621,7 @@ namespace {
 		word = gtk_xtext_strip_color(word, len, xtext->scratch_buffer, NULL, slp, FALSE);
 
 		/* avoid turning the cursor into a hand for non-url part of the word */
-		if (xtext->urlcheck_function && xtext->urlcheck_function(GTK_WIDGET(xtext), (char*)word))
+		if (xtext->urlcheck_function && xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word)))
 		{
 			int start, end;
 			url_last(&start, &end);
@@ -1720,7 +1720,7 @@ namespace {
 		{
 			int laststart, lastend;
 
-			word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), (char*)word);
+			word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word));
 			if (word_type > 0)
 			{
 				if (url_last(&laststart, &lastend))
@@ -4744,7 +4744,7 @@ gtk_xtext_set_time_stamp(xtext_buffer *buf, gboolean time_stamp)
 }
 
 void
-gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, char *))
+gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, const char *))
 {
 	xtext->urlcheck_function = urlcheck_function;
 }

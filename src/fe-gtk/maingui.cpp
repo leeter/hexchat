@@ -2163,7 +2163,7 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 /* check if a word is clickable */
 
 static int
-mg_word_check (GtkWidget * xtext, char *word)
+mg_word_check (GtkWidget * xtext, const char *word)
 {
 	session *sess = current_sess;
 	int ret;
