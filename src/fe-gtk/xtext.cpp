@@ -4493,7 +4493,7 @@ namespace {
 
 	/* append a textentry to our linked list */
 
-	static void gtk_xtext_append_entry(xtext_buffer *buf, textentry * ent, time_t stamp)
+	static void gtk_xtext_append_entry(xtext_buffer *buf, std::unique_ptr<textentry> ent, time_t stamp)
 	{
 		/* we don't like tabs */
 		std::replace(ent->str.begin(), ent->str.end(), '\t', ' ');
@@ -4501,7 +4501,7 @@ namespace {
 		ent->stamp = stamp;
 		if (stamp == 0)
 			ent->stamp = time(nullptr);
-		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
+		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent.get());
 		ent->mark_start = -1;
 		ent->mark_end = -1;
 		ent->next = NULL;
@@ -4510,20 +4510,21 @@ namespace {
 		if (ent->indent < MARGIN)
 			ent->indent = MARGIN;	  /* 2 pixels is the left margin */
 
+		auto entry = ent.release();
 		/* append to our linked list */
 		if (buf->text_last)
-			buf->text_last->next = ent;
+			buf->text_last->next = entry;
 		else
-			buf->text_first = ent;
+			buf->text_first = entry;
 		ent->prev = buf->text_last;
-		buf->text_last = ent;
+		buf->text_last = entry;
 
-		buf->num_lines += gtk_xtext_lines_taken(buf, ent);
+		buf->num_lines += gtk_xtext_lines_taken(buf, entry);
 
 		if ((buf->marker_pos == NULL || buf->marker_seen) && (buf->xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(buf->xtext))))))
 		{
-			buf->marker_pos = ent;
+			buf->marker_pos = entry;
 			buf->marker_state = MARKER_IS_SET;
 			dontscroll(buf); /* force scrolling off */
 			buf->marker_seen = false;
@@ -4564,8 +4565,8 @@ namespace {
 		{
 			GList *gl;
 
-			gl = gtk_xtext_search_textentry(buf, *ent);
-			gtk_xtext_search_textentry_add(buf, ent, gl, FALSE);
+			gl = gtk_xtext_search_textentry(buf, *entry);
+			gtk_xtext_search_textentry_add(buf, entry, gl, FALSE);
 		}
 	}
 
@@ -4579,7 +4580,6 @@ const unsigned char left_text[], int left_len,
 const unsigned char right_text[], int right_len,
 time_t stamp)
 {
-	textentry *ent;
 	int space;
 	int tempindent;
 	int left_width;
@@ -4596,7 +4596,7 @@ time_t stamp)
 	if (right_text[right_len - 1] == '\n')
 		right_len--;
 
-	ent = new textentry;
+	std::unique_ptr<textentry> ent{ new textentry };
 	ent->str.resize(left_len + right_len + 1, '\0');
 	auto str = ent->str.begin();
 	std::copy_n(left_text, left_len, str);
@@ -4631,21 +4631,19 @@ time_t stamp)
 		buf->xtext->force_render = true;
 	}
 
-	gtk_xtext_append_entry(buf, ent, stamp);
+	gtk_xtext_append_entry(buf, std::move(ent), stamp);
 }
 
 void
 gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 {
-	textentry *ent;
-
 	if (text.back() == '\n')
 		text.remove_suffix(text.size() - 1);
 
 	if (text.size() >= sizeof(buf->xtext->scratch_buffer))
 		text.remove_suffix(sizeof(buf->xtext->scratch_buffer) - 1);
 
-	ent = new textentry;
+	std::unique_ptr<textentry> ent{ new textentry };
 	if (!text.empty())
 	{
 		ent->str = ustring{ text.cbegin(), text.cend() };
@@ -4653,11 +4651,10 @@ gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 	ent->indent = 0;
 	ent->left_len = -1;
 
-	gtk_xtext_append_entry(buf, ent, stamp);
+	gtk_xtext_append_entry(buf, std::move(ent), stamp);
 }
 
-gboolean
-gtk_xtext_is_empty(xtext_buffer *buf)
+bool gtk_xtext_is_empty(xtext_buffer *buf)
 {
 	return buf->text_first == NULL;
 }

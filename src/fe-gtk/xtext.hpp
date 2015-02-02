@@ -273,7 +273,7 @@ int gtk_xtext_moveto_marker_pos(GtkXText *xtext);
 void gtk_xtext_check_marker_visibility(GtkXText *xtext);
 void gtk_xtext_set_marker_last(session *sess);
 
-gboolean gtk_xtext_is_empty(xtext_buffer *buf);
+bool gtk_xtext_is_empty(xtext_buffer *buf);
 
 void gtk_xtext_set_error_function(GtkXText *xtext, void(*error_function) (int));
 void gtk_xtext_set_indent(GtkXText *xtext, gboolean indent);
