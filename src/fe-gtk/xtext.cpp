@@ -4516,7 +4516,7 @@ namespace {
 			buf->text_last->next = entry;
 		else
 			buf->text_first = entry;
-		ent->prev = buf->text_last;
+		entry->prev = buf->text_last;
 		buf->text_last = entry;
 
 		buf->num_lines += gtk_xtext_lines_taken(buf, entry);
