@@ -32,7 +32,6 @@
 #include <string>
 #include <locale>
 #include <codecvt>
-#include <unordered_map>
 #include <filesystem>
 
 #include <Windows.h>
@@ -159,8 +158,47 @@ namespace
 		}
 		return hr;
 	}
+	static ::Windows::UI::Notifications::ToastNotifier ^ notifier = nullptr;
+	void show_notification(const std::string & title, const std::string & subtitle, const std::string & message)
+	{
+		try
+		{
+			namespace wun = Windows::UI::Notifications;
+			auto toastTemplate =
+				wun::ToastNotificationManager::GetTemplateContent(
+				wun::ToastTemplateType::ToastText04);
+			auto node_list = toastTemplate->GetElementsByTagName(Platform::StringReference(L"text"));
+
+			// Title first
+			auto wide_title = widen(title);
+			node_list->GetAt(0)->AppendChild(
+				toastTemplate->CreateTextNode(Platform::StringReference(wide_title.c_str(), wide_title.size())));
+
+			// Subtitle
+			auto wide_subtitle = widen(subtitle);
+			node_list->GetAt(1)->AppendChild(
+				toastTemplate->CreateTextNode(
+				Platform::StringReference(wide_subtitle.c_str(), wide_subtitle.size())));
+
+			// then the message
+			auto widen_str = widen(message);
+			auto node2 = node_list->GetAt(2);
+			node2->AppendChild(
+				toastTemplate->CreateTextNode(
+				Platform::StringReference(widen_str.c_str(), widen_str.size())));
+
+			notifier->Show(ref new wun::ToastNotification(toastTemplate));
+		}
+		catch (Platform::Exception ^ ex)
+		{
+			auto what = ex->ToString();
+
+			hexchat_printf(ph, "An Error Occurred Printing a Notification HRESULT: %#X : %s", static_cast<unsigned long>(ex->HResult), narrow(what->Data()).c_str());
+		}
+	}
 	
-	static int handle_incoming(const char *const word[], const char *const word_eol[], void*) {
+	static int handle_incoming(const char *const word[], const char *const word_eol[], void*) throw()
+	{
 
 		// is this the active channel or is the window focused?
 		if (hexchat_get_context(ph) == hexchat_find_context(ph, nullptr, nullptr) &&
@@ -169,70 +207,39 @@ namespace
 			return HEXCHAT_EAT_NONE;
 		}
 
-		const std::string nick(hexchat_get_info(ph, "nick"));
+		const std::string my_nick{ hexchat_get_info(ph, "nick") };
+		// this should be the nick
+		auto nick = std::string(word[1]);
+		auto bang_loc = nick.find_first_of('!');
+		if (bang_loc != std::wstring::npos)
+		{
+			nick.erase(bang_loc);
+		}
 
-
-		if (nick != word[3] && std::string(word_eol[4]).find(nick) == std::string::npos)
+		nick.erase(0, 1);
+		const std::string channel(hexchat_get_info(ph, "channel"));
+		if (my_nick != word[3] && std::string(word_eol[4]).find(my_nick) == std::string::npos)
 			return HEXCHAT_EAT_NONE;
 
-		const std::string channel(hexchat_get_info(ph, "channel"));
 		const std::string server_name(hexchat_get_info(ph, "server"));
 
-		try
-		{
-			auto toastTemplate =
-				Windows::UI::Notifications::ToastNotificationManager::GetTemplateContent(
-					Windows::UI::Notifications::ToastTemplateType::ToastText04);
-			auto node_list = toastTemplate->GetElementsByTagName(Platform::StringReference(L"text"));
-			UINT node_count = node_list->Length;
+		auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
 
-			// put the channel name first
-			auto message_source = widen(server_name + " - " + channel);
-			node_list->GetAt(0)->AppendChild(
-				toastTemplate->CreateTextNode(Platform::StringReference(message_source.c_str(), message_source.size())));
+		std::unique_ptr<char, decltype(sanitizer_del)> sanitized(
+			hexchat_strip(ph, word_eol[4], static_cast<int>(std::strlen(word_eol[4])), 7 /*STRIP_ALL*/),
+			sanitizer_del);
 
-			// this should be the nick
-			auto wide_nick = widen(word[1]);
-			auto bang_loc = wide_nick.find_first_of(L'!');
-			if (bang_loc != std::wstring::npos)
-			{
-				wide_nick.erase(bang_loc, std::wstring::npos);
-			}
-			wide_nick.erase(0, 1);
-			node_list->GetAt(1)->AppendChild(
-				toastTemplate->CreateTextNode(
-				Platform::StringReference(wide_nick.c_str(), wide_nick.size())));
-
-			// then the message
-			auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
-			std::unique_ptr<char, decltype(sanitizer_del)> sanitized(
-				hexchat_strip(ph, word_eol[4], static_cast<int>(std::strlen(word_eol[4])), 7 /*STRIP_ALL*/),
-				sanitizer_del);
-			auto widen_str = widen(sanitized.get());
-			widen_str.erase(0, 1);
-			// remove characters that would break the toast
-			widen_str.erase(std::remove(widen_str.begin(), widen_str.end(), L'\x1'), widen_str.end());
-
-			auto node2 = node_list->GetAt(2);
-			node2->AppendChild(
-				toastTemplate->CreateTextNode(
-				Platform::StringReference(widen_str.c_str(), widen_str.size())));
-
-			auto notifier = Windows::UI::Notifications::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
-			notifier->Show(ref new Windows::UI::Notifications::ToastNotification(toastTemplate));
-		}
-		catch (Platform::Exception ^ ex)
-		{
-			auto what = ex->ToString();
-
-			hexchat_printf(ph, "An Error Occurred Printing a Notification HRESULT: %#X : %s", static_cast<unsigned long>(ex->HResult), narrow(what->Data()).c_str());
-		}
+		auto sanitized_str = std::string{ sanitized.get() };
+		sanitized_str.erase(0, 1);
+		// remove characters that would break the toast
+		sanitized_str.erase(std::remove(sanitized_str.begin(), sanitized_str.end(), '\x1'), sanitized_str.end());
+		show_notification(server_name + " - " + channel, nick, sanitized_str);
 		return HEXCHAT_EAT_NONE;
 	}
 }
 
 int
-hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
+hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg) throw()
 {
 	if (!IsWindows8Point1OrGreater())
 		return FALSE;
@@ -252,14 +259,18 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 	hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
 	
 	hexchat_printf(ph, "%s plugin loaded\n", name);
-
+	namespace wun = Windows::UI::Notifications;
+	if (!notifier)
+		notifier = wun::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
 	return TRUE;       /* return 1 for success */
 }
 
 
 int
-hexchat_plugin_deinit(void)
+hexchat_plugin_deinit(void) throw()
 {
+	// ensure release before we deinit the runtime
+	notifier = nullptr;
 	Windows::Foundation::Uninitialize();
 	hexchat_command(ph, "MENU DEL \"Window/Set up WinRT Notifications\"");
 	hexchat_printf(ph, "%s plugin unloaded\n", name);
