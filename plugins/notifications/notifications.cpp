@@ -1,5 +1,5 @@
 /* HexChat
-* Copyright (c) 2014 Leetsoftwerx
+* Copyright (c) 2014-2015 Leetsoftwerx
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -32,18 +32,12 @@
 #include <string>
 #include <locale>
 #include <codecvt>
-#include <filesystem>
 
 #include <Windows.h>
-#include <ShlObj.h>
-#include <Shobjidl.h>
-#include <Propvarutil.h>
-#include <functiondiscoverykeys.h>
 #include <VersionHelpers.h>
 
 #include <roapi.h>
 #include <windows.ui.notifications.h>
-#include <comdef.h>
 
 #include "hexchat-plugin.h"
 
@@ -63,18 +57,17 @@ namespace
 		WS_HIDDEN
 	};
 
-	WinStatus
-	get_window_status()
+	WinStatus get_window_status()
 	{
 		const char * st = hexchat_get_info(ph, "win_status");
 
 		if (!st)
 			return WinStatus::WS_HIDDEN;
 
-		if (!strcmp(st, "active"))
+		if (!std::strcmp(st, "active"))
 			return WinStatus::WS_FOCUSED;
 
-		if (!strcmp(st, "hidden"))
+		if (!std::strcmp(st, "hidden"))
 			return WinStatus::WS_HIDDEN;
 
 		return WinStatus::WS_NORMAL;
@@ -92,72 +85,6 @@ namespace
 		return converter.to_bytes(to_narrow);
 	}
 
-	_COM_SMARTPTR_TYPEDEF(IPropertyStore, __uuidof(IPropertyStore));
-	// we have to create an app compatible shortcut to use toast notifications
-	HRESULT InstallShortcut(const std::wstring& shortcutPath)
-	{
-		wchar_t exePath[MAX_PATH];
-
-		DWORD charWritten = GetModuleFileNameW(nullptr, exePath, ARRAYSIZE(exePath));
-		try
-		{
-			_com_util::CheckError(charWritten > 0 ? S_OK : E_FAIL);
-
-			IShellLinkWPtr shellLink(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER);
-			if (!shellLink)
-				_com_issue_error(E_NOINTERFACE);
-			
-			_com_util::CheckError(shellLink->SetPath(exePath));
-
-			_com_util::CheckError(shellLink->SetArguments(L""));
-			
-			IPropertyStorePtr propertyStore(shellLink);
-			if (!propertyStore)
-				_com_issue_error(E_NOINTERFACE);
-
-			PROPVARIANT appIdPropVar;
-			_com_util::CheckError(InitPropVariantFromString(AppId, &appIdPropVar));
-			std::unique_ptr<PROPVARIANT, decltype(&PropVariantClear)> pro_var(&appIdPropVar, PropVariantClear);
-			_com_util::CheckError(propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar));
-			
-			_com_util::CheckError(propertyStore->Commit());
-			
-			IPersistFilePtr persistFile(shellLink);
-			if (!persistFile)
-				_com_issue_error(E_NOINTERFACE);
-			
-			_com_util::CheckError(persistFile->Save(shortcutPath.c_str(), TRUE));
-		}
-		catch (const _com_error & ex)
-		{
-			return ex.Error();
-		}
-		return S_OK;
-	}
-
-	HRESULT TryInstallAppShortcut()
-	{
-		wchar_t * roaming_path_wide = nullptr;
-		HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &roaming_path_wide);
-		if (FAILED(hr))
-			return hr;
-
-		std::unique_ptr<wchar_t, decltype(&::CoTaskMemFree)> roaming_path(roaming_path_wide, &::CoTaskMemFree);
-		std::tr2::sys::wpath path(roaming_path_wide);
-
-		path /= L"\\Microsoft\\Windows\\Start Menu\\Programs\\Hexchat.lnk";
-		bool fileExists = std::tr2::sys::exists(path);
-
-		if (!fileExists)
-		{
-			hr = InstallShortcut(path.string());
-		}
-		else
-		{
-			hr = S_FALSE;
-		}
-		return hr;
-	}
 	static ::Windows::UI::Notifications::ToastNotifier ^ notifier = nullptr;
 	void show_notification(const std::string & title, const std::string & subtitle, const std::string & message)
 	{
@@ -167,27 +94,27 @@ namespace
 			auto toastTemplate =
 				wun::ToastNotificationManager::GetTemplateContent(
 				wun::ToastTemplateType::ToastText04);
-			auto node_list = toastTemplate->GetElementsByTagName(Platform::StringReference(L"text"));
+			auto node_list = toastTemplate->GetElementsByTagName(Platform::StringReference{ L"text", 4 });
 
 			// Title first
 			auto wide_title = widen(title);
 			node_list->GetAt(0)->AppendChild(
-				toastTemplate->CreateTextNode(Platform::StringReference(wide_title.c_str(), wide_title.size())));
+				toastTemplate->CreateTextNode(Platform::StringReference{ wide_title.c_str(), wide_title.size() }));
 
 			// Subtitle
 			auto wide_subtitle = widen(subtitle);
 			node_list->GetAt(1)->AppendChild(
 				toastTemplate->CreateTextNode(
-				Platform::StringReference(wide_subtitle.c_str(), wide_subtitle.size())));
+				Platform::StringReference{ wide_subtitle.c_str(), wide_subtitle.size() }));
 
 			// then the message
 			auto widen_str = widen(message);
 			auto node2 = node_list->GetAt(2);
 			node2->AppendChild(
 				toastTemplate->CreateTextNode(
-				Platform::StringReference(widen_str.c_str(), widen_str.size())));
+				Platform::StringReference{ widen_str.c_str(), widen_str.size() }));
 
-			notifier->Show(ref new wun::ToastNotification(toastTemplate));
+			notifier->Show(ref new wun::ToastNotification{ toastTemplate });
 		}
 		catch (Platform::Exception ^ ex)
 		{
@@ -199,7 +126,6 @@ namespace
 	
 	static int handle_incoming(const char *const word[], const char *const word_eol[], void*) throw()
 	{
-
 		// is this the active channel or is the window focused?
 		if (hexchat_get_context(ph) == hexchat_find_context(ph, nullptr, nullptr) &&
 			get_window_status() == WinStatus::WS_FOCUSED)
@@ -217,11 +143,11 @@ namespace
 		}
 
 		nick.erase(0, 1);
-		const std::string channel(hexchat_get_info(ph, "channel"));
+		const std::string channel{ hexchat_get_info(ph, "channel") };
 		if (my_nick != word[3] && std::string(word_eol[4]).find(my_nick) == std::string::npos)
 			return HEXCHAT_EAT_NONE;
 
-		const std::string server_name(hexchat_get_info(ph, "server"));
+		const std::string server_name{ hexchat_get_info(ph, "server") };
 
 		auto sanitizer_del = std::bind(hexchat_free, ph, std::placeholders::_1);
 
@@ -251,10 +177,6 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 	*plugin_name = const_cast<char*>(name);
 	*plugin_desc = const_cast<char*>(desc);
 	*plugin_version = const_cast<char*>(version);
-
-	hr = TryInstallAppShortcut();
-	if (FAILED(hr))
-		return FALSE;
 	
 	hexchat_hook_server(ph, "PRIVMSG", HEXCHAT_PRI_NORM, handle_incoming, NULL);
 	
