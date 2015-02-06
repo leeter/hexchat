@@ -53,6 +53,7 @@ namespace irc
 	public:
 		::std::string hostname() const;
 		bool throttle() const NOEXCEPT;
+		std::size_t queue_length() const NOEXCEPT;
 	};
 }
 

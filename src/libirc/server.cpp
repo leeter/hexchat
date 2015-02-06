@@ -44,7 +44,7 @@ namespace irc
 		{
 			if (!_throttle)
 				p_connection->enqueue_message(raw.to_string());
-			outbound_queue.push(raw.to_string());
+			outbound_queue.push(raw);
 		}
 
 		void poll()
@@ -74,6 +74,10 @@ namespace irc
 			return _throttle;
 		}
 
+		io::irc::throttled_queue::size_type queue_length() const NOEXCEPT
+		{
+			return outbound_queue.queue_length();
+		}
 	};
 
 	server server::connect(::io::tcp::connection_security sec, const boost::string_ref& hostname, std::uint16_t port)
@@ -132,6 +136,11 @@ namespace irc
 	std::string server::hostname() const
 	{
 		return p_impl->hostname();
+	}
+
+	std::size_t server::queue_length() const NOEXCEPT
+	{
+		return p_impl->queue_length();
 	}
 
 	bool server::throttle() const NOEXCEPT

@@ -18,7 +18,10 @@
 
 #include <chrono>
 #include <queue>
+#include <string>
 #include <boost/algorithm/string.hpp>
+#include <boost/utility/string_ref.hpp>
+#include "config.hpp"
 #include "throttled_queue.hpp"
 #include "tcp_connection.hpp"
 #include "sutter.hpp"
@@ -40,7 +43,7 @@ namespace io
 
 			~p_impl(){}
 
-			void push(const std::string & inbound)
+			void push(const boost::string_ref & inbound)
 			{
 				int priority = 2;	/* pri 2 for most things */
 				/* privmsg and notice get a lower priority */
@@ -55,12 +58,12 @@ namespace io
 					if (boost::icontains(inbound, "WHO") ||
 						/* but only MODE queries, not changes */
 						(boost::icontains(inbound, "MODE") &&
-						inbound.find_first_of('-') == std::string::npos &&
-						inbound.find_first_of('+') == std::string::npos))
+						inbound.find_first_of('-') == boost::string_ref::npos &&
+						inbound.find_first_of('+') == boost::string_ref::npos))
 						priority = 0;
 				}
 
-				this->outbound_queue.emplace(std::make_pair(priority, inbound));
+				this->outbound_queue.emplace(std::make_pair(priority, inbound.to_string()));
 				this->queue_len_in_bytes += inbound.size(); /* tcp_send_queue uses strlen */
 			}
 			
@@ -100,7 +103,7 @@ namespace io
 				return top.second;
 			}
 
-			size_type queue_length() const
+			size_type queue_length() const NOEXCEPT
 			{
 				return this->queue_len_in_bytes;
 			}
@@ -117,12 +120,12 @@ namespace io
 			:impl(sutter::make_unique<throttled_queue::p_impl>())
 		{}
 
-		throttled_queue::size_type throttled_queue::queue_length() const
+		throttled_queue::size_type throttled_queue::queue_length() const NOEXCEPT
 		{
 			return impl->queue_length();
 		}
 
-		void throttled_queue::push(const std::string & inbound)
+		void throttled_queue::push(const boost::string_ref & inbound)
 		{
 			impl->push(inbound);
 		}
