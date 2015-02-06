@@ -42,14 +42,14 @@ namespace w32
 {
 	namespace crypto
 	{
-		void seed_openssl_random()
+		void seed_openssl_random() throw()
 		{
 			BCRYPT_ALG_HANDLE hdnl;
 			NTSTATUS res = BCryptOpenAlgorithmProvider(&hdnl, BCRYPT_RNG_ALGORITHM, nullptr, 0);
 			if (!BCRYPT_SUCCESS(res))
 				return; // TODO throw error?
 
-			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg(hdnl);
+			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg{ hdnl, alg_deleter };
 
 			UCHAR buffer[256];
 			for (int i = 0; i < 256 && BCRYPT_SUCCESS(res); ++i)

@@ -25,9 +25,6 @@
 #include "inet.hpp"				  /* make it first to avoid macro redefinitions */
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
-#ifdef WIN32
-#include "w32crypt_seed.hpp"
-#endif
 #include "../../config.h"
 #include <string>
 #include <iterator>
@@ -125,10 +122,6 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 
 	/* used in SSL_connect(), SSL_accept() */
 	SSL_CTX_set_info_callback(ctx, info_cb_func);
-
-#ifdef WIN32
-	w32::crypto::seed_openssl_random();
-#endif
 
 	return(ctx);
 }
