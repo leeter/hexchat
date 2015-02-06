@@ -51,7 +51,7 @@ namespace w32
 
 			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg{ hdnl, alg_deleter };
 
-			UCHAR buffer[256];
+			UCHAR buffer[256] = { 0 };
 			for (int i = 0; i < 256 && BCRYPT_SUCCESS(res); ++i)
 			{
 				res = BCryptGenRandom(alg.get(), buffer, sizeof(buffer), 0);

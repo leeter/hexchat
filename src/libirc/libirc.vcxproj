@@ -77,7 +77,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT;BOOST_NO_ANSI_APIS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..;$(YourBoostPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
@@ -97,7 +97,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT;_WIN64;_AMD64_;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES_MEMORY;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT;BOOST_NO_ANSI_APIS;_WIN64;_AMD64_;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(DepsRoot)\include;$(SolutionDir)..;$(YourBoostPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
