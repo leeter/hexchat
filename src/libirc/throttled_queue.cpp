@@ -63,6 +63,11 @@ namespace io
 				this->outbound_queue.emplace(std::make_pair(priority, inbound));
 				this->queue_len_in_bytes += inbound.size(); /* tcp_send_queue uses strlen */
 			}
+			
+			void pop()
+			{
+				this->outbound_queue.pop();
+			}
 
 			boost::optional<std::string> front()
 			{
@@ -120,6 +125,11 @@ namespace io
 		void throttled_queue::push(const std::string & inbound)
 		{
 			impl->push(inbound);
+		}
+
+		void throttled_queue::pop()
+		{
+			impl->pop();
 		}
 
 		void throttled_queue::clear()

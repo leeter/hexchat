@@ -18,9 +18,11 @@
 
 #include <string>
 #include <boost/utility/string_ref.hpp>
+#include <boost/optional.hpp>
 #include "server.hpp"
 #include "sutter.hpp"
 #include "tcp_connection.hpp"
+#include "throttled_queue.hpp"
 
 namespace irc
 {
@@ -29,23 +31,47 @@ namespace irc
 		server_impl(const server_impl&) = delete;
 		std::string _hostname;
 		std::unique_ptr<io::tcp::connection> p_connection;
+		::io::irc::throttled_queue outbound_queue;
+		bool _throttle;
 	public:
 		server_impl(std::unique_ptr<io::tcp::connection> connection)
-			:p_connection(std::move(connection))
+			:p_connection(std::move(connection)), _throttle(false)
 		{
-
 		}
 
 	public:
 		void send(const boost::string_ref& raw) override final
 		{
-			p_connection->enqueue_message(raw.to_string());
+			if (!_throttle)
+				p_connection->enqueue_message(raw.to_string());
+			outbound_queue.push(raw.to_string());
+		}
+
+		void poll()
+		{
+			auto to_send = outbound_queue.front();
+			if (to_send)
+			{
+				p_connection->enqueue_message(*to_send);
+				outbound_queue.pop();
+			}
+			p_connection->poll();
+		}
+
+		void throttle(bool do_throttle)
+		{
+			_throttle = do_throttle;
 		}
 
 	public:
 		std::string hostname() const
 		{
 			return _hostname;
+		}
+
+		bool throttle() const NOEXCEPT
+		{
+			return _throttle;
 		}
 
 	};
@@ -97,10 +123,20 @@ namespace irc
 		p_impl->send(raw);
 	}
 
+	void server::throttle(bool do_throttle)
+	{
+		p_impl->throttle(do_throttle);
+	}
+
 	// Accessors
 	std::string server::hostname() const
 	{
 		return p_impl->hostname();
+	}
+
+	bool server::throttle() const NOEXCEPT
+	{
+		return p_impl->throttle();
 	}
 
 }// namespace irc

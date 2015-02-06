@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <boost/optional.hpp>
+#include <boost/optional/optional_fwd.hpp>
 #include "tcpfwd.hpp"
 
 namespace io

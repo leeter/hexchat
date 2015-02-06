@@ -48,9 +48,11 @@ namespace irc
 	public:
 		void swap(server&) NOEXCEPT;
 		void send(const ::boost::string_ref&) override final;
+		void throttle(bool);
 
 	public:
 		::std::string hostname() const;
+		bool throttle() const NOEXCEPT;
 	};
 }
 
