@@ -24,7 +24,14 @@
 
 namespace irc
 {
-	void send_privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message);
+	namespace proto
+	{
+		void names(::irc::connection& con, const ::boost::string_ref& channel);
+		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text);
+		void ping_user(::irc::connection & con, const ::boost::string_ref& user, const ::boost::string_ref & timestring);
+		void privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message);
+		void whois(::irc::connection & con, const ::boost::string_ref& nick);
+	} // namespace proto
 } // namespace irc
 
 #endif // LIBIRC_IRC_PROTO_HPP

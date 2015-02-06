@@ -25,11 +25,41 @@
 
 namespace irc
 {
-	void send_privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message)
+	namespace proto
 	{
-		std::ostringstream out;
-		out << boost::format("PRIVMSG %s :%s\r\n") % channel % message;
-		con.send(out.str());
-	}
+		void names(::irc::connection& con, const ::boost::string_ref& channel)
+		{
+			std::ostringstream out;
+			out << boost::format{ "NAMES %s\r\n" } % channel;
+			con.send(out.str());
+		}
+		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text)
+		{
+			std::ostringstream out;
+			out << boost::format{ "NOTICE %s :%s\r\n" } % channel % text;
+			con.send(out.str());
+		}
+
+		void ping_user(::irc::connection & con, const ::boost::string_ref& user, const ::boost::string_ref & timestring)
+		{
+			std::ostringstream out;
+			out << boost::format{ "PRIVMSG %s :\001PING %s\001\r\n" } % user % timestring;
+			con.send(out.str());
+		}
+
+		void privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message)
+		{
+			std::ostringstream out;
+			out << boost::format{ "PRIVMSG %s :%s\r\n" } % channel % message;
+			con.send(out.str());
+		}
+
+		void whois(::irc::connection & con, const ::boost::string_ref& nick)
+		{
+			std::ostringstream out;
+			out << boost::format{ "WHOIS %s\r\n" } % nick;
+			con.send(out.str());
+		}
+	} // namespace proto
 
 } // namespace irc
