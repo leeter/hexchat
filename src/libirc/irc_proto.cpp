@@ -33,6 +33,7 @@ namespace irc
 			out << boost::format{ "NAMES %s\r\n" } % channel;
 			con.send(out.str());
 		}
+
 		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text)
 		{
 			std::ostringstream out;

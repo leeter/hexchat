@@ -32,7 +32,7 @@
 #pragma comment(lib, "bcrypt.lib")
 
 namespace{
-	auto alg_deleter = [](BCRYPT_ALG_HANDLE handle)
+	auto alg_deleter = [](BCRYPT_ALG_HANDLE handle) throw()
 	{
 		BCryptCloseAlgorithmProvider(handle, 0);
 	};
