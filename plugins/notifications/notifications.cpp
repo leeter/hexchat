@@ -73,16 +73,16 @@ namespace
 		return WinStatus::WS_NORMAL;
 	}
 
+	using utf8converter = std::wstring_convert < std::codecvt_utf8_utf16<wchar_t> > ;
+
 	std::wstring widen(const std::string & to_widen)
 	{
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-		return converter.from_bytes(to_widen);
+		 return utf8converter{}.from_bytes(to_widen);
 	}
 
 	std::string narrow(const std::wstring & to_narrow)
 	{
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-		return converter.to_bytes(to_narrow);
+		return utf8converter{}.to_bytes(to_narrow);
 	}
 
 	static ::Windows::UI::Notifications::ToastNotifier ^ notifier = nullptr;
@@ -135,7 +135,7 @@ namespace
 
 		const std::string my_nick{ hexchat_get_info(ph, "nick") };
 		// this should be the nick
-		auto nick = std::string(word[1]);
+		auto nick = std::string{ word[1] };
 		auto bang_loc = nick.find_first_of('!');
 		if (bang_loc != std::wstring::npos)
 		{
@@ -183,7 +183,7 @@ hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **pl
 	hexchat_printf(ph, "%s plugin loaded\n", name);
 	namespace wun = Windows::UI::Notifications;
 	if (!notifier)
-		notifier = wun::ToastNotificationManager::CreateToastNotifier(Platform::StringReference(AppId));
+		notifier = wun::ToastNotificationManager::CreateToastNotifier(Platform::StringReference{ AppId, ARRAYSIZE(AppId) - 1 });
 	return TRUE;       /* return 1 for success */
 }
 
