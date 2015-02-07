@@ -310,19 +310,15 @@ namespace
 
 		return font;
 	}
+	CUSTOM_PTR(PangoFontMetrics, pango_font_metrics_unref)
 
-	static void
-		backend_font_open(GtkXText *xtext, const char *name)
+	static void backend_font_open(GtkXText *xtext, const char *name)
 	{
-		PangoLanguage *lang;
-		PangoContext *context;
-		PangoFontMetrics *metrics;
-
 		xtext->font = &xtext->pango_font;
 		xtext->font->font = backend_font_open_real(name);
 		if (!xtext->font->font)
 		{
-			xtext->font = NULL;
+			xtext->font = nullptr;
 			return;
 		}
 
@@ -331,42 +327,42 @@ namespace
 		xtext_pango_init(xtext);
 
 		/* vte does it this way */
-		context = gtk_widget_get_pango_context(GTK_WIDGET(xtext));
-		lang = pango_context_get_language(context);
-		metrics = pango_context_get_metrics(context, xtext->font->font, lang);
-		xtext->font->ascent = pango_font_metrics_get_ascent(metrics) / PANGO_SCALE;
-		xtext->font->descent = pango_font_metrics_get_descent(metrics) / PANGO_SCALE;
-		pango_font_metrics_unref(metrics);
+		auto context = gtk_widget_get_pango_context(GTK_WIDGET(xtext));
+		auto lang = pango_context_get_language(context);
+		PangoFontMetricsPtr metrics{ pango_context_get_metrics(context, xtext->font->font, lang) };
+		xtext->font->ascent = pango_font_metrics_get_ascent(metrics.get()) / PANGO_SCALE;
+		xtext->font->descent = pango_font_metrics_get_descent(metrics.get()) / PANGO_SCALE;
 	}
-	static int
-		backend_get_text_width_emph(GtkXText *xtext, const guchar *str, int len, int emphasis)
-	{
-		int width;
-		int deltaw;
-		int mbl;
 
-		if (*str == 0)
+	static int backend_get_text_width_emph(GtkXText *xtext, const ustring_ref & str, int emphasis)
+	{
+		if (str.empty())
 			return 0;
 
 		if ((emphasis & EMPH_HIDDEN))
 			return 0;
 		emphasis &= (EMPH_ITAL | EMPH_BOLD);
 
-		width = 0;
+		int width = 0;
 		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
-		while (len > 0)
+		auto itr = str.cbegin();
+		auto end = str.cend();
+		for (auto itr = str.cbegin(), end = str.cend(); itr != end;)
 		{
-			mbl = charlen(str);
-			if (*str < 128)
-				deltaw = fontwidths[emphasis][*str];
+			int mbl = charlen(itr);
+			int deltaw;
+			if (*itr < 128)
+				deltaw = fontwidths[emphasis][*itr];
 			else
 			{
-				pango_layout_set_text(xtext->layout, (const char*)str, mbl);
-				pango_layout_get_pixel_size(xtext->layout, &deltaw, NULL);
+				pango_layout_set_text(xtext->layout, reinterpret_cast<const char*>(itr), mbl);
+				pango_layout_get_pixel_size(xtext->layout, &deltaw, nullptr);
 			}
 			width += deltaw;
-			str += mbl;
-			len -= mbl;
+			if (mbl < std::distance(itr, end))
+				itr += mbl;
+			else
+				break;
 		}
 
 		return width;
@@ -378,7 +374,7 @@ namespace
 
 		for (const auto & meta : slp)
 		{
-			width += backend_get_text_width_emph(xtext, str, meta.len, meta.emph);
+			width += backend_get_text_width_emph(xtext, ustring_ref{ str, static_cast<size_t>(meta.len) }, meta.emph);
 			str += meta.len;
 		}
 
@@ -903,7 +899,7 @@ namespace {
 		while (wid > 0)
 		{
 			mbl = charlen(ent->str.c_str() + off);
-			mbw = backend_get_text_width_emph(xtext, ent->str.c_str() + off, mbl, meta->emph);
+			mbw = backend_get_text_width_emph(xtext, ustring_ref( ent->str.c_str() + off, mbl ), meta->emph);
 			wid -= mbw;
 			xx += mbw;
 			if (xx >= x)
@@ -2478,7 +2474,7 @@ namespace{
 
 		for (auto & meta : ent->slp)
 		{
-			meta.width = backend_get_text_width_emph(xtext, ent->str.c_str() + meta.off, meta.len, meta.emph);
+			meta.width = backend_get_text_width_emph(xtext, ustring_ref{ ent->str.c_str() + meta.off, meta.len }, meta.emph);
 		}
 		return width;
 	}
@@ -2502,7 +2498,7 @@ namespace{
 		if (xtext->dont_render || len < 1 || xtext->hidden)
 			return 0;
 
-		auto str_width = backend_get_text_width_emph(xtext, str, len, *emphasis);
+		auto str_width = backend_get_text_width_emph(xtext, ustring_ref( str, len ), *emphasis);
 
 		if (xtext->dont_render2)
 			return str_width;
@@ -3162,7 +3158,7 @@ namespace{
 				def :
 				{
 					int mbl = static_cast<int>(charlen(str));
-					int char_width = backend_get_text_width_emph(xtext, str, mbl, emphasis);
+					int char_width = backend_get_text_width_emph(xtext, ustring_ref( str, mbl ), emphasis);
 					if (!hidden) str_width += char_width;
 					if (str_width > win_width)
 					{
