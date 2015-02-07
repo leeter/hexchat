@@ -1,5 +1,5 @@
-/* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+/* libirc
+* Copyright (C) 2014 - 2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,6 @@ namespace irc
 		bool throttle() const NOEXCEPT;
 		std::size_t queue_length() const NOEXCEPT;
 	};
-}
+} // namespace irc
 
 #endif //LIBIRC_SERVER_HPP
