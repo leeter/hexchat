@@ -27,8 +27,10 @@
     defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
     defined(_MSC_FULL_VER) && _MSC_FULL_VER > 180031101
 #  define NOEXCEPT noexcept
-#else
+#elif defined(_MSC_VER)
 #  define NOEXCEPT throw()
+#else
+#error noexcept is required to compile this code!
 #endif
 
 #endif //LIBIRC_CONFIG_HPP
