@@ -1489,8 +1489,7 @@ namespace {
 		return 0;
 	}
 
-	static gint
-		gtk_xtext_scrollup_timeout(GtkXText * xtext)
+	static gboolean gtk_xtext_scrollup_timeout(GtkXText * xtext)
 	{
 		int p_y;
 		xtext_buffer *buf = xtext->buffer;
@@ -1502,23 +1501,23 @@ namespace {
 		if (buf->last_ent_start == NULL ||	/* If context has changed OR */
 			buf->pagetop_ent == NULL ||		/* pagetop_ent is reset OR */
 			p_y >= 0 ||							/* not above top margin OR */
-			adj->value == 0)						/* we're scrolled to the top */
+			adj->value == 0.0)						/* we're scrolled to the top */
 		{
 			xtext->scroll_tag = 0;
-			return 0;
+			return FALSE;
 		}
 
-		if (adj->value < 0)
+		if (adj->value < 0.0)
 		{
 			delta_y = adj->value * xtext->fontsize;
-			adj->value = 0;
+			adj->value = 0.0;
 		}
 		else {
 			delta_y = xtext->fontsize;
 			adj->value--;
 		}
 		xtext->select_start_y += delta_y;
-		xtext->select_start_adj = adj->value;
+		xtext->select_start_adj = static_cast<int>(adj->value);
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, NULL, TRUE);
 		gtk_xtext_render_ents(xtext, buf->pagetop_ent->prev, buf->last_ent_end);
@@ -1527,7 +1526,7 @@ namespace {
 			gtk_xtext_scrollup_timeout,
 			xtext);
 
-		return 0;
+		return FALSE;
 	}
 
 	static void
@@ -2218,21 +2217,20 @@ namespace {
 	static gboolean gtk_xtext_scroll(GtkWidget *widget, GdkEventScroll *event)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
-
+		gdouble new_value;
 		if (event->direction == GDK_SCROLL_UP)		/* mouse wheel pageUp */
 		{
-			auto new_value = xtext->adj->value - (xtext->adj->page_increment / 10.0);
+			new_value = xtext->adj->value - (xtext->adj->page_increment / 10.0);
 			if (new_value < xtext->adj->lower)
 				new_value = xtext->adj->lower;
-			gtk_adjustment_set_value(xtext->adj, new_value);
 		}
 		else if (event->direction == GDK_SCROLL_DOWN)	/* mouse wheel pageDn */
 		{
-			auto new_value = xtext->adj->value + (xtext->adj->page_increment / 10.0);
+			new_value = xtext->adj->value + (xtext->adj->page_increment / 10.0);
 			if (new_value >(xtext->adj->upper - xtext->adj->page_size))
 				new_value = xtext->adj->upper - xtext->adj->page_size;
-			gtk_adjustment_set_value(xtext->adj, new_value);
 		}
+		gtk_adjustment_set_value(xtext->adj, new_value);
 
 		return FALSE;
 	}
@@ -3755,7 +3753,7 @@ namespace{
 		if (xtext->buffer->num_lines <= xtext->adj->page_size)
 			dontscroll(xtext->buffer);
 
-		auto pos = static_cast<int>(xtext->adj->value) * xtext->fontsize;
+		int pos = xtext->adj->value * xtext->fontsize;
 		auto overlap = xtext->buffer->last_pixel_pos - pos;
 		xtext->buffer->last_pixel_pos = pos;
 
