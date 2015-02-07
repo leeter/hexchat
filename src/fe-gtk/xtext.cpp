@@ -930,7 +930,7 @@ namespace {
 
 	static int
 		gtk_xtext_find_x(GtkXText * xtext, int x, textentry * ent, int subline,
-		int line, int *out_of_bounds)
+		int line, gboolean *out_of_bounds)
 	{
 		int indent;
 		const unsigned char *str;
@@ -953,31 +953,28 @@ namespace {
 		/* Let user select left a few pixels to grab hidden text e.g. '<' */
 		if (x < indent - xtext->space_width)
 		{
-			*out_of_bounds = 1;
+			*out_of_bounds = TRUE;
 			return (str - ent->str.c_str());
 		}
 
-		*out_of_bounds = 0;
+		*out_of_bounds = FALSE;
 
 		return find_x(xtext, ent, x, subline, indent);
 	}
 
 	static textentry *
 		gtk_xtext_find_char(GtkXText * xtext, int x, int y, int *off,
-		int *out_of_bounds, int *ret_subline)
+		gboolean *out_of_bounds, int *ret_subline)
 	{
-		textentry *ent;
-		int line;
-		int subline;
-
 		/* Adjust y value for negative rounding, double to int */
 		if (y < 0)
 			y -= xtext->fontsize;
-
-		line = (y + xtext->pixel_offset) / xtext->fontsize;
-		ent = gtk_xtext_nth(xtext, line + (int)xtext->adj->value, &subline);
+		
+		int subline;
+		int line = (y + xtext->pixel_offset) / xtext->fontsize;
+		auto ent = gtk_xtext_nth(xtext, line + (int)xtext->adj->value, &subline);
 		if (!ent)
-			return 0;
+			return nullptr;
 
 		if (off)
 			*off = gtk_xtext_find_x(xtext, x, ent, subline, line, out_of_bounds);
@@ -1040,10 +1037,9 @@ namespace {
 	static void
 		gtk_xtext_draw_marker(GtkXText * xtext, textentry * ent, int y)
 	{
-		int x, width, render_y;
-
 		if (!xtext->marker) return;
 
+		int render_y;
 		if (xtext->buffer->marker_pos == ent)
 		{
 			render_y = y + xtext->font->descent;
@@ -1054,8 +1050,8 @@ namespace {
 		}
 		else return;
 
-		x = 0;
-		width = GTK_WIDGET(xtext)->allocation.width;
+		int x = 0;
+		int width = GTK_WIDGET(xtext)->allocation.width;
 
 		gdk_draw_line(xtext->draw_buf, xtext->marker_gc, x, render_y, x + width, render_y);
 
@@ -1069,9 +1065,7 @@ namespace {
 		gtk_xtext_paint(GtkWidget *widget, GdkRectangle *area)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
-		textentry *ent_start, *ent_end;
-		int x, y;
-
+		
 		if (area->x == 0 && area->y == 0 &&
 			area->height == widget->allocation.height &&
 			area->width == widget->allocation.width)
@@ -1081,7 +1075,9 @@ namespace {
 			return;
 		}
 
-		ent_start = gtk_xtext_find_char(xtext, area->x, area->y, NULL, NULL, NULL);
+		textentry *ent_end;
+		int x, y;
+		auto ent_start = gtk_xtext_find_char(xtext, area->x, area->y, NULL, NULL, NULL);
 		if (!ent_start)
 		{
 			xtext_draw_bg(xtext, area->x, area->y, area->width, area->height);
@@ -1445,7 +1441,7 @@ namespace {
 	static int
 		gtk_xtext_timeout_ms(GtkXText *xtext, int pixes)
 	{
-		int apixes = abs(pixes);
+		int apixes = std::abs(pixes);
 
 		if (apixes < 6) return 100;
 		if (apixes < 12) return 50;
@@ -1528,15 +1524,12 @@ namespace {
 	static void
 		gtk_xtext_selection_update(GtkXText * xtext, GdkEventMotion * event, int p_y, gboolean render)
 	{
-		int win_height;
-		int moved;
-
 		if (xtext->scroll_tag)
 		{
 			return;
 		}
 
-		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		int win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
 		/* selecting past top of window, scroll up! */
 		if (p_y < 0 && xtext->adj->value >= 0)
@@ -1552,7 +1545,7 @@ namespace {
 		}
 		else
 		{
-			moved = (int)xtext->adj->value - xtext->select_start_adj;
+			int moved = (int)xtext->adj->value - xtext->select_start_adj;
 			xtext->select_start_y -= (moved * xtext->fontsize);
 			xtext->select_start_adj = xtext->adj->value;
 			gtk_xtext_selection_draw(xtext, event, render);
@@ -1563,19 +1556,15 @@ namespace {
 		gtk_xtext_get_word(GtkXText * xtext, int x, int y, textentry ** ret_ent,
 		int *ret_off, int *ret_len, std::vector<offlen_t> *slp)
 	{
-		textentry *ent;
 		int offset;
-		const unsigned char *word;
-		const unsigned char *last, *end;
-		int len;
-		int out_of_bounds = 0;
+		gboolean out_of_bounds = FALSE;
 		int len_to_offset = 0;
 
-		ent = gtk_xtext_find_char(xtext, x, y, &offset, &out_of_bounds, NULL);
-		if (ent == NULL || out_of_bounds || offset < 0 || offset >= ent->str.size())
-			return NULL;
+		auto ent = gtk_xtext_find_char(xtext, x, y, &offset, &out_of_bounds, nullptr);
+		if (!ent || out_of_bounds || offset < 0 || offset >= ent->str.size())
+			return nullptr;
 
-		word = ent->str.c_str() + offset;
+		auto word = ent->str.c_str() + offset;
 		while ((word = (unsigned char*)g_utf8_find_prev_char((const gchar*)ent->str.c_str(), (const gchar*)word)))
 		{
 			if (is_del(*word))
@@ -1592,9 +1581,9 @@ namespace {
 		/* remove color characters from the length */
 		gtk_xtext_strip_color((unsigned char*)word, len_to_offset, xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
 
-		last = word;
-		end = ent->str.c_str() + ent->str.size();
-		len = 0;
+		auto last = word;
+		auto end = ent->str.c_str() + ent->str.size();
+		int len = 0;
 		do
 		{
 			if (is_del(*last))
