@@ -1142,7 +1142,7 @@ namespace {
 	{
 		/* render all the complete lines */
 		if (start->next == end)
-			gtk_xtext_render_ents(xtext, end, NULL);
+			gtk_xtext_render_ents(xtext, end, nullptr);
 		else
 			gtk_xtext_render_ents(xtext, start->next, end);
 
@@ -1151,7 +1151,7 @@ namespace {
 			xtext->jump_in_offset = xtext->buffer->last_offset_start;
 		else
 			xtext->jump_in_offset = start_offset;
-		gtk_xtext_render_ents(xtext, start, NULL);
+		gtk_xtext_render_ents(xtext, start, nullptr);
 		xtext->jump_in_offset = 0;
 	}
 
@@ -1163,7 +1163,7 @@ namespace {
 	{
 		/* render all the complete lines */
 		if (end->prev == start)
-			gtk_xtext_render_ents(xtext, start, NULL);
+			gtk_xtext_render_ents(xtext, start, nullptr);
 		else
 			gtk_xtext_render_ents(xtext, start, end->prev);
 
@@ -1172,7 +1172,7 @@ namespace {
 			xtext->jump_out_offset = xtext->buffer->last_offset_end;
 		else
 			xtext->jump_out_offset = end_offset;
-		gtk_xtext_render_ents(xtext, end, NULL);
+		gtk_xtext_render_ents(xtext, end, nullptr);
 		xtext->jump_out_offset = 0;
 	}
 
@@ -1328,23 +1328,16 @@ namespace {
 		xtext->skip_stamp = false;
 	}
 
-	static void
-		gtk_xtext_selection_draw(GtkXText * xtext, GdkEventMotion * event, gboolean render)
+	static void gtk_xtext_selection_draw(GtkXText * xtext, GdkEventMotion * event, bool render)
 	{
-		textentry *ent;
-		textentry *ent_end;
-		textentry *ent_start;
 		int offset_start;
 		int offset_end;
 		int subline_start;
 		int subline_end;
-		int oob;
-		bool marking_up = false;
-		int len_start;
-		int len_end;
+		gboolean oob = false;
 
-		ent_start = gtk_xtext_find_char(xtext, xtext->select_start_x, xtext->select_start_y, &offset_start, &oob, &subline_start);
-		ent_end = gtk_xtext_find_char(xtext, xtext->select_end_x, xtext->select_end_y, &offset_end, &oob, &subline_end);
+		auto ent_start = gtk_xtext_find_char(xtext, xtext->select_start_x, xtext->select_start_y, &offset_start, &oob, &subline_start);
+		auto ent_end = gtk_xtext_find_char(xtext, xtext->select_end_x, xtext->select_end_y, &offset_end, &oob, &subline_end);
 
 		if ((!ent_start || !ent_end) && !xtext->buffer->text_last && xtext->adj->value != xtext->buffer->old_value)
 		{
@@ -1364,6 +1357,8 @@ namespace {
 			offset_end = ent_end->str.size();
 		}
 
+		bool marking_up = false;
+
 		if ((ent_start != ent_end && xtext->select_start_y > xtext->select_end_y) || /* different entries */
 			(ent_start == ent_end && subline_start > subline_end) || /* different lines */
 			(ent_start == ent_end && subline_start == subline_end && xtext->select_start_x > xtext->select_end_x)) /* marking to the left */
@@ -1374,6 +1369,8 @@ namespace {
 		/* word selection */
 		if (xtext->word_select)
 		{
+			int len_start;
+			int len_end;
 			/* a word selection cannot be started if the cursor is out of bounds in gtk_xtext_button_press */
 			gtk_xtext_get_word(xtext, xtext->select_start_x, xtext->select_start_y, NULL, &offset_start, &len_start, NULL);
 
@@ -1400,7 +1397,7 @@ namespace {
 			/* ensure ent_start is above ent_end */
 			if (ent_start != ent_end)
 			{
-				ent = ent_start;
+				auto ent = ent_start;
 				ent_start = ent_end;
 				ent_end = ent;
 			}
@@ -1425,7 +1422,7 @@ namespace {
 		/* set all the mark_ fields of the ents within the selection */
 		if (ent_start != ent_end)
 		{
-			ent = ent_start->next;
+			auto ent = ent_start->next;
 			while (ent && ent != ent_end)
 			{
 				ent->mark_start = 0;
@@ -1438,8 +1435,7 @@ namespace {
 			gtk_xtext_selection_render(xtext, ent_start, ent_end);
 	}
 
-	static int
-		gtk_xtext_timeout_ms(GtkXText *xtext, int pixes)
+	static int gtk_xtext_timeout_ms(GtkXText *xtext, int pixes)
 	{
 		int apixes = std::abs(pixes);
 
@@ -1448,37 +1444,37 @@ namespace {
 		if (apixes < 20) return 20;
 		return 10;
 	}
-	static gint
-		gtk_xtext_scrolldown_timeout(GtkXText * xtext)
+
+	static gboolean gtk_xtext_scrolldown_timeout(GtkXText * xtext)
 	{
 		int p_y, win_height;
 		xtext_buffer *buf = xtext->buffer;
 		GtkAdjustment *adj = xtext->adj;
 
-		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, 0, &p_y, 0);
+		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
 		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
-		if (buf->last_ent_end == NULL ||	/* If context has changed OR */
-			buf->pagetop_ent == NULL ||	/* pagetop_ent is reset OR */
+		if (buf->last_ent_end == nullptr ||	/* If context has changed OR */
+			buf->pagetop_ent == nullptr ||	/* pagetop_ent is reset OR */
 			p_y <= win_height ||			/* pointer not below bottom margin OR */
 			adj->value >= adj->upper - adj->page_size) 	/* we're scrolled to bottom */
 		{
 			xtext->scroll_tag = 0;
-			return 0;
+			return FALSE;
 		}
 
 		xtext->select_start_y -= xtext->fontsize;
 		xtext->select_start_adj++;
 		adj->value++;
 		gtk_adjustment_value_changed(adj);
-		gtk_xtext_selection_draw(xtext, NULL, TRUE);
+		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_xtext_render_ents(xtext, buf->pagetop_ent->next, buf->last_ent_end);
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(xtext, p_y - win_height),
 			(GSourceFunc)
 			gtk_xtext_scrolldown_timeout,
 			xtext);
 
-		return 0;
+		return FALSE;
 	}
 
 	static gboolean gtk_xtext_scrollup_timeout(GtkXText * xtext)
@@ -1488,7 +1484,7 @@ namespace {
 		GtkAdjustment *adj = xtext->adj;
 		int delta_y;
 
-		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, 0, &p_y, 0);
+		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
 
 		if (buf->last_ent_start == NULL ||	/* If context has changed OR */
 			buf->pagetop_ent == NULL ||		/* pagetop_ent is reset OR */
@@ -1511,7 +1507,7 @@ namespace {
 		xtext->select_start_y += delta_y;
 		xtext->select_start_adj = static_cast<int>(adj->value);
 		gtk_adjustment_value_changed(adj);
-		gtk_xtext_selection_draw(xtext, NULL, TRUE);
+		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_xtext_render_ents(xtext, buf->pagetop_ent->prev, buf->last_ent_end);
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(xtext, p_y),
 			(GSourceFunc)
@@ -1522,7 +1518,7 @@ namespace {
 	}
 
 	static void
-		gtk_xtext_selection_update(GtkXText * xtext, GdkEventMotion * event, int p_y, gboolean render)
+		gtk_xtext_selection_update(GtkXText * xtext, GdkEventMotion * event, int p_y, bool render)
 	{
 		if (xtext->scroll_tag)
 		{
@@ -1808,7 +1804,7 @@ namespace {
 			}
 		}
 
-		if (xtext->urlcheck_function == NULL)
+		if (xtext->urlcheck_function == nullptr)
 			return FALSE;
 
 		word_type = gtk_xtext_get_word_adjust(xtext, x, y, &word_ent, &offset, &len);
@@ -1839,7 +1835,7 @@ namespace {
 				xtext->render_hilights_only = true;
 				xtext->skip_stamp = true;
 
-				gtk_xtext_render_ents(xtext, word_ent, NULL);
+				gtk_xtext_render_ents(xtext, word_ent, nullptr);
 
 				xtext->skip_border_fills = false;
 				xtext->render_hilights_only = false;
@@ -1848,7 +1844,7 @@ namespace {
 			return FALSE;
 		}
 
-		gtk_xtext_leave_notify(widget, NULL);
+		gtk_xtext_leave_notify(widget, nullptr);
 
 		return FALSE;
 	}
@@ -1874,38 +1870,37 @@ namespace {
 void
 gtk_xtext_copy_selection(GtkXText *xtext)
 {
-	gtk_xtext_set_clip_owner(GTK_WIDGET(xtext), NULL);
+	gtk_xtext_set_clip_owner(GTK_WIDGET(xtext), nullptr);
 }
 
 namespace {
-	static void
-		gtk_xtext_unselect(GtkXText *xtext)
+	void gtk_xtext_unselect(GtkXText &xtext)
 	{
-		xtext_buffer *buf = xtext->buffer;
+		xtext_buffer *buf = xtext.buffer;
 
-		xtext->skip_border_fills = true;
-		xtext->skip_stamp = true;
+		xtext.skip_border_fills = true;
+		xtext.skip_stamp = true;
 
-		xtext->jump_in_offset = buf->last_ent_start->mark_start;
+		xtext.jump_in_offset = buf->last_ent_start->mark_start;
 		/* just a single ent was marked? */
 		if (buf->last_ent_start == buf->last_ent_end)
 		{
-			xtext->jump_out_offset = buf->last_ent_start->mark_end;
-			buf->last_ent_end = NULL;
+			xtext.jump_out_offset = buf->last_ent_start->mark_end;
+			buf->last_ent_end = nullptr;
 		}
 
-		gtk_xtext_selection_clear(xtext->buffer);
+		gtk_xtext_selection_clear(xtext.buffer);
 
 		/* FIXME: use jump_out on multi-line selects too! */
-		xtext->jump_in_offset = 0;
-		xtext->jump_out_offset = 0;
-		gtk_xtext_render_ents(xtext, buf->last_ent_start, buf->last_ent_end);
+		xtext.jump_in_offset = 0;
+		xtext.jump_out_offset = 0;
+		gtk_xtext_render_ents(&xtext, buf->last_ent_start, buf->last_ent_end);
 
-		xtext->skip_border_fills = false;
-		xtext->skip_stamp = false;
+		xtext.skip_border_fills = false;
+		xtext.skip_stamp = false;
 
-		xtext->buffer->last_ent_start = NULL;
-		xtext->buffer->last_ent_end = NULL;
+		xtext.buffer->last_ent_start = NULL;
+		xtext.buffer->last_ent_end = NULL;
 	}
 
 	static gboolean
@@ -1966,7 +1961,7 @@ namespace {
 				xtext->select_start_y == event->y &&
 				xtext->buffer->last_ent_start)
 			{
-				gtk_xtext_unselect(xtext);
+				gtk_xtext_unselect(*xtext);
 				xtext->mark_stamp = false;
 				return FALSE;
 			}
@@ -2068,17 +2063,16 @@ namespace {
 
 	/* another program has claimed the selection */
 
-	static gboolean
-		gtk_xtext_selection_kill(GtkXText *xtext, GdkEventSelection *event)
+	gboolean gtk_xtext_selection_kill(GtkXText *xtext, GdkEventSelection *event)
 	{
 #ifndef WIN32
 		if (xtext->buffer->last_ent_start)
-			gtk_xtext_unselect(xtext);
+			gtk_xtext_unselect(*xtext);
 #endif
 		return TRUE;
 	}
 
-	static std::string gtk_xtext_selection_get_text(GtkXText *xtext)
+	std::string gtk_xtext_selection_get_text(GtkXText *xtext)
 	{
 		auto buf = xtext->selection_buffer;
 		if (!buf)
@@ -2147,7 +2141,7 @@ namespace {
 		if (!xtext->color_paste)
 		{
 			glib_string res((char*)gtk_xtext_strip_color(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size(), NULL, &len, NULL, FALSE));
-			stripped = std::string{ res.get(), static_cast<size_t>(len) };
+			stripped = std::string( res.get(), len );
 		}
 		return stripped;
 	}
@@ -2228,7 +2222,7 @@ namespace {
 		if (vadj)
 			g_return_if_fail(GTK_IS_ADJUSTMENT(vadj));
 		else
-			vadj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 1, 1, 1, 1));
+			vadj = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 1.0, 1.0, 1.0, 1.0));
 
 		if (xtext->adj && (xtext->adj != vadj))
 		{
@@ -2251,8 +2245,7 @@ namespace {
 		}
 	}
 
-	static void
-		gtk_xtext_class_init(GtkXTextClass * text_class)
+	void gtk_xtext_class_init(GtkXTextClass * text_class)
 	{
 		GtkObjectClass *object_class;
 		GtkWidgetClass *widget_class;
@@ -2344,7 +2337,7 @@ namespace{
 		offlen_t meta;
 	};
 
-	static void xtext_do_chunk(chunk_t &c)
+	void xtext_do_chunk(chunk_t &c)
 	{
 		if (c.len1 == 0)
 			return;
@@ -2359,7 +2352,7 @@ namespace{
 		c.len1 = 0;
 	}
 
-	static unsigned char * gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
+	unsigned char * gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
 		int *newlen, std::vector<offlen_t> * slp, int strip_hidden)
 	{
 		chunk_t c;
@@ -2368,7 +2361,6 @@ namespace{
 		bool hidden = false;
 		unsigned char *new_str;
 		const unsigned char *text0 = text;
-		int mbl;	/* multi-byte length */
 
 		if (outbuf == NULL)
 			new_str = static_cast<unsigned char*>(g_malloc0(len + 2));
@@ -2381,9 +2373,9 @@ namespace{
 		std::locale locale;
 		while (len > 0)
 		{
-			mbl = charlen(text);
+			int mbl = charlen(text); /* multi-byte length */
 			if (mbl > len)
-				goto bad_utf8;
+				break; // bad UTF-8
 
 			if (rcol > 0 && (std::isdigit<char>(*text, locale) || (*text == ',' && std::isdigit<char>(text[1], locale) && !bgcol)))
 			{
@@ -2437,12 +2429,12 @@ namespace{
 			len -= mbl;
 		}
 
-	bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
+	//bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
 		xtext_do_chunk(c);
 
 		new_str[i] = 0;
 
-		if (newlen != NULL)
+		if (newlen)
 			*newlen = i;
 
 		if (slp)
