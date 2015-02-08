@@ -164,7 +164,7 @@ namespace
 	static int gtk_xtext_find_subline(GtkXText *xtext, textentry *ent, int line);
 	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
 	static unsigned char *
-		gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
+		gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
 		int *newlen, std::vector<offlen_t> * slp, int strip_hidden);
 	static bool gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add);
 	static int gtk_xtext_render_page_timeout(GtkXText * xtext);
@@ -1575,7 +1575,7 @@ namespace {
 			word = ent->str.c_str();
 
 		/* remove color characters from the length */
-		gtk_xtext_strip_color((unsigned char*)word, len_to_offset, xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
+		gtk_xtext_strip_color(ustring_ref(word, len_to_offset), xtext->scratch_buffer, &len_to_offset, NULL, FALSE);
 
 		auto last = word;
 		auto end = ent->str.c_str() + ent->str.size();
@@ -1598,7 +1598,7 @@ namespace {
 		if (ret_len)
 			*ret_len = len;		/* Length before stripping */
 
-		word = gtk_xtext_strip_color(word, len, xtext->scratch_buffer, NULL, slp, FALSE);
+		word = gtk_xtext_strip_color(ustring_ref(word, len), xtext->scratch_buffer, NULL, slp, FALSE);
 
 		/* avoid turning the cursor into a hand for non-url part of the word */
 		if (xtext->urlcheck_function && xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word)))
@@ -2140,7 +2140,7 @@ namespace {
 		std::string stripped = out.str();
 		if (!xtext->color_paste)
 		{
-			glib_string res((char*)gtk_xtext_strip_color(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size(), NULL, &len, NULL, FALSE));
+			glib_string res((char*)gtk_xtext_strip_color(ustring_ref(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size()), NULL, &len, NULL, FALSE));
 			stripped = std::string( res.get(), len );
 		}
 		return stripped;
@@ -2352,7 +2352,7 @@ namespace{
 		c.len1 = 0;
 	}
 
-	unsigned char * gtk_xtext_strip_color(const unsigned char *text, int len, unsigned char *outbuf,
+	unsigned char * gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
 		int *newlen, std::vector<offlen_t> * slp, int strip_hidden)
 	{
 		chunk_t c;
@@ -2360,10 +2360,9 @@ namespace{
 		int rcol = 0, bgcol = 0;
 		bool hidden = false;
 		unsigned char *new_str;
-		const unsigned char *text0 = text;
-
+		auto beinning = text.cbegin();
 		if (outbuf == NULL)
-			new_str = static_cast<unsigned char*>(g_malloc0(len + 2));
+			new_str = static_cast<unsigned char*>(g_malloc0(text.size() + 2));
 		else
 			new_str = outbuf;
 
@@ -2371,16 +2370,16 @@ namespace{
 		c.len1 = 0;
 		c.emph = 0;
 		std::locale locale;
-		while (len > 0)
+		for (auto itr = text.cbegin(), end = text.cend(); itr != end;)
 		{
-			int mbl = charlen(text); /* multi-byte length */
-			if (mbl > len)
+			int mbl = charlen(itr); /* multi-byte length */
+			if (mbl > std::distance(itr, end))
 				break; // bad UTF-8
 
-			if (rcol > 0 && (std::isdigit<char>(*text, locale) || (*text == ',' && std::isdigit<char>(text[1], locale) && !bgcol)))
+			if (rcol > 0 && (std::isdigit<char>(*itr, locale) || (*itr == ',' && std::isdigit<char>(itr[1], locale) && !bgcol)))
 			{
-				if (text[1] != ',') rcol--;
-				if (*text == ',')
+				if (itr[1] != ',') rcol--;
+				if (*itr == ',')
 				{
 					rcol = 2;
 					bgcol = 1;
@@ -2389,7 +2388,7 @@ namespace{
 			else
 			{
 				rcol = bgcol = 0;
-				switch (*text)
+				switch (*itr)
 				{
 				case ATTR_COLOR:
 					xtext_do_chunk(c);
@@ -2402,11 +2401,11 @@ namespace{
 				case ATTR_UNDERLINE:
 				case ATTR_ITALICS:
 					xtext_do_chunk(c);
-					if (*text == ATTR_RESET)
+					if (*itr == ATTR_RESET)
 						c.emph = 0;
-					if (*text == ATTR_ITALICS)
+					if (*itr == ATTR_ITALICS)
 						c.emph ^= EMPH_ITAL;
-					if (*text == ATTR_BOLD)
+					if (*itr == ATTR_BOLD)
 						c.emph ^= EMPH_BOLD;
 					break;
 				case ATTR_HIDDEN:
@@ -2418,15 +2417,14 @@ namespace{
 					if (strip_hidden == 2 || (!(hidden && strip_hidden)))
 					{
 						if (c.len1 == 0)
-							c.off1 = text - text0;
-						std::copy_n(text, mbl, new_str + i);
+							c.off1 = std::distance(itr, beinning);
+						std::copy_n(itr, mbl, new_str + i);
 						i += mbl;
 						c.len1 += mbl;
 					}
 				}
 			}
-			text += mbl;
-			len -= mbl;
+			itr += mbl;
 		}
 
 	//bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
@@ -2448,7 +2446,7 @@ namespace{
 	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry *ent)
 	{
 		ent->slp.clear();
-		auto new_buf = gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), xtext->scratch_buffer,
+		auto new_buf = gtk_xtext_strip_color(ent->str, xtext->scratch_buffer,
 			NULL, &ent->slp, 2);
 
 		auto width = backend_get_text_width_slp(xtext, new_buf, ent->slp);
@@ -2460,11 +2458,11 @@ namespace{
 		return width;
 	}
 
-	static int gtk_xtext_text_width(GtkXText *xtext, const unsigned char text[], int len)
+	int gtk_xtext_text_width(GtkXText *xtext, const ustring_ref & text)
 	{
 		int new_len;
 		std::vector<offlen_t> slp;
-		auto new_buf = gtk_xtext_strip_color(text, len, xtext->scratch_buffer,
+		auto new_buf = gtk_xtext_strip_color(text, xtext->scratch_buffer,
 			&new_len, &slp, !xtext->ignore_hidden);
 
 		return backend_get_text_width_slp(xtext, new_buf, slp);
@@ -3392,8 +3390,8 @@ namespace {
 			{
 				ent->indent =
 					(buf->indent -
-					gtk_xtext_text_width(buf->xtext, ent->str.c_str(),
-					ent->left_len)) - buf->xtext->space_width;
+					gtk_xtext_text_width(buf->xtext, ustring_ref(ent->str.c_str(),
+					ent->left_len))) - buf->xtext->space_width;
 				if (ent->indent < MARGIN)
 					ent->indent = MARGIN;
 			}
@@ -3422,7 +3420,7 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 	{
 		auto time_str = xtext_get_stamp_str(time(0));
 		xtext->stamp_width =
-			gtk_xtext_text_width(xtext, (const unsigned char*)time_str.c_str(), time_str.size()) + MARGIN;
+			gtk_xtext_text_width(xtext, ustring_ref(reinterpret_cast<const unsigned char*>(time_str.c_str()), time_str.size())) + MARGIN;
 	}
 
 	gtk_xtext_fix_indent(xtext->buffer);
@@ -3478,7 +3476,7 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 	ent = xtext->buffer->text_first;
 	while (ent)
 	{
-		glib_string buf((char*)gtk_xtext_strip_color(ent->str.c_str(), ent->str.size(), NULL,
+		glib_string buf((char*)gtk_xtext_strip_color(ent->str, NULL,
 			&newlen, NULL, FALSE));
 		write(fh, buf.get(), newlen);
 		write(fh, "\n", 1);
@@ -3520,24 +3518,17 @@ namespace{
 
 	/* Calculate number of actual lines (with wraps), to set adj->lower. *
 	* This should only be called when the window resizes.               */
-
-	static void
-		gtk_xtext_calc_lines(xtext_buffer *buf, bool fire_signal)
+	void gtk_xtext_calc_lines(xtext_buffer *buf, bool fire_signal)
 	{
-		textentry *ent;
-		int width;
-		int height;
-		int lines;
-
-		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
-		width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
+		int height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
+		int width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
 		width -= MARGIN;
 
 		if (width < 30 || height < buf->xtext->fontsize || width < buf->indent + 30)
 			return;
 
-		lines = 0;
-		ent = buf->text_first;
+		int lines = 0;
+		auto ent = buf->text_first;
 		while (ent)
 		{
 			lines += gtk_xtext_lines_taken(buf, ent);
@@ -3550,14 +3541,10 @@ namespace{
 	}
 
 	/* find the n-th line in the linked list, this includes wrap calculations */
-
-	static textentry *
-		gtk_xtext_nth(GtkXText *xtext, int line, int *subline)
+	textentry * gtk_xtext_nth(GtkXText *xtext, int line, int *subline)
 	{
 		int lines = 0;
-		textentry *ent;
-
-		ent = xtext->buffer->text_first;
+		textentry * ent = xtext->buffer->text_first;
 
 		/* -- optimization -- try to make a short-cut using the pagetop ent */
 		if (xtext->buffer->pagetop_ent)
@@ -3609,41 +3596,32 @@ namespace{
 	}
 
 	/* render enta (or an inclusive range enta->entb) */
-
-	static int
-		gtk_xtext_render_ents(GtkXText * xtext, textentry * enta, textentry * entb)
+	int gtk_xtext_render_ents(GtkXText * xtext, textentry * enta, textentry * entb)
 	{
-		textentry *ent, *orig_ent, *tmp_ent;
-		int line;
-		int lines_max;
-		int width;
-		int height;
-		int subline;
-		bool drawing = false;
-
 		if (xtext->buffer->indent < MARGIN)
 			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
 
-		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
-		width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		int height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		int width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(xtext)));
 		width -= MARGIN;
 
 		if (width < 32 || height < xtext->fontsize || width < xtext->buffer->indent + 30)
 			return 0;
 
-		lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
-		line = 0;
-		orig_ent = xtext->buffer->pagetop_ent;
-		subline = xtext->buffer->pagetop_subline;
+		int lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
+		int line = 0;
+		auto orig_ent = xtext->buffer->pagetop_ent;
+		int subline = xtext->buffer->pagetop_subline;
 
 		/* used before a complete page is in buffer */
-		if (orig_ent == NULL)
+		if (!orig_ent)
 			orig_ent = xtext->buffer->text_first;
 
 		/* check if enta is before the start of this page */
+		bool drawing = false;
 		if (entb)
 		{
-			tmp_ent = orig_ent;
+			auto tmp_ent = orig_ent;
 			while (tmp_ent)
 			{
 				if (tmp_ent == enta)
@@ -3657,7 +3635,7 @@ namespace{
 			}
 		}
 
-		ent = orig_ent;
+		auto ent = orig_ent;
 		while (ent)
 		{
 			if (entb && ent == enta)
@@ -3695,9 +3673,7 @@ namespace{
 	}
 
 	/* render a whole page/window, starting from 'startline' */
-
-	static void
-		gtk_xtext_render_page(GtkXText * xtext)
+	void gtk_xtext_render_page(GtkXText * xtext)
 	{		
 		int startline = xtext->adj->value;
 
@@ -3806,7 +3782,7 @@ gtk_xtext_refresh(GtkXText * xtext)
 
 namespace{
 
-	static bool	gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
+	bool gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
 	{
 		std::unique_ptr<textentry> entry(ent);
 		/* Set visible to TRUE if this is the current buffer */
@@ -3845,13 +3821,9 @@ namespace{
 	}
 
 	/* remove the topline from the list */
-
-	static void
-		gtk_xtext_remove_top(xtext_buffer *buffer)
+	void gtk_xtext_remove_top(xtext_buffer *buffer)
 	{
-		textentry *ent;
-
-		ent = buffer->text_first;
+		textentry *ent = buffer->text_first;
 		if (!ent)
 			return;
 		buffer->num_lines -= ent->sublines.size();
@@ -3859,9 +3831,9 @@ namespace{
 		buffer->last_pixel_pos -= (ent->sublines.size() * buffer->xtext->fontsize);
 		buffer->text_first = ent->next;
 		if (buffer->text_first)
-			buffer->text_first->prev = NULL;
+			buffer->text_first->prev = nullptr;
 		else
-			buffer->text_last = NULL;
+			buffer->text_last = nullptr;
 
 		buffer->old_value -= ent->sublines.size();
 		if (buffer->xtext->buffer == buffer)	/* is it the current buffer? */
@@ -3900,9 +3872,9 @@ namespace{
 		buffer->num_lines -= ent->sublines.size();
 		buffer->text_last = ent->prev;
 		if (buffer->text_last)
-			buffer->text_last->next = NULL;
+			buffer->text_last->next = nullptr;
 		else
-			buffer->text_first = NULL;
+			buffer->text_first = nullptr;
 
 		if (gtk_xtext_kill_ent(buffer, ent))
 		{
@@ -3967,9 +3939,9 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 		if (buf->xtext->auto_indent)
 			buf->indent = MARGIN;
 		buf->scrollbar_down = true;
-		buf->last_ent_start = NULL;
-		buf->last_ent_end = NULL;
-		buf->marker_pos = NULL;
+		buf->last_ent_start = nullptr;
+		buf->last_ent_end = nullptr;
+		buf->marker_pos = nullptr;
 		if (buf->text_first)
 			marker_reset = true;
 		dontscroll(buf);
@@ -3980,7 +3952,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			delete buf->text_first;
 			buf->text_first = next;
 		}
-		buf->text_last = NULL;
+		buf->text_last = nullptr;
 	}
 
 	if (buf->xtext->buffer == buf)
@@ -4101,7 +4073,7 @@ namespace{
 			return gl;
 		}
 		std::vector<offlen_t> slp;
-		str = (gchar*)gtk_xtext_strip_color(ent.str.c_str(), ent.str.size(), buf->xtext->scratch_buffer,
+		str = (gchar*)gtk_xtext_strip_color(ent.str, buf->xtext->scratch_buffer,
 			&lstr, &slp, !buf->xtext->ignore_hidden);
 
 		/* Regular-expression matching --- */
@@ -4578,7 +4550,7 @@ time_t stamp)
 	str[left_len] = ' ';
 	std::copy_n(right_text, right_len, str + left_len + 1);
 
-	left_width = gtk_xtext_text_width(buf->xtext, left_text, left_len);
+	left_width = gtk_xtext_text_width(buf->xtext, ustring_ref(left_text, left_len));
 
 	ent->left_len = left_len;
 	ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
