@@ -1,5 +1,6 @@
-/* X-Chat
+/* X-Chat, Hexchat
 * Copyright (C) 1998 Peter Zelezny.
+* Copyright (c) 2014-2015 Leetsoftwerx
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -3486,15 +3487,10 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 namespace{
 	/* count how many lines 'ent' will take (with wraps) */
 
-	static int
-		gtk_xtext_lines_taken(xtext_buffer *buf, textentry * ent)
+	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry * ent)
 	{
-		const unsigned char *str;
-		int indent, len;
-		int win_width;
-
 		ent->sublines.clear();
-		win_width = buf->window_width - MARGIN;
+		int win_width = buf->window_width - MARGIN;
 
 		if (win_width >= ent->indent + ent->str_width)
 		{
@@ -3502,12 +3498,12 @@ namespace{
 			return 1;
 		}
 
-		indent = ent->indent;
-		str = ent->str.c_str();
+		int indent = ent->indent;
+		auto str = ent->str.c_str();
 
 		do
 		{
-			len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
+			int len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
 			ent->sublines.push_back(str + len - ent->str.c_str());
 			indent = buf->indent;
 			str += len;
