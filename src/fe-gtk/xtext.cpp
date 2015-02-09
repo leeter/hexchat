@@ -3160,7 +3160,7 @@ namespace{
 						goto done;
 					}
 
-					/* keep a record of the last space, for wordwrapping */
+					/* keep a record of the last space, for word wrapping */
 					if (is_del(*str))
 					{
 						last_space = str;
@@ -3191,9 +3191,7 @@ namespace{
 	}
 
 	/* find the offset, in bytes, that wrap number 'line' starts at */
-
-	static int
-		gtk_xtext_find_subline(GtkXText *xtext, textentry *ent, int line)
+	int gtk_xtext_find_subline(GtkXText *xtext, textentry *ent, int line)
 	{
 		int rlen = 0;
 
@@ -3208,8 +3206,7 @@ namespace{
 
 	/* horrible hack for drawing time stamps */
 
-	static void
-		gtk_xtext_render_stamp(GtkXText * xtext, textentry * ent,
+	void gtk_xtext_render_stamp(GtkXText * xtext, textentry * ent,
 		const boost::string_ref & text, int line, int win_width)
 	{
 		
@@ -3268,8 +3265,7 @@ namespace{
 
 	/* render a single line, which may wrap to more lines */
 
-	static int
-		gtk_xtext_render_line(GtkXText * xtext, textentry * ent, int line,
+	int gtk_xtext_render_line(GtkXText * xtext, textentry * ent, int line,
 		int lines_max, int subline, int win_width)
 	{
 		const unsigned char *str;
