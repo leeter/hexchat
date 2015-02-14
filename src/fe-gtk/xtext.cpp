@@ -358,10 +358,7 @@ namespace
 				pango_layout_get_pixel_size(xtext->layout, &deltaw, nullptr);
 			}
 			width += deltaw;
-			auto left = std::distance(itr, end);
-			if (left < 0)
-				throw std::out_of_range(std::string("past the end!!!!! "));
-			if (mbl < left)
+			if (mbl < std::distance(itr, end))
 				itr += mbl;
 			else
 				break;
@@ -2455,6 +2452,8 @@ namespace{
 
 		for (auto & meta : ent->slp)
 		{
+			if (meta.off > ent->str.size())
+				throw std::out_of_range("Invalid offset!!");
 			meta.width = backend_get_text_width_emph(xtext, ustring_ref( ent->str.c_str() + meta.off, meta.len ), meta.emph);
 		}
 		return width;
