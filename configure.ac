@@ -170,7 +170,7 @@ AC_ARG_WITH(theme-manager,
 	[AS_HELP_STRING([--with-theme-manager],[compile theme manager (needs monodevelop, default: off)])],
 		theme_manager=$withval, theme_manager=no)
 
-BOOST_REQUIRE([1.48])
+BOOST_REQUIRE([1.53])
 BOOST_CHRONO
 BOOST_IOSTREAMS
 BOOST_FILESYSTEM
@@ -178,6 +178,7 @@ BOOST_SIGNALS2
 BOOST_ASIO
 BOOST_THREAD
 BOOST_REGEX
+BOOST_TEST
 
 
 dnl *********************************************************************
@@ -840,6 +841,7 @@ plugins/checksum/Makefile
 plugins/doat/Makefile
 plugins/fishlim/Makefile
 plugins/sysinfo/Makefile
+test/libirctest/Makefile
 po/Makefile.in
 ])
 
