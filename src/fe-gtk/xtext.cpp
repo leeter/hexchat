@@ -2359,7 +2359,7 @@ namespace{
 		int rcol = 0, bgcol = 0;
 		bool hidden = false;
 		unsigned char *new_str;
-		auto beinning = text.cbegin();
+		auto beginning = text.cbegin();
 		if (outbuf == NULL)
 			new_str = static_cast<unsigned char*>(g_malloc0(text.size() + 2));
 		else
@@ -2416,7 +2416,7 @@ namespace{
 					if (strip_hidden == 2 || (!(hidden && strip_hidden)))
 					{
 						if (c.len1 == 0)
-							c.off1 = std::distance(itr, beinning);
+							c.off1 = std::distance(beginning, itr);
 						std::copy_n(itr, mbl, new_str + i);
 						i += mbl;
 						c.len1 += mbl;
