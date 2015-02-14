@@ -348,7 +348,7 @@ namespace
 		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
 		for (auto itr = str.cbegin(), end = str.cend(); itr != end;)
 		{
-			int mbl = charlen(itr);
+			int mbl = g_utf8_skip[static_cast<gchar>(*itr)];
 			int deltaw;
 			if (*itr < 128)
 				deltaw = fontwidths[emphasis][*itr];
@@ -358,7 +358,7 @@ namespace
 				pango_layout_get_pixel_size(xtext->layout, &deltaw, nullptr);
 			}
 			width += deltaw;
-			if (mbl <= std::distance(itr, end))
+			if (mbl < std::distance(itr, end))
 				itr += mbl;
 			else
 				break;
