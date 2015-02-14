@@ -36,6 +36,8 @@ namespace
 
 } // anonymous namespace
 
+BOOST_AUTO_TEST_SUITE(irc_proto)
+
 BOOST_AUTO_TEST_CASE(away_no_reason)
 {
 	test_connection con;
@@ -44,3 +46,5 @@ BOOST_AUTO_TEST_CASE(away_no_reason)
 
 	BOOST_REQUIRE_MESSAGE(con.message == "AWAY : \r\n", "If no reason is specified none should be transmitted");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
