@@ -16,6 +16,7 @@ script:
     - ./autogen.sh
     - ./configure --enable-textfe --with-theme-manager
     - make
+    - test/libirctest/libirc-test
 
 matrix:
      fast_finish: true
