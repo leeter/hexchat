@@ -56,7 +56,7 @@ namespace irc
 			std::ostringstream out;
 			out << "JOIN " << channel;
 			if (!key.empty())
-				out << key;
+				out << ' ' << key;
 			out << "\r\n";
 			con.send(out.str());
 		}
