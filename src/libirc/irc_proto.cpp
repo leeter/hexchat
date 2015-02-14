@@ -51,6 +51,16 @@ namespace irc
 			con.send(out.str());
 		}
 
+		void join(::irc::connection& con, const::boost::string_ref& channel, const ::boost::string_ref& key)
+		{
+			std::ostringstream out;
+			out << "JOIN " << channel;
+			if (!key.empty())
+				out << key;
+			out << "\r\n";
+			con.send(out.str());
+		}
+
 		void mode(::irc::connection& con, const ::boost::string_ref& target, const ::boost::string_ref& mode)
 		{
 			std::ostringstream out;
@@ -76,6 +86,16 @@ namespace irc
 		{
 			std::ostringstream out;
 			out << boost::format{ "NOTICE %s :%s\r\n" } % channel % text;
+			con.send(out.str());
+		}
+
+		void part(::irc::connection& con, const ::boost::string_ref& channel, const ::boost::string_ref& reason)
+		{
+			std::ostringstream out;
+			out << "PART " << channel;
+			if (!reason.empty())
+				out << ':' << reason;
+			out << "\r\n";
 			con.send(out.str());
 		}
 
