@@ -346,8 +346,6 @@ namespace
 
 		int width = 0;
 		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
-		auto itr = str.cbegin();
-		auto end = str.cend();
 		for (auto itr = str.cbegin(), end = str.cend(); itr != end;)
 		{
 			int mbl = charlen(itr);
@@ -360,7 +358,7 @@ namespace
 				pango_layout_get_pixel_size(xtext->layout, &deltaw, nullptr);
 			}
 			width += deltaw;
-			if (mbl < std::distance(itr, end))
+			if (mbl <= std::distance(itr, end))
 				itr += mbl;
 			else
 				break;
