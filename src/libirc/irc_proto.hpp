@@ -26,11 +26,15 @@ namespace irc
 {
 	namespace proto
 	{
+		void away(::irc::connection & con, const ::boost::string_ref& reason);
+		void back(::irc::connection & con);
+		void invite(::irc::connection & con, const ::boost::string_ref& channel, const ::boost::string_ref& nick);
+		void mode(::irc::connection& con, const ::boost::string_ref& target, const ::boost::string_ref& mode);
 		void names(::irc::connection& con, const ::boost::string_ref& channel);
 		void nick(::irc::connection& con, const ::boost::string_ref& nick);
 		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text);
-		void ping_user(::irc::connection & con, const ::boost::string_ref& user, const ::boost::string_ref & timestring);
 		void privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message);
+		void quit(::irc::connection& con, const ::boost::string_ref& reason);
 		void whois(::irc::connection & con, const ::boost::string_ref& nick);
 	} // namespace proto
 } // namespace irc

@@ -27,6 +27,37 @@ namespace irc
 {
 	namespace proto
 	{
+		void away(::irc::connection & con, const ::boost::string_ref& reason)
+		{
+			std::ostringstream out;
+			out << "AWAY :";
+			if (reason.empty())
+				out << " ";
+			else
+				out << reason;
+			out << "\r\n";
+			con.send(out.str());
+		}
+
+		void back(::irc::connection & con)
+		{
+			con.send(boost::string_ref("AWAY\r\n", 6));
+		}
+
+		void invite(::irc::connection & con, const ::boost::string_ref& channel, const ::boost::string_ref& nick)
+		{
+			std::ostringstream out;
+			out << boost::format{ "INVITE %s %s\r\n" } % channel % nick;
+			con.send(out.str());
+		}
+
+		void mode(::irc::connection& con, const ::boost::string_ref& target, const ::boost::string_ref& mode)
+		{
+			std::ostringstream out;
+			out << boost::format{ "MODE %s %s\r\n" } % target % mode;
+			con.send(out.str());
+		}
+
 		void names(::irc::connection& con, const ::boost::string_ref& channel)
 		{
 			std::ostringstream out;
@@ -48,17 +79,22 @@ namespace irc
 			con.send(out.str());
 		}
 
-		void ping_user(::irc::connection & con, const ::boost::string_ref& user, const ::boost::string_ref & timestring)
-		{
-			std::ostringstream out;
-			out << boost::format{ "PRIVMSG %s :\001PING %s\001\r\n" } % user % timestring;
-			con.send(out.str());
-		}
-
 		void privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message)
 		{
 			std::ostringstream out;
 			out << boost::format{ "PRIVMSG %s :%s\r\n" } % channel % message;
+			con.send(out.str());
+		}
+
+		void quit(::irc::connection& con, const ::boost::string_ref& reason)
+		{
+			std::ostringstream out;
+			out << "QUIT";
+			if (!reason.empty())
+			{
+				out << " :" << reason;
+			}
+			out << "\r\n";
 			con.send(out.str());
 		}
 
