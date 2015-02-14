@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="libirctest.cpp">
+    <ClCompile Include="irc_proto_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
