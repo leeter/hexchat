@@ -841,6 +841,7 @@ plugins/checksum/Makefile
 plugins/doat/Makefile
 plugins/fishlim/Makefile
 plugins/sysinfo/Makefile
+test/Makefile
 test/libirctest/Makefile
 po/Makefile.in
 ])
