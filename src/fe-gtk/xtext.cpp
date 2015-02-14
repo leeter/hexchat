@@ -795,7 +795,7 @@ namespace {
 	}
 
 	static void
-		gtk_xtext_size_request(GtkWidget * widget, GtkRequisition * requisition)
+		gtk_xtext_size_request(GtkWidget *, GtkRequisition * requisition)
 	{
 		requisition->width = 200;
 		requisition->height = 90;
@@ -1327,7 +1327,7 @@ namespace {
 		xtext->skip_stamp = false;
 	}
 
-	static void gtk_xtext_selection_draw(GtkXText * xtext, GdkEventMotion * event, bool render)
+	static void gtk_xtext_selection_draw(GtkXText * xtext, GdkEventMotion *, bool render)
 	{
 		int offset_start;
 		int offset_end;
@@ -1434,7 +1434,7 @@ namespace {
 			gtk_xtext_selection_render(xtext, ent_start, ent_end);
 	}
 
-	static int gtk_xtext_timeout_ms(GtkXText *xtext, int pixes)
+	static int gtk_xtext_timeout_ms(int pixes)
 	{
 		int apixes = std::abs(pixes);
 
@@ -1468,7 +1468,7 @@ namespace {
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_xtext_render_ents(xtext, buf->pagetop_ent->next, buf->last_ent_end);
-		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(xtext, p_y - win_height),
+		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y - win_height),
 			(GSourceFunc)
 			gtk_xtext_scrolldown_timeout,
 			xtext);
@@ -1508,7 +1508,7 @@ namespace {
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_xtext_render_ents(xtext, buf->pagetop_ent->prev, buf->last_ent_end);
-		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(xtext, p_y),
+		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y),
 			(GSourceFunc)
 			gtk_xtext_scrollup_timeout,
 			xtext);
@@ -1634,7 +1634,7 @@ namespace {
 	}
 
 	static gboolean
-		gtk_xtext_leave_notify(GtkWidget * widget, GdkEventCrossing * event)
+		gtk_xtext_leave_notify(GtkWidget * widget, GdkEventCrossing *)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
 
@@ -2062,7 +2062,7 @@ namespace {
 
 	/* another program has claimed the selection */
 
-	gboolean gtk_xtext_selection_kill(GtkXText *xtext, GdkEventSelection *event)
+	gboolean gtk_xtext_selection_kill(GtkXText *xtext, GdkEventSelection *)
 	{
 #ifndef WIN32
 		if (xtext->buffer->last_ent_start)
@@ -2150,7 +2150,7 @@ namespace {
 	static void
 		gtk_xtext_selection_get(GtkWidget * widget,
 		GtkSelectionData * selection_data_ptr,
-		guint info, guint time)
+		guint info, guint /*time*/)
 	{
 		auto stripped = gtk_xtext_selection_get_text(GTK_XTEXT(widget));
 		if (stripped.empty())
@@ -2214,7 +2214,7 @@ namespace {
 	}
 
 	static void
-		gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj)
+		gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *, GtkAdjustment *vadj)
 	{
 		/* hadj is ignored entirely */
 
@@ -2655,7 +2655,7 @@ namespace{
 	static int
 		gtk_xtext_render_str(GtkXText * xtext, int y, textentry * ent,
 		const unsigned char str[], int len, int win_width, int indent,
-		int line, bool left_only, int *x_size_ret, int *emphasis)
+		int /*line*/, bool left_only, int *x_size_ret, int *emphasis)
 	{
 		GdkGC *gc;
 		int i = 0, x = indent, j = 0;
@@ -3189,7 +3189,7 @@ namespace{
 	}
 
 	/* find the offset, in bytes, that wrap number 'line' starts at */
-	int gtk_xtext_find_subline(GtkXText *xtext, textentry *ent, int line)
+	int gtk_xtext_find_subline(GtkXText *, textentry *ent, int line)
 	{
 		int rlen = 0;
 
