@@ -2452,8 +2452,6 @@ namespace{
 
 		for (auto & meta : ent->slp)
 		{
-			if (meta.off > ent->str.size())
-				throw std::out_of_range("Invalid offset!!");
 			meta.width = backend_get_text_width_emph(xtext, ustring_ref( ent->str.c_str() + meta.off, meta.len ), meta.emph);
 		}
 		return width;
