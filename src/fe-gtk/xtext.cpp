@@ -348,7 +348,7 @@ namespace
 		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
 		for (auto itr = str.cbegin(), end = str.cend(); itr != end;)
 		{
-			int mbl = g_utf8_skip[static_cast<gchar>(*itr)];
+			int mbl = g_utf8_skip[static_cast<int>(*itr)];
 			int deltaw;
 			if (*itr < 128)
 				deltaw = fontwidths[emphasis][*itr];
