@@ -44,10 +44,10 @@ namespace irc
 			con.send(boost::string_ref("AWAY\r\n", 6));
 		}
 
-		void invite(::irc::connection & con, const ::boost::string_ref& channel, const ::boost::string_ref& nick)
+		void invite(::irc::connection & con, const ::boost::string_ref& nick, const ::boost::string_ref& channel)
 		{
 			std::ostringstream out;
-			out << boost::format{ "INVITE %s %s\r\n" } % channel % nick;
+			out << boost::format{ "INVITE %s %s\r\n" } % nick % channel;
 			con.send(out.str());
 		}
 

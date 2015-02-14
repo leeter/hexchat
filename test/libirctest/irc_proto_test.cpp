@@ -49,4 +49,40 @@ BOOST_AUTO_TEST_CASE(away_no_reason)
 	BOOST_REQUIRE_EQUAL(con.message, "AWAY : \r\n");
 }
 
+BOOST_AUTO_TEST_CASE(away_with_reason)
+{
+	test_connection con;
+
+	irc::proto::away(con, "random");
+	BOOST_REQUIRE_EQUAL(con.message, "AWAY :random\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(back)
+{
+	test_connection con;
+	irc::proto::back(con);
+	BOOST_REQUIRE_EQUAL(con.message, "AWAY\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(invite)
+{
+	test_connection con;
+	irc::proto::invite(con, "nick", "channel");
+	BOOST_REQUIRE_EQUAL(con.message, "INVITE nick channel\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(join_no_key)
+{
+	test_connection con;
+	irc::proto::join(con, "channel", {});
+	BOOST_REQUIRE_EQUAL(con.message, "JOIN channel\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(join_with_key)
+{
+	test_connection con;
+	irc::proto::join(con, "channel", "key");
+	BOOST_REQUIRE_EQUAL(con.message, "JOIN channel key\r\n");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

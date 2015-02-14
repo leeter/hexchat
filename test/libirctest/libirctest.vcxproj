@@ -44,13 +44,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <ReferencePath>$(YourBoostPath);$(ReferencePath)</ReferencePath>
     <OutDir>$(HexChatBin)</OutDir>
     <IntDir>$(HexChatObj)$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <ReferencePath>$(YourBoostPath);$(ReferencePath)</ReferencePath>
     <IntDir>$(HexChatObj)$(ProjectName)\</IntDir>
     <OutDir>$(HexChatBin)</OutDir>
   </PropertyGroup>
