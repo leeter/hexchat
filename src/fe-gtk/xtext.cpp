@@ -547,8 +547,8 @@ namespace
 			else
 				xtext->buffer->scrollbar_down = false;
 
-			if (xtext->adj->value + 1 == xtext->buffer->old_value ||
-				xtext->adj->value - 1 == xtext->buffer->old_value)	/* clicked an arrow? */
+			if (xtext->adj->value + 1.0 == xtext->buffer->old_value ||
+				xtext->adj->value - 1.0 == xtext->buffer->old_value)	/* clicked an arrow? */
 			{
 				if (xtext->io_tag)
 				{
@@ -4352,10 +4352,10 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 	if (!gtk_xtext_check_ent_visibility(xtext, ent, 1))
 	{
 		GtkAdjustment *adj = xtext->adj;
-		float value;
+		gdouble value;
 
 		buf->pagetop_ent = nullptr;
-		for (value = 0.0f, ent = buf->text_first;
+		for (value = 0.0, ent = buf->text_first;
 			ent && ent != buf->hintsearch; ent = ent->next)
 		{
 			value += ent->sublines.size();
@@ -4367,9 +4367,9 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		else if ((flags & backward) && ent)
 		{
 			value -= adj->page_size - ent->sublines.size();
-			if (value < 0.0f)
+			if (value < 0.0)
 			{
-				value = 0.0f;
+				value = 0.0;
 			}
 		}
 		gtk_adjustment_set_value(adj, value);
@@ -4395,8 +4395,8 @@ namespace {
 		/* less than a complete page? */
 		if (xtext->buffer->num_lines <= adj->page_size)
 		{
-			xtext->buffer->old_value = 0;
-			adj->value = 0;
+			xtext->buffer->old_value = 0.0;
+			adj->value = 0.0;
 			gtk_xtext_render_page(xtext);
 		}
 		else if (xtext->buffer->scrollbar_down)
@@ -4488,13 +4488,13 @@ namespace {
 		if (buf->scrollbar_down)
 		{
 			buf->old_value = buf->num_lines - buf->xtext->adj->page_size;
-			if (buf->old_value < 0)
-				buf->old_value = 0;
+			if (buf->old_value < 0.0)
+				buf->old_value = 0.0;
 		}
 		if (buf->search_flags & follow)
 		{
 			auto gl = gtk_xtext_search_textentry(buf, *entry);
-			gtk_xtext_search_textentry_add(buf, entry, gl, FALSE);
+			gtk_xtext_search_textentry_add(buf, entry, gl, false);
 		}
 	}
 
@@ -4775,15 +4775,15 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 	dontscroll(buf);	/* force scrolling off */
 	xtext->adj->value = buf->old_value;
 	xtext->adj->upper = buf->num_lines;
-	if (xtext->adj->upper == 0)
-		xtext->adj->upper = 1;
+	if (xtext->adj->upper == 0.0)
+		xtext->adj->upper = 1.0;
 	/* sanity check */
 	else if (xtext->adj->value > xtext->adj->upper - xtext->adj->page_size)
 	{
 		/*buf->pagetop_ent = NULL;*/
 		xtext->adj->value = xtext->adj->upper - xtext->adj->page_size;
-		if (xtext->adj->value < 0)
-			xtext->adj->value = 0;
+		if (xtext->adj->value < 0.0)
+			xtext->adj->value = 0.0;
 	}
 
 	if (render)
@@ -4817,7 +4817,7 @@ gtk_xtext_buffer_new(GtkXText *xtext)
 	xtext_buffer *buf;
 
 	buf = new xtext_buffer();
-	buf->old_value = -1;
+	buf->old_value = -1.0;
 	buf->xtext = xtext;
 	buf->scrollbar_down = true;
 	buf->indent = xtext->space_width * 2;

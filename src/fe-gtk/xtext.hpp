@@ -83,7 +83,7 @@ enum marker_reset_reason {
 struct xtext_buffer {
 	GtkXText *xtext;					/* attached to this widget */
 
-	gfloat old_value;					/* last known adj->value */
+	gdouble old_value;					/* last known adj->value */
 	textentry *text_first;
 	textentry *text_last;
 
