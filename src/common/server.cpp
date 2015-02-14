@@ -270,7 +270,7 @@ tcp_sendf (server &serv, const char *fmt, ...)
 	if (len < 0 || len > (sizeof (send_buf) - 1))
 		len = std::strlen (send_buf);
 
-	tcp_send_len(serv, boost::string_ref{ send_buf, static_cast<std::size_t>( len ) });
+	tcp_send_len(serv, boost::string_ref(send_buf, len));
 }
 
 static int
