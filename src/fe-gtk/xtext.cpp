@@ -373,7 +373,7 @@ namespace
 
 		for (const auto & meta : slp)
 		{
-			width += backend_get_text_width_emph(xtext, ustring_ref{ str, static_cast<size_t>(meta.len) }, meta.emph);
+			width += backend_get_text_width_emph(xtext, ustring_ref( str, meta.len), meta.emph);
 			str += meta.len;
 		}
 
@@ -2452,7 +2452,7 @@ namespace{
 
 		for (auto & meta : ent->slp)
 		{
-			meta.width = backend_get_text_width_emph(xtext, ustring_ref{ ent->str.c_str() + meta.off, meta.len }, meta.emph);
+			meta.width = backend_get_text_width_emph(xtext, ustring_ref( ent->str.c_str() + meta.off, meta.len ), meta.emph);
 		}
 		return width;
 	}
