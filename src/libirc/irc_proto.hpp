@@ -27,6 +27,7 @@ namespace irc
 	namespace proto
 	{
 		void names(::irc::connection& con, const ::boost::string_ref& channel);
+		void nick(::irc::connection& con, const ::boost::string_ref& nick);
 		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text);
 		void ping_user(::irc::connection & con, const ::boost::string_ref& user, const ::boost::string_ref & timestring);
 		void privmsg(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref& message);

@@ -34,6 +34,13 @@ namespace irc
 			con.send(out.str());
 		}
 
+		void nick(::irc::connection& con, const ::boost::string_ref& nick)
+		{
+			std::ostringstream out;
+			out << boost::format{ "NICK %s\r\n" } % nick;
+			con.send(out.str());
+		}
+
 		void notice(::irc::connection & con, const ::boost::string_ref & channel, const ::boost::string_ref & text)
 		{
 			std::ostringstream out;
