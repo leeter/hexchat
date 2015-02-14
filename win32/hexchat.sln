@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\src\common\common.vcxproj", "{87554B59-006C-4D94-9714-897B27067BA3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -143,6 +143,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "irc", "irc", "{BF79D87B-9901-4B55-8E07-9AB9766BAA2D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libirc", "..\src\libirc\libirc.vcxproj", "{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libirctest", "..\test\libirctest\libirctest.vcxproj", "{6771DFC1-F942-4113-9B68-9C22F297F780}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -406,6 +408,17 @@ Global
 		{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29}.Release|Win32.Build.0 = Release|Win32
 		{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29}.Release|x64.ActiveCfg = Release|x64
 		{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29}.Release|x64.Build.0 = Release|x64
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Debug|Win32.Build.0 = Debug|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Debug|x64.ActiveCfg = Debug|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|Win32.ActiveCfg = Release|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|Win32.Build.0 = Release|Win32
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|x64.ActiveCfg = Release|x64
+		{6771DFC1-F942-4113-9B68-9C22F297F780}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -432,5 +445,6 @@ Global
 		{C2321A03-0BA7-45B3-8740-ABD82B36B0BF} = {D237DA6B-BD5F-46C0-8BEA-50E9A1340240}
 		{C53145CC-D021-40C9-B97C-0249AB9A43C9} = {561126F4-FA18-45FC-A2BF-8F858F161D6D}
 		{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29} = {BF79D87B-9901-4B55-8E07-9AB9766BAA2D}
+		{6771DFC1-F942-4113-9B68-9C22F297F780} = {BF79D87B-9901-4B55-8E07-9AB9766BAA2D}
 	EndGlobalSection
 EndGlobal
