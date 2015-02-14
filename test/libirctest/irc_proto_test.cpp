@@ -17,6 +17,9 @@
 */
 
 #define BOOST_TEST_MODULE irc_proto_tests
+#ifndef _MSC_VER
+#define BOOST_TEST_DYN_LINK
+#endif
 #include <string>
 #include <irc_proto.hpp>
 #include <connection.hpp>
@@ -43,8 +46,7 @@ BOOST_AUTO_TEST_CASE(away_no_reason)
 	test_connection con;
 
 	irc::proto::away(con, {});
-
-	BOOST_REQUIRE_MESSAGE(con.message == "AWAY : \r\n", "If no reason is specified none should be transmitted");
+	BOOST_REQUIRE_EQUAL(con.message, "AWAY : \r\n");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
