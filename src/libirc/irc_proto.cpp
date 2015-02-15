@@ -44,6 +44,13 @@ namespace irc
 			con.send(boost::string_ref("AWAY\r\n", 6));
 		}
 
+		void channel_modes(::irc::connection& con, const ::boost::string_ref& channel)
+		{
+			std::ostringstream out;
+			out << "MODE " << channel << "\r\n";
+			con.send(out.str());
+		}
+
 		void invite(::irc::connection & con, const ::boost::string_ref& nick, const ::boost::string_ref& channel)
 		{
 			std::ostringstream out;
@@ -58,6 +65,13 @@ namespace irc
 			if (!key.empty())
 				out << ' ' << key;
 			out << "\r\n";
+			con.send(out.str());
+		}
+
+		void kick(::irc::connection& con, const::boost::string_ref& channel, const ::boost::string_ref& nick, const ::boost::string_ref& reason)
+		{
+			std::ostringstream out;
+			out << boost::format("KICK %s %s :%s\r\n") % channel % nick % reason;
 			con.send(out.str());
 		}
 

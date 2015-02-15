@@ -28,8 +28,10 @@ namespace irc
 	{
 		void away(::irc::connection & con, const ::boost::string_ref& reason);
 		void back(::irc::connection & con);
+		void channel_modes(::irc::connection& con, const ::boost::string_ref& channel);
 		void invite(::irc::connection & con, const ::boost::string_ref& nick, const ::boost::string_ref& channel);
 		void join(::irc::connection& con, const::boost::string_ref& channel, const ::boost::string_ref& key);
+		void kick(::irc::connection& con, const::boost::string_ref& channel, const ::boost::string_ref& nick, const ::boost::string_ref& reason);
 		void mode(::irc::connection& con, const ::boost::string_ref& target, const ::boost::string_ref& mode);
 		void names(::irc::connection& con, const ::boost::string_ref& channel);
 		void nick(::irc::connection& con, const ::boost::string_ref& nick);
