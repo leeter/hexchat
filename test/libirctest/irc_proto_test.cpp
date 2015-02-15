@@ -64,6 +64,13 @@ BOOST_AUTO_TEST_CASE(back)
 	BOOST_REQUIRE_EQUAL(con.message, "AWAY\r\n");
 }
 
+BOOST_AUTO_TEST_CASE(channel_modes)
+{
+	test_connection con;
+	irc::proto::channel_modes(con, "channel");
+	BOOST_REQUIRE_EQUAL(con.message, "MODE channel\r\n");
+}
+
 BOOST_AUTO_TEST_CASE(invite)
 {
 	test_connection con;
@@ -83,6 +90,13 @@ BOOST_AUTO_TEST_CASE(join_with_key)
 	test_connection con;
 	irc::proto::join(con, "channel", "key");
 	BOOST_REQUIRE_EQUAL(con.message, "JOIN channel key\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(mode)
+{
+	test_connection con;
+	irc::proto::mode(con, "target", "mode");
+	BOOST_REQUIRE_EQUAL(con.message, "MODE target mode\r\n");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
