@@ -293,7 +293,7 @@ lag_check (void)
 			} else
 			{
 				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
-				serv->p_ping ("", tbuf);
+				serv->p_ping({}, tbuf);
 				
 				if (!serv->lag_sent)
 				{
@@ -337,8 +337,8 @@ doover:
 				/* if we're under 31 WHOs, send another channels worth */
 				if (sent < 31 && !sess->doing_who)
 				{
-					sess->done_away_check = TRUE;
-					sess->doing_who = TRUE;
+					sess->done_away_check = true;
+					sess->doing_who = true;
 					/* this'll send a WHO #channel */
 					sess->server->p_away_status (sess->channel);
 					sent += sess->total;
@@ -357,7 +357,7 @@ doover:
 		{
 			sess = static_cast<session*>(list->data);
 			if (!sess->server->have_awaynotify)
-				sess->done_away_check = FALSE;
+				sess->done_away_check = false;
 			list = list->next;
 		}
 		loop++;
@@ -426,7 +426,7 @@ irc_init (session *sess)
 	{
 		buf = g_strdup_printf ("server %s", arg_url);
 		g_free (arg_url);	/* from GOption */
-		handle_command (sess, buf, FALSE);
+		handle_command (sess, buf, false);
 		g_free (buf);
 	}
 	
@@ -435,7 +435,7 @@ irc_init (session *sess)
 		for (i = 0; i < g_strv_length(arg_urls); i++)
 		{
 			buf = g_strdup_printf ("%s %s", i==0? "server" : "newserver", arg_urls[i]);
-			handle_command (sess, buf, FALSE);
+			handle_command (sess, buf, false);
 			g_free (buf);
 		}
 		g_strfreev (arg_urls);
@@ -443,7 +443,7 @@ irc_init (session *sess)
 
 	if (arg_command != nullptr)
 	{
-		handle_command (sess, arg_command, FALSE);
+		handle_command (sess, arg_command, false);
 		g_free (arg_command);
 	}
 
@@ -496,7 +496,7 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 {
 	if (from)
 	{
-		safe_strcpy(this->channel, from, CHANLEN);
+		safe_strcpy(this->channel, from);
 		this->name = from;
 	}
 }
