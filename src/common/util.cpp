@@ -36,6 +36,7 @@
 #include <ctime>
 #include <functional>
 #include <iterator>
+#include <iomanip>
 #include <locale>
 #include <string>
 #include <sstream>
@@ -1619,31 +1620,27 @@ static std::string str_sha256hash (const boost::string_ref &string)
 std::string challengeauth_response(const boost::string_ref &username, const boost::string_ref &password, const std::string &challenge)
 {
 	std::string user = username.to_string();
-	for (auto & c : user)
+	for (auto &c : user)
 	{
-		c = rfc_tolower(c);			/* convert username to lowercase as per the RFC */
+		/* convert username to lowercase as per the RFC */
+		c = rfc_tolower(c);
 	}
 
 	std::string pass = password.to_string();
 	pass.resize(10, '\0'); /* truncate to 10 characters */
-	auto passhash = str_sha256hash (pass);
+	auto passhash = str_sha256hash(pass);
 
 	std::ostringstream key;
 	key << user << ':' << passhash;
 
-	auto keyhash = str_sha256hash (key.str());
+	auto keyhash = str_sha256hash(key.str());
 
 	std::vector<unsigned char> digest(EVP_MAX_MD_SIZE);
 
 	unsigned int digest_len = digest.size();
-	HMAC (
-		EVP_sha256 (),
-		keyhash.c_str(),
-		keyhash.size(),
-		(const unsigned char *) challenge.c_str(),
-		challenge.size(),
-		&digest[0],
-		&digest_len);
+	HMAC(EVP_sha256(), keyhash.c_str(), keyhash.size(),
+	     (const unsigned char *)challenge.c_str(), challenge.size(),
+	     &digest[0], &digest_len);
 
 	std::ostringstream buf;
 	for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
@@ -1667,68 +1664,76 @@ std::string challengeauth_response(const boost::string_ref &username, const boos
  *
  * This assumes format is a locale-encoded string. For utf-8 strings, use strftime_utf8
  */
-size_t
-strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time)
+size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time)
 {
 #ifndef WIN32
 	return strftime (dest, destsize, format, time);
 #else
-	char safe_format[64] = { 0 };
-	const char *p = format;
-	int i = 0;
+	//char safe_format[64] = { 0 };
+	//const char *p = format;
+	//int i = 0;
 
-	if (std::strlen (format) >= sizeof(safe_format))
-		return 0;
+	//if (std::strlen (format) >= sizeof(safe_format))
+	//	return 0;
 
-	while (*p)
-	{
-		if (*p == '%')
-		{
-			int has_hash = (*(p + 1) == '#');
-			char c = *(p + (has_hash ? 2 : 1));
+	//while (*p)
+	//{
+	//	if (*p == '%')
+	//	{
+	//		int has_hash = (*(p + 1) == '#');
+	//		char c = *(p + (has_hash ? 2 : 1));
 
-			if (i >= sizeof (safe_format))
-				return 0;
+	//		if (i >= sizeof (safe_format))
+	//			return 0;
 
-			switch (c)
-			{
-			case 'a': case 'A': case 'b': case 'B': case 'c': case 'd': case 'H': case 'I': case 'j': case 'm': case 'M':
-			case 'p': case 'S': case 'U': case 'w': case 'W': case 'x': case 'X': case 'y': case 'Y': case 'z': case 'Z':
-			case '%':
-				/* formatting code is fine */
-				break;
-			default:
-				/* replace bad formatting code with itself, escaped, e.g. "%V" --> "%%V" */
-				g_strlcat (safe_format, "%%", sizeof(safe_format));
-				i += 2;
-				p++;
-				break;
-			}
+	//		switch (c)
+	//		{
+	//		case 'a': case 'A': case 'b': case 'B': case 'c': case 'd': case 'H': case 'I': case 'j': case 'm': case 'M':
+	//		case 'p': case 'S': case 'U': case 'w': case 'W': case 'x': case 'X': case 'y': case 'Y': case 'z': case 'Z':
+	//		case '%':
+	//			/* formatting code is fine */
+	//			break;
+	//		default:
+	//			/* replace bad formatting code with itself, escaped, e.g. "%V" --> "%%V" */
+	//			g_strlcat (safe_format, "%%", sizeof(safe_format));
+	//			i += 2;
+	//			p++;
+	//			break;
+	//		}
 
-			/* the current loop run will append % (and maybe #) and the next one will do the actual char. */
-			if (has_hash)
-			{
-				safe_format[i] = *p;
-				p++;
-				i++;
-			}
-			if (c == '%')
-			{
-				safe_format[i] = *p;
-				p++;
-				i++;
-			}
-		}
+	//		/* the current loop run will append % (and maybe #) and the next one will do the actual char. */
+	//		if (has_hash)
+	//		{
+	//			safe_format[i] = *p;
+	//			p++;
+	//			i++;
+	//		}
+	//		if (c == '%')
+	//		{
+	//			safe_format[i] = *p;
+	//			p++;
+	//			i++;
+	//		}
+	//	}
 
-		if (*p)
-		{
-			safe_format[i] = *p;
-			p++;
-			i++;
-		}
-	}
+	//	if (*p)
+	//	{
+	//		safe_format[i] = *p;
+	//		p++;
+	//		i++;
+	//	}
+	//}
+	std::ostringstream out;
+	out << std::put_time(time, format);
+	auto time_string = out.str();
+	auto to_copy = std::min(time_string.size(), destsize);
+	std::copy_n(time_string.cbegin(), to_copy, dest);
+	if (to_copy < destsize)
+		dest[to_copy + 1] = 0;
+	else
+		dest[destsize - 1] = 0;
 
-	return std::strftime (dest, destsize, safe_format, time);
+	return to_copy; //std::strftime (dest, destsize, safe_format, time);
 #endif
 }
 
