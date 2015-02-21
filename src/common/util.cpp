@@ -48,6 +48,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -126,13 +127,13 @@ path_part (char *file, char *path, int pathlen)
 char *				/* like strstr(), but nocase */
 nocasestrstr (const char *s, const char *wanted)
 {
-	register const int len = strlen (wanted);
+	const auto len = std::strlen (wanted);
 
 	if (len == 0)
 		return (char *)s;
 	while (rfc_tolower(*s) != rfc_tolower(*wanted) || g_ascii_strncasecmp (s, wanted, len))
 		if (*s++ == '\0')
-			return (char *)NULL;
+			return (char *)nullptr;
 	return (char *)s;
 }
 
@@ -187,11 +188,11 @@ errorstring (int err)
 
 				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
 				return fbuf;
-				}
+			}
 		}	/* ! if (osvi.dwMajorVersion >= 5) */
 
 		/* fallback to error number */
-		sprintf (fbuf, "%s %d", _("Error"), err);
+		snprintf (fbuf, sizeof(fbuf), "%s %d", _("Error"), err);
 		return fbuf;
 	} /* ! if (err >= WSABASEERR) */
 #endif	/* ! WIN32 */
@@ -290,7 +291,7 @@ expand_homedir (char *file)
 	return g_strdup (file);
 }
 
-std::string strip_color(const std::string &text, strip_flags flags)
+std::string strip_color(const boost::string_ref &text, strip_flags flags)
 {
 	auto new_str = strip_color2 (text, flags);
 
@@ -305,7 +306,7 @@ std::string strip_color(const std::string &text, strip_flags flags)
 
 
 std::string 
-strip_color2(const std::string & src, strip_flags flags)
+strip_color2(const boost::string_ref & src, strip_flags flags)
 {
 	int rcol = 0, bgcol = 0;
 	auto src_itr = src.cbegin();
@@ -470,13 +471,12 @@ static int
 get_mhz (void)
 {
 	HKEY hKey;
-	int result, data;
-
 	if (RegOpenKeyExW (HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\"
 		L"CentralProcessor\\0", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
 	{
+		int data;
 		DWORD dataSize = sizeof (data);
-		result = RegQueryValueExW (hKey, L"~MHz", 0, 0, (LPBYTE)&data, &dataSize);
+		auto result = RegQueryValueExW (hKey, L"~MHz", 0, 0, (LPBYTE)&data, &dataSize);
 		RegCloseKey (hKey);
 		if (result == ERROR_SUCCESS)
 			return data;
@@ -487,7 +487,7 @@ get_mhz (void)
 int
 get_cpu_arch (void)
 {
-	SYSTEM_INFO si;
+	SYSTEM_INFO si = { 0 };
 
 	GetSystemInfo (&si);
 

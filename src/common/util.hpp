@@ -38,6 +38,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <boost/utility/string_ref_fwd.hpp>
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
@@ -67,8 +68,8 @@ enum strip_flags{
 	STRIP_ALL = 7
 };
 
-std::string strip_color(const std::string &text, strip_flags flags);
-std::string strip_color2(const std::string & src, strip_flags flags);
+std::string strip_color(const boost::string_ref &text, strip_flags flags);
+std::string strip_color2(const boost::string_ref &src, strip_flags flags);
 int strip_hidden_attribute (const std::string & src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
