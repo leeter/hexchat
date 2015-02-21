@@ -215,15 +215,18 @@ struct chanopt_in_memory
  * channel = <channel name>
  * alert_taskbar = <1/0>
  */
-std::istream& 
-operator>> (std::istream& i, chanopt_in_memory& chanop)
+std::istream &operator>>(std::istream &i, chanopt_in_memory &chanop)
 {
+	std::istream::sentry sentry(i);
+	if (!sentry)
+		return i;
 	chanop = chanopt_in_memory();
 	// get network
 	std::string line;
 	if (!std::getline(i, line, '\n'))
 		return i;
-	do{
+	do
+	{
 		auto loc_eq = line.find_first_of('=');
 		if (loc_eq == std::string::npos) // data corruption
 			return i;
@@ -239,18 +242,21 @@ operator>> (std::istream& i, chanopt_in_memory& chanop)
 		else
 		{
 			int value = std::stoi(second_part);
-			for (const auto & op : chanopt)
+			for (const auto &op : chanopt)
 			{
-				if (first_part == op.name || (op.alias && first_part == op.alias))
+				if (first_part == op.name ||
+				    (op.alias && first_part == op.alias))
 				{
-					*(std::uint8_t *)G_STRUCT_MEMBER_P(&chanop, op.offset) = value;
+					*(std::uint8_t *)G_STRUCT_MEMBER_P(
+					    &chanop, op.offset) = value;
 					break;
 				}
 			}
 		}
-		// if the next character is n it's a network and we shouldn't continue
+		// if the next character is n it's a network and we shouldn't
+		// continue
 	} while (i.peek() != 'n' && std::getline(i, line, '\n'));
-	
+
 	/* we should always leave the stream in a good state if we got this far
 	 * otherwise the reader will assume we've failed even though we haven't
 	 */
@@ -261,18 +267,23 @@ operator>> (std::istream& i, chanopt_in_memory& chanop)
 	return i;
 }
 
-std::ostream&
-operator<< (std::ostream& o, const chanopt_in_memory& chanop)
+std::ostream &operator<<(std::ostream &o, const chanopt_in_memory &chanop)
 {
+	std::ostream::sentry sentry(o);
+	if (!o)
+		return o;
 	bool something_saved = false;
 	std::ostringstream buffer;
 	buffer << "network = " << chanop.network << "\n";
 	buffer << "channel = " << chanop.channel << "\n";
-	for (const auto& op : chanopt){
-		std::uint8_t val = G_STRUCT_MEMBER(std::uint8_t, &chanop, op.offset);
+	for (const auto &op : chanopt)
+	{
+		std::uint8_t val =
+		    G_STRUCT_MEMBER(std::uint8_t, &chanop, op.offset);
 		if (val != SET_DEFAULT)
 		{
-			buffer << op.name << " = " << std::to_string(val) << "\n";
+			buffer << op.name << " = " << std::to_string(val)
+			       << "\n";
 			something_saved = true;
 		}
 	}
