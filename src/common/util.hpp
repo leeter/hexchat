@@ -96,7 +96,7 @@ bool unity_mode ();
 char *encode_sasl_pass_plain (const char *user, const char *pass);
 char *encode_sasl_pass_blowfish (const std::string & user, const std::string& pass, const std::string & data);
 char *encode_sasl_pass_aes (char *user, char *pass, char *data);
-std::string challengeauth_response(const std::string & username, const std::string & password, const std::string & challenge);
+std::string challengeauth_response(const boost::string_ref & username, const boost::string_ref & password, const std::string & challenge);
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
 size_t strftime_utf8 (char *dest, size_t destsize, const char *format, time_t time);
 

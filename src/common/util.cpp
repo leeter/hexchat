@@ -1497,11 +1497,9 @@ str_ihash (const unsigned char *key)
 void
 safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 {
-	int mbl;
-
 	while (1)
 	{
-		mbl = g_utf8_skip[*((unsigned char *)src)];
+		int mbl = g_utf8_skip[*((unsigned char *)src)];
 
 		if (bytes_left < (mbl + 1)) /* can't fit with NULL? */
 		{
@@ -1583,14 +1581,14 @@ char* new_strdup(const char in[])
 }
 
 #ifdef USE_OPENSSL
-static std::string str_sha256hash (const std::string & string)
+static std::string str_sha256hash (const boost::string_ref &string)
 {
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	char buf[SHA256_DIGEST_LENGTH * 2 + 1];		/* 64 digit hash + '\0' */
 	SHA256_CTX sha256;
 
 	SHA256_Init (&sha256);
-	SHA256_Update (&sha256, string.c_str(), string.size());
+	SHA256_Update (&sha256, string.data(), string.size());
 	SHA256_Final (hash, &sha256);
 
 	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
@@ -1618,21 +1616,22 @@ static std::string str_sha256hash (const std::string & string)
  * <a href="http://www.askyb.com/cpp/openssl-hmac-hasing-example-in-cpp/">example 1</a>,
  * <a href="http://stackoverflow.com/questions/242665/understanding-engine-initialization-in-openssl">example 2</a>.
  */
-std::string challengeauth_response(const std::string & username, const std::string &password, const std::string &challenge)
+std::string challengeauth_response(const boost::string_ref &username, const boost::string_ref &password, const std::string &challenge)
 {
-	std::string user(username);
+	std::string user = username.to_string();
 	for (auto & c : user)
-{
+	{
 		c = rfc_tolower(c);			/* convert username to lowercase as per the RFC */
 	}
 
-	std::string pass(password);
+	std::string pass = password.to_string();
 	pass.resize(10, '\0'); /* truncate to 10 characters */
-	auto passhash = str_sha256hash (pass.c_str());
+	auto passhash = str_sha256hash (pass);
 
-	glib_string key(g_strdup_printf("%s:%s", user.c_str(), passhash.c_str()));
+	std::ostringstream key;
+	key << user << ':' << passhash;
 
-	auto keyhash = str_sha256hash (key.get());
+	auto keyhash = str_sha256hash (key.str());
 
 	std::vector<unsigned char> digest(EVP_MAX_MD_SIZE);
 
@@ -1678,7 +1677,7 @@ strftime_validated (char *dest, size_t destsize, const char *format, const struc
 	const char *p = format;
 	int i = 0;
 
-	if (strlen (format) >= sizeof(safe_format))
+	if (std::strlen (format) >= sizeof(safe_format))
 		return 0;
 
 	while (*p)
@@ -1729,7 +1728,7 @@ strftime_validated (char *dest, size_t destsize, const char *format, const struc
 		}
 	}
 
-	return strftime (dest, destsize, safe_format, time);
+	return std::strftime (dest, destsize, safe_format, time);
 #endif
 }
 
