@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(safe_strcpy_input_too_long)
 	char out[15];
 	safe_strcpy(out, input, 10);
 
-	BOOST_REQUIRE_EQUAL(std::strlen(out), 10);
+	BOOST_REQUIRE_EQUAL(std::strlen(out), 9);
 }
 
 
