@@ -1,3 +1,3 @@
 
 
-SUBDIRS = libirctest
+SUBDIRS = libirctest commontest
