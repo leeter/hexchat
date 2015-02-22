@@ -35,10 +35,13 @@
 
 #include <locale>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
 #include <boost/utility/string_ref_fwd.hpp>
+
+#include "sessfwd.hpp"
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
@@ -74,7 +77,7 @@ int strip_hidden_attribute (const std::string & src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
 #ifdef WIN32
-int waitline2 (GIOChannel *source, char *buf, int bufsize);
+//int waitline2 (GIOChannel *source, char *buf, int bufsize);
 int get_cpu_arch (void);
 #else
 #define waitline2(source,buf,size) waitline(serv->childread,buf,size,0)
@@ -82,8 +85,8 @@ int get_cpu_arch (void);
 unsigned long make_ping_time (void);
 void move_file (const std::string& src_dir, const std::string& dst_dir, const std::string& fname, int dccpermissions);
 int token_foreach (char *str, char sep, int (*callback) (char *str, void *ud), void *ud);
-guint32 str_hash (const char *key);
-guint32 str_ihash (const unsigned char *key);
+std::uint32_t str_hash (const char *key);
+std::uint32_t str_ihash(const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, std::size_t bytes_left);
 template<size_t N>
 void safe_strcpy(char(&dest)[N], const char src[])
