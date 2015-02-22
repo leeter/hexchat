@@ -843,6 +843,7 @@ plugins/fishlim/Makefile
 plugins/sysinfo/Makefile
 test/Makefile
 test/libirctest/Makefile
+test/commontest/Makefile
 po/Makefile.in
 ])
 
