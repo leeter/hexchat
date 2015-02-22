@@ -298,7 +298,7 @@ std::string strip_color(const boost::string_ref &text, strip_flags flags)
 
 	if (flags & STRIP_ESCMARKUP)
 	{
-		glib_string esc(g_markup_escape_text (new_str.c_str(), -1));
+		glib_string esc(g_markup_escape_text (new_str.c_str(), new_str.size()));
 		return std::string(esc.get());
 	}
 
