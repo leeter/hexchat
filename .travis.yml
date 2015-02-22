@@ -17,6 +17,7 @@ script:
     - ./configure --enable-textfe --with-theme-manager
     - make
     - test/libirctest/libirc-test
+    - test/commontest/libhexchatcommon-test
 
 matrix:
      fast_finish: true
