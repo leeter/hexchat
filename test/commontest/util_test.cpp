@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cstring>
 #include <util.hpp>
-#include <charset_helpers.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/utility/string_ref.hpp>
 
