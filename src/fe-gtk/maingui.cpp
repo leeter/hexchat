@@ -191,56 +191,56 @@ fe_set_tab_color (struct session *sess, int col)
 		switch (col)
 		{
 		case 0:	/* no particular color (theme default) */
-			sess->new_data = FALSE;
-			sess->msg_said = FALSE;
-			sess->nick_said = FALSE;
+			sess->new_data = false;
+			sess->msg_said = false;
+			sess->nick_said = false;
 			chan_set_color(static_cast<chan *>(sess->res->tab), plain_list);
 			break;
 		case 1:	/* new data has been displayed (dark red) */
-			sess->new_data = TRUE;
-			sess->msg_said = FALSE;
-			sess->nick_said = FALSE;
+			sess->new_data = true;
+			sess->msg_said = false;
+			sess->nick_said = false;
 			chan_set_color(static_cast<chan *>(sess->res->tab), newdata_list);
 
 			if (chan_is_collapsed(static_cast<chan *>(sess->res->tab))
 				&& !(server_sess->msg_said || server_sess->nick_said)
 				&& !(server_sess == current_tab))
 			{
-				server_sess->new_data = TRUE;
-				server_sess->msg_said = FALSE;
-				server_sess->nick_said = FALSE;
+				server_sess->new_data = true;
+				server_sess->msg_said = false;
+				server_sess->nick_said = false;
 				chan_set_color(chan_get_parent(static_cast<chan *>(sess->res->tab)), newdata_list);
 			}
 				
 			break;
 		case 2:	/* new message arrived in channel (light red) */
-			sess->new_data = FALSE;
-			sess->msg_said = TRUE;
-			sess->nick_said = FALSE;
+			sess->new_data = false;
+			sess->msg_said = true;
+			sess->nick_said = false;
 			chan_set_color(static_cast<chan *>(sess->res->tab), newmsg_list);
 			
 			if (chan_is_collapsed(static_cast<chan *>(sess->res->tab))
 				&& !server_sess->nick_said
 				&& !(server_sess == current_tab))
 			{
-				server_sess->new_data = FALSE;
-				server_sess->msg_said = TRUE;
-				server_sess->nick_said = FALSE;
+				server_sess->new_data = false;
+				server_sess->msg_said = true;
+				server_sess->nick_said = false;
 				chan_set_color(chan_get_parent(static_cast<chan *>(sess->res->tab)), newmsg_list);
 			}
 			
 			break;
 		case 3:	/* your nick has been seen (blue) */
-			sess->new_data = FALSE;
-			sess->msg_said = FALSE;
-			sess->nick_said = TRUE;
+			sess->new_data = false;
+			sess->msg_said = false;
+			sess->nick_said = true;
 			chan_set_color(static_cast<chan *>(sess->res->tab), nickseen_list);
 
 			if (chan_is_collapsed(static_cast<chan *>(sess->res->tab)) && !(server_sess == current_tab))
 			{
-				server_sess->new_data = FALSE;
-				server_sess->msg_said = FALSE;
-				server_sess->nick_said = TRUE;
+				server_sess->new_data = false;
+				server_sess->msg_said = false;
+				server_sess->nick_said = true;
 				chan_set_color(chan_get_parent(static_cast<chan *>(sess->res->tab)), nickseen_list);
 			}
 				
