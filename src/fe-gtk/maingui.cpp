@@ -541,7 +541,7 @@ mg_focus (session *sess)
 
 	sess->server->front_session = sess;
 
-	if (sess->server->server_session != NULL)
+	if (sess->server->server_session != nullptr)
 	{
 		if (sess->server->server_session->type != session::SESS_SERVER)
 			sess->server->server_session = sess;
@@ -552,9 +552,9 @@ mg_focus (session *sess)
 
 	if (sess->new_data || sess->nick_said || sess->msg_said)
 	{
-		sess->nick_said = FALSE;
-		sess->msg_said = FALSE;
-		sess->new_data = FALSE;
+		sess->nick_said = false;
+		sess->msg_said = false;
+		sess->new_data = false;
 		lastact_update (sess);
 		/* when called via mg_changui_new, is_tab might be true, but
 			sess->res->tab is still NULL. */
@@ -614,7 +614,6 @@ mg_unpopulate (session *sess)
 {
 	restore_gui *res;
 	session_gui *gui;
-	int i;
 
 	gui = sess->gui;
 	res = sess->res;
@@ -628,7 +627,7 @@ mg_unpopulate (session *sess)
 	if (gui->throttleinfo)
 		res->queue_text = gtk_label_get_text (GTK_LABEL (gui->throttleinfo));
 
-	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
+	for (int i = 0; i < NUM_FLAG_WIDS - 1; i++)
 		res->flag_wid_state[i] = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]));
 
 	res->old_ul_value = userlist_get_value (gui->user_tree);
@@ -744,20 +743,19 @@ mg_userlist_showhide (session *sess, int show)
 	mg_hide_empty_boxes (gui);
 }
 
-static gboolean
-mg_is_userlist_and_tree_combined (void)
+static bool mg_is_userlist_and_tree_combined ()
 {
 	if (prefs.hex_gui_tab_pos == POS_TOPLEFT && prefs.hex_gui_ulist_pos == POS_BOTTOMLEFT)
-		return TRUE;
+		return true;
 	if (prefs.hex_gui_tab_pos == POS_BOTTOMLEFT && prefs.hex_gui_ulist_pos == POS_TOPLEFT)
-		return TRUE;
+		return true;
 
 	if (prefs.hex_gui_tab_pos == POS_TOPRIGHT && prefs.hex_gui_ulist_pos == POS_BOTTOMRIGHT)
-		return TRUE;
+		return true;
 	if (prefs.hex_gui_tab_pos == POS_BOTTOMRIGHT && prefs.hex_gui_ulist_pos == POS_TOPRIGHT)
-		return TRUE;
+		return true;
 
-	return FALSE;
+	return false;
 }
 
 /* decide if the userlist should be shown or hidden for this tab */
@@ -1020,7 +1018,7 @@ mg_ircdestroy (session *sess)
 
 	session_free (sess);	/* tell hexchat.c about it */
 
-	if (mg_gui == NULL)
+	if (!mg_gui)
 	{
 /*		puts("-> mg_gui is already NULL");*/
 		return;
@@ -1040,9 +1038,9 @@ mg_ircdestroy (session *sess)
 
 /*	puts("-> no tabs left, killing main tabwindow");*/
 	gtk_widget_destroy (mg_gui->window);
-	active_tab = NULL;
-	mg_gui = NULL;
-	parent_window = NULL;
+	active_tab = nullptr;
+	mg_gui = nullptr;
+	parent_window = nullptr;
 }
 
 static void
@@ -1127,7 +1125,7 @@ mg_count_networks (void)
 	int cons = 0;
 	GSList *list;
 
-	for (list = serv_list; list; list = list->next)
+	for (auto list = serv_list; list; list = g_slist_next(list))
 	{
 		if (((server *)list->data)->connected)
 			cons++;
