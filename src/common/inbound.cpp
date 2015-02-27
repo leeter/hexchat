@@ -63,6 +63,7 @@
 #include "sasl.hpp"
 #include "userlist.hpp"
 #include "session.hpp"
+#include "session_logging.hpp"
 
 namespace dcc = hexchat::dcc;
 

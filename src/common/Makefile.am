@@ -33,6 +33,9 @@ EXTRA_DIST = \
 	sasl.hpp \
 	server.hpp \
 	servlist.hpp \
+	session.hpp \
+	sessfwd.hpp \
+	session_logging.hpp \
 	ssl.hpp \
 	ssl.cpp	\
 	text.hpp \
@@ -65,7 +68,7 @@ make_te_CPPFLAGS = $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 
 libhexchatcommon_a_SOURCES = base64.cpp cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp filesystem.cpp hexchat.cpp \
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp network.cpp notify.cpp \
-	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp server.cpp servlist.cpp \
+	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp session_logging.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp url.cpp userlist.cpp util.cpp
 libhexchatcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBPROXY_CFLAGS) $(CPPFLAGS)
 libhexchatcommon_a_CFLAGS = $(AM_CFLAGS) $(LIBPROXY_CFLAGS) $(CFLAGS)

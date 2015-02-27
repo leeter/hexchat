@@ -41,6 +41,7 @@
     <ClInclude Include="servlist.hpp" />
     <ClInclude Include="sessfwd.hpp" />
     <ClInclude Include="session.hpp" />
+    <ClInclude Include="session_logging.hpp" />
     <ClInclude Include="ssl.hpp" />
     <ClInclude Include="text.hpp" />
     <ClInclude Include="textenums.h" />
@@ -78,6 +79,7 @@
     <ClCompile Include="sasl.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="servlist.cpp" />
+    <ClCompile Include="session_logging.cpp" />
     <ClCompile Include="ssl.cpp" />
     <ClCompile Include="text.cpp" />
     <ClCompile Include="url.cpp" />

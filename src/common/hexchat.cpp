@@ -56,6 +56,7 @@
 #include "notify.hpp"
 #include "server.hpp"
 #include "session.hpp"
+#include "session_logging.hpp"
 #include "servlist.hpp"
 #include "outbound.hpp"
 #include "text.hpp"
