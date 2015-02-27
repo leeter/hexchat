@@ -628,7 +628,7 @@ mg_unpopulate (session *sess)
 		res->queue_text = gtk_label_get_text (GTK_LABEL (gui->throttleinfo));
 
 	for (int i = 0; i < NUM_FLAG_WIDS - 1; i++)
-		res->flag_wid_state[i] = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]));
+		res->flag_wid_state[i] = !!gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]));
 
 	res->old_ul_value = userlist_get_value (gui->user_tree);
 	if (gui->lagometer)
@@ -1123,8 +1123,6 @@ static int
 mg_count_networks (void)
 {
 	int cons = 0;
-	GSList *list;
-
 	for (auto list = serv_list; list; list = g_slist_next(list))
 	{
 		if (((server *)list->data)->connected)
@@ -3029,7 +3027,7 @@ mg_create_tabs (session_gui *gui)
 }
 
 static gboolean
-mg_tabwin_focus_cb (GtkWindow * win, GdkEventFocus *event, gpointer userdata)
+mg_tabwin_focus_cb (GtkWindow * win, GdkEventFocus *, gpointer)
 {
 	current_sess = current_tab;
 	if (current_sess)
@@ -3042,7 +3040,7 @@ mg_tabwin_focus_cb (GtkWindow * win, GdkEventFocus *event, gpointer userdata)
 }
 
 static gboolean
-mg_topwin_focus_cb (GtkWindow * win, GdkEventFocus *event, session *sess)
+mg_topwin_focus_cb (GtkWindow * win, GdkEventFocus *, session *sess)
 {
 	current_sess = sess;
 	if (!sess->server->server_session)
@@ -3162,7 +3160,7 @@ mg_create_topwindow (session *sess)
 }
 
 static gboolean
-mg_tabwindow_de_cb (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+mg_tabwindow_de_cb (GtkWidget *, GdkEvent *, gpointer)
 {
 	GSList *list;
 	session *sess;
@@ -3354,7 +3352,7 @@ fe_clear_channel (session &sess)
 }
 
 void
-fe_set_nonchannel (session *sess, int state)
+fe_set_nonchannel (session * /*sess*/, int /*state*/)
 {
 }
 
@@ -3394,7 +3392,7 @@ fe_update_mode_buttons (session *sess, char mode, char sign)
 				ignore_chanmode = false;
 			} else
 			{
-				sess->res->flag_wid_state[i] = state;
+				sess->res->flag_wid_state[i] = !!state;
 			}
 			return;
 		}
@@ -3458,7 +3456,6 @@ restore_gui::restore_gui()
 	old_ul_value(),	/* old userlist value (for adj) */
 	lag_value(),	/* lag-o-meter */
 	queue_value(), /* outbound queue meter */
-	flag_wid_state(),
 	c_graph(){}
 
 void

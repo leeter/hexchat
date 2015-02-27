@@ -23,6 +23,7 @@
 #include "../../config.h"
 
 #include <string>
+#include <bitset>
 #define DISPLAY_NAME "HexChat"
 
 #ifndef WIN32
@@ -123,7 +124,8 @@ struct restore_gui
 	gfloat queue_value; /* outbound queue meter */
 	std::string queue_text;		/* outbound queue text */
 	std::string queue_tip;		/* outbound queue tooltip */
-	short flag_wid_state[NUM_FLAG_WIDS];
+	std::bitset<NUM_FLAG_WIDS> flag_wid_state;
+	//short flag_wid_state[NUM_FLAG_WIDS];
 	bool c_graph;	/* connecting graph, is there one? */
 };
 
