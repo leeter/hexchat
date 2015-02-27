@@ -22,9 +22,12 @@
 #include <atomic>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iterator>
 #include <string>
 #include <boost/utility/string_ref.hpp>
+
+#include <gdk/gdk.h>
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
@@ -676,7 +679,7 @@ cv_tabs_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 
 static int
 tab_group_for_each_tab(chanview *cv,
-int(*callback) (GtkWidget *tab, int num, int usernum),
+const std::function<int(GtkWidget *tab, int num, int usernum)> & callback,
 int usernum)
 {
 	GtkBox *innerbox = (GtkBox *)((tabview *)cv)->inner;
@@ -790,10 +793,9 @@ cv_tabs_move(chan *ch, int delta)
 {
 	int i = 0;
 	int pos = 0;
-	GList *list;
 	GtkWidget *parent = gtk_widget_get_parent(GTK_WIDGET(ch->impl));
 
-	for (list = gtk_container_get_children(GTK_CONTAINER(parent)); list; list = list->next)
+	for (auto list = gtk_container_get_children(GTK_CONTAINER(parent)); list; list = list->next)
 	{
 		GtkWidget *child_entry = static_cast<GtkWidget*>(list->data);
 		if (child_entry == ch->impl)
@@ -813,13 +815,12 @@ cv_tabs_move(chan *ch, int delta)
 static void
 cv_tabs_move_family(chan *ch, int delta)
 {
-	int i, pos = 0;
-	GList *list;
+	int pos = 0;
 	GtkWidget *box = NULL;
 
 	/* find position of tab's family */
-	i = 0;
-	for (list = gtk_container_get_children(GTK_CONTAINER(((tabview *)ch->cv)->inner)); list; list = list->next)
+	int i = 0;
+	for (auto list = gtk_container_get_children(GTK_CONTAINER(((tabview *)ch->cv)->inner)); list; list = list->next)
 	{
 		GtkWidget *child_entry;
 		void *fam;
@@ -886,13 +887,13 @@ cv_tabs_get_parent(chan *ch)
 
 /* ======= TREE ======= */
 
-typedef struct
+struct treeview
 {
 	GtkTreeView *tree;
 	GtkWidget *scrollw;	/* scrolledWindow */
-} treeview;
+};
 
-#include <gdk/gdk.h>
+
 
 static void 	/* row-activated, when a row is double clicked */
 cv_tree_activated_cb(GtkTreeView *view, GtkTreePath *path,
@@ -1277,8 +1278,7 @@ static std::string truncate_tab_name (const boost::string_ref & name, int max)
 /* iterate through a model, into 1 depth of children */
 
 static void
-model_foreach_1 (GtkTreeModel *model, void (*func)(void *, GtkTreeIter *),
-					  void *userdata)
+model_foreach_1 (GtkTreeModel *model, std::function<void(GtkTreeIter*)> func)
 {
 	GtkTreeIter iter, inner;
 
@@ -1286,11 +1286,11 @@ model_foreach_1 (GtkTreeModel *model, void (*func)(void *, GtkTreeIter *),
 	{
 		do
 		{
-			func (userdata, &iter);
+			func (&iter);
 			if (gtk_tree_model_iter_children (model, &inner, &iter))
 			{
 				do
-					func (userdata, &inner);
+					func (&inner);
 				while (gtk_tree_model_iter_next (model, &inner));
 			}
 		}
@@ -1319,7 +1319,8 @@ chanview_pop_cb (chanview *cv, GtkTreeIter *iter)
 static void
 chanview_populate (chanview *cv)
 {
-	model_foreach_1(GTK_TREE_MODEL(cv->store), (void(*)(void *, GtkTreeIter *))chanview_pop_cb, cv);
+	auto callback = std::bind(chanview_pop_cb, cv, std::placeholders::_1);
+	model_foreach_1(GTK_TREE_MODEL(cv->store), callback);
 }
 
 void
@@ -1390,7 +1391,8 @@ chanview_free_ch (chanview *cv, GtkTreeIter *iter)
 static void
 chanview_destroy_store (chanview *cv)	/* free every (chan *) in the store */
 {
-	model_foreach_1(GTK_TREE_MODEL(cv->store), (void(*)(void *, GtkTreeIter *))chanview_free_ch, cv);
+	auto callback = std::bind(chanview_free_ch, cv, std::placeholders::_1);
+	model_foreach_1(GTK_TREE_MODEL(cv->store), callback);
 	g_object_unref (cv->store);
 }
 
