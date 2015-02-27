@@ -24,6 +24,7 @@
 #include <cstring>
 #include <iterator>
 #include <string>
+#include <boost/utility/string_ref.hpp>
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
@@ -96,20 +97,20 @@ static int cv_find_number_of_chan (chanview *cv, chan *find_ch);
 
 /* ======= TABS ======= */
 
-typedef struct
+struct tabview
 {
 	GtkWidget *outer;	/* outer box */
 	GtkWidget *inner;	/* inner box */
 	GtkWidget *b1;		/* button1 */
 	GtkWidget *b2;		/* button2 */
-} tabview;
+};
 
 static void chanview_populate(chanview *cv);
 
 /* ignore "toggled" signal? */
 static bool ignore_toggle = false;
-static int tab_left_is_moving = 0;
-static int tab_right_is_moving = 0;
+static bool tab_left_is_moving = false;
+static bool tab_right_is_moving = false;
 
 /* userdata for gobjects used here:
 *
@@ -149,12 +150,12 @@ cv_tabs_sizealloc(GtkWidget *, GtkAllocation *, chanview *cv)
 	if (cv->vertical)
 	{
 		adj = gtk_viewport_get_vadjustment(GTK_VIEWPORT(gtk_widget_get_parent(inner)));
-		gdk_window_get_geometry(parent_win, 0, 0, 0, &viewport_size, 0);
+		gdk_window_get_geometry(parent_win, nullptr, nullptr, nullptr, &viewport_size, nullptr);
 	}
 	else
 	{
 		adj = gtk_viewport_get_hadjustment(GTK_VIEWPORT(gtk_widget_get_parent(inner)));
-		gdk_window_get_geometry(parent_win, 0, 0, &viewport_size, 0, 0);
+		gdk_window_get_geometry(parent_win, nullptr, nullptr, &viewport_size, nullptr, nullptr);
 	}
 
 	if (gtk_adjustment_get_upper(adj) <= viewport_size)
@@ -217,10 +218,8 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 {
 	GtkAdjustment *adj;
 	gint viewport_size;
-	gfloat new_value;
 	GtkWidget *inner;
 	GdkWindow *parent_win;
-	gfloat i;
 
 	inner = ((tabview *)cv)->inner;
 	parent_win = gtk_widget_get_window(gtk_widget_get_parent(inner));
@@ -236,16 +235,16 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 		gdk_window_get_geometry(parent_win, 0, 0, &viewport_size, 0, 0);
 	}
 
-	new_value = tab_search_offset(inner, gtk_adjustment_get_value(adj), 0, cv->vertical);
+	gdouble new_value = tab_search_offset(inner, gtk_adjustment_get_value(adj), FALSE, cv->vertical);
 
 	if (new_value + viewport_size > gtk_adjustment_get_upper(adj))
 		new_value = gtk_adjustment_get_upper(adj) - viewport_size;
 
 	if (!tab_left_is_moving)
 	{
-		tab_left_is_moving = 1;
+		tab_left_is_moving = true;
 
-		for (i = gtk_adjustment_get_value(adj); ((i > new_value) && (tab_left_is_moving)); i -= 0.1f)
+		for (auto i = gtk_adjustment_get_value(adj); ((i > new_value) && (tab_left_is_moving)); i -= 0.1)
 		{
 			gtk_adjustment_set_value(adj, i);
 			while (g_main_context_pending(NULL))
@@ -254,11 +253,11 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 
 		gtk_adjustment_set_value(adj, new_value);
 
-		tab_left_is_moving = 0;		/* hSP: set to false in case we didnt get stopped (the normal case) */
+		tab_left_is_moving = false;		/* hSP: set to false in case we didnt get stopped (the normal case) */
 	}
 	else
 	{
-		tab_left_is_moving = 0;		/* hSP: jump directly to next element if user is clicking faster than we can scroll.. */
+		tab_left_is_moving = false;		/* hSP: jump directly to next element if user is clicking faster than we can scroll.. */
 	}
 }
 
@@ -267,10 +266,8 @@ tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
 {
 	GtkAdjustment *adj;
 	gint viewport_size;
-	gfloat new_value;
 	GtkWidget *inner;
 	GdkWindow *parent_win;
-	gfloat i;
 
 	inner = ((tabview *)cv)->inner;
 	parent_win = gtk_widget_get_window(gtk_widget_get_parent(inner));
@@ -286,16 +283,16 @@ tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
 		gdk_window_get_geometry(parent_win, 0, 0, &viewport_size, 0, 0);
 	}
 
-	new_value = tab_search_offset(inner, gtk_adjustment_get_value(adj), 1, cv->vertical);
+	gdouble new_value = tab_search_offset(inner, gtk_adjustment_get_value(adj), TRUE, cv->vertical);
 
-	if (new_value == 0 || new_value + viewport_size > gtk_adjustment_get_upper(adj))
+	if (new_value == 0.0 || new_value + viewport_size > gtk_adjustment_get_upper(adj))
 		new_value = gtk_adjustment_get_upper(adj) - viewport_size;
 
 	if (!tab_right_is_moving)
 	{
-		tab_right_is_moving = 1;
+		tab_right_is_moving = true;
 
-		for (i = gtk_adjustment_get_value(adj); ((i < new_value) && (tab_right_is_moving)); i += 0.1f)
+		for (auto i = gtk_adjustment_get_value(adj); ((i < new_value) && (tab_right_is_moving)); i += 0.1)
 		{
 			gtk_adjustment_set_value(adj, i);
 			while (g_main_context_pending(NULL))
@@ -304,11 +301,11 @@ tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
 
 		gtk_adjustment_set_value(adj, new_value);
 
-		tab_right_is_moving = 0;		/* hSP: set to false in case we didnt get stopped (the normal case) */
+		tab_right_is_moving = false;		/* hSP: set to false in case we didnt get stopped (the normal case) */
 	}
 	else
 	{
-		tab_right_is_moving = 0;		/* hSP: jump directly to next element if user is clicking faster than we can scroll.. */
+		tab_right_is_moving = false;		/* hSP: jump directly to next element if user is clicking faster than we can scroll.. */
 	}
 }
 
@@ -442,11 +439,6 @@ cv_tabs_postinit(chanview *cv)
 static void
 tab_add_sorted(chanview *cv, GtkWidget *box, GtkWidget *tab, chan *ch)
 {
-	GList *list;
-	GtkWidget *child;
-	int i = 0;
-	void *b;
-
 	if (!cv->sorted)
 	{
 		gtk_box_pack_start(GTK_BOX(box), tab, 0, 0, 0);
@@ -458,12 +450,12 @@ tab_add_sorted(chanview *cv, GtkWidget *box, GtkWidget *tab, chan *ch)
 	*   - move tab if renamed (dialogs) */
 
 	/* userdata, passed to mg_tabs_compare() */
-	b = ch->userdata;
-
-	list = gtk_container_get_children(GTK_CONTAINER(box));
+	auto b = ch->userdata;
+	int i = 0;
+	auto list = gtk_container_get_children(GTK_CONTAINER(box));
 	while (list)
 	{
-		child = static_cast<GtkWidget*>(list->data);
+		auto child = static_cast<GtkWidget*>(list->data);
 		if (!GTK_IS_SEPARATOR(child))
 		{
 			void *a = g_object_get_data(G_OBJECT(child), "u");
@@ -492,26 +484,24 @@ static void
 cv_tabs_prune(chanview *cv)
 {
 	GList *boxes, *children;
-	GtkWidget *box, *inner;
-	GtkWidget *child;
-	int empty;
+	GtkWidget *inner;
 
 	inner = ((tabview *)cv)->inner;
 	boxes = gtk_container_get_children(GTK_CONTAINER(inner));
 	while (boxes)
 	{
-		child = static_cast<GtkWidget*>(boxes->data);
-		box = child;
+		auto child = static_cast<GtkWidget*>(boxes->data);
+		auto box = child;
 		boxes = boxes->next;
 
 		/* check if the box is empty (except a vseperator) */
-		empty = TRUE;
+		bool empty = true;
 		children = gtk_container_get_children(GTK_CONTAINER(box));
 		while (children)
 		{
 			if (!GTK_IS_SEPARATOR((GtkWidget *)children->data))
 			{
-				empty = FALSE;
+				empty = false;
 				break;
 			}
 			children = children->next;
@@ -528,7 +518,6 @@ tab_add_real(chanview *cv, GtkWidget *tab, chan *ch)
 	GList *boxes, *children;
 	GtkWidget *sep, *box, *inner;
 	GtkWidget *child;
-	int empty;
 
 	inner = ((tabview *)cv)->inner;
 	/* see if a family for this tab already exists */
@@ -548,13 +537,13 @@ tab_add_real(chanview *cv, GtkWidget *tab, chan *ch)
 		boxes = boxes->next;
 
 		/* check if the box is empty (except a vseperator) */
-		empty = TRUE;
+		bool empty = true;
 		children = gtk_container_get_children(GTK_CONTAINER(box));
 		while (children)
 		{
 			if (!GTK_IS_SEPARATOR((GtkWidget *)children->data))
 			{
-				empty = FALSE;
+				empty = false;
 				break;
 			}
 			children = children->next;
@@ -776,12 +765,10 @@ cv_tabs_change_orientation(chanview *cv)
 static void
 cv_tabs_move_focus(chanview *cv, gboolean relative, int num)
 {
-	int i, max;
-
 	if (relative)
 	{
-		max = cv->size;
-		i = tab_group_get_cur_page(cv) + num;
+		auto max = cv->size;
+		auto i = tab_group_get_cur_page(cv) + num;
 		/* make it wrap around at both ends */
 		if (i < 0)
 			i = max - 1;
@@ -813,9 +800,7 @@ cv_tabs_move(chan *ch, int delta)
 
 	for (list = gtk_container_get_children(GTK_CONTAINER(parent)); list; list = list->next)
 	{
-		GtkWidget *child_entry;
-
-		child_entry = static_cast<GtkWidget*>(list->data);
+		GtkWidget *child_entry = static_cast<GtkWidget*>(list->data);
 		if (child_entry == ch->impl)
 			pos = i;
 
@@ -1287,13 +1272,12 @@ cv_tree_is_collapsed(chan *ch)
 
 /* ==== ABSTRACT CHANVIEW ==== */
 
-static std::string
-truncate_tab_name (const std::string & name, int max)
+static std::string truncate_tab_name (const boost::string_ref & name, int max)
 {
-	if (max > 2 && g_utf8_strlen (name.c_str(), -1) > max)
+	if (max > 2 && g_utf8_strlen (name.data(), name.size()) > max)
 	{
 		/* truncate long channel names */
-		std::string buf(name);
+		std::string buf = name.to_string();
 		buf.reserve(name.size() + 4);
 		const char* offset = g_utf8_offset_to_pointer (buf.c_str(), max);
 		buf.erase(buf.begin() + std::distance(buf.c_str(), offset), buf.end());
@@ -1301,7 +1285,7 @@ truncate_tab_name (const std::string & name, int max)
 		return buf;
 	}
 
-	return name;
+	return name.to_string();
 }
 
 /* iterate through a model, into 1 depth of children */
@@ -1538,15 +1522,15 @@ chanview_add_real (chanview *cv, const char *name, void *family, void *userdata,
 {
 	GtkTreeIter parent_iter;
 	GtkTreeIter iter;
-	gboolean has_parent = FALSE;
+	bool has_parent = false;
 
 	if (chanview_find_parent (cv, family, &parent_iter, avoid))
 	{
 		chanview_insert_sorted (cv, &iter, &parent_iter, userdata);
-		has_parent = TRUE;
+		has_parent = true;
 	} else
 	{
-		gtk_tree_store_append (cv->store, &iter, NULL);
+		gtk_tree_store_append (cv->store, &iter, nullptr);
 	}
 
 	if (!ch)
@@ -1559,14 +1543,15 @@ chanview_add_real (chanview *cv, const char *name, void *family, void *userdata,
 		ch->tag = tag;
 		ch->icon = icon;
 	}
-	memcpy (&(ch->iter), &iter, sizeof (iter));
+	ch->iter = iter;
+	//memcpy (&(ch->iter), &iter, sizeof (iter));
 
 	gtk_tree_store_set (cv->store, &iter, COL_NAME, name, COL_CHAN, ch,
 							  COL_PIXBUF, icon, -1);
 
 	cv->size++;
 	if (!has_parent)
-		ch->impl = cv->func_add (cv, ch, name, NULL);
+		ch->impl = cv->func_add (cv, ch, name, nullptr);
 	else
 		ch->impl = cv->func_add (cv, ch, name, &parent_iter);
 
@@ -1578,7 +1563,7 @@ chanview_add (chanview *cv, char *name, void *family, void *userdata, gboolean a
 {
 	auto new_name = truncate_tab_name (name, cv->trunc_len);
 
-	auto ret = chanview_add_real (cv, new_name.c_str(), family, userdata, allow_closure, tag, icon, NULL, NULL);
+	auto ret = chanview_add_real (cv, new_name.c_str(), family, userdata, allow_closure, tag, icon, nullptr, nullptr);
 
 	return ret;
 }
