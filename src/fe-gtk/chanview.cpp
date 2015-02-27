@@ -32,6 +32,7 @@
 #include "maingui.hpp"
 #include "gtkutil.hpp"
 #include "chanview.hpp"
+#include "gtk_helpers.hpp"
 
 /* treeStore columns */
 #define COL_NAME 0		/* (char *) */
@@ -678,19 +679,13 @@ tab_group_for_each_tab(chanview *cv,
 int(*callback) (GtkWidget *tab, int num, int usernum),
 int usernum)
 {
-	GList *tabs;
-	GList *boxes;
-	GtkWidget *child;
-	GtkBox *innerbox;
-	int i;
-
-	innerbox = (GtkBox *)((tabview *)cv)->inner;
-	boxes = gtk_container_get_children(GTK_CONTAINER(innerbox));
-	i = 0;
+	GtkBox *innerbox = (GtkBox *)((tabview *)cv)->inner;
+	auto boxes = gtk_container_get_children(GTK_CONTAINER(innerbox));
+	int i = 0;
 	while (boxes)
 	{
-		child = static_cast<GtkWidget*>(boxes->data);
-		tabs = gtk_container_get_children(GTK_CONTAINER(child));
+		auto child = static_cast<GtkWidget*>(boxes->data);
+		auto tabs = gtk_container_get_children(GTK_CONTAINER(child));
 
 		while (tabs)
 		{
@@ -1083,7 +1078,7 @@ cv_tree_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 }
 
 static void
-cv_tree_change_orientation(chanview *cv)
+cv_tree_change_orientation(chanview *)
 {
 }
 
@@ -1092,7 +1087,6 @@ cv_tree_focus(chan *ch)
 {
 	GtkTreeView *tree = ((treeview *)ch->cv)->tree;
 	GtkTreeModel *model = gtk_tree_view_get_model(tree);
-	GtkTreePath *path;
 	GtkTreeIter parent;
 	GdkRectangle cell_rect;
 	GdkRectangle vis_rect;
@@ -1101,7 +1095,7 @@ cv_tree_focus(chan *ch)
 	/* expand the parent node */
 	if (gtk_tree_model_iter_parent(model, &parent, &ch->iter))
 	{
-		path = gtk_tree_model_get_path(model, &parent);
+		GtkTreePathPtr path(gtk_tree_model_get_path(model, &parent));
 		if (path)
 		{
 			/*if (!gtk_tree_view_row_expanded (tree, path))
@@ -1109,12 +1103,11 @@ cv_tree_focus(chan *ch)
 			gtk_tree_path_free (path);
 			return;
 			}*/
-			gtk_tree_view_expand_row(tree, path, FALSE);
-			gtk_tree_path_free(path);
+			gtk_tree_view_expand_row(tree, path.get(), FALSE);
 		}
 	}
 
-	path = gtk_tree_model_get_path(model, &ch->iter);
+	GtkTreePathPtr path(gtk_tree_model_get_path(model, &ch->iter));
 	if (path)
 	{
 		/* This full section does what
@@ -1123,7 +1116,7 @@ cv_tree_focus(chan *ch)
 		* not visible. Basic algorithm taken from gtktreeview.c */
 
 		/* obtain information to see if the cell is visible */
-		gtk_tree_view_get_background_area(tree, path, NULL, &cell_rect);
+		gtk_tree_view_get_background_area(tree, path.get(), NULL, &cell_rect);
 		gtk_tree_view_get_visible_rect(tree, &vis_rect);
 
 		/* The cordinates aren't offset correctly */
@@ -1133,14 +1126,13 @@ cv_tree_focus(chan *ch)
 		if (cell_rect.y < vis_rect.y ||
 			cell_rect.y + cell_rect.height > vis_rect.y + vis_rect.height)
 		{
-			dest_y = cell_rect.y - ((vis_rect.height - cell_rect.height) * 0.5);
+			dest_y = cell_rect.y - ((vis_rect.height - cell_rect.height)  * 0.5);
 			if (dest_y < 0)
 				dest_y = 0;
 			gtk_tree_view_scroll_to_point(tree, -1, dest_y);
 		}
 		/* theft done, now make it focused like */
-		gtk_tree_view_set_cursor(tree, path, NULL, FALSE);
-		gtk_tree_path_free(path);
+		gtk_tree_view_set_cursor(tree, path.get(), NULL, FALSE);
 	}
 }
 
@@ -1164,7 +1156,7 @@ cv_tree_move_focus(chanview *cv, gboolean relative, int num)
 }
 
 static void
-cv_tree_remove(chan *ch)
+cv_tree_remove(chan *)
 {
 }
 
@@ -1174,7 +1166,6 @@ move_row(chan *ch, int delta, GtkTreeIter *parent)
 	GtkTreeStore *store = ch->cv->store;
 	GtkTreeIter *src = &ch->iter;
 	GtkTreeIter dest = ch->iter;
-	GtkTreePath *dest_path;
 
 	if (delta < 0) /* down */
 	{
@@ -1186,18 +1177,16 @@ move_row(chan *ch, int delta, GtkTreeIter *parent)
 	}
 	else
 	{
-		dest_path = gtk_tree_model_get_path(GTK_TREE_MODEL(store), &dest);
-		if (gtk_tree_path_prev(dest_path))
+		GtkTreePathPtr dest_path(gtk_tree_model_get_path(GTK_TREE_MODEL(store), &dest));
+		if (gtk_tree_path_prev(dest_path.get()))
 		{
-			gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &dest, dest_path);
+			gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &dest, dest_path.get());
 			gtk_tree_store_swap(store, src, &dest);
 		}
 		else
 		{	/* move to bottom */
 			gtk_tree_store_move_before(store, src, NULL);
 		}
-
-		gtk_tree_path_free(dest_path);
 	}
 }
 
@@ -1255,16 +1244,13 @@ static gboolean
 cv_tree_is_collapsed(chan *ch)
 {
 	chan *parent = cv_tree_get_parent(ch);
-	GtkTreePath *path = NULL;
-	gboolean ret;
 
 	if (parent == NULL)
 		return FALSE;
 
-	path = gtk_tree_model_get_path(GTK_TREE_MODEL(parent->cv->store),
-		&parent->iter);
-	ret = !gtk_tree_view_row_expanded(((treeview *)parent->cv)->tree, path);
-	gtk_tree_path_free(path);
+	GtkTreePathPtr path( gtk_tree_model_get_path(GTK_TREE_MODEL(parent->cv->store),
+		&parent->iter));
+	gboolean ret = !gtk_tree_view_row_expanded(((treeview *)parent->cv)->tree, path.get());
 
 	return ret;
 }
@@ -1321,13 +1307,13 @@ chanview_pop_cb (chanview *cv, GtkTreeIter *iter)
 
 	gtk_tree_model_get (GTK_TREE_MODEL (cv->store), iter,
 							  COL_NAME, &name, COL_CHAN, &ch, COL_ATTR, &attr, -1);
+	glib_string name_ptr{ name };
 	ch->impl = cv->func_add (cv, ch, name, NULL);
 	if (attr)
 	{
 		cv->func_set_color (ch, attr);
 		pango_attr_list_unref (attr);
 	}
-	g_free (name);
 }
 
 static void
@@ -1432,9 +1418,7 @@ chanview *
 chanview_new (int type, int trunc_len, bool sort, bool use_icons,
 				  GtkStyle *style)
 {
-	chanview *cv;
-
-	cv = new chanview();
+	chanview *cv = new chanview();
 	cv->store = gtk_tree_store_new (4, G_TYPE_STRING, G_TYPE_POINTER,
 											  PANGO_TYPE_ATTR_LIST, GDK_TYPE_PIXBUF);
 	cv->style = style;
