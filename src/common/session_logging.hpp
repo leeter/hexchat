@@ -19,6 +19,7 @@
 #ifndef HEXCHAT_SESSION_LOGGING_HPP
 #define HEXCHAT_SESSION_LOGGING_HPP
 
+#include <ctime>
 #include <string>
 #include "sessfwd.hpp"
 

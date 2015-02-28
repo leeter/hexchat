@@ -47,6 +47,7 @@
 #include "../common/userlist.hpp"
 #include "../common/session.hpp"
 #include "../common/session_logging.hpp"
+#include "../common/glist_iterators.hpp"
 
 #include "fe-gtk.hpp"
 #include "banlist.hpp"
@@ -63,6 +64,8 @@
 #include "xtext.hpp"
 #include "sexy-spell-entry.hpp"
 #include "gtk_helpers.hpp"
+
+using sess_itr = glib_helper::glist_iterator < session >;
 
 namespace dcc = hexchat::dcc;
 
@@ -288,24 +291,18 @@ mg_set_access_icon (session_gui *gui, GdkPixbuf *pix, gboolean away)
 static gboolean
 mg_inputbox_focus (GtkWidget *widget, GdkEventFocus *event, session_gui *gui)
 {
-	GSList *list;
-	session *sess;
-
 	if (gui->is_tab)
 		return FALSE;
 
-	list = sess_list;
-	while (list)
+	for (sess_itr itr{ sess_list }, end; itr != end; ++itr)
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->gui == gui)
+		if (itr->gui == gui)
 		{
-			current_sess = sess;
-			if (!sess->server->server_session)
-				sess->server->server_session = sess;
+			current_sess = &(*itr);
+			if (!itr->server->server_session)
+				itr->server->server_session = current_sess;
 			break;
 		}
-		list = list->next;
 	}
 
 	return FALSE;
@@ -315,8 +312,6 @@ void
 mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 {
 	static bool ignore = false;
-	GSList *list;
-	session *sess = NULL;
 
 	if (ignore)
 		return;
@@ -324,6 +319,8 @@ mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 	const char* cmd_text = SPELL_ENTRY_GET_TEXT (igad);
 	if (cmd_text[0] == 0)
 		return;
+
+	session *sess = NULL;
 
 	std::string cmd(cmd_text);
 
@@ -338,7 +335,7 @@ mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 		sess = current_tab;
 	} else
 	{
-		list = sess_list;
+		auto list = sess_list;
 		while (list)
 		{
 			sess = static_cast<session*>(list->data);
@@ -390,13 +387,11 @@ has_key (char *modes)
 void
 fe_set_title (session &sess)
 {
-	char tbuf[512];
-	int type;
-
 	if (sess.gui->is_tab && (&sess) != current_tab)
 		return;
 
-	type = sess.type;
+	auto type = sess.type;
+	char tbuf[512] = { 0 };
 
 	if (!sess.server->connected && sess.type != session::SESS_DIALOG)
 		goto def;
@@ -448,7 +443,7 @@ fe_set_title (session &sess)
 }
 
 static gboolean
-mg_windowstate_cb (GtkWindow *wid, GdkEventWindowState *event, gpointer userdata)
+mg_windowstate_cb (GtkWindow *wid, GdkEventWindowState *event, gpointer)
 {
 	if ((event->changed_mask & GDK_WINDOW_STATE_ICONIFIED) &&
 		 (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED) &&
@@ -473,7 +468,7 @@ mg_windowstate_cb (GtkWindow *wid, GdkEventWindowState *event, gpointer userdata
 }
 
 static gboolean
-mg_configure_cb (GtkWidget *wid, GdkEventConfigure *event, session *sess)
+mg_configure_cb (GtkWidget *wid, GdkEventConfigure *, session *sess)
 {
 	if (sess == NULL)			/* for the main_window */
 	{
@@ -509,13 +504,12 @@ mg_configure_cb (GtkWidget *wid, GdkEventConfigure *event, session *sess)
 static void
 mg_show_generic_tab (GtkWidget *box)
 {
-	int num;
 	GtkWidget *f = NULL;
 
 	if (current_sess && gtk_widget_has_focus (current_sess->gui->input_box))
 		f = current_sess->gui->input_box;
 
-	num = gtk_notebook_page_num (GTK_NOTEBOOK (mg_gui->note_book), box);
+	auto num = gtk_notebook_page_num (GTK_NOTEBOOK (mg_gui->note_book), box);
 	gtk_notebook_set_current_page (GTK_NOTEBOOK (mg_gui->note_book), num);
 	gtk_tree_view_set_model (GTK_TREE_VIEW (mg_gui->user_tree), NULL);
 	gtk_window_set_title (GTK_WINDOW (mg_gui->window),
@@ -567,20 +561,20 @@ mg_focus (session *sess)
 static int
 mg_progressbar_update (GtkWidget *bar)
 {
-	static int type = 0;
-	static gdouble pos = 0;
+	static GtkProgressBarOrientation type = GtkProgressBarOrientation();
+	static gdouble pos = 0.0;
 
 	pos += 0.05;
 	if (pos >= 0.99)
 	{
-		if (type == 0)
+		if (type == GTK_PROGRESS_LEFT_TO_RIGHT)
 		{
-			type = 1;
+			type = GTK_PROGRESS_RIGHT_TO_LEFT;
 			gtk_progress_bar_set_orientation ((GtkProgressBar *) bar,
 														 GTK_PROGRESS_RIGHT_TO_LEFT);
 		} else
 		{
-			type = 0;
+			type = GTK_PROGRESS_LEFT_TO_RIGHT;
 			gtk_progress_bar_set_orientation ((GtkProgressBar *) bar,
 														 GTK_PROGRESS_LEFT_TO_RIGHT);
 		}

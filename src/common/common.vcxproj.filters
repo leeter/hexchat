@@ -137,6 +137,9 @@
     <ClInclude Include="session_logging.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="glist_iterators.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="marshal.c">

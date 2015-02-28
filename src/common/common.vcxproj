@@ -22,6 +22,7 @@
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />
     <ClInclude Include="filesystem.hpp" />
+    <ClInclude Include="glist_iterators.hpp" />
     <ClInclude Include="history.hpp" />
     <ClInclude Include="identd.hpp" />
     <ClInclude Include="ignore.hpp" />

@@ -13,7 +13,8 @@ EXTRA_DIST = \
 	ctcp.hpp \
 	dcc.hpp \
 	fe.hpp \
-	filesystem.hpp
+	filesystem.hpp\
+	glist_iterators.hpp \
 	hexchat.hpp \
 	hexchatc.hpp \
 	hexchat-plugin.h \
