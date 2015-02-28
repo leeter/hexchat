@@ -49,7 +49,7 @@ namespace glib_helper
 		}
 		const T& operator*() const
 		{
-			return *static_cast<const T*>(list->data)
+			return *static_cast<const T*>(list->data);
 		}
 		const T* operator->() const
 		{
