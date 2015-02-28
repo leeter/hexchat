@@ -35,43 +35,63 @@ namespace glib_helper
 	{
 		L * list;
 	public:
+		using const_reference = const reference;
+		using const_pointer = const pointer;
 		explicit glist_iterator(L * list = nullptr)
 			:list(list){}
 
-		T& operator*()
-		{
-			return *static_cast<T*>(list->data);
-		}
+		auto operator*() -> reference;
+		auto operator->() -> pointer;
+		auto operator*() const->const_reference;
+		auto operator->() const->const_pointer;
+		auto operator++()->glist_iterator&;
+		auto operator++(int)->glist_iterator&;
 
-		T* operator->()
-		{
-			return static_cast<T*>(list->data);
-		}
-		const T& operator*() const
-		{
-			return *static_cast<const T*>(list->data);
-		}
-		const T* operator->() const
-		{
-			return static_cast<const T*>(list->data);
-		}
-		glist_iterator& operator++()
-		{
-			list = list ? list->next : nullptr;
-			return *this;
-		}
-
-		glist_iterator& operator++(int)
-		{
-			glist_iterator temp = *this;
-			list = list ? list->next : nullptr;
-			return temp;
-		}
 		bool equal(glist_iterator const& rhs) const
 		{
 			return this->list == rhs.list;
 		}
 	};
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator*() -> reference
+	{
+		return *static_cast<T*>(list->data);
+	}
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator*() const -> const_reference
+	{
+		return *static_cast<const T*>(list->data);
+	}
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator->() -> pointer
+	{
+		return static_cast<T*>(list->data);
+	}
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator->() const -> const_pointer
+	{
+		return static_cast<const T*>(list->data);
+	}
+
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator++()->glist_iterator&
+	{
+		list = list ? list->next : nullptr;
+		return *this;
+	}
+
+	template<typename T, typename L>
+	auto glist_iterator<T, L>::operator++(int) -> glist_iterator&
+	{
+		glist_iterator temp = *this;
+		list = list ? list->next : nullptr;
+		return temp;
+	}
 
 	template<typename T, typename L>
 	inline bool operator==(glist_iterator<T, L> const& lhs, glist_iterator<T, L> const& rhs)

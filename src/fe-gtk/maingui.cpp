@@ -1117,33 +1117,28 @@ mg_create_icon_item (const char label[], const char stock[], GtkWidget *menu,
 static int
 mg_count_networks (void)
 {
-	int cons = 0;
-	for (auto list = serv_list; list; list = g_slist_next(list))
-	{
-		if (((server *)list->data)->connected)
-			cons++;
-	}
-	return cons;
+	using serv_itr = glib_helper::glist_iterator<server>;
+	return std::count_if(
+		serv_itr{ serv_list },
+		serv_itr{},
+		[](const server& s)
+		{
+			return s.connected;
+		});
 }
 
 static int
 mg_count_dccs (void)
 {
-	GSList *list;
-	dcc::DCC *dcc;
-	int dccs = 0;
-
-	list = dcc_list;
-	while (list)
-	{
-		dcc = static_cast<dcc::DCC*>(list->data);
-		if ((dcc->type == dcc::DCC::dcc_type::TYPE_SEND || dcc->type == dcc::DCC::dcc_type::TYPE_RECV) &&
-			 dcc->dccstat == STAT_ACTIVE)
-			dccs++;
-		list = list->next;
-	}
-
-	return dccs;
+	using dcc_itr = glib_helper::glist_iterator < dcc::DCC > ;
+	return std::count_if(
+		dcc_itr{ dcc_list },
+		dcc_itr{},
+		[](const dcc::DCC& dcc)
+		{
+			return (dcc.type == dcc::DCC::dcc_type::TYPE_SEND || dcc.type == dcc::DCC::dcc_type::TYPE_RECV) &&
+				dcc.dccstat == STAT_ACTIVE;
+		});
 }
 
 void
