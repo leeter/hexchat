@@ -35,6 +35,8 @@ namespace glib_helper
 	{
 		L * list;
 	public:
+		using reference = typename std::iterator < std::forward_iterator_tag, T >::reference ;
+		using pointer = typename std::iterator<std::forward_iterator_tag, T>::pointer;
 		using const_reference = const reference;
 		using const_pointer = const pointer;
 		explicit glist_iterator(L * list = nullptr)
