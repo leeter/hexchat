@@ -178,8 +178,8 @@ struct session_gui
 	int pane_left_size;	/*last position of the pane*/
 	int pane_right_size;
 
-	guint16 is_tab;	/* is tab or toplevel? */
-	guint16 ul_hidden;	/* userlist hidden? */
+	bool is_tab;	/* is tab or toplevel? */
+	bool ul_hidden;	/* userlist hidden? */
 
 };
 
