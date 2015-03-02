@@ -2104,11 +2104,12 @@ mg_create_dialogbuttons (GtkWidget *box)
 static void
 mg_create_topicbar (session *sess, GtkWidget *box)
 {
-	GtkWidget *hbox, *topic, *bbox;
+	GtkWidget *topic, *bbox;
 	session_gui *gui = sess->gui;
 
-	gui->topic_bar = hbox = gtk_hbox_new (false, 0);
-	gtk_box_pack_start (GTK_BOX (box), hbox, false, false, 0);
+	gui->topic_bar = gtk_hbox_new (false, 0);
+	gtk_box_pack_start(GTK_BOX(box), gui->topic_bar, false, false, 0);
+	auto hbox = GTK_BOX(gui->topic_bar);
 
 	if (!gui->is_tab)
 		sess->res->tab = nullptr;
@@ -2116,7 +2117,7 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 	gui->topic_entry = topic = sexy_spell_entry_new ();
 	gtk_widget_set_name (topic, "hexchat-inputbox");
 	sexy_spell_entry_set_checked (SEXY_SPELL_ENTRY (topic), false);
-	gtk_container_add (GTK_CONTAINER (hbox), topic);
+	gtk_container_add(GTK_CONTAINER(gui->topic_bar), topic);
 	g_signal_connect (G_OBJECT (topic), "activate",
 							G_CALLBACK (mg_topic_cb), 0);
 
@@ -2124,15 +2125,15 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 		mg_apply_entry_style (topic);
 
 	gui->topicbutton_box = bbox = gtk_hbox_new (false, 0);
-	gtk_box_pack_start (GTK_BOX (hbox), bbox, false, false, 0);
+	gtk_box_pack_start (hbox, bbox, false, false, 0);
 	mg_create_chanmodebuttons (gui, bbox);
 
 	gui->dialogbutton_box = bbox = gtk_hbox_new (false, 0);
-	gtk_box_pack_start (GTK_BOX (hbox), bbox, false, false, 0);
+	gtk_box_pack_start (hbox, bbox, false, false, 0);
 	mg_create_dialogbuttons (bbox);
 
 	if (!prefs.hex_gui_ulist_resizable)
-		gtkutil_button (hbox, GTK_STOCK_GOTO_LAST, _("Show/Hide userlist"),
+		gtkutil_button(gui->topic_bar, GTK_STOCK_GOTO_LAST, _("Show/Hide userlist"),
 		G_CALLBACK(mg_userlist_toggle_cb), nullptr, nullptr);
 }
 
@@ -2297,13 +2298,14 @@ mg_create_textarea (session *sess, GtkWidget *box)
 
 	gtk_drag_dest_set(gui->vscrollbar, static_cast<GtkDestDefaults>(GTK_DEST_DEFAULT_DROP | GTK_DEST_DEFAULT_MOTION), dnd_dest_targets, 2,
 							 static_cast<GdkDragAction>(GDK_ACTION_MOVE | GDK_ACTION_COPY | GDK_ACTION_LINK));
-	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_begin",
+	auto vscroll_obj = G_OBJECT(gui->vscrollbar);
+	g_signal_connect (vscroll_obj, "drag_begin",
 							G_CALLBACK (mg_drag_begin_cb), nullptr);
-	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_drop",
+	g_signal_connect (vscroll_obj, "drag_drop",
 							G_CALLBACK (mg_drag_drop_cb), nullptr);
-	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_motion",
+	g_signal_connect (vscroll_obj, "drag_motion",
 							G_CALLBACK (mg_drag_motion_cb), gui->vscrollbar);
-	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_end",
+	g_signal_connect (vscroll_obj, "drag_end",
 							G_CALLBACK (mg_drag_end_cb), nullptr);
 
 	gtk_drag_dest_set (gui->xtext, GTK_DEST_DEFAULT_ALL, dnd_targets, 1,
@@ -2333,15 +2335,16 @@ mg_create_infoframe (GtkWidget *box)
 static void
 mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 {
-	GtkWidget *infbox, *wid, *box;
+	GtkWidget *infbox, *wid;
 
-	gui->meter_box = infbox = box = gtk_vbox_new (false, 1);
-	gtk_box_pack_start (GTK_BOX (parent_box), box, false, false, 0);
+	gui->meter_box = infbox = gtk_vbox_new (false, 1);
+	gtk_box_pack_start(GTK_BOX(parent_box), gui->meter_box, false, false, 0);
 
+	auto box = GTK_BOX(gui->meter_box);
 	if ((prefs.hex_gui_lagometer & 2) || (prefs.hex_gui_throttlemeter & 2))
 	{
 		infbox = gtk_hbox_new (false, 0);
-		gtk_box_pack_start (GTK_BOX (box), infbox, false, false, 0);
+		gtk_box_pack_start (box, infbox, false, false, 0);
 	}
 
 	if (prefs.hex_gui_lagometer & 1)
@@ -2355,7 +2358,7 @@ mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 
 		wid = gtk_event_box_new ();
 		gtk_container_add (GTK_CONTAINER (wid), gui->lagometer);
-		gtk_box_pack_start (GTK_BOX (box), wid, false, false, 0);
+		gtk_box_pack_start (box, wid, false, false, 0);
 	}
 	if (prefs.hex_gui_lagometer & 2)
 	{
@@ -2374,7 +2377,7 @@ mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 
 		wid = gtk_event_box_new ();
 		gtk_container_add (GTK_CONTAINER (wid), gui->throttlemeter);
-		gtk_box_pack_start (GTK_BOX (box), wid, 0, 0, 0);
+		gtk_box_pack_start (box, wid, false, false, 0);
 	}
 	if (prefs.hex_gui_throttlemeter & 2)
 	{
@@ -2443,9 +2446,10 @@ mg_rightpane_cb (GtkPaned *pane, GParamSpec *param, session_gui *gui)
 	int handle_size;
 	GtkAllocation allocation;
 
-	gtk_widget_style_get(GTK_WIDGET(pane), "handle-size", &handle_size, nullptr);
+	auto pane_widget = GTK_WIDGET(pane);
+	gtk_widget_style_get(pane_widget, "handle-size", &handle_size, nullptr);
 	/* record the position from the RIGHT side */
-	gtk_widget_get_allocation (GTK_WIDGET(pane), &allocation);
+	gtk_widget_get_allocation (pane_widget, &allocation);
 	prefs.hex_gui_pane_right_size = allocation.width - gtk_paned_get_position (pane) - handle_size;
 }
 
@@ -2466,8 +2470,6 @@ mg_add_pane_signals (session_gui *gui)
 static void
 mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 {
-	GtkWidget *vbox, *hbox, *book;
-
 	/* sep between top and bottom of left side */
 	gui->vpane_left = gtk_vpaned_new ();
 
@@ -2476,38 +2478,41 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 
 	/* sep between left and xtext */
 	gui->hpane_left = gtk_hpaned_new ();
-	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.hex_gui_pane_left_size);
+	auto left_pane = GTK_PANED(gui->hpane_left);
+	gtk_paned_set_position (left_pane, prefs.hex_gui_pane_left_size);
 
 	/* sep between xtext and right side */
 	gui->hpane_right = gtk_hpaned_new ();
 
 	if (prefs.hex_gui_win_swap)
 	{
-		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->vpane_left, false, true);
-		gtk_paned_pack1 (GTK_PANED (gui->hpane_left), gui->hpane_right, true, true);
+		gtk_paned_pack2 (left_pane, gui->vpane_left, false, true);
+		gtk_paned_pack1 (left_pane, gui->hpane_right, true, true);
 	}
 	else
 	{
-		gtk_paned_pack1 (GTK_PANED (gui->hpane_left), gui->vpane_left, false, true);
-		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->hpane_right, true, true);
+		gtk_paned_pack1 (left_pane, gui->vpane_left, false, true);
+		gtk_paned_pack2 (left_pane, gui->hpane_right, true, true);
 	}
-	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, false, true);
+	auto right_pane = GTK_PANED(gui->hpane_right);
+	gtk_paned_pack2 (right_pane, gui->vpane_right, false, true);
 
 	gtk_container_add (GTK_CONTAINER (box), gui->hpane_left);
 
-	gui->note_book = book = gtk_notebook_new ();
-	gtk_notebook_set_show_tabs (GTK_NOTEBOOK (book), false);
-	gtk_notebook_set_show_border (GTK_NOTEBOOK (book), false);
-	gtk_paned_pack1 (GTK_PANED (gui->hpane_right), book, true, true);
+	gui->note_book = gtk_notebook_new ();
+	auto notebook = GTK_NOTEBOOK(gui->note_book);
+	gtk_notebook_set_show_tabs (notebook, false);
+	gtk_notebook_set_show_border (notebook, false);
+	gtk_paned_pack1(right_pane, gui->note_book, true, true);
 
-	hbox = gtk_hbox_new (false, 0);
+	auto hbox = gtk_hbox_new (false, 0);
 	gtk_paned_pack1 (GTK_PANED (gui->vpane_right), hbox, false, true);
 	mg_create_userlist (gui, hbox);
 
 	gui->user_box = hbox;
 
-	vbox = gtk_vbox_new (false, 3);
-	gtk_notebook_append_page (GTK_NOTEBOOK (book), vbox, nullptr);
+	auto vbox = gtk_vbox_new (false, 3);
+	gtk_notebook_append_page (notebook, vbox, nullptr);
 	mg_create_topicbar (sess, vbox);
 
 	if (prefs.hex_gui_search_pos)
