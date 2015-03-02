@@ -565,36 +565,40 @@ tray_menu_destroy (GtkWidget *menu, gpointer userdata)
 }
 
 #ifdef WIN32
-static void
+static gboolean
 tray_menu_enter_cb (GtkWidget *menu)
 {
 	tray_menu_inactivetime = 0;
+	return false;
 }
 
-static void
+static gboolean
 tray_menu_left_cb (GtkWidget *menu)
 {
 	tray_menu_inactivetime = g_get_real_time ();
+	return false;
 }
 
-static void
+static gboolean
 tray_check_hide (GtkWidget *menu)
 {
 	if (tray_menu_inactivetime && g_get_real_time () - tray_menu_inactivetime  >= 2000000)
 	{
 		tray_menu_destroy (menu, NULL);
 	}
+	return false;
 }
 
 void setup_open(void);
-static void
+static gboolean
 tray_menu_settings (GtkWidget * wid, gpointer none)
 {
 	setup_open ();
+	return false;
 }
 #endif
 
-static void
+static gboolean
 tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 {
 	static GtkWidget *menu;
@@ -664,6 +668,7 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 
 	gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL,
 						 userdata, button, time);
+	return false;
 }
 
 static void
