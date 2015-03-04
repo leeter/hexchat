@@ -22,15 +22,17 @@
 #endif
 
 #include <algorithm>
-#include <vector>
-#include <string>
-#include <functional>
-#include <sstream>
 #include <cstdio>
 #include <cstdlib>
-#include <fcntl.h>
 #include <cstring>
+#include <functional>
 #include <stdexcept>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <fcntl.h>
+
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref.hpp>
 
@@ -77,32 +79,35 @@
 #include "servlistgui.hpp"
 #include "userlistgui.hpp"
 
-static GSList *submenu_list;
-
-enum
+namespace
 {
-	M_MENUITEM,
-	M_NEWMENU,
-	M_END,
-	M_SEP,
-	M_MENUTOG,
-	M_MENURADIO,
-	M_MENUSTOCK,
-	M_MENUPIX,
-	M_MENUSUB
-};
+	static GSList *submenu_list;
 
-struct mymenu
-{
-	const char *text;
-	GCallback callback;
-	char *image;
-	unsigned char type;	/* M_XXX */
-	unsigned char id;		/* MENU_ID_XXX (menu.hpp) */
-	unsigned char state;	/* ticked or not? */
-	unsigned char sensitive;	/* shaded out? */
-	guint key;				/* GDK_KEY_x */
-};
+	enum class menu_type : char
+	{
+		ITEM,
+		NEWMENU,
+		END,
+		SEP,
+		TOG,
+		RADIO,
+		STOCK,
+		PIX,
+		SUB
+	};
+
+	struct mymenu
+	{
+		const char *text;
+		GCallback callback;
+		char *image;
+		menu_type type;	/* M_XXX */
+		unsigned char id;		/* MENU_ID_XXX (menu.hpp) */
+		unsigned char state;	/* ticked or not? */
+		unsigned char sensitive;	/* shaded out? */
+		guint key;				/* GDK_KEY_x */
+	};
+}// anon namespace
 
 #define XCMENU_DOLIST 1
 #define XCMENU_SHADED 1
@@ -1730,104 +1735,106 @@ menu_about (GtkWidget *wid, gpointer sess)
 	gtk_widget_show_all (GTK_WIDGET(dialog));
 }
 
-static struct mymenu mymenu[] = {
-	{N_("He_xChat"), 0, 0, M_NEWMENU, MENU_ID_HEXCHAT, 0, 1},
-	{N_("Network Li_st..."), G_CALLBACK(menu_open_server_list), (char *)&pix_book, M_MENUPIX, 0, 0, 1, GDK_KEY_s},
-	{0, 0, 0, M_SEP, 0, 0, 0},
+namespace{
+	static struct mymenu mymenu[] = {
+		{ N_("He_xChat"), 0, 0, menu_type::NEWMENU, MENU_ID_HEXCHAT, 0, 1 },
+		{ N_("Network Li_st..."), G_CALLBACK(menu_open_server_list), (char *)&pix_book, menu_type::PIX, 0, 0, 1, GDK_KEY_s },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
 
-	{N_("_New"), 0, GTK_STOCK_NEW, M_MENUSUB, 0, 0, 1},
-	{ N_("Server Tab..."), G_CALLBACK(menu_newserver_tab), 0, M_MENUITEM, 0, 0, 1, GDK_KEY_t },
-	{ N_("Channel Tab..."), G_CALLBACK(menu_newchannel_tab), 0, M_MENUITEM, 0, 0, 1 },
-	{ N_("Server Window..."), G_CALLBACK(menu_newserver_window), 0, M_MENUITEM, 0, 0, 1, GDK_KEY_n },
-	{ N_("Channel Window..."), G_CALLBACK(menu_newchannel_window), 0, M_MENUITEM, 0, 0, 1 },
-		{0, 0, 0, M_END, 0, 0, 0},
-	{0, 0, 0, M_SEP, 0, 0, 0},
+		{ N_("_New"), 0, GTK_STOCK_NEW, menu_type::SUB, 0, 0, 1 },
+		{ N_("Server Tab..."), G_CALLBACK(menu_newserver_tab), 0, menu_type::ITEM, 0, 0, 1, GDK_KEY_t },
+		{ N_("Channel Tab..."), G_CALLBACK(menu_newchannel_tab), 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Server Window..."), G_CALLBACK(menu_newserver_window), 0, menu_type::ITEM, 0, 0, 1, GDK_KEY_n },
+		{ N_("Channel Window..."), G_CALLBACK(menu_newchannel_window), 0, menu_type::ITEM, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::END, 0, 0, 0 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
 
-	{N_("_Load Plugin or Script..."), menu_loadplugin, GTK_STOCK_REVERT_TO_SAVED, M_MENUSTOCK, 0, 0, 1},
-	{0, 0, 0, M_SEP, 0, 0, 0},	/* 11 */
+		{ N_("_Load Plugin or Script..."), menu_loadplugin, GTK_STOCK_REVERT_TO_SAVED, menu_type::STOCK, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },	/* 11 */
 #define DETACH_OFFSET (12)
-	{ 0, G_CALLBACK(menu_detach), GTK_STOCK_REDO, M_MENUSTOCK, 0, 0, 1 },	/* 12 */
+		{ 0, G_CALLBACK(menu_detach), GTK_STOCK_REDO, menu_type::STOCK, 0, 0, 1 },	/* 12 */
 #define CLOSE_OFFSET (13)
-	{ 0, G_CALLBACK(menu_close), GTK_STOCK_CLOSE, M_MENUSTOCK, 0, 0, 1, GDK_KEY_w },
-	{0, 0, 0, M_SEP, 0, 0, 0},
-	{ N_("_Quit"), G_CALLBACK(menu_quit), GTK_STOCK_QUIT, M_MENUSTOCK, 0, 0, 1, GDK_KEY_q },	/* 15 */
+		{ 0, G_CALLBACK(menu_close), GTK_STOCK_CLOSE, menu_type::STOCK, 0, 0, 1, GDK_KEY_w },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
+		{ N_("_Quit"), G_CALLBACK(menu_quit), GTK_STOCK_QUIT, menu_type::STOCK, 0, 0, 1, GDK_KEY_q },	/* 15 */
 
-	{N_("_View"), 0, 0, M_NEWMENU, 0, 0, 1},
+		{ N_("_View"), 0, 0, menu_type::NEWMENU, 0, 0, 1 },
 #define MENUBAR_OFFSET (17)
-	{N_("_Menu Bar"), menu_bar_toggle_cb, 0, M_MENUTOG, MENU_ID_MENUBAR, 0, 1, GDK_KEY_F9},
-	{ N_("_Topic Bar"), G_CALLBACK(menu_topicbar_toggle), 0, M_MENUTOG, MENU_ID_TOPICBAR, 0, 1 },
-	{ N_("_User List"), G_CALLBACK(menu_userlist_toggle), 0, M_MENUTOG, MENU_ID_USERLIST, 0, 1, GDK_KEY_F7 },
-	{ N_("U_serlist Buttons"), G_CALLBACK(menu_ulbuttons_toggle), 0, M_MENUTOG, MENU_ID_ULBUTTONS, 0, 1 },
-	{ N_("M_ode Buttons"), G_CALLBACK(menu_cmbuttons_toggle), 0, M_MENUTOG, MENU_ID_MODEBUTTONS, 0, 1 },
-	{0, 0, 0, M_SEP, 0, 0, 0},
-	{N_("_Channel Switcher"), 0, 0, M_MENUSUB, 0, 0, 1},	/* 23 */
+		{ N_("_Menu Bar"), menu_bar_toggle_cb, 0, menu_type::TOG, MENU_ID_MENUBAR, 0, 1, GDK_KEY_F9 },
+		{ N_("_Topic Bar"), G_CALLBACK(menu_topicbar_toggle), 0, menu_type::TOG, MENU_ID_TOPICBAR, 0, 1 },
+		{ N_("_User List"), G_CALLBACK(menu_userlist_toggle), 0, menu_type::TOG, MENU_ID_USERLIST, 0, 1, GDK_KEY_F7 },
+		{ N_("U_serlist Buttons"), G_CALLBACK(menu_ulbuttons_toggle), 0, menu_type::TOG, MENU_ID_ULBUTTONS, 0, 1 },
+		{ N_("M_ode Buttons"), G_CALLBACK(menu_cmbuttons_toggle), 0, menu_type::TOG, MENU_ID_MODEBUTTONS, 0, 1 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
+		{ N_("_Channel Switcher"), 0, 0, menu_type::SUB, 0, 0, 1 },	/* 23 */
 #define TABS_OFFSET (24)
-	{ N_("_Tabs"), G_CALLBACK(menu_layout_cb), 0, M_MENURADIO, MENU_ID_LAYOUT_TABS, 0, 1 },
-		{N_("T_ree"), 0, 0, M_MENURADIO, MENU_ID_LAYOUT_TREE, 0, 1},
-		{0, 0, 0, M_END, 0, 0, 0},
-	{N_("_Network Meters"), 0, 0, M_MENUSUB, 0, 0, 1},	/* 27 */
-#define METRE_OFFSET (28)
-	{ N_("Off"), G_CALLBACK(menu_metres_off), 0, M_MENURADIO, 0, 0, 1 },
-	{ N_("Graph"), G_CALLBACK(menu_metres_graph), 0, M_MENURADIO, 0, 0, 1 },
-	{ N_("Text"), G_CALLBACK(menu_metres_text), 0, M_MENURADIO, 0, 0, 1 },
-	{ N_("Both"), G_CALLBACK(menu_metres_both), 0, M_MENURADIO, 0, 0, 1 },
-		{0, 0, 0, M_END, 0, 0, 0},	/* 32 */
-	{ 0, 0, 0, M_SEP, 0, 0, 0 },
-	{ N_("_Fullscreen"), G_CALLBACK(menu_fullscreen_toggle), 0, M_MENUTOG, MENU_ID_FULLSCREEN, 0, 1, GDK_KEY_F11 },
+		{ N_("_Tabs"), G_CALLBACK(menu_layout_cb), 0, menu_type::RADIO, MENU_ID_LAYOUT_TABS, 0, 1 },
+		{ N_("T_ree"), 0, 0, menu_type::RADIO, MENU_ID_LAYOUT_TREE, 0, 1 },
+		{ 0, 0, 0, menu_type::END, 0, 0, 0 },
+		{ N_("_Network Meters"), 0, 0, menu_type::SUB, 0, 0, 1 },	/* 27 */
+#define METRE_OFFSET (2)
+		{ N_("Off"), G_CALLBACK(menu_metres_off), 0, menu_type::RADIO, 0, 0, 1 },
+		{ N_("Graph"), G_CALLBACK(menu_metres_graph), 0, menu_type::RADIO, 0, 0, 1 },
+		{ N_("Text"), G_CALLBACK(menu_metres_text), 0, menu_type::RADIO, 0, 0, 1 },
+		{ N_("Both"), G_CALLBACK(menu_metres_both), 0, menu_type::RADIO, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::END, 0, 0, 0 },	/* 32 */
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
+		{ N_("_Fullscreen"), G_CALLBACK(menu_fullscreen_toggle), 0, menu_type::TOG, MENU_ID_FULLSCREEN, 0, 1, GDK_KEY_F11 },
 
-	{N_("_Server"), 0, 0, M_NEWMENU, 0, 0, 1},
-	{ N_("_Disconnect"), G_CALLBACK(menu_disconnect), GTK_STOCK_DISCONNECT, M_MENUSTOCK, MENU_ID_DISCONNECT, 0, 1 },
-	{ N_("_Reconnect"), G_CALLBACK(menu_reconnect), GTK_STOCK_CONNECT, M_MENUSTOCK, MENU_ID_RECONNECT, 0, 1 },
-	{ N_("_Join a Channel..."), G_CALLBACK(menu_join), GTK_STOCK_JUMP_TO, M_MENUSTOCK, MENU_ID_JOIN, 0, 1 },
-	{ N_("_List of Channels..."), G_CALLBACK(menu_chanlist), GTK_STOCK_INDEX, M_MENUITEM, 0, 0, 1 },
-	{0, 0, 0, M_SEP, 0, 0, 0},
+		{ N_("_Server"), 0, 0, menu_type::NEWMENU, 0, 0, 1 },
+		{ N_("_Disconnect"), G_CALLBACK(menu_disconnect), GTK_STOCK_DISCONNECT, menu_type::STOCK, MENU_ID_DISCONNECT, 0, 1 },
+		{ N_("_Reconnect"), G_CALLBACK(menu_reconnect), GTK_STOCK_CONNECT, menu_type::STOCK, MENU_ID_RECONNECT, 0, 1 },
+		{ N_("_Join a Channel..."), G_CALLBACK(menu_join), GTK_STOCK_JUMP_TO, menu_type::STOCK, MENU_ID_JOIN, 0, 1 },
+		{ N_("_List of Channels..."), G_CALLBACK(menu_chanlist), GTK_STOCK_INDEX, menu_type::ITEM, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
 #define AWAY_OFFSET (41)
-	{ N_("Marked _Away"), G_CALLBACK(menu_away), 0, M_MENUTOG, MENU_ID_AWAY, 0, 1, GDK_KEY_a },
+		{ N_("Marked _Away"), G_CALLBACK(menu_away), 0, menu_type::TOG, MENU_ID_AWAY, 0, 1, GDK_KEY_a },
 
-	{N_("_Usermenu"), 0, 0, M_NEWMENU, MENU_ID_USERMENU, 0, 1},	/* 40 */
+		{ N_("_Usermenu"), 0, 0, menu_type::NEWMENU, MENU_ID_USERMENU, 0, 1 },	/* 40 */
 
-	{N_("S_ettings"), 0, 0, M_NEWMENU, 0, 0, 1},
-	{ N_("_Preferences"), G_CALLBACK(menu_settings), GTK_STOCK_PREFERENCES, M_MENUSTOCK, 0, 0, 1 },
-	{0, 0, 0, M_SEP, 0, 0, 0},
-	{N_("Auto Replace..."), menu_rpopup, 0, M_MENUITEM, 0, 0, 1},
-	{N_("CTCP Replies..."), menu_ctcpguiopen, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Dialog Buttons..."), menu_dlgbuttons, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Keyboard Shortcuts..."), menu_keypopup, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Text Events..."), menu_evtpopup, 0, M_MENUITEM, 0, 0, 1},
-	{N_("URL Handlers..."), menu_urlhandlers, 0, M_MENUITEM, 0, 0, 1},
-	{N_("User Commands..."), menu_usercommands, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Userlist Buttons..."), menu_ulbuttons, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Userlist Popup..."), menu_ulpopup, 0, M_MENUITEM, 0, 0, 1},	/* 52 */
+		{ N_("S_ettings"), 0, 0, menu_type::NEWMENU, 0, 0, 1 },
+		{ N_("_Preferences"), G_CALLBACK(menu_settings), GTK_STOCK_PREFERENCES, menu_type::STOCK, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
+		{ N_("Auto Replace..."), menu_rpopup, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("CTCP Replies..."), menu_ctcpguiopen, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Dialog Buttons..."), menu_dlgbuttons, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Keyboard Shortcuts..."), menu_keypopup, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Text Events..."), menu_evtpopup, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("URL Handlers..."), menu_urlhandlers, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("User Commands..."), menu_usercommands, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Userlist Buttons..."), menu_ulbuttons, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Userlist Popup..."), menu_ulpopup, 0, menu_type::ITEM, 0, 0, 1 },	/* 52 */
 
-	{N_("_Window"), 0, 0, M_NEWMENU, 0, 0, 1},
-	{ N_("_Ban List..."), G_CALLBACK(menu_banlist), 0, M_MENUITEM, 0, 0, 1 },
-	{N_("Character Chart..."), ascii_open, 0, M_MENUITEM, 0, 0, 1},
-	{ N_("Direct Chat..."), G_CALLBACK(menu_dcc_chat_win), 0, M_MENUITEM, 0, 0, 1 },
-	{ N_("File _Transfers..."), G_CALLBACK(menu_dcc_win), 0, M_MENUITEM, 0, 0, 1 },
-	{N_("Friends List..."), hexchat::gui::notify::notify_opengui, 0, M_MENUITEM, 0, 0, 1},
-	{N_("Ignore List..."), ignore_gui_open, 0, M_MENUITEM, 0, 0, 1},
-	{N_("_Plugins and Scripts..."), menu_pluginlist, 0, M_MENUITEM, 0, 0, 1},
-	{ N_("_Raw Log..."), G_CALLBACK(menu_rawlog), 0, M_MENUITEM, 0, 0, 1 },	/* 61 */
-	{N_("URL Grabber..."), ::hexchat::gui::url::url_opengui, 0, M_MENUITEM, 0, 0, 1},
-	{0, 0, 0, M_SEP, 0, 0, 0},
-	{ N_("Reset Marker Line"), G_CALLBACK(menu_resetmarker), 0, M_MENUITEM, 0, 0, 1, GDK_KEY_m },
-	{ N_("Move to Marker Line"), G_CALLBACK(menu_movetomarker), 0, M_MENUITEM, 0, 0, 1, GDK_KEY_M },
-	{ N_("_Copy Selection"), G_CALLBACK(menu_copy_selection), 0, M_MENUITEM, 0, 0, 1, GDK_KEY_C },
-	{ N_("C_lear Text"), G_CALLBACK(menu_flushbuffer), GTK_STOCK_CLEAR, M_MENUSTOCK, 0, 0, 1 },
-	{ N_("Save Text..."), G_CALLBACK(menu_savebuffer), GTK_STOCK_SAVE, M_MENUSTOCK, 0, 0, 1 },
+		{ N_("_Window"), 0, 0, menu_type::NEWMENU, 0, 0, 1 },
+		{ N_("_Ban List..."), G_CALLBACK(menu_banlist), 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Character Chart..."), ascii_open, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Direct Chat..."), G_CALLBACK(menu_dcc_chat_win), 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("File _Transfers..."), G_CALLBACK(menu_dcc_win), 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Friends List..."), hexchat::gui::notify::notify_opengui, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("Ignore List..."), ignore_gui_open, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("_Plugins and Scripts..."), menu_pluginlist, 0, menu_type::ITEM, 0, 0, 1 },
+		{ N_("_Raw Log..."), G_CALLBACK(menu_rawlog), 0, menu_type::ITEM, 0, 0, 1 },	/* 61 */
+		{ N_("URL Grabber..."), ::hexchat::gui::url::url_opengui, 0, menu_type::ITEM, 0, 0, 1 },
+		{ 0, 0, 0, menu_type::SEP, 0, 0, 0 },
+		{ N_("Reset Marker Line"), G_CALLBACK(menu_resetmarker), 0, menu_type::ITEM, 0, 0, 1, GDK_KEY_m },
+		{ N_("Move to Marker Line"), G_CALLBACK(menu_movetomarker), 0, menu_type::ITEM, 0, 0, 1, GDK_KEY_M },
+		{ N_("_Copy Selection"), G_CALLBACK(menu_copy_selection), 0, menu_type::ITEM, 0, 0, 1, GDK_KEY_C },
+		{ N_("C_lear Text"), G_CALLBACK(menu_flushbuffer), GTK_STOCK_CLEAR, menu_type::STOCK, 0, 0, 1 },
+		{ N_("Save Text..."), G_CALLBACK(menu_savebuffer), GTK_STOCK_SAVE, menu_type::STOCK, 0, 0, 1 },
 #define SEARCH_OFFSET (70)
-	{N_("Search"), 0, GTK_STOCK_JUSTIFY_LEFT, M_MENUSUB, 0, 0, 1},
-		{N_("Search Text..."), menu_search, GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_f},
-		{ N_("Search Next"), G_CALLBACK(menu_search_next), GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_g },
-		{ N_("Search Previous"), G_CALLBACK(menu_search_prev), GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_G },
-		{0, 0, 0, M_END, 0, 0, 0},
+		{ N_("Search"), 0, GTK_STOCK_JUSTIFY_LEFT, menu_type::SUB, 0, 0, 1 },
+		{ N_("Search Text..."), menu_search, GTK_STOCK_FIND, menu_type::STOCK, 0, 0, 1, GDK_KEY_f },
+		{ N_("Search Next"), G_CALLBACK(menu_search_next), GTK_STOCK_FIND, menu_type::STOCK, 0, 0, 1, GDK_KEY_g },
+		{ N_("Search Previous"), G_CALLBACK(menu_search_prev), GTK_STOCK_FIND, menu_type::STOCK, 0, 0, 1, GDK_KEY_G },
+		{ 0, 0, 0, menu_type::END, 0, 0, 0 },
 
-	{N_("_Help"), 0, 0, M_NEWMENU, 0, 0, 1},	/* 74 */
-	{ N_("_Contents"), G_CALLBACK(menu_docs), GTK_STOCK_HELP, M_MENUSTOCK, 0, 0, 1, GDK_KEY_F1 },
-	{ N_("_About"), G_CALLBACK(menu_about), GTK_STOCK_ABOUT, M_MENUSTOCK, 0, 0, 1 },
+		{ N_("_Help"), 0, 0, menu_type::NEWMENU, 0, 0, 1 },	/* 74 */
+		{ N_("_Contents"), G_CALLBACK(menu_docs), GTK_STOCK_HELP, menu_type::STOCK, 0, 0, 1, GDK_KEY_F1 },
+		{ N_("_About"), G_CALLBACK(menu_about), GTK_STOCK_ABOUT, menu_type::STOCK, 0, 0, 1 },
 
-	{0, 0, 0, M_END, 0, 0, 0},
-};
+		{ 0, 0, 0, menu_type::END, 0, 0, 0 },
+	};
+} // anonymous namespace
 
 void
 menu_set_away (session_gui *gui, int away)
@@ -2333,7 +2340,7 @@ menu_create_main (void *accel_group, bool bar, int away, int toplevel,
 
 		switch (mymenu[i].type)
 		{
-		case M_NEWMENU:
+		case menu_type::NEWMENU:
 			if (menu)
 				gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), menu);
 			item = menu = gtk_menu_new ();
@@ -2349,15 +2356,15 @@ menu_create_main (void *accel_group, bool bar, int away, int toplevel,
 			gtk_widget_show (menu_item);
 			break;
 
-		case M_MENUPIX:
+		case menu_type::PIX:
 			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, false);
 			goto normalitem;
 
-		case M_MENUSTOCK:
+		case menu_type::STOCK:
 			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
 			goto normalitem;
 
-		case M_MENUITEM:
+		case menu_type::ITEM:
 			item = gtk_menu_item_new_with_mnemonic (_(mymenu[i].text));
 normalitem:
 			if (mymenu[i].key != 0)
@@ -2379,7 +2386,7 @@ normalitem:
 			gtk_widget_show (item);
 			break;
 
-		case M_MENUTOG:
+		case menu_type::TOG:
 			item = gtk_check_menu_item_new_with_mnemonic (_(mymenu[i].text));
 togitem:
 			/* must avoid callback for Radio buttons */
@@ -2404,19 +2411,19 @@ togitem:
 			gtk_widget_set_sensitive (item, mymenu[i].sensitive);
 			break;
 
-		case M_MENURADIO:
+		case menu_type::RADIO:
 			item = gtk_radio_menu_item_new_with_mnemonic (group, _(mymenu[i].text));
 			group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));
 			goto togitem;
 
-		case M_SEP:
+		case menu_type::SEP:
 			item = gtk_menu_item_new ();
 			gtk_widget_set_sensitive (item, FALSE);
 			gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
 			gtk_widget_show (item);
 			break;
 
-		case M_MENUSUB:
+		case menu_type::SUB:
 			group = NULL;
 			submenu = gtk_menu_new ();
 			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
