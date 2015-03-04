@@ -599,13 +599,12 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 {
 	char buf[512];
 	char unknown[96];
-	char *fmt;
 	const char *users_country;
 	gboolean missing = false;
 	GtkWidget *item;
 
 	/* let the translators tweak this if need be */
-	fmt = _("<tt><b>%-11s</b></tt> %s");
+	const char* fmt = _("<tt><b>%-11s</b></tt> %s");
 	snprintf (unknown, sizeof (unknown), "<i>%s</i>", _("Unknown"));
 
 	if (user->realname)
@@ -616,21 +615,21 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	{
 		snprintf (buf, sizeof (buf), fmt, _("Real Name:"), unknown);
 	}
-	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+	item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->realname ? &(*user->realname)[0] : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("User:"),
 				 user->hostname ? user->hostname->c_str() : unknown);
-	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+	item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
 							(gpointer)(user->hostname ? user->hostname->c_str() : unknown));
 	
 	snprintf (buf, sizeof (buf), fmt, _("Account:"),
 				 user->account ? user->account->c_str() : unknown);
-	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+	item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->account ? &(*user->account)[0] : unknown);
@@ -639,14 +638,14 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	if (users_country)
 	{
 		snprintf (buf, sizeof (buf), fmt, _ ("Country:"), users_country);
-		item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+		item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 		g_signal_connect (G_OBJECT (item), "activate",
 			G_CALLBACK (copy_to_clipboard_cb), (gpointer)users_country);
 	}
 
 	snprintf (buf, sizeof (buf), fmt, _("Server:"),
 				 user->servername ? user->servername->c_str() : unknown);
-	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+	item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 	g_signal_connect (G_OBJECT (item), "activate",
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->servername ? &(*user->servername)[0] : unknown);
@@ -656,13 +655,13 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 		char min[96];
 
 		snprintf (min, sizeof (min), _("%u minutes ago"),
-					(unsigned int) ((time (0) - user->lasttalk) / 60));
+					(unsigned int) ((std::time (nullptr) - user->lasttalk) / 60));
 		snprintf (buf, sizeof (buf), fmt, _("Last Msg:"), min);
 	} else
 	{
 		snprintf (buf, sizeof (buf), fmt, _("Last Msg:"), unknown);
 	}
-	menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+	menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 
 	if (user->away)
 	{
@@ -671,7 +670,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 		{
 			auto msg = strip_color (away->first ? away->second : std::string(unknown), static_cast<strip_flags>(STRIP_ALL|STRIP_ESCMARKUP));
 			snprintf (buf, sizeof (buf), fmt, _("Away Msg:"), msg.c_str());
-			item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
+			item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 			g_signal_connect (G_OBJECT (item), "activate",
 									G_CALLBACK (copy_to_clipboard_cb), 
 									away->first ? const_cast<char*>(away->second.c_str()) : unknown);
@@ -726,8 +725,8 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 	if (num_sel > 1)
 	{
 		snprintf (buf, sizeof (buf), _("%d nicks selected."), num_sel);
-		menu_quick_item (0, buf, menu, 0, 0, 0);
-		menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
+		menu_quick_item (nullptr, buf, menu, 0, nullptr, nullptr);
+		menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, nullptr, nullptr);
 	} else
 	{
 		user = userlist_find (sess, nick);	/* lasttalk is channel specific */
@@ -744,7 +743,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 			}
 
 			menu_quick_endsub ();
-			menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
+			menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, nullptr, nullptr);
 		}
 	}
 
@@ -945,17 +944,17 @@ menu_urlmenu (GdkEventButton *event, const std::string & url)
 		std::unique_ptr<char[]> tmp(new_strdup (str_copy.get()));
 		chop = g_utf8_offset_to_pointer (tmp.get(), 48);
 		chop[0] = chop[1] = chop[2] = '.';
-		chop[3] = 0;
-		menu_quick_item (0, tmp.get(), menu, XCMENU_SHADED, 0, 0);
+		chop[3] = '\0';
+		menu_quick_item (nullptr, tmp.get(), menu, XCMENU_SHADED, nullptr, nullptr);
 	} else
 	{
-		menu_quick_item (0, str_copy.get(), menu, XCMENU_SHADED, 0, 0);
+		menu_quick_item (nullptr, str_copy.get(), menu, XCMENU_SHADED, nullptr, nullptr);
 	}
-	menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);
+	menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, nullptr, nullptr);
 
 	/* Two hardcoded entries */
-	if (strncmp (str_copy.get(), "irc://", 6) == 0 ||
-		strncmp (str_copy.get(), "ircs://",7) == 0)
+	if (std::strncmp (str_copy.get(), "irc://", 6) == 0 ||
+		std::strncmp (str_copy.get(), "ircs://",7) == 0)
 		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Connect"), menu, str_copy.get());
 	else
 		menu_quick_item_with_callback (G_CALLBACK(open_url_cb), _("Open Link in Browser"), menu, str_copy.get());
@@ -1015,8 +1014,8 @@ menu_chanmenu (struct session *sess, GdkEventButton * event, char *chan)
 
 	menu = gtk_menu_new ();
 
-	menu_quick_item (0, chan, menu, XCMENU_SHADED, str_copy.get(), 0);
-	menu_quick_item (0, 0, menu, XCMENU_SHADED, str_copy.get(), 0);
+	menu_quick_item (nullptr, chan, menu, XCMENU_SHADED, str_copy.get(), nullptr);
+	menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, str_copy.get(), nullptr);
 
 	if (!is_joined)
 		menu_quick_item_with_callback (G_CALLBACK(menu_chan_join), _("Join Channel"), menu,
@@ -1122,15 +1121,15 @@ static void
 menu_usermenu (void)
 {
 	editlist_gui_open (nullptr, nullptr, usermenu_list, _(DISPLAY_NAME": User menu"),
-							 "usermenu", "usermenu.conf", 0);
+							 "usermenu", "usermenu.conf", nullptr);
 }
 
 static void
 usermenu_create (GtkWidget *menu)
 {
 	menu_create (menu, usermenu_list, "", false);
-	menu_quick_item (0, 0, menu, XCMENU_SHADED, 0, 0);	/* sep */
-	menu_quick_item_with_callback (menu_usermenu, _("Edit This Menu..."), menu, 0);
+	menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, nullptr, nullptr);	/* sep */
+	menu_quick_item_with_callback (menu_usermenu, _("Edit This Menu..."), menu, nullptr);
 }
 
 static void
@@ -1182,7 +1181,7 @@ menu_newserver_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-	new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+	new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1192,7 +1191,7 @@ menu_newchannel_window (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 0;
-	new_ircwindow(current_sess->server, nullptr, session::SESS_CHANNEL, 0);
+	new_ircwindow(current_sess->server, nullptr, session::SESS_CHANNEL, false);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1206,7 +1205,7 @@ menu_newserver_tab (GtkWidget * wid, gpointer none)
 	/* force focus if setting is "only requested tabs" */
 	if (prefs.hex_gui_tab_newtofront == 2)
 		prefs.hex_gui_tab_newtofront = 1;
-	new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+	new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 	prefs.hex_gui_tab_chans = old;
 	prefs.hex_gui_tab_newtofront = oldf;
 }
@@ -1217,7 +1216,7 @@ menu_newchannel_tab (GtkWidget * wid, gpointer none)
 	int old = prefs.hex_gui_tab_chans;
 
 	prefs.hex_gui_tab_chans = 1;
-	new_ircwindow(current_sess->server, nullptr, session::SESS_CHANNEL, 0);
+	new_ircwindow(current_sess->server, nullptr, session::SESS_CHANNEL, false);
 	prefs.hex_gui_tab_chans = old;
 }
 
@@ -1378,7 +1377,7 @@ menu_join (GtkWidget * wid, gpointer none)
 	GtkWidget *hbox, *dialog, *entry, *label;
 
 	dialog = gtk_dialog_new_with_buttons (_("Join Channel"),
-									GTK_WINDOW (parent_window), static_cast<GtkDialogFlags>(0),
+									GTK_WINDOW (parent_window), GtkDialogFlags(),
 									_("Retrieve channel list..."), GTK_RESPONSE_HELP,
 									GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 									GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -1392,10 +1391,10 @@ menu_join (GtkWidget * wid, gpointer none)
 	gtk_entry_set_text (GTK_ENTRY (entry), "#");
 	g_signal_connect (G_OBJECT (entry), "activate",
 							G_CALLBACK (menu_join_entry_cb), dialog);
-	gtk_box_pack_end (GTK_BOX (hbox), entry, 0, 0, 0);
+	gtk_box_pack_end (GTK_BOX (hbox), entry, false, false, 0);
 
 	label = gtk_label_new (_("Enter Channel to Join:"));
-	gtk_box_pack_end (GTK_BOX (hbox), label, 0, 0, 0);
+	gtk_box_pack_end (GTK_BOX (hbox), label, false, false, 0);
 
 	g_signal_connect (G_OBJECT (dialog), "response",
 						   G_CALLBACK (menu_join_cb), entry);
@@ -1576,12 +1575,6 @@ menu_docs (GtkWidget *wid, gpointer none)
 {
 	fe_open_url ("http://hexchat.readthedocs.org");
 }
-
-/*static void
-menu_webpage (GtkWidget *wid, gpointer none)
-{
-	fe_open_url ("http://xchat.org");
-}*/
 
 static void
 menu_dcc_win (GtkWidget *wid, gpointer none)
@@ -1908,7 +1901,6 @@ menu_find_item (GtkWidget *menu, const char name[])
 static GtkWidget *
 menu_find_path (GtkWidget *menu, const std::string & path)
 {
-	GtkMenuItem *item;
 	std::string name;
 	/* grab the next part of the path */
 	auto len = path.find_first_of('/');
@@ -1920,7 +1912,7 @@ menu_find_path (GtkWidget *menu, const std::string & path)
 	else
 		name = path.substr(0, len);
 
-	item = menu_find_item (menu, name.c_str());
+	auto item = menu_find_item (menu, name.c_str());
 	if (!item)
 		return nullptr;
 
@@ -1990,9 +1982,9 @@ menu_update_cb (GtkWidget *menu, menu_entry *me, char *target)
 static void
 menu_radio_cb (GtkCheckMenuItem *item, menu_entry *me)
 {
-	me->state = 0;
+	me->state = false;
 	if (item->active)
-		me->state = 1;
+		me->state = true;
 
 	/* update the state, incase this was changed via right-click. */
 	/* This will update all other windows and menu bars */
@@ -2006,9 +1998,9 @@ menu_radio_cb (GtkCheckMenuItem *item, menu_entry *me)
 static void
 menu_toggle_cb(GtkCheckMenuItem *item, menu_entry *me)
 {
-	me->state = 0;
+	me->state = false;
 	if (item->active)
-		me->state = 1;
+		me->state = true;
 
 	/* update the state, incase this was changed via right-click. */
 	/* This will update all other windows and menu bars */
@@ -2134,7 +2126,6 @@ static void
 menu_add_cb (GtkWidget *menu, menu_entry *me, char *target)
 {
 	GtkWidget *item;
-	GtkAccelGroup *accel_group;
 
 	if (me->group)	/* have a group name? Must be a radio item */
 		item = menu_add_radio (menu, me);
@@ -2150,7 +2141,7 @@ menu_add_cb (GtkWidget *menu, menu_entry *me, char *target)
 		gtk_widget_set_sensitive (item, me->enable);
 		if (me->key)
 		{
-			accel_group = static_cast<GtkAccelGroup*>(g_object_get_data (G_OBJECT (menu), "accel"));
+			auto accel_group = static_cast<GtkAccelGroup*>(g_object_get_data (G_OBJECT (menu), "accel"));
 			if (accel_group)	/* popup menus don't have them */
 				gtk_widget_add_accelerator (item, "activate", accel_group, me->key,
 													 static_cast<GdkModifierType>(me->modifier), GTK_ACCEL_VISIBLE);
@@ -2205,7 +2196,7 @@ menu_add_plugin_items (GtkWidget *menu, char *root, char *target)
 	/* outbound.c */
 	for (auto & me : menu_list)
 	{
-		if (!me->is_main && !strncmp (me->path.c_str(), root + 1, root[0]))
+		if (!me->is_main && !std::strncmp (me->path.c_str(), root + 1, root[0]))
 			menu_add_cb (menu, me.get(), target);
 	}
 }
