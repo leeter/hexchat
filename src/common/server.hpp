@@ -83,10 +83,10 @@ public:
 	void p_get_ip_uh(const std::string &nick);
 	void p_set_back();
 	void p_set_away(const std::string & reason);
-	void p_message(const std::string & channel, const std::string & text);
+	void p_message(const boost::string_ref & channel, const boost::string_ref & text);
 	void p_action(const std::string & channel, const std::string & act);
 	void p_notice(const std::string & channel, const std::string & text);
-	void p_topic(const std::string & channel, const char *topic);
+	void p_topic(const boost::string_ref & channel, const char *topic);
 	void p_list_channels(const std::string & arg, int min_users);
 	void p_change_nick(const std::string & new_nick);
 	void p_names(const std::string & channel);

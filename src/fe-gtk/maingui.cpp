@@ -824,7 +824,7 @@ mg_populate (session *sess)
 	restore_gui *res = sess->res;
 	int i;
 	bool render = true;
-	guint16 vis = gui->ul_hidden;
+	bool vis = gui->ul_hidden;
 	GtkAllocation allocation;
 
 	switch (sess->type)
@@ -3145,9 +3145,6 @@ mg_create_topwindow (session *sess)
 static gboolean
 mg_tabwindow_de_cb (GtkWidget *, GdkEvent *, gpointer)
 {
-	GSList *list;
-	session *sess;
-
 	if (prefs.hex_gui_tray_close && !unity_mode () && tray_toggle_visibility (false))
 		return true;
 
