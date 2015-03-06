@@ -3769,13 +3769,13 @@ mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, gui
 		height = gdk_window_get_height (gtk_widget_get_window (widget));
 		draw = gtk_widget_get_window (widget);
 	}
-	GdkGCValues val = { 0 };
+	GdkGCValues val = {};
 	val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 	val.graphics_exposures = 0;
 	val.function = GDK_XOR;
 
 	GdkGCPtr gc{ gdk_gc_new_with_values(gtk_widget_get_window(widget), &val, static_cast<GdkGCValuesMask>(GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW | GDK_GC_FUNCTION)) };
-	GdkColor col = { 0 };
+	GdkColor col = {};
 	col.red = RAND_INT(RAND_MAX) % 0xffff;
 	col.green = RAND_INT(RAND_MAX) % 0xffff;
 	col.blue = RAND_INT(RAND_MAX) % 0xffff;

@@ -97,8 +97,8 @@ struct textentry
 		tag(),
 		marks(){}
 
-	struct textentry *next;
-	struct textentry *prev;
+	textentry *next;
+	textentry *prev;
 	ustring str;
 	time_t stamp;
 	gint16 str_width;
