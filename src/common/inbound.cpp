@@ -88,7 +88,7 @@ clear_channel (session &sess)
 
 	fe_clear_channel (sess);
 	userlist_clear (&sess);
-	fe_set_nonchannel (&sess, FALSE);
+	fe_set_nonchannel (&sess, false);
 	fe_set_title (sess);
 }
 
@@ -198,7 +198,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 			}
 			set_topic (sess, ip, ip);
 		}
-		inbound_chanmsg (serv, nullptr, nullptr, from, text, FALSE, id, tags_data);
+		inbound_chanmsg (serv, nullptr, nullptr, from, text, false, id, tags_data);
 		return;
 	}
 
@@ -214,7 +214,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 	{
 		user->lasttalk = time (0);
 		if (user->account)
-			id = TRUE;
+			id = true;
 	}
 	
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
@@ -321,7 +321,7 @@ is_hilight (const char from[], const char text[], session *sess, server &serv)
 	{
 		if (sess != current_tab)
 		{
-			sess->nick_said = TRUE;
+			sess->nick_said = true;
 			lastact_update (sess);
 		}
 		fe_set_hilight (sess);
@@ -394,7 +394,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 	if (user)
 	{
 		nickchar[0] = user->prefix[0];
-		user->lasttalk = time (0);
+		user->lasttalk = std::time (nullptr);
 		if (user->account)
 			id = true;
 		if (user->me)
@@ -461,7 +461,7 @@ inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
 		if (user->account)
 			id = true;
 		nickchar[0] = user->prefix[0];
-		user->lasttalk = time (0);
+		user->lasttalk = std::time (nullptr);
 		if (user->me)
 			fromme = true;
 	}
@@ -600,16 +600,16 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 
 	fe_set_channel (sess);
 	fe_set_title (*sess);
-	fe_set_nonchannel (sess, TRUE);
+	fe_set_nonchannel (sess, true);
 	userlist_clear (sess);
 
 	log_open_or_close (sess);
 
 	sess->waitchannel[0] = 0;
-	sess->ignore_date = TRUE;
-	sess->ignore_mode = TRUE;
-	sess->ignore_names = TRUE;
-	sess->end_of_names = FALSE;
+	sess->ignore_date = true;
+	sess->ignore_mode = true;
+	sess->ignore_names = true;
+	sess->end_of_names = false;
 
 	/* sends a MODE */
 	serv.p_join_info (chan);
@@ -621,7 +621,7 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 	{
 		/* sends WHO #channel */
 		serv.p_user_list (chan);
-		sess->doing_who = TRUE;
+		sess->doing_who = true;
 	}
 }
 
@@ -677,7 +677,7 @@ inbound_nameslist (server &serv, char *chan, char *names,
 
 	if (sess->end_of_names)
 	{
-		sess->end_of_names = FALSE;
+		sess->end_of_names = false;
 		userlist_clear (sess);
 	}
 
@@ -952,7 +952,7 @@ inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip, int id,
 					sess = new_ircwindow(&serv, "(snotices)", session::SESS_SNOTICES, 0);
 				fe_set_channel (sess);
 				fe_set_title (*sess);
-				fe_set_nonchannel (sess, FALSE);
+				fe_set_nonchannel (sess, false);
 				userlist_clear (sess);
 				log_open_or_close (sess);
 			}
@@ -1120,7 +1120,7 @@ check_autojoin_channels (server &serv)
 					}
 				}
 
-				/* for easier checks, ensure that favchannel->key is just NULL when session->channelkey is empty i.e. '' */
+				/* for easier checks, ensure that favchannel->key is just nullptr when session->channelkey is empty i.e. '' */
 				if (strlen (sess->channelkey))
 				{
 					sess_channels.push_back(favchannel{ sess->waitchannel, boost::make_optional<std::string>(sess->channelkey) });
@@ -1312,15 +1312,15 @@ inbound_login_start (session *sess, char *nick, char *servname,
 {
 	if (!sess->server)
 		throw std::runtime_error("Invalid server reference");
-	inbound_newnick (*(sess->server), sess->server->nick, nick, TRUE, tags_data);
+	inbound_newnick (*(sess->server), sess->server->nick, nick, true, tags_data);
 	sess->server->set_name(servname);
 	if (sess->type == session::SESS_SERVER)
 		log_open_or_close (sess);
 	/* reset our away status */
 	if (sess->server->reconnect_away)
 	{
-		handle_command (sess->server->server_session, "away", FALSE);
-		sess->server->reconnect_away = FALSE;
+		handle_command (sess->server->server_session, "away", false);
+		sess->server->reconnect_away = false;
 	}
 }
 
@@ -1374,11 +1374,11 @@ void
 inbound_user_info_start (session *sess, const char *nick,
 								 const message_tags_data *tags_data)
 {
-	/* set away to FALSE now, 301 may turn it back on */
+	/* set away to false now, 301 may turn it back on */
 	inbound_set_all_away_status (*(sess->server), nick, false);
 }
 
-/* reporting new information found about this user. chan may be NULL.
+/* reporting new information found about this user. chan may be nullptr.
  * away may be 0xff to indicate UNKNOWN. */
 
 void
@@ -1537,12 +1537,12 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 			notify_send_watches (serv);
 		}
 
-		serv.end_of_motd = TRUE;
+		serv.end_of_motd = true;
 	}
 
 	if (prefs.hex_irc_skip_motd && !serv.motd_skipped)
 	{
-		serv.motd_skipped = TRUE;
+		serv.motd_skipped = true;
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_MOTDSKIP, serv.server_session, nullptr, nullptr,
 									  nullptr, nullptr, 0, tags_data->timestamp);
 		return;
@@ -1573,43 +1573,43 @@ inbound_cap_ack (server &serv, char *nick, char *extensions,
 
 	if (strstr (extensions, "identify-msg") != nullptr)
 	{
-		serv.have_idmsg = TRUE;
+		serv.have_idmsg = true;
 	}
 
 	if (strstr (extensions, "multi-prefix") != nullptr)
 	{
-		serv.have_namesx = TRUE;
+		serv.have_namesx = true;
 	}
 
 	if (strstr (extensions, "away-notify") != nullptr)
 	{
-		serv.have_awaynotify = TRUE;
+		serv.have_awaynotify = true;
 	}
 
 	if (strstr (extensions, "account-notify") != nullptr)
 	{
-		serv.have_accnotify = TRUE;
+		serv.have_accnotify = true;
 	}
 					
 	if (strstr (extensions, "extended-join") != nullptr)
 	{
-		serv.have_extjoin = TRUE;
+		serv.have_extjoin = true;
 	}
 
 	if (strstr (extensions, "userhost-in-names") != nullptr)
 	{
-		serv.have_uhnames = TRUE;
+		serv.have_uhnames = true;
 	}
 
 	if (strstr (extensions, "server-time") != nullptr)
 	{
-		serv.have_server_time = TRUE;
+		serv.have_server_time = true;
 	}
 
 	if (strstr (extensions, "sasl") != nullptr)
 	{
-		serv.have_sasl = TRUE;
-		serv.sent_saslauth = FALSE;
+		serv.have_sasl = true;
+		serv.sent_saslauth = false;
 
 #ifdef USE_OPENSSL
 		if (serv.loginmethod == LOGIN_SASLEXTERNAL)
@@ -1726,7 +1726,7 @@ inbound_cap_ls (server &serv, char *nick, char *extensions_str,
 	if (!want_sasl)
 	{
 		/* if we use SASL, CAP END is dealt via raw numerics */
-		serv.sent_capend = TRUE;
+		serv.sent_capend = true;
 		tcp_send(serv, "CAP END\r\n");
 	}
 }
@@ -1734,7 +1734,7 @@ inbound_cap_ls (server &serv, char *nick, char *extensions_str,
 void
 inbound_cap_nak (server &serv, const message_tags_data *tags_data)
 {
-	serv.sent_capend = TRUE;
+	serv.sent_capend = true;
 	tcp_send (serv, "CAP END\r\n");
 }
 
@@ -1819,12 +1819,12 @@ inbound_sasl_authenticate (server &serv, char *data)
 		if (pass.empty())
 		{
 			/* something went wrong abort */
-			serv.sent_saslauth = TRUE; /* prevent trying PLAIN */
+			serv.sent_saslauth = true; /* prevent trying PLAIN */
 			tcp_send (serv, "AUTHENTICATE *\r\n");
 			return;
 		}
 
-		serv.sent_saslauth = TRUE;
+		serv.sent_saslauth = true;
 		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass.c_str());
 
 		
@@ -1832,11 +1832,10 @@ inbound_sasl_authenticate (server &serv, char *data)
 								nullptr,	nullptr,	0,	0);
 }
 
-int
-inbound_sasl_error (server &serv)
+bool inbound_sasl_error (server &serv)
 {
 	if (serv.retry_sasl && !serv.sent_saslauth)
-		return 1;
+		return true;
 
 	/* If server sent 904 before we sent password,
 		* mech not support so fallback to next mech */
@@ -1844,7 +1843,7 @@ inbound_sasl_error (server &serv)
 	{
 		serv.sasl_mech -= 1;
 		tcp_sendf (serv, "AUTHENTICATE %s\r\n", sasl_mechanisms[serv.sasl_mech]);
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
