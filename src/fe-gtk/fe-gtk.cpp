@@ -696,7 +696,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 	lbuf = static_cast<xtext_buffer*>(lastlog_sess->res->buffer);
 	if (flags & regexp)
 	{
-		GRegexCompileFlags gcf = static_cast<GRegexCompileFlags>( (flags & case_match)? 0: G_REGEX_CASELESS);
+		GRegexCompileFlags gcf = (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS;
 		GError *err = nullptr;
 		lbuf->search_re = g_regex_new (sstr, gcf, GRegexMatchFlags(), &err);
 		if (err)
