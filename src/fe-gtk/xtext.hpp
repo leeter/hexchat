@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_XTEXT_HPP
 #define HEXCHAT_XTEXT_HPP
 
+#include <list>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
 
