@@ -38,6 +38,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include <ctime>
 #include <iterator>
 #include <locale>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -2441,17 +2442,17 @@ namespace{
 
 	/* gives width of a string, excluding the mIRC codes */
 
-	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry *ent)
+	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry &ent)
 	{
-		ent->slp.clear();
-		auto new_buf = gtk_xtext_strip_color(ent->str, xtext->scratch_buffer,
-			nullptr, &ent->slp, 2);
+		ent.slp.clear();
+		auto new_buf = gtk_xtext_strip_color(ent.str, xtext->scratch_buffer,
+			nullptr, &ent.slp, 2);
 
-		auto width = backend_get_text_width_slp(xtext, new_buf, ent->slp);
+		auto width = backend_get_text_width_slp(xtext, new_buf, ent.slp);
 
-		for (auto & meta : ent->slp)
+		for (auto & meta : ent.slp)
 		{
-			meta.width = backend_get_text_width_emph(xtext, ustring_ref( ent->str.c_str() + meta.off, meta.len ), meta.emph);
+			meta.width = backend_get_text_width_emph(xtext, ustring_ref( ent.str.c_str() + meta.off, meta.len ), meta.emph);
 		}
 		return width;
 	}
@@ -3054,12 +3055,12 @@ namespace{
 	/* walk through str until this line doesn't fit anymore */
 
 	static int
-		find_next_wrap(GtkXText * xtext, textentry * ent, const unsigned char str[],
+		find_next_wrap(GtkXText * xtext, const textentry & ent, const unsigned char str[],
 		int win_width, int indent)
 	{
 		/* single liners */
-		if (win_width >= ent->str_width + ent->indent)
-			return ent->str.size();
+		if (win_width >= ent.str_width + ent.indent)
+			return ent.str.size();
 
 		const unsigned char *last_space = str;
 		const unsigned char *orig_str = str;
@@ -3073,14 +3074,14 @@ namespace{
 		/* it does happen! */
 		if (win_width < 1)
 		{
-			ret = ent->str.size() - (str - ent->str.c_str());
+			ret = ent.str.size() - (str - ent.str.c_str());
 			goto done;
 		}
 
 		/* Find emphasis value for the offset that is the first byte of our string */
-		for (auto & meta : ent->slp)
+		for (auto & meta : ent.slp)
 		{
-			auto start = ent->str.c_str() + meta.off;
+			auto start = ent.str.c_str() + meta.off;
 			auto end = start + meta.len;
 			if (str >= start && str < end)
 			{
@@ -3171,7 +3172,7 @@ namespace{
 				}
 			}
 
-			if (str >= ent->str.c_str() + ent->str.size())
+			if (str >= ent.str.c_str() + ent.str.size())
 			{
 				ret = str - orig_str;
 				break; // goto done;
@@ -3373,23 +3374,21 @@ namespace {
 		gtk_xtext_recalc_widths(xtext_buffer *buf, bool do_str_width)
 	{
 		/* since we have a new font, we have to recalc the text widths */
-		auto ent = buf->text_first;
-		while (ent)
+		for (auto & ent : buf->entries)
 		{
 			if (do_str_width)
 			{
-				ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
+				ent.str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
 			}
-			if (ent->left_len != -1)
+			if (ent.left_len != -1)
 			{
-				ent->indent =
+				ent.indent =
 					(buf->indent -
-					gtk_xtext_text_width(buf->xtext, ustring_ref(ent->str.c_str(),
-					ent->left_len))) - buf->xtext->space_width;
-				if (ent->indent < MARGIN)
-					ent->indent = MARGIN;
+					gtk_xtext_text_width(buf->xtext, ustring_ref(ent.str.c_str(),
+					ent.left_len))) - buf->xtext->space_width;
+				if (ent.indent < MARGIN)
+					ent.indent = MARGIN;
 			}
-			ent = ent->next;
 		}
 
 		gtk_xtext_calc_lines(buf, false);
@@ -3464,45 +3463,41 @@ gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap)
 void
 gtk_xtext_save(GtkXText * xtext, int fh)
 {
-	textentry *ent;
-	int newlen;
-
-	ent = xtext->buffer->text_first;
-	while (ent)
+	for (auto & ent : xtext->buffer->entries)
 	{
-		glib_string buf((char*)gtk_xtext_strip_color(ent->str, nullptr,
+		int newlen;
+		glib_string buf((char*)gtk_xtext_strip_color(ent.str, nullptr,
 			&newlen, nullptr, false));
 		write(fh, buf.get(), newlen);
 		write(fh, "\n", 1);
-		ent = ent->next;
 	}
 }
 namespace{
 	/* count how many lines 'ent' will take (with wraps) */
 
-	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry * ent)
+	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry & ent)
 	{
-		ent->sublines.clear();
+		ent.sublines.clear();
 		int win_width = buf->window_width - MARGIN;
 
-		if (win_width >= ent->indent + ent->str_width)
+		if (win_width >= ent.indent + ent.str_width)
 		{
-			ent->sublines.push_back(ent->str.size());
+			ent.sublines.push_back(ent.str.size());
 			return 1;
 		}
 
-		int indent = ent->indent;
-		auto str = ent->str.c_str();
+		int indent = ent.indent;
+		auto str = ent.str.c_str();
 
 		do
 		{
 			int len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
-			ent->sublines.push_back(str + len - ent->str.c_str());
+			ent.sublines.push_back(str + len - ent.str.c_str());
 			indent = buf->indent;
 			str += len;
-		} while (str < ent->str.c_str() + ent->str.size());
+		} while (str < ent.str.c_str() + ent.str.size());
 
-		return ent->sublines.size();
+		return ent.sublines.size();
 	}
 
 	/* Calculate number of actual lines (with wraps), to set adj->lower. *
@@ -3517,11 +3512,9 @@ namespace{
 			return;
 
 		int lines = 0;
-		auto ent = buf->text_first;
-		while (ent)
+		for (auto & ent : buf->entries)
 		{
 			lines += gtk_xtext_lines_taken(buf, ent);
-			ent = ent->next;
 		}
 
 		buf->pagetop_ent = nullptr;
@@ -3930,17 +3923,14 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 		buf->last_ent_start = nullptr;
 		buf->last_ent_end = nullptr;
 		buf->marker_pos = nullptr;
-		if (buf->text_first)
+		if (!buf->entries.empty())
 			marker_reset = true;
 		dontscroll(buf);
 
-		while (buf->text_first)
-		{
-			auto next = buf->text_first->next;
-			delete buf->text_first;
-			buf->text_first = next;
-		}
+		buf->entries.clear();
+		buf->text_first = nullptr;
 		buf->text_last = nullptr;
+		buf->pagetop_ent = nullptr;
 	}
 
 	if (buf->xtext->buffer == buf)
@@ -4430,7 +4420,7 @@ namespace {
 		ent->stamp = stamp;
 		if (stamp == 0)
 			ent->stamp = time(nullptr);
-		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
+		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, *ent);
 		ent->mark_start = -1;
 		ent->mark_end = -1;
 		ent->next = nullptr;
@@ -4447,7 +4437,7 @@ namespace {
 		ent->prev = buf->text_last;
 		buf->text_last = ent;
 
-		buf->num_lines += gtk_xtext_lines_taken(buf, ent);
+		buf->num_lines += gtk_xtext_lines_taken(buf, *ent);
 
 		if ((buf->marker_pos == nullptr || buf->marker_seen) && (buf->xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(buf->xtext))))))
