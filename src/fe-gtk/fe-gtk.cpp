@@ -683,12 +683,11 @@ fe_beep (session *sess)
 void
 fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags)
 {
-	GError *err = NULL;
-	xtext_buffer *buf, *lbuf;
+	xtext_buffer *lbuf;
 
-	buf = static_cast<xtext_buffer*>(sess->res->buffer);
+	auto buf = static_cast<xtext_buffer*>(sess->res->buffer);
 
-	if (gtk_xtext_is_empty (buf))
+	if (buf && gtk_xtext_is_empty (*buf))
 	{
 		PrintText (lastlog_sess, _("Search buffer is empty.\n"));
 		return;
@@ -698,12 +697,12 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 	if (flags & regexp)
 	{
 		GRegexCompileFlags gcf = static_cast<GRegexCompileFlags>( (flags & case_match)? 0: G_REGEX_CASELESS);
-
+		GError *err = nullptr;
 		lbuf->search_re = g_regex_new (sstr, gcf, GRegexMatchFlags(), &err);
 		if (err)
 		{
+			std::unique_ptr<GError, decltype(&g_error_free)> err_ptr(err, g_error_free);
 			PrintText (lastlog_sess, _(err->message));
-			g_error_free (err);
 			return;
 		}
 	}

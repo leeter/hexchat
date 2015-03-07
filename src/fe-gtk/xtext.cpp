@@ -4223,7 +4223,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 	xtext_buffer *buf = xtext->buffer;
 	
 
-	if (buf->text_first == nullptr)
+	if (buf->entries.empty())
 	{
 		return nullptr;
 	}
@@ -4573,40 +4573,37 @@ gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 	gtk_xtext_append_entry(buf, &ent, stamp);
 }
 
-bool gtk_xtext_is_empty(xtext_buffer *buf)
+bool gtk_xtext_is_empty(const xtext_buffer &buf)
 {
-	return buf->text_first == nullptr;
+	return buf.entries.empty();
 }
 
 
 int
 gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 {
-	auto ent = search_area->text_first;
 	int matches = 0;
-
-	while (ent)
+	for (auto & ent : search_area->entries)
 	{
-		auto gl = gtk_xtext_search_textentry(out, *ent);
+		auto gl = gtk_xtext_search_textentry(out, ent);
 		if (gl)
 		{
 			matches++;
 			/* copy the text over */
 			if (search_area->xtext->auto_indent)
 			{
-				gtk_xtext_append_indent(out, ent->str.c_str(), ent->left_len,
-					ent->str.c_str() + ent->left_len + 1,
-					ent->str.size() - ent->left_len - 1, 0);
+				gtk_xtext_append_indent(out, ent.str.c_str(), ent.left_len,
+					ent.str.c_str() + ent.left_len + 1,
+					ent.str.size() - ent.left_len - 1, 0);
 			}
 			else
 			{
-				gtk_xtext_append(out, boost::string_ref{ reinterpret_cast<const char*>(ent->str.c_str()), ent->str.size() }, 0);
+				gtk_xtext_append(out, boost::string_ref{ reinterpret_cast<const char*>(ent.str.c_str()), ent.str.size() }, 0);
 			}
 
-			out->text_last->stamp = ent->stamp;
+			out->text_last->stamp = ent.stamp;
 			gtk_xtext_search_textentry_add(out, out->text_last, gl, true);
 		}
-		ent = ent->next;
 	}
 	out->search_found = g_list_reverse(out->search_found);
 
