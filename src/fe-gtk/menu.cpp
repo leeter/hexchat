@@ -1842,26 +1842,31 @@ menu_set_fullscreen (session_gui *gui, int full)
 	g_signal_handlers_unblock_by_func(G_OBJECT(item), (void*)menu_fullscreen_toggle, nullptr);
 }
 
-GtkWidget *
-create_icon_menu (const char labeltext[], void *stock_name, bool is_stock)
+static GtkWidget * create_img_menu(const char labeltext[], GtkWidget *img)
 {
-	GtkWidget *item, *img;
-
-	if (is_stock)
-		img = gtk_image_new_from_stock (static_cast<const gchar*>(stock_name), GTK_ICON_SIZE_MENU);
-	else
-		img = gtk_image_new_from_pixbuf (*((GdkPixbuf **)stock_name));
-	item = gtk_image_menu_item_new_with_mnemonic (labeltext);
-	gtk_image_menu_item_set_image ((GtkImageMenuItem *)item, img);
-	gtk_widget_show (img);
+	auto item = gtk_image_menu_item_new_with_mnemonic(labeltext);
+	gtk_image_menu_item_set_image((GtkImageMenuItem *)item, img);
+	gtk_widget_show(img);
 
 	return item;
+}
+
+static GtkWidget * create_icon_menu (const char labeltext[], void *stock_name)
+{
+	auto img = gtk_image_new_from_pixbuf (*((GdkPixbuf **)stock_name));
+	return create_img_menu(labeltext, img);
+}
+
+GtkWidget* create_icon_menu_from_stock(const char labeltext[], const char stock_name[])
+{
+	auto img = gtk_image_new_from_stock(stock_name, GTK_ICON_SIZE_MENU);
+	return create_img_menu(labeltext, img);
 }
 
 /* Override the default GTK2.4 handler, which would make menu
    bindings not work when the menu-bar is hidden. */
 static gboolean
-menu_canacaccel (GtkWidget *widget, guint signal_id, gpointer user_data)
+menu_canacaccel (GtkWidget *widget, guint /*signal_id*/, gpointer /*user_data*/)
 {
 	/* GTK2.2 behaviour */
 	return gtk_widget_is_sensitive (widget);
@@ -2209,11 +2214,11 @@ menu_create_main (void *accel_group, bool bar, int away, int toplevel,
 {
 	int i = 0;
 	GtkWidget *item;
-	GtkWidget *menu = 0;
-	GtkWidget *menu_item = 0;
+	GtkWidget *menu = nullptr;
+	GtkWidget *menu_item = nullptr;
 	GtkWidget *menu_bar;
-	GtkWidget *usermenu = 0;
-	GtkWidget *submenu = 0;
+	GtkWidget *usermenu = nullptr;
+	GtkWidget *submenu = nullptr;
 	int close_mask = STATE_CTRL;
 	int away_mask = STATE_ALT;
 	char *key_theme = nullptr;
@@ -2341,11 +2346,11 @@ menu_create_main (void *accel_group, bool bar, int away, int toplevel,
 			break;
 
 		case menu_type::PIX:
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, false);
+			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image);
 			goto normalitem;
 
 		case menu_type::STOCK:
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
+			item = create_icon_menu_from_stock (_(mymenu[i].text), mymenu[i].image);
 			goto normalitem;
 
 		case menu_type::ITEM:
@@ -2410,7 +2415,7 @@ togitem:
 		case menu_type::SUB:
 			group = nullptr;
 			submenu = gtk_menu_new ();
-			item = create_icon_menu (_(mymenu[i].text), mymenu[i].image, true);
+			item = create_icon_menu_from_stock (_(mymenu[i].text), mymenu[i].image);
 			/* record the English name for /menu */
 			g_object_set_data (G_OBJECT (item), "name", const_cast<char*>(mymenu[i].text));
 			gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
