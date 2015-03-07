@@ -78,6 +78,7 @@
 #include "dcc.hpp"
 #include "userlist.hpp"
 #include "session.hpp"
+#include "glist_iterators.hpp"
 
 namespace hexchat{
 namespace fe{
@@ -94,7 +95,11 @@ static const size_t TBUFSIZE = 4096;
 static void help (session *sess, char *tbuf, const char *helpcmd, bool quiet);
 static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
 static void handle_say (session *sess, char *text, int check_spch);
-
+namespace
+{
+	using sess_itr = glib_helper::glist_iterator < session > ;
+	using serv_itr = glib_helper::glist_iterator < server > ;
+}
 
 static void
 notj_msg (struct session *sess)
@@ -856,39 +861,31 @@ cmd_dcc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-cmd_debug (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_debug (struct session *sess, char*, char *[], char *[])
 {
-	struct session *s;
-	struct server *v;
-	GSList *list = sess_list;
-
-	PrintText (sess, "Session   T Channel    WaitChan  WillChan  Server\n");
-	while (list)
+	PrintText (sess, _("Session   T Channel    WaitChan  WillChan  Server\n"));
+	for (sess_itr s{ sess_list }, end; s != end; ++s)
 	{
-		s = (struct session *) list->data;
-		sprintf (tbuf, "%p %1x %-10.10s %-10.10s %-10.10s %p\n",
-					s, s->type, s->channel, s->waitchannel,
-					s->willjoinchannel, s->server);
-		PrintText (sess, tbuf);
-		list = list->next;
+		std::ostringstream out;
+		out << boost::format(_("%p %1x %-10.10s %-10.10s %-10.10s %p\n")) % &(*s) % s->type % s->channel % s->waitchannel %
+			s->willjoinchannel % s->server;
+		PrintText (sess, out.str());
 	}
 
-	list = serv_list;
-	PrintText (sess, "Server    Sock  Name\n");
-	while (list)
+	PrintText (sess, _("Server    Sock  Name\n"));
+	for (serv_itr v{ serv_list }, end; v != end; ++v)
 	{
-		v = (struct server *) list->data;
-		sprintf (tbuf, "%p %-5d %s\n",
-					v, v->sok, v->servername);
-		PrintText (sess, tbuf);
-		list = list->next;
+		std::ostringstream out;
+		out << boost::format(_("%p %-5d %s\n")) % &(*v) % v->sok % v->servername;
+		PrintText (sess, out.str());
 	}
 
-	sprintf (tbuf,
-				"\nfront_session: %p\n"
-				"current_tab: %p\n\n",
-				sess->server->front_session, current_tab);
-	PrintText (sess, tbuf);
+	std::ostringstream out;
+	out << boost::format(_(
+		"\nfront_session: %p\n"
+		"current_tab: %p\n\n"
+		)) % sess->server->front_session % current_tab;
+	PrintText (sess, out.str());
 
 	return true;
 }
