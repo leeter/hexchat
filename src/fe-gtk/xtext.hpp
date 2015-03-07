@@ -81,9 +81,19 @@ enum marker_reset_reason {
 };
 
 struct xtext_buffer {
+	using entry_list = std::list < textentry > ;
+private:
+	xtext_buffer(const xtext_buffer&) = delete;
+	xtext_buffer& operator=(const xtext_buffer&) = delete;
+
+public:
+	xtext_buffer(GtkXText*);
+	entry_list entries;
+	
 	GtkXText *xtext;					/* attached to this widget */
 
 	gdouble old_value;					/* last known adj->value */
+	
 	textentry *text_first;
 	textentry *text_last;
 

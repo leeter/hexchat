@@ -3774,7 +3774,6 @@ namespace{
 
 	bool gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
 	{
-		std::unique_ptr<textentry> entry(ent);
 		/* Set visible to TRUE if this is the current buffer */
 		/* and this ent shows up on the screen now */
 		bool visible = buffer->xtext->buffer == buffer &&
@@ -3813,26 +3812,27 @@ namespace{
 	/* remove the topline from the list */
 	void gtk_xtext_remove_top(xtext_buffer *buffer)
 	{
-		textentry *ent = buffer->text_first;
-		if (!ent)
+		
+		if (buffer->entries.empty())
 			return;
-		buffer->num_lines -= ent->sublines.size();
-		buffer->pagetop_line -= ent->sublines.size();
-		buffer->last_pixel_pos -= (ent->sublines.size() * buffer->xtext->fontsize);
-		buffer->text_first = ent->next;
+		textentry & ent = buffer->entries.front();
+		buffer->num_lines -= ent.sublines.size();
+		buffer->pagetop_line -= ent.sublines.size();
+		buffer->last_pixel_pos -= (ent.sublines.size() * buffer->xtext->fontsize);
+		buffer->text_first = ent.next;
 		if (buffer->text_first)
 			buffer->text_first->prev = nullptr;
 		else
 			buffer->text_last = nullptr;
 
-		buffer->old_value -= ent->sublines.size();
+		buffer->old_value -= ent.sublines.size();
 		if (buffer->xtext->buffer == buffer)	/* is it the current buffer? */
 		{
-			buffer->xtext->adj->value -= ent->sublines.size();
-			buffer->xtext->select_start_adj -= ent->sublines.size();
+			buffer->xtext->adj->value -= ent.sublines.size();
+			buffer->xtext->select_start_adj -= ent.sublines.size();
 		}
 
-		if (gtk_xtext_kill_ent(buffer, ent))
+		if (gtk_xtext_kill_ent(buffer, &ent))
 		{
 			if (!buffer->xtext->add_io_tag)
 			{
@@ -3849,24 +3849,23 @@ namespace{
 					buffer->xtext);
 			}
 		}
+		buffer->entries.pop_front();
 	}
 
 	static void
 		gtk_xtext_remove_bottom(xtext_buffer *buffer)
 	{
-		textentry *ent;
-
-		ent = buffer->text_last;
-		if (!ent)
+		if (buffer->entries.empty())
 			return;
-		buffer->num_lines -= ent->sublines.size();
-		buffer->text_last = ent->prev;
+		textentry & ent = buffer->entries.back();
+		buffer->num_lines -= ent.sublines.size();
+		buffer->text_last = ent.prev;
 		if (buffer->text_last)
 			buffer->text_last->next = nullptr;
 		else
 			buffer->text_first = nullptr;
 
-		if (gtk_xtext_kill_ent(buffer, ent))
+		if (gtk_xtext_kill_ent(buffer, &ent))
 		{
 			if (!buffer->xtext->add_io_tag)
 			{
@@ -3883,6 +3882,7 @@ namespace{
 					buffer->xtext);
 			}
 		}
+		buffer->entries.pop_back();
 	}
 
 } // end anonymous namespace
@@ -4423,7 +4423,7 @@ namespace {
 
 	/* append a textentry to our linked list */
 
-	static void gtk_xtext_append_entry(xtext_buffer *buf, std::unique_ptr<textentry> ent, time_t stamp)
+	static void gtk_xtext_append_entry(xtext_buffer *buf, textentry* ent, time_t stamp)
 	{
 		/* we don't like tabs */
 		std::replace(ent->str.begin(), ent->str.end(), '\t', ' ');
@@ -4431,7 +4431,7 @@ namespace {
 		ent->stamp = stamp;
 		if (stamp == 0)
 			ent->stamp = time(nullptr);
-		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent.get());
+		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
 		ent->mark_start = -1;
 		ent->mark_end = -1;
 		ent->next = nullptr;
@@ -4440,21 +4440,20 @@ namespace {
 		if (ent->indent < MARGIN)
 			ent->indent = MARGIN;	  /* 2 pixels is the left margin */
 
-		auto entry = ent.release();
 		/* append to our linked list */
 		if (buf->text_last)
-			buf->text_last->next = entry;
+			buf->text_last->next = ent;
 		else
-			buf->text_first = entry;
-		entry->prev = buf->text_last;
-		buf->text_last = entry;
+			buf->text_first = ent;
+		ent->prev = buf->text_last;
+		buf->text_last = ent;
 
-		buf->num_lines += gtk_xtext_lines_taken(buf, entry);
+		buf->num_lines += gtk_xtext_lines_taken(buf, ent);
 
 		if ((buf->marker_pos == nullptr || buf->marker_seen) && (buf->xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(buf->xtext))))))
 		{
-			buf->marker_pos = entry;
+			buf->marker_pos = ent;
 			buf->marker_state = MARKER_IS_SET;
 			dontscroll(buf); /* force scrolling off */
 			buf->marker_seen = false;
@@ -4493,8 +4492,8 @@ namespace {
 		}
 		if (buf->search_flags & follow)
 		{
-			auto gl = gtk_xtext_search_textentry(buf, *entry);
-			gtk_xtext_search_textentry_add(buf, entry, gl, false);
+			auto gl = gtk_xtext_search_textentry(buf, *ent);
+			gtk_xtext_search_textentry_add(buf, ent, gl, false);
 		}
 	}
 
@@ -4524,17 +4523,18 @@ time_t stamp)
 	if (right_text[right_len - 1] == '\n')
 		right_len--;
 
-	std::unique_ptr<textentry> ent{ new textentry };
-	ent->str.resize(left_len + right_len + 1, '\0');
-	auto str = ent->str.begin();
+	buf->entries.emplace_back();
+	textentry & ent = buf->entries.back();
+	ent.str.resize(left_len + right_len + 1, '\0');
+	auto str = ent.str.begin();
 	std::copy_n(left_text, left_len, str);
 	str[left_len] = ' ';
 	std::copy_n(right_text, right_len, str + left_len + 1);
 
 	left_width = gtk_xtext_text_width(buf->xtext, ustring_ref(left_text, left_len));
 
-	ent->left_len = left_len;
-	ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
+	ent.left_len = left_len;
+	ent.indent = (buf->indent - left_width) - buf->xtext->space_width;
 
 	if (buf->time_stamp)
 		space = buf->xtext->stamp_width;
@@ -4542,7 +4542,7 @@ time_t stamp)
 		space = 0;
 
 	/* do we need to auto adjust the separator position? */
-	if (buf->xtext->auto_indent && ent->indent < MARGIN + space)
+	if (buf->xtext->auto_indent && ent.indent < MARGIN + space)
 	{
 		tempindent = MARGIN + space + buf->xtext->space_width + left_width;
 
@@ -4555,11 +4555,11 @@ time_t stamp)
 		gtk_xtext_fix_indent(buf);
 		gtk_xtext_recalc_widths(buf, false);
 
-		ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
+		ent.indent = (buf->indent - left_width) - buf->xtext->space_width;
 		buf->xtext->force_render = true;
 	}
 
-	gtk_xtext_append_entry(buf, std::move(ent), stamp);
+	gtk_xtext_append_entry(buf, &ent, stamp);
 }
 
 void
@@ -4571,15 +4571,17 @@ gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 	if (text.size() >= sizeof(buf->xtext->scratch_buffer))
 		text.remove_suffix(sizeof(buf->xtext->scratch_buffer) - 1);
 
-	std::unique_ptr<textentry> ent{ new textentry };
+	buf->entries.emplace_back();
+
+	textentry& ent = buf->entries.back();
 	if (!text.empty())
 	{
-		ent->str = ustring{ text.cbegin(), text.cend() };
+		ent.str = ustring{ text.cbegin(), text.cend() };
 	}
-	ent->indent = 0;
-	ent->left_len = -1;
+	ent.indent = 0;
+	ent.left_len = -1;
 
-	gtk_xtext_append_entry(buf, std::move(ent), stamp);
+	gtk_xtext_append_entry(buf, &ent, stamp);
 }
 
 bool gtk_xtext_is_empty(xtext_buffer *buf)
@@ -4814,16 +4816,46 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 xtext_buffer *
 gtk_xtext_buffer_new(GtkXText *xtext)
 {
-	xtext_buffer *buf;
-
-	buf = new xtext_buffer();
-	buf->old_value = -1.0;
-	buf->xtext = xtext;
-	buf->scrollbar_down = true;
-	buf->indent = xtext->space_width * 2;
+	xtext_buffer *buf = new xtext_buffer(xtext);
 	dontscroll(buf);
 
 	return buf;
+}
+
+xtext_buffer::xtext_buffer(GtkXText* parent)
+	: xtext(parent),     /* attached to this widget */
+	  old_value(-1.0), /* last known adj->value */
+	  text_first(), text_last(),
+
+	  last_ent_start(), /* this basically describes the last rendered */
+	  last_ent_end(),   /* selection. */
+	  last_offset_start(), last_offset_end(),
+
+	  last_pixel_pos(),
+
+	  pagetop_line(), pagetop_subline(),
+	  pagetop_ent(), /* what's at xtext->adj->value */
+
+	  num_lines(), indent(parent->space_width * 2), /* position of separator (pixels) from left */
+
+	  marker_pos(), marker_state(),
+
+	  window_width(), /* window size when last rendered. */
+	  window_height(),
+
+	  time_stamp(), scrollbar_down(true), needs_recalc(), marker_seen(),
+
+	  search_found(), /* list of textentries where search found strings */
+	  search_text(),  /* desired text to search for */
+	  search_nee(),   /* prepared needle to look in haystack for */
+	  search_lnee(),  /* its length */
+	  search_flags(), /* match, bwd, highlight */
+	  cursearch(),    /* GList whose 'data' pts to current textentry */
+	  curmark(),      /* current item in ent->marks */
+	  curdata(),      /* current offset info, from *curmark */
+	  search_re(),    /* Compiled regular expression */
+	  hintsearch()    /* textentry found for last search */
+{
 }
 
 void
@@ -4839,13 +4871,5 @@ gtk_xtext_buffer_free(xtext_buffer *buf)
 	if (buf->search_found)
 	{
 		gtk_xtext_search_fini(buf);
-	}
-
-	auto ent = buf->text_first;
-	while (ent)
-	{
-		auto next = ent->next;
-		std::unique_ptr<textentry> ent_ptr(ent);
-		ent = next;
 	}
 }
