@@ -75,17 +75,17 @@
 
 namespace dcc = hexchat::dcc;
 
-GSList *popup_list = 0;
-GSList *button_list = 0;
-GSList *dlgbutton_list = 0;
-GSList *command_list = 0;
-GSList *ctcp_list = 0;
-GSList *replace_list = 0;
-GSList *sess_list = 0;
-GSList *dcc_list = 0;
-GSList *usermenu_list = 0;
-GSList *urlhandler_list = 0;
-GSList *tabmenu_list = 0;
+GSList *popup_list = nullptr;
+GSList *button_list = nullptr;
+GSList *dlgbutton_list = nullptr;
+GSList *command_list = nullptr;
+GSList *ctcp_list = nullptr;
+GSList *replace_list = nullptr;
+GSList *sess_list = nullptr;
+GSList *dcc_list = nullptr;
+GSList *usermenu_list = nullptr;
+GSList *urlhandler_list = nullptr;
+GSList *tabmenu_list = nullptr;
 
 /*
  * This array contains 5 double linked lists, one for each priority in the
@@ -121,7 +121,7 @@ gint arg_existing = FALSE;
 #endif /* USE_DBUS */
 
 struct session *current_tab;
-struct session *current_sess = 0;
+struct session *current_sess = nullptr;
 struct hexchatprefs prefs;
 
 #ifdef USE_LIBPROXY
@@ -759,7 +759,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -1133,7 +1133,7 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
 
