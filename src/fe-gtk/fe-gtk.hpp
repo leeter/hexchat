@@ -117,11 +117,11 @@ struct restore_gui
 	std::string topic_text;	/* topic GtkEntry buffer */
 	std::string key_text;
 	std::string limit_text;
-	gfloat old_ul_value;	/* old userlist value (for adj) */
-	gfloat lag_value;	/* lag-o-meter */
+	gdouble old_ul_value;	/* old userlist value (for adj) */
+	gdouble lag_value;	/* lag-o-meter */
 	std::string lag_text;	/* lag-o-meter text */
 	std::string lag_tip;		/* lag-o-meter tooltip */
-	gfloat queue_value; /* outbound queue meter */
+	gdouble queue_value; /* outbound queue meter */
 	std::string queue_text;		/* outbound queue text */
 	std::string queue_tip;		/* outbound queue tooltip */
 	std::bitset<NUM_FLAG_WIDS> flag_wid_state;

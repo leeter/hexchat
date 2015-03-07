@@ -566,9 +566,7 @@ fe_update_channel_key (struct session *sess)
 void
 fe_update_channel_limit (struct session *sess)
 {
-	char tmp[16];
-
-	sprintf (tmp, "%d", sess->limit);
+	auto tmp = std::to_string(sess->limit);
 	fe_update_mode_entry (sess, sess->gui->limit_entry,
 								 sess->res->limit_text, tmp);
 	fe_set_title (*sess);
@@ -731,7 +729,6 @@ fe_set_lag (server *serv, long lag)
 {
 	GSList *list = sess_list;
 	session *sess;
-	gdouble per;
 	char lagtext[64];
 	char lagtip[128];
 	unsigned long nowtim;
@@ -748,7 +745,7 @@ fe_set_lag (server *serv, long lag)
 	if (lag > 30000 && serv->lag_sent)
 		lag=30000;
 
-	per = ((double)lag) / 1000.0;
+	auto per = static_cast<double>(lag) / 1000.0;
 	if (per > 1.0)
 		per = 1.0;
 
@@ -788,11 +785,10 @@ fe_set_throttle (server *serv)
 {
 	GSList *list = sess_list;
 	struct session *sess;
-	float per;
 	char tbuf[96];
 	char tip[160];
 
-	per = (float) serv->sendq_len / 1024.0;
+	auto per = static_cast<double>(serv->sendq_len) / 1024.0;
 	if (per > 1.0)
 		per = 1.0;
 

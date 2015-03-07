@@ -4275,10 +4275,10 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			{
 				return nullptr;
 			}
-			for (ent = buf->text_first; ent; ent = ent->next)
+			for (auto& ent : buf->entries)
 			{
-				auto gl = gtk_xtext_search_textentry(buf, *ent);
-				gtk_xtext_search_textentry_add(buf, ent, gl, true);
+				auto gl = gtk_xtext_search_textentry(buf, ent);
+				gtk_xtext_search_textentry_add(buf, &ent, gl, true);
 			}
 			buf->search_found = g_list_reverse(buf->search_found);
 		}
@@ -4711,12 +4711,11 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 		textentry *ent = buf->text_first;
 		GtkAdjustment *adj = xtext->adj;
 		gdouble value = 0.0;
-		while (ent)
+		for (auto & ent : buf->entries)
 		{
-			if (ent == buf->marker_pos)
+			if (&ent == buf->marker_pos)
 				break;
-			value += ent->sublines.size();
-			ent = ent->next;
+			value += ent.sublines.size();
 		}
 		if (value >= adj->value && value < adj->value + adj->page_size)
 			return MARKER_IS_SET;
