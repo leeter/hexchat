@@ -620,9 +620,9 @@ send_quit_or_part (session * killsess)
 			{
 				server_sendpart (*killserv, killsess->channel, nullptr);
 			}
-			}
 		}
 	}
+}
 
 session::~session()
 {
@@ -801,25 +801,38 @@ xchat_auto_connect (gpointer userdata)
 	return 0;
 }
 
+#ifdef WIN32
+namespace
+{
+	class winsock_raii
+	{
+		WSADATA wsadata;
+		bool success;
+		winsock_raii(const winsock_raii&) = delete;
+		winsock_raii& operator=(const winsock_raii&) = delete;
+	public:
+		winsock_raii()
+			:success(WSAStartup(MAKEWORD(2, 2), &wsadata) == 0)
+		{
+		}
+		~winsock_raii()
+		{
+			WSACleanup();
+		}
+
+		explicit operator bool() const
+		{
+			return success;
+		}
+	};
+}
+#endif
+
 static void
 xchat_init (void)
 {
 	char buf[3068];
 	const char *cs = nullptr;
-
-#ifdef WIN32
-	WSADATA wsadata;
-
-#ifdef USE_IPV6
-	if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
-	{
-		MessageBoxW (nullptr, L"Cannot find winsock 2.2+", L"Error", MB_OK);
-		exit (0);
-	}
-#else
-	WSAStartup(0x0101, &wsadata);
-#endif	/* !USE_IPV6 */
-#endif	/* !WIN32 */
 
 #ifdef USE_SIGACTION
 	struct sigaction act;
@@ -1136,6 +1149,15 @@ main (int argc, char *argv[])
 				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
+#ifdef WIN32
+	winsock_raii winsock;
+
+	if (!winsock)
+	{
+		MessageBoxW(nullptr, L"Cannot find winsock 2.2+", L"Error", MB_OK);
+		std::exit (0);
+	}
+#endif
 
 	xchat_init ();
 
@@ -1143,10 +1165,6 @@ main (int argc, char *argv[])
 
 #ifdef USE_LIBPROXY
 	px_proxy_factory_free(libproxy_factory);
-#endif
-
-#ifdef WIN32
-	WSACleanup ();
 #endif
 
 	return 0;
