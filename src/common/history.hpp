@@ -24,6 +24,8 @@
 #include <utility>
 #include <array>
 
+#include <boost/utility/string_ref_fwd.hpp>
+
 enum{ HISTORY_SIZE = 100 };
 
 class history
@@ -33,8 +35,8 @@ class history
 	int realpos;
 public:
 	history();
-	void add(const std::string& text);
-	std::pair<std::string, bool> up(const std::string& current_text);
+	void add(const boost::string_ref& text);
+	std::pair<std::string, bool> up(const boost::string_ref& current_text);
 	std::pair<std::string, bool> down();
 	void clear();
 };
