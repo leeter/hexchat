@@ -808,19 +808,21 @@ namespace
 	{
 		WSADATA wsadata;
 		bool success;
+
 		winsock_raii(const winsock_raii&) = delete;
 		winsock_raii& operator=(const winsock_raii&) = delete;
 	public:
-		winsock_raii()
-			:success(WSAStartup(MAKEWORD(2, 2), &wsadata) == 0)
+		explicit winsock_raii() NOEXCEPT
+			:wsadata({ 0 }), success(WSAStartup(MAKEWORD(2, 2), &wsadata) == 0)
 		{
 		}
-		~winsock_raii()
+		~winsock_raii() NOEXCEPT
 		{
-			WSACleanup();
+			if (success)
+				WSACleanup();
 		}
 
-		explicit operator bool() const
+		explicit operator bool() const NOEXCEPT
 		{
 			return success;
 		}
@@ -1058,10 +1060,7 @@ set_locale (void)
 int
 main (int argc, char *argv[])
 {
-	int i;
-	int ret;
-
-	srand (time (0));	/* CL: do this only once! */
+	srand (time (nullptr));	/* CL: do this only once! */
 
 	/* We must check for the config dir parameter, otherwise load_config() will behave incorrectly.
 	 * load_config() must come before fe_args() because fe_args() calls gtk_init() which needs to
@@ -1069,7 +1068,7 @@ main (int argc, char *argv[])
 	 * for the most part. */
 	if (argc >= 2)
 	{
-		for (i = 1; i < argc; i++)
+		for (int i = 1; i < argc; i++)
 		{
 			if ((strcmp (argv[i], "-d") == 0 || strcmp (argv[i], "--cfgdir") == 0)
 				&& i + 1 < argc)
@@ -1115,7 +1114,7 @@ main (int argc, char *argv[])
 	SOCKSinit (argv[0]);
 #endif
 
-	ret = fe_args (argc, argv);
+	auto ret = fe_args (argc, argv);
 	if (ret != -1)
 		return ret;
 	
