@@ -581,7 +581,7 @@ gtk_xtext_new(GdkColor palette[], bool separator)
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
 	xtext->orig_buffer = xtext->buffer;
 
-	gtk_widget_set_double_buffered(GTK_WIDGET(xtext), FALSE);
+	gtk_widget_set_double_buffered(GTK_WIDGET(xtext), false);
 	gtk_xtext_set_palette(xtext, palette);
 
 	return GTK_WIDGET(xtext);
@@ -711,7 +711,7 @@ namespace {
 		GdkColor col;
 		GdkColormap *cmap;
 
-		gtk_widget_set_realized(widget, TRUE);
+		gtk_widget_set_realized(widget, true);
 		xtext = GTK_XTEXT(widget);
 
 		attributes.x = widget->allocation.x;
@@ -754,17 +754,17 @@ namespace {
 
 		/* for the separator bar (light) */
 		col.red = 0xffff; col.green = 0xffff; col.blue = 0xffff;
-		gdk_colormap_alloc_color(cmap, &col, FALSE, TRUE);
+		gdk_colormap_alloc_color(cmap, &col, false, true);
 		gdk_gc_set_foreground(xtext->light_gc, &col);
 
 		/* for the separator bar (dark) */
 		col.red = 0x1111; col.green = 0x1111; col.blue = 0x1111;
-		gdk_colormap_alloc_color(cmap, &col, FALSE, TRUE);
+		gdk_colormap_alloc_color(cmap, &col, false, true);
 		gdk_gc_set_foreground(xtext->dark_gc, &col);
 
 		/* for the separator bar (thinline) */
 		col.red = 0x8e38; col.green = 0x8e38; col.blue = 0x9f38;
-		gdk_colormap_alloc_color(cmap, &col, FALSE, TRUE);
+		gdk_colormap_alloc_color(cmap, &col, false, true);
 		gdk_gc_set_foreground(xtext->thin_gc, &col);
 
 		/* for the marker bar (marker) */
@@ -788,7 +788,7 @@ namespace {
 		xtext->hand_cursor = gdk_cursor_new_for_display(gdk_window_get_display(widget->window), GDK_HAND1);
 		xtext->resize_cursor = gdk_cursor_new_for_display(gdk_window_get_display(widget->window), GDK_LEFT_SIDE);
 
-		gdk_window_set_back_pixmap(widget->window, nullptr, FALSE);
+		gdk_window_set_back_pixmap(widget->window, nullptr, false);
 		widget->style = gtk_style_attach(widget->style, widget->window);
 
 		backend_init(xtext);
@@ -941,7 +941,7 @@ namespace {
 
 		if (line > xtext->adj->page_size || line < 0)
 		{
-			*out_of_bounds = TRUE;
+			*out_of_bounds = true;
 			return 0;
 		}
 
@@ -952,11 +952,11 @@ namespace {
 		/* Let user select left a few pixels to grab hidden text e.g. '<' */
 		if (x < indent - xtext->space_width)
 		{
-			*out_of_bounds = TRUE;
+			*out_of_bounds = true;
 			return (str - ent->str.c_str());
 		}
 
-		*out_of_bounds = FALSE;
+		*out_of_bounds = false;
 
 		return find_x(xtext, ent, x, subline, indent);
 	}
@@ -1130,7 +1130,7 @@ namespace {
 		gtk_xtext_expose(GtkWidget * widget, GdkEventExpose * event)
 	{
 		gtk_xtext_paint(widget, &event->area);
-		return FALSE;
+		return false;
 	}
 
 	/* render a selection that has extended or contracted upward */
@@ -1459,7 +1459,7 @@ namespace {
 			adj->value >= adj->upper - adj->page_size) 	/* we're scrolled to bottom */
 		{
 			xtext->scroll_tag = 0;
-			return FALSE;
+			return false;
 		}
 
 		xtext->select_start_y -= xtext->fontsize;
@@ -1473,7 +1473,7 @@ namespace {
 			gtk_xtext_scrolldown_timeout,
 			xtext);
 
-		return FALSE;
+		return false;
 	}
 
 	static gboolean gtk_xtext_scrollup_timeout(GtkXText * xtext)
@@ -1491,7 +1491,7 @@ namespace {
 			adj->value == 0.0)						/* we're scrolled to the top */
 		{
 			xtext->scroll_tag = 0;
-			return FALSE;
+			return false;
 		}
 
 		if (adj->value < 0.0)
@@ -1513,7 +1513,7 @@ namespace {
 			gtk_xtext_scrollup_timeout,
 			xtext);
 
-		return FALSE;
+		return false;
 	}
 
 	static void
@@ -1552,7 +1552,7 @@ namespace {
 		int *ret_off, int *ret_len, std::vector<offlen_t> *slp)
 	{
 		int offset;
-		gboolean out_of_bounds = FALSE;
+		gboolean out_of_bounds = false;
 		int len_to_offset = 0;
 
 		auto ent = gtk_xtext_find_char(xtext, x, y, &offset, &out_of_bounds, nullptr);
@@ -1574,7 +1574,7 @@ namespace {
 			word = ent->str.c_str();
 
 		/* remove color characters from the length */
-		gtk_xtext_strip_color(ustring_ref(word, len_to_offset), xtext->scratch_buffer, &len_to_offset, nullptr, FALSE);
+		gtk_xtext_strip_color(ustring_ref(word, len_to_offset), xtext->scratch_buffer, &len_to_offset, nullptr, false);
 
 		auto last = word;
 		auto end = ent->str.c_str() + ent->str.size();
@@ -1597,7 +1597,7 @@ namespace {
 		if (ret_len)
 			*ret_len = len;		/* Length before stripping */
 
-		word = gtk_xtext_strip_color(ustring_ref(word, len), xtext->scratch_buffer, nullptr, slp, FALSE);
+		word = gtk_xtext_strip_color(ustring_ref(word, len), xtext->scratch_buffer, nullptr, slp, false);
 
 		/* avoid turning the cursor into a hand for non-url part of the word */
 		if (xtext->urlcheck_function && xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word)))
@@ -1658,7 +1658,7 @@ namespace {
 			xtext->hilight_ent = nullptr;
 		}
 
-		return FALSE;
+		return false;
 	}
 
 	/* check if we should mark time stamps, and if a redraw is needed */
@@ -1666,13 +1666,13 @@ namespace {
 	static gboolean
 		gtk_xtext_check_mark_stamp(GtkXText *xtext, GdkModifierType mask)
 	{
-		gboolean redraw = FALSE;
+		gboolean redraw = false;
 
 		if (mask & STATE_SHIFT || prefs.hex_text_autocopy_stamp)
 		{
 			if (!xtext->mark_stamp)
 			{
-				redraw = TRUE;	/* must redraw all */
+				redraw = true;	/* must redraw all */
 				xtext->mark_stamp = true;
 			}
 		}
@@ -1680,7 +1680,7 @@ namespace {
 		{
 			if (xtext->mark_stamp)
 			{
-				redraw = TRUE;	/* must redraw all */
+				redraw = true;	/* must redraw all */
 				xtext->mark_stamp = false;
 			}
 		}
@@ -1761,16 +1761,16 @@ namespace {
 						xtext);
 				}
 			}
-			return FALSE;
+			return false;
 		}
 
 		if (xtext->button_down)
 		{
 			redraw = gtk_xtext_check_mark_stamp(xtext, mask);
 			gtk_grab_add(widget);
-			/*gdk_pointer_grab (widget->window, TRUE,
+			/*gdk_pointer_grab (widget->window, true,
 			GDK_BUTTON_RELEASE_MASK |
-			GDK_BUTTON_MOTION_MASK, NULL, NULL, 0);*/
+			GDK_BUTTON_MOTION_MASK, nullptr, nullptr, 0);*/
 			xtext->select_end_x = x;
 			xtext->select_end_y = y;
 			gtk_xtext_selection_update(xtext, event, y, !redraw);
@@ -1784,7 +1784,7 @@ namespace {
 					xtext->buffer->last_ent_end);
 				xtext->force_stamp = false;
 			}
-			return FALSE;
+			return false;
 		}
 
 		if (xtext->separator && xtext->buffer->indent)
@@ -1799,12 +1799,12 @@ namespace {
 					xtext->cursor_hand = false;
 					xtext->cursor_resize = true;
 				}
-				return FALSE;
+				return false;
 			}
 		}
 
 		if (xtext->urlcheck_function == nullptr)
-			return FALSE;
+			return false;
 
 		word_type = gtk_xtext_get_word_adjust(xtext, x, y, &word_ent, &offset, &len);
 		if (word_type > 0)
@@ -1840,12 +1840,12 @@ namespace {
 				xtext->render_hilights_only = false;
 				xtext->skip_stamp = false;
 			}
-			return FALSE;
+			return false;
 		}
 
 		gtk_xtext_leave_notify(widget, nullptr);
 
-		return FALSE;
+		return false;
 	}
 
 	static void gtk_xtext_set_clip_owner(GtkWidget * xtext, GdkEventButton * event)
@@ -1922,7 +1922,7 @@ namespace {
 			}
 			else
 				gtk_xtext_draw_sep(xtext, -1);
-			return FALSE;
+			return false;
 		}
 
 		if (event->button == 1)
@@ -1953,7 +1953,7 @@ namespace {
 			{
 				xtext->word_select = false;
 				xtext->line_select = false;
-				return FALSE;
+				return false;
 			}
 
 			if (xtext->select_start_x == event->x &&
@@ -1962,7 +1962,7 @@ namespace {
 			{
 				gtk_xtext_unselect(*xtext);
 				xtext->mark_stamp = false;
-				return FALSE;
+				return false;
 			}
 
 			if (!xtext->hilighting)
@@ -1976,7 +1976,7 @@ namespace {
 			}
 		}
 
-		return FALSE;
+		return false;
 	}
 
 	static gboolean
@@ -2001,11 +2001,11 @@ namespace {
 			else
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0,
 				"", event);
-			return FALSE;
+			return false;
 		}
 
 		if (event->button != 1)		  /* we only want left button */
-			return FALSE;
+			return false;
 
 		if (event->type == GDK_2BUTTON_PRESS)	/* WORD select */
 		{
@@ -2013,7 +2013,7 @@ namespace {
 			if (gtk_xtext_get_word(xtext, x, y, &ent, &offset, &len, 0))
 			{
 				if (len == 0)
-					return FALSE;
+					return false;
 				gtk_xtext_selection_clear(xtext->buffer);
 				ent->mark_start = offset;
 				ent->mark_end = offset + len;
@@ -2021,7 +2021,7 @@ namespace {
 				xtext->word_select = true;
 			}
 
-			return FALSE;
+			return false;
 		}
 
 		if (event->type == GDK_3BUTTON_PRESS)	/* LINE select */
@@ -2036,7 +2036,7 @@ namespace {
 				xtext->line_select = true;
 			}
 
-			return FALSE;
+			return false;
 		}
 
 		/* check if it was a separator-bar click */
@@ -2048,7 +2048,7 @@ namespace {
 				xtext->moving_separator = true;
 				/* draw the separator line */
 				gtk_xtext_draw_sep(xtext, -1);
-				return FALSE;
+				return false;
 			}
 		}
 
@@ -2057,7 +2057,7 @@ namespace {
 		xtext->select_start_y = y;
 		xtext->select_start_adj = xtext->adj->value;
 
-		return FALSE;
+		return false;
 	}
 
 	/* another program has claimed the selection */
@@ -2068,7 +2068,7 @@ namespace {
 		if (xtext->buffer->last_ent_start)
 			gtk_xtext_unselect(*xtext);
 #endif
-		return TRUE;
+		return true;
 	}
 
 	std::string gtk_xtext_selection_get_text(GtkXText *xtext)
@@ -2139,7 +2139,7 @@ namespace {
 		std::string stripped = out.str();
 		if (!xtext->color_paste)
 		{
-			glib_string res((char*)gtk_xtext_strip_color(ustring_ref(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size()), nullptr, &len, nullptr, FALSE));
+			glib_string res((char*)gtk_xtext_strip_color(ustring_ref(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size()), nullptr, &len, nullptr, false));
 			stripped = std::string(res.get(), len);
 		}
 		return stripped;
@@ -2210,7 +2210,7 @@ namespace {
 			gtk_adjustment_set_value(xtext->adj, new_value);
 		}
 
-		return FALSE;
+		return false;
 	}
 
 	static void
@@ -2807,7 +2807,7 @@ namespace{
 						RENDER_FLUSH;
 						pstr += j;
 						j = 0;
-						gtk_xtext_reset(xtext, mark, FALSE);
+						gtk_xtext_reset(xtext, mark, false);
 					}
 				}
 
@@ -3472,7 +3472,7 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 	while (ent)
 	{
 		glib_string buf((char*)gtk_xtext_strip_color(ent->str, nullptr,
-			&newlen, nullptr, FALSE));
+			&newlen, nullptr, false));
 		write(fh, buf.get(), newlen);
 		write(fh, "\n", 1);
 		ent = ent->next;
@@ -3633,7 +3633,7 @@ namespace{
 
 			if (drawing || ent == entb || ent == enta)
 			{
-				gtk_xtext_reset(xtext, FALSE, TRUE);
+				gtk_xtext_reset(xtext, false, true);
 				line += gtk_xtext_render_line(xtext, ent, line, lines_max,
 					subline, width);
 				subline = 0;
@@ -3706,7 +3706,7 @@ namespace{
 			GdkRectangle area;
 
 			/* so the obscured regions are exposed */
-			gdk_gc_set_exposures(xtext->fgc, TRUE);
+			gdk_gc_set_exposures(xtext->fgc, true);
 			if (overlap < 1)	/* DOWN */
 			{
 				gdk_draw_drawable(xtext->draw_buf, xtext->fgc, xtext->draw_buf,
@@ -3723,7 +3723,7 @@ namespace{
 				area.y = 0;
 				area.height = overlap;
 			}
-			gdk_gc_set_exposures(xtext->fgc, FALSE);
+			gdk_gc_set_exposures(xtext->fgc, false);
 
 			if (area.height > 0)
 			{
@@ -3741,7 +3741,7 @@ namespace{
 
 		while (ent)
 		{
-			gtk_xtext_reset(xtext, FALSE, TRUE);
+			gtk_xtext_reset(xtext, false, true);
 			line += gtk_xtext_render_line(xtext, ent, line, lines_max,
 				subline, width);
 			subline = 0;
@@ -3775,7 +3775,7 @@ namespace{
 	bool gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
 	{
 		std::unique_ptr<textentry> entry(ent);
-		/* Set visible to TRUE if this is the current buffer */
+		/* Set visible to true if this is the current buffer */
 		/* and this ent shows up on the screen now */
 		bool visible = buffer->xtext->buffer == buffer &&
 			gtk_xtext_check_ent_visibility(buffer->xtext, ent, 0);
@@ -3975,7 +3975,7 @@ namespace{
 		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
 		ent = buf->pagetop_ent;
-		/* If top line not completely displayed return FALSE */
+		/* If top line not completely displayed return false */
 		if (ent == find_ent && buf->pagetop_subline > 0)
 		{
 			return false;
@@ -4110,7 +4110,7 @@ namespace{
 		return gl;
 	}
 
-	/* Add a list of found search results to an entry, maybe NULL */
+	/* Add a list of found search results to an entry, maybe nullptr */
 	static void gtk_xtext_search_textentry_add(xtext_buffer *buf, textentry *ent, GList *gl, bool pre)
 	{
 		ent->marks = gl;
@@ -4179,7 +4179,7 @@ namespace{
 		}
 	}
 
-	/* Returns TRUE if the base search information exists and is still okay to use */
+	/* Returns true if the base search information exists and is still okay to use */
 	static bool
 		gtk_xtext_search_init(xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr)
 	{
@@ -4266,7 +4266,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		gtk_xtext_search_fini(buf);
 	}
 
-	/* If the text arg is neither NULL nor "", it's the search string */
+	/* If the text arg is neither nullptr nor "", it's the search string */
 	else
 	{
 		if (gtk_xtext_search_init(buf, text, flags, perr) == false)	/* If a new search: */
@@ -4704,7 +4704,7 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 	if (buf->marker_pos == nullptr)
 		return buf->marker_state;
 
-	if (gtk_xtext_check_ent_visibility(xtext, buf->marker_pos, 1) == FALSE)
+	if (gtk_xtext_check_ent_visibility(xtext, buf->marker_pos, 1) == false)
 	{
 		textentry *ent = buf->text_first;
 		GtkAdjustment *adj = xtext->adj;
@@ -4780,7 +4780,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 	/* sanity check */
 	else if (xtext->adj->value > xtext->adj->upper - xtext->adj->page_size)
 	{
-		/*buf->pagetop_ent = NULL;*/
+		/*buf->pagetop_ent = nullptr;*/
 		xtext->adj->value = xtext->adj->upper - xtext->adj->page_size;
 		if (xtext->adj->value < 0.0)
 			xtext->adj->value = 0.0;
