@@ -83,12 +83,13 @@ enum marker_reset_reason {
 
 struct xtext_buffer {
 //	using entry_list = std::list < textentry > ;
-//private:
-//	xtext_buffer(const xtext_buffer&) = delete;
-//	xtext_buffer& operator=(const xtext_buffer&) = delete;
-//
-//public:
-//	xtext_buffer(GtkXText*);
+private:
+	xtext_buffer(const xtext_buffer&) = delete;
+	xtext_buffer& operator=(const xtext_buffer&) = delete;
+
+public:
+	explicit xtext_buffer(GtkXText* parent) NOEXCEPT;
+	~xtext_buffer() NOEXCEPT;
 //	entry_list entries;
 	
 	GtkXText *xtext;					/* attached to this widget */

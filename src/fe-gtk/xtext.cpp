@@ -4814,16 +4814,62 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 xtext_buffer *
 gtk_xtext_buffer_new(GtkXText *xtext)
 {
-	xtext_buffer *buf;
-
-	buf = new xtext_buffer();
-	buf->old_value = -1.0;
-	buf->xtext = xtext;
-	buf->scrollbar_down = true;
-	buf->indent = xtext->space_width * 2;
+	xtext_buffer *buf = new xtext_buffer(xtext);
 	dontscroll(buf);
 
 	return buf;
+}
+
+xtext_buffer::xtext_buffer(GtkXText* parent)
+	: xtext(parent),     /* attached to this widget */
+	old_value(-1.0), /* last known adj->value */
+	text_first(), text_last(),
+
+	last_ent_start(), /* this basically describes the last rendered */
+	last_ent_end(),   /* selection. */
+	last_offset_start(), last_offset_end(),
+
+	last_pixel_pos(),
+
+	pagetop_line(), pagetop_subline(),
+	pagetop_ent(), /* what's at xtext->adj->value */
+
+	num_lines(), indent(parent->space_width * 2), /* position of separator (pixels) from left */
+
+	marker_pos(), marker_state(),
+
+	window_width(), /* window size when last rendered. */
+	window_height(),
+
+	time_stamp(), scrollbar_down(true), needs_recalc(), marker_seen(),
+
+	search_found(), /* list of textentries where search found strings */
+	search_text(),  /* desired text to search for */
+	search_nee(),   /* prepared needle to look in haystack for */
+	search_lnee(),  /* its length */
+	search_flags(), /* match, bwd, highlight */
+	cursearch(),    /* GList whose 'data' pts to current textentry */
+	curmark(),      /* current item in ent->marks */
+	curdata(),      /* current offset info, from *curmark */
+	search_re(),    /* Compiled regular expression */
+	hintsearch()    /* textentry found for last search */
+{
+}
+
+xtext_buffer::~xtext_buffer()
+{
+	if (this->search_found)
+	{
+		gtk_xtext_search_fini(this);
+	}
+
+	auto ent = this->text_first;
+	while (ent)
+	{
+		auto next = ent->next;
+		std::unique_ptr<textentry> ent_ptr(ent);
+		ent = next;
+	}
 }
 
 void
@@ -4835,17 +4881,4 @@ gtk_xtext_buffer_free(xtext_buffer *buf)
 
 	if (buf->xtext->selection_buffer == buf)
 		buf->xtext->selection_buffer = nullptr;
-
-	if (buf->search_found)
-	{
-		gtk_xtext_search_fini(buf);
-	}
-
-	auto ent = buf->text_first;
-	while (ent)
-	{
-		auto next = ent->next;
-		std::unique_ptr<textentry> ent_ptr(ent);
-		ent = next;
-	}
 }
