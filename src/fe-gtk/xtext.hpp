@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_XTEXT_HPP
 #define HEXCHAT_XTEXT_HPP
 
-#include <list>
+#include <memory>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
 
@@ -81,8 +81,9 @@ enum marker_reset_reason {
 	MARKER_RESET_BY_CLEAR
 };
 
+struct xtext_impl;
+
 struct xtext_buffer {
-//	using entry_list = std::list < textentry > ;
 private:
 	xtext_buffer(const xtext_buffer&) = delete;
 	xtext_buffer& operator=(const xtext_buffer&) = delete;
@@ -90,7 +91,7 @@ private:
 public:
 	explicit xtext_buffer(GtkXText* parent) NOEXCEPT;
 	~xtext_buffer() NOEXCEPT;
-//	entry_list entries;
+	std::unique_ptr<xtext_impl> impl;
 	
 	GtkXText *xtext;					/* attached to this widget */
 
