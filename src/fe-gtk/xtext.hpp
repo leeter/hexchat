@@ -89,7 +89,7 @@ private:
 	xtext_buffer& operator=(const xtext_buffer&) = delete;
 
 public:
-	explicit xtext_buffer(GtkXText* parent) NOEXCEPT;
+	explicit xtext_buffer(GtkXText* parent);
 	~xtext_buffer() NOEXCEPT;
 	std::unique_ptr<xtext_impl> impl;
 	
