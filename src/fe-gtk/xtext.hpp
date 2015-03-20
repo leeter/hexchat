@@ -117,9 +117,8 @@ public:
 	bool marker_seen;
 
 	GList *search_found;		/* list of textentries where search found strings */
-	gchar *search_text;		/* desired text to search for */
-	gchar *search_nee;		/* prepared needle to look in haystack for */
-	gint search_lnee;		/* its length */
+	std::string search_text;		/* desired text to search for */
+	std::string search_nee;		/* prepared needle to look in haystack for */
 	gtk_xtext_search_flags search_flags;	/* match, bwd, highlight */
 	GList *cursearch;			/* GList whose 'data' pts to current textentry */
 	GList *curmark;			/* current item in ent->marks */

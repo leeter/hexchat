@@ -2089,7 +2089,7 @@ namespace {
 	gboolean gtk_xtext_selection_kill(GtkXText *xtext, GdkEventSelection *)
 	{
 #ifndef WIN32
-		if (xtext->buffer->last_ent_start)
+		if (xtext->buffer->impl->last_ent_start)
 			gtk_xtext_unselect(*xtext);
 #endif
 		return true;
@@ -4088,7 +4088,7 @@ namespace{
 	/* Search a single textentry for occurrence(s) of search arg string */
 	static GList * gtk_xtext_search_textentry(xtext_buffer *buf, const textentry &ent)
 	{
-		if (buf->search_text == nullptr)
+		if (buf->search_text.empty())
 		{
 			return nullptr;
 		}
@@ -4129,15 +4129,15 @@ namespace{
 			off = 0;
 
 			for (pos = hay.get(), len = lhay; len;
-				off += buf->search_lnee, pos = hay.get() + off, len = lhay - off)
+				off += buf->search_nee.size(), pos = hay.get() + off, len = lhay - off)
 			{
-				str = g_strstr_len(pos, len, buf->search_nee);
+				str = g_strstr_len(pos, len, buf->search_nee.c_str());
 				if (!str)
 				{
 					break;
 				}
 				off = str - hay.get();
-				gtk_xtext_unstrip_color(off, off + buf->search_lnee,
+				gtk_xtext_unstrip_color(off, off + buf->search_nee.size(),
 					slp, &gl, ent.str.size());
 			}
 		}
@@ -4199,9 +4199,7 @@ namespace{
 		g_list_foreach(buf->search_found, gtk_xtext_search_textentry_fini, 0);
 		g_list_free(buf->search_found);
 		buf->search_found = nullptr;
-		g_free(buf->search_text);
 		buf->search_text = nullptr;
-		g_free(buf->search_nee);
 		buf->search_nee = nullptr;
 		buf->search_flags = gtk_xtext_search_flags();
 		buf->cursearch = nullptr;
@@ -4219,8 +4217,7 @@ namespace{
 		gtk_xtext_search_init(xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr)
 	{
 		/* Of the five flags, backward and highlight_all do not need a new search */
-		if (buf->search_found &&
-			strcmp(buf->search_text, text) == 0 &&
+		if (buf->search_found && buf->search_text == text &&
 			(buf->search_flags & case_match) == (flags & case_match) &&
 			(buf->search_flags & follow) == (flags & follow) &&
 			(buf->search_flags & regexp) == (flags & regexp))
@@ -4229,7 +4226,7 @@ namespace{
 		}
 		buf->hintsearch = static_cast<textentry *>(buf->cursearch ? buf->cursearch->data : nullptr);
 		gtk_xtext_search_fini(buf);
-		buf->search_text = g_strdup(text);
+		buf->search_text = text;
 		if (flags & regexp)
 		{
 			buf->search_re = g_regex_new(text, (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS, GRegexMatchFlags(), perr);
@@ -4242,13 +4239,13 @@ namespace{
 		{
 			if (flags & case_match)
 			{
-				buf->search_nee = g_strdup(text);
+				buf->search_nee = text;
 			}
 			else
 			{
-				buf->search_nee = g_utf8_casefold(text, strlen(text));
+				glib_string folded{ g_utf8_casefold(text, strlen(text)) };
+				buf->search_nee = folded.get();
 			}
-			buf->search_lnee = strlen(buf->search_nee);
 		}
 		buf->search_flags = flags;
 		buf->cursearch = nullptr;
@@ -4877,9 +4874,6 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 	time_stamp(), scrollbar_down(true), needs_recalc(), marker_seen(),
 
 	search_found(), /* list of textentries where search found strings */
-	search_text(),  /* desired text to search for */
-	search_nee(),   /* prepared needle to look in haystack for */
-	search_lnee(),  /* its length */
 	search_flags(), /* match, bwd, highlight */
 	cursearch(),    /* GList whose 'data' pts to current textentry */
 	curmark(),      /* current item in ent->marks */

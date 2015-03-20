@@ -710,16 +710,16 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 	{
 		if (flags & case_match)
 		{
-			lbuf->search_nee = g_strdup (sstr);
+			lbuf->search_nee = sstr;
 		}
 		else
 		{
-			lbuf->search_nee = g_utf8_casefold (sstr, strlen (sstr));
+			glib_string folded{ g_utf8_casefold(sstr, strlen(sstr)) };
+			lbuf->search_nee = folded.get();
 		}
-		lbuf->search_lnee = strlen (lbuf->search_nee);
 	}
 	lbuf->search_flags = flags;
-	lbuf->search_text = g_strdup (sstr);
+	lbuf->search_text = sstr;
 	gtk_xtext_lastlog (lbuf, buf);
 }
 
