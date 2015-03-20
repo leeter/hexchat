@@ -21,11 +21,13 @@
 #define NOMINMAX
 #endif
 
-#include <string>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <memory>
+#include <string>
+#include <thread>
 #include <boost/filesystem.hpp>
 #include <boost/utility/string_ref.hpp>
 #include "fe-gtk.hpp"
@@ -84,7 +86,7 @@ GtkosxApplication *osx_app;
 
 /* === command-line parameter parsing : requires glib 2.6 === */
 
-static char *arg_cfgdir = NULL;
+static char *arg_cfgdir = nullptr;
 static gint arg_show_autoload = 0;
 static gint arg_show_config = 0;
 static gint arg_show_version = 0;
@@ -92,20 +94,20 @@ static gint arg_minimize = 0;
 
 static const GOptionEntry gopt_entries[] = 
 {
- {"no-auto",	'a', 0, G_OPTION_ARG_NONE,	&arg_dont_autoconnect, N_("Don't auto connect to servers"), NULL},
+ {"no-auto",	'a', 0, G_OPTION_ARG_NONE,	&arg_dont_autoconnect, N_("Don't auto connect to servers"), nullptr},
  {"cfgdir",	'd', 0, G_OPTION_ARG_STRING,	&arg_cfgdir, N_("Use a different config directory"), "PATH"},
- {"no-plugins",	'n', 0, G_OPTION_ARG_NONE,	&arg_skip_plugins, N_("Don't auto load any plugins"), NULL},
- {"plugindir",	'p', 0, G_OPTION_ARG_NONE,	&arg_show_autoload, N_("Show plugin/script auto-load directory"), NULL},
- {"configdir",	'u', 0, G_OPTION_ARG_NONE,	&arg_show_config, N_("Show user config directory"), NULL},
+ {"no-plugins",	'n', 0, G_OPTION_ARG_NONE,	&arg_skip_plugins, N_("Don't auto load any plugins"), nullptr},
+ {"plugindir",	'p', 0, G_OPTION_ARG_NONE,	&arg_show_autoload, N_("Show plugin/script auto-load directory"), nullptr},
+ {"configdir",	'u', 0, G_OPTION_ARG_NONE,	&arg_show_config, N_("Show user config directory"), nullptr},
  {"url",	 0,  G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &arg_url, N_("Open an irc://server:port/channel?key URL"), "URL"},
  {"command",	'c', 0, G_OPTION_ARG_STRING,	&arg_command, N_("Execute command:"), "COMMAND"},
 #ifdef USE_DBUS
- {"existing",	'e', 0, G_OPTION_ARG_NONE,	&arg_existing, N_("Open URL or execute command in an existing HexChat"), NULL},
+ {"existing",	'e', 0, G_OPTION_ARG_NONE,	&arg_existing, N_("Open URL or execute command in an existing HexChat"), nullptr},
 #endif
  {"minimize",	 0,  0, G_OPTION_ARG_INT,	&arg_minimize, N_("Begin minimized. Level 0=Normal 1=Iconified 2=Tray"), N_("level")},
- {"version",	'v', 0, G_OPTION_ARG_NONE,	&arg_show_version, N_("Show version information"), NULL},
+ {"version",	'v', 0, G_OPTION_ARG_NONE,	&arg_show_version, N_("Show version information"), nullptr},
  {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &arg_urls, N_("Open an irc://server:port/channel?key URL"), "URL"},
- {NULL}
+ {nullptr}
 };
 
 #ifdef WIN32
@@ -113,7 +115,7 @@ static void
 create_msg_dialog (gchar *title, gchar *message)
 {
 	std::unique_ptr<GtkWidget, decltype(&gtk_widget_destroy)> dialog(
-		gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "%s", message), &gtk_widget_destroy);
+		gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "%s", message), &gtk_widget_destroy);
 	gtk_window_set_title (GTK_WINDOW (dialog.get()), title);
 
 /* On Win32 we automatically have the icon. If we try to load it explicitly, it will look ugly for some reason. */
@@ -129,7 +131,7 @@ create_msg_dialog (gchar *title, gchar *message)
 int
 fe_args (int argc, char *argv[])
 {
-	GError *error = NULL;
+	GError *error = nullptr;
 	GOptionContext *context;
 	char *buffer;
 
@@ -139,12 +141,12 @@ fe_args (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
-	context = g_option_context_new (NULL);
+	context = g_option_context_new (nullptr);
 #ifdef WIN32
-	g_option_context_set_help_enabled (context, FALSE);	/* disable stdout help as stdout is unavailable for subsystem:windows */
+	g_option_context_set_help_enabled (context, false);	/* disable stdout help as stdout is unavailable for subsystem:windows */
 #endif
 	g_option_context_add_main_entries (context, gopt_entries, GETTEXT_PACKAGE);
-	g_option_context_add_group (context, gtk_get_option_group (FALSE));
+	g_option_context_add_group (context, gtk_get_option_group (false));
 	g_option_context_parse (context, &argc, &argv, &error);
 
 #ifdef WIN32
@@ -152,17 +154,17 @@ fe_args (int argc, char *argv[])
 	{
 		if (error->message)								/* the error message contains argv so search for patterns in that */
 		{
-			if (strstr (error->message, "--help-all") != NULL)
+			if (strstr (error->message, "--help-all") != nullptr)
 			{
-				buffer = g_strdup_printf (g_option_context_get_help (context, FALSE, NULL));
+				buffer = g_strdup_printf (g_option_context_get_help (context, false, nullptr));
 				gtk_init (&argc, &argv);
 				create_msg_dialog ("Long Help", buffer);
 				g_free (buffer);
 				return 0;
 			}
-			else if (strstr (error->message, "--help") != NULL || strstr (error->message, "-?") != NULL)
+			else if (strstr (error->message, "--help") != nullptr || strstr (error->message, "-?") != nullptr)
 			{
-				buffer = g_strdup_printf (g_option_context_get_help (context, TRUE, NULL));
+				buffer = g_strdup_printf (g_option_context_get_help (context, true, nullptr));
 				gtk_init (&argc, &argv);
 				create_msg_dialog ("Help", buffer);
 				g_free (buffer);
@@ -250,7 +252,7 @@ fe_args (int argc, char *argv[])
 	gtk_init (&argc, &argv);
 
 #ifdef HAVE_GTK_MAC
-	osx_app = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+	osx_app = g_object_new(GTKOSX_TYPE_APPLICATION, nullptr);
 #endif
 
 	return -1;
@@ -267,7 +269,7 @@ GtkStyle *
 create_input_style (GtkStyle *style)
 {
 	char buf[256];
-	static int done_rc = FALSE;
+	static bool done_rc = false;
 
 	pango_font_description_free (style->font_desc);
 	style->font_desc = pango_font_description_from_string (prefs.hex_text_font);
@@ -283,7 +285,7 @@ create_input_style (GtkStyle *style)
 
 	if (prefs.hex_gui_input_style && !done_rc)
 	{
-		done_rc = TRUE;
+		done_rc = true;
 		sprintf (buf, cursor_color_rc, (colors[COL_FG].red >> 8),
 			(colors[COL_FG].green >> 8), (colors[COL_FG].blue >> 8));
 		gtk_rc_parse_string (buf);
@@ -324,7 +326,7 @@ fe_main (void)
 #ifdef HAVE_GTK_MAC
 	gtkosx_application_ready(osx_app);
 	g_signal_connect (G_OBJECT(osx_app), "NSApplicationWillTerminate",
-					G_CALLBACK(gtkosx_application_terminate), NULL);
+					G_CALLBACK(gtkosx_application_terminate), nullptr);
 #endif
 
 	gtk_main ();
@@ -332,7 +334,7 @@ fe_main (void)
 	/* sleep for 2 seconds so any QUIT messages are not lost. The  */
 	/* GUI is closed at this point, so the user doesn't even know! */
 	if (prefs.wait_on_exit)
-		sleep (2);
+		std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
 void
@@ -391,7 +393,7 @@ fe_idle (gpointer data)
 {
 	session *sess = static_cast<session*>(sess_list->data);
 
-	plugin_add (sess, NULL, NULL, tray_plugin_init, tray_plugin_deinit, NULL, false);
+	plugin_add (sess, nullptr, nullptr, tray_plugin_init, tray_plugin_deinit, nullptr, false);
 
 	if (arg_minimize == 1)
 		gtk_window_iconify (GTK_WINDOW (sess->gui->window));
@@ -426,7 +428,7 @@ fe_new_window (session *sess, int focus)
 #endif
 
 	if (!sess_list->next)
-		g_idle_add (fe_idle, NULL);
+		g_idle_add (fe_idle, nullptr);
 
 	sess->scrollback_replay_marklast = gtk_xtext_set_marker_last;
 }
@@ -454,7 +456,7 @@ fe_message(const boost::string_ref & msg, int flags)
 		gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog), msg.data());
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (gtk_widget_destroy), 0);
-	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
+	gtk_window_set_resizable (GTK_WINDOW (dialog), false);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
 	gtk_widget_show (dialog);
 
@@ -642,7 +644,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 	if (!no_activity && !sess.new_data && &sess != current_tab &&
 		sess.gui->is_tab && !sess.nick_said)
 	{
-		sess.new_data = TRUE;
+		sess.new_data = true;
 		lastact_update (&sess);
 		if (sess.msg_said)
 			fe_set_tab_color (&sess, 2);
@@ -657,7 +659,7 @@ fe_beep (session *sess)
 #ifdef WIN32
 	/* Play the "Instant Message Notification" system sound
 	 */
-	if (!PlaySoundW (L"Notification.IM", NULL, SND_ALIAS | SND_ASYNC))
+	if (!PlaySoundW (L"Notification.IM", nullptr, SND_ALIAS | SND_ASYNC))
 	{
 		/* The user does not have the "Instant Message Notification" sound set. Fall back to system beep.
 		 */
@@ -665,16 +667,16 @@ fe_beep (session *sess)
 	}
 #else
 #ifdef USE_LIBCANBERRA
-	if (ca_con == NULL)
+	if (ca_con == nullptr)
 	{
 		ca_context_create (&ca_con);
 		ca_context_change_props (ca_con,
 										CA_PROP_APPLICATION_ID, "hexchat",
 										CA_PROP_APPLICATION_NAME, DISPLAY_NAME,
-										CA_PROP_APPLICATION_ICON_NAME, "hexchat", NULL);
+										CA_PROP_APPLICATION_ICON_NAME, "hexchat", nullptr);
 	}
 
-	if (ca_context_play (ca_con, 0, CA_PROP_EVENT_ID, "message-new-instant", NULL) != 0)
+	if (ca_context_play (ca_con, 0, CA_PROP_EVENT_ID, "message-new-instant", nullptr) != 0)
 #endif
 	gdk_beep ();
 #endif
@@ -844,7 +846,7 @@ fe_ctrl_gui (session *sess, fe_gui_action action, int arg)
 		mg_detach (sess, arg);	/* arg: 0=toggle 1=detach 2=attach */
 		break;
 	case FE_GUI_APPLY:
-		setup_apply_real (TRUE, TRUE, TRUE);
+		setup_apply_real (true, true, true);
 	}
 }
 
@@ -872,8 +874,8 @@ fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *)
 
 	if (dcc->file)
 	{
-		filepath = g_build_filename (prefs.hex_dcc_dir, dcc->file, NULL);
-		gtkutil_file_req (message, (filereqcallback)dcc_saveas_cb, ud, filepath, NULL,
+		filepath = g_build_filename (prefs.hex_dcc_dir, dcc->file, nullptr);
+		gtkutil_file_req (message, (filereqcallback)dcc_saveas_cb, ud, filepath, nullptr,
 								FRF_WRITE|FRF_NOASKOVERWRITE|FRF_FILTERISINITIAL);
 		g_free (filepath);
 	}
@@ -917,7 +919,7 @@ fe_gui_info_ptr (session *sess, int info_type)
 	case 1:	/* GtkWindow * (for plugins) */
 		return sess->gui->window;
 	}
-	return NULL;
+	return nullptr;
 }
 
 const char * fe_get_inputbox_contents (session *sess)
@@ -974,20 +976,20 @@ url_escape_hostname (const char *url)
 	char *host_start, *host_end, *ret, *hostname;
 
 	host_start = strstr (url, "://");
-	if (host_start != NULL)
+	if (host_start != nullptr)
 	{
 		*host_start = '\0';
 		host_start += 3;
 		host_end = strchr (host_start, '/');
 
-		if (host_end != NULL)
+		if (host_end != nullptr)
 		{
 			*host_end = '\0';
 			host_end++;
 		}
 
 		hostname = g_hostname_to_ascii (host_start);
-		if (host_end != NULL)
+		if (host_end != nullptr)
 			ret = g_strdup_printf ("%s://%s/%s", url, hostname, host_end);
 		else
 			ret = g_strdup_printf ("%s://%s", url, hostname);
@@ -1005,11 +1007,11 @@ osx_show_uri (const char *url)
 	char *escaped_url, *encoded_url, *open, *cmd;
 
 	escaped_url = url_escape_hostname (url);
-	encoded_url = g_filename_from_utf8 (escaped_url, -1, NULL, NULL, NULL);
+	encoded_url = g_filename_from_utf8 (escaped_url, -1, nullptr, nullptr, nullptr);
 	if (encoded_url)
 	{
 		open = g_find_program_in_path ("open");
-		cmd = g_strjoin (" ", open, encoded_url, NULL);
+		cmd = g_strjoin (" ", open, encoded_url, nullptr);
 
 		hexchat_exec (cmd);
 
@@ -1026,11 +1028,11 @@ static void
 fe_open_url_inner (const char *url)
 {
 #ifdef WIN32
-	ShellExecuteW (0, L"open", charset::widen(url).c_str(), NULL, NULL, SW_SHOWNORMAL);
+	ShellExecuteW (0, L"open", charset::widen(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif defined(__APPLE__)
 	osx_show_uri (url);
 #else
-	gtk_show_uri (NULL, url, GDK_CURRENT_TIME, NULL);
+	gtk_show_uri (nullptr, url, GDK_CURRENT_TIME, nullptr);
 #endif
 }
 
@@ -1044,7 +1046,7 @@ fe_open_url (const char *url)
 	if (url_type == WORD_PATH)
 	{
 #ifndef WIN32
-		uri = g_strconcat ("file://", url, NULL);
+		uri = g_strconcat ("file://", url, nullptr);
 		fe_open_url_inner (uri);
 		g_free (uri);
 #else
@@ -1064,7 +1066,7 @@ fe_open_url (const char *url)
 		g_free (uri);
 	}
 	/* the http:// part's missing, prepend it, otherwise it won't always work */
-	else if (strchr (url, ':') == NULL)
+	else if (strchr (url, ':') == nullptr)
 	{
 		url = g_strdup_printf ("http://%s", url);
 		fe_open_url_inner (url);
@@ -1130,9 +1132,9 @@ fe_get_file (const char *title, char *initial,
 				 fe_file_flags flags)
 				
 {
-	/* OK: Call callback once per file, then once more with file=NULL. */
-	/* CANCEL: Call callback once with file=NULL. */
-	gtkutil_file_req (title, callback, userdata, initial, NULL, flags | FRF_FILTERISINITIAL);
+	/* OK: Call callback once per file, then once more with file=nullptr. */
+	/* CANCEL: Call callback once with file=nullptr. */
+	gtkutil_file_req (title, callback, userdata, initial, nullptr, flags | FRF_FILTERISINITIAL);
 }
 
 void
@@ -1155,5 +1157,5 @@ fe_get_default_font (void)
 	else
 #endif
 #endif
-		return NULL;
+		return nullptr;
 }
