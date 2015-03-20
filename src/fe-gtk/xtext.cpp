@@ -115,7 +115,25 @@ struct textentry
 
 struct xtext_impl
 {
+	textentry *text_first;
+	textentry *text_last;
+
+	textentry *last_ent_start;	  /* this basically describes the last rendered */
+	textentry *last_ent_end;	  /* selection. */
+	textentry *pagetop_ent;			/* what's at xtext->adj->value */
+
+	textentry *marker_pos;
+	marker_reset_reason marker_state;
 	std::deque<textentry> entries;
+
+	xtext_impl()
+		:text_first(), text_last(),
+
+		last_ent_start(), /* this basically describes the last rendered */
+		last_ent_end(),   /* selection. */
+		pagetop_ent(), /* what's at xtext->adj->value */
+		marker_pos(), marker_state()
+	{}
 };
 
 namespace
@@ -829,7 +847,7 @@ namespace {
 				gtk_xtext_calc_lines(xtext->buffer, false);
 			else
 			{
-				xtext->buffer->pagetop_ent = nullptr;
+				xtext->buffer->impl->pagetop_ent = nullptr;
 				gtk_xtext_adjustment_set(xtext->buffer, false);
 			}
 			if (xtext->buffer->scrollbar_down)
@@ -844,14 +862,14 @@ namespace {
 		textentry *ent;
 		int ret = 0;
 
-		ent = buf->last_ent_start;
+		ent = buf->impl->last_ent_start;
 		while (ent)
 		{
 			if (ent->mark_start != -1)
 				ret = 1;
 			ent->mark_start = -1;
 			ent->mark_end = -1;
-			if (ent == buf->last_ent_end)
+			if (ent == buf->impl->last_ent_end)
 				break;
 			ent = ent->next;
 		}
@@ -1045,11 +1063,11 @@ namespace {
 		if (!xtext->marker) return;
 
 		int render_y;
-		if (xtext->buffer->marker_pos == ent)
+		if (xtext->buffer->impl->marker_pos == ent)
 		{
 			render_y = y + xtext->font->descent;
 		}
-		else if (xtext->buffer->marker_pos == ent->next && ent->next != nullptr)
+		else if (xtext->buffer->impl->marker_pos == ent->next && ent->next != nullptr)
 		{
 			render_y = y + xtext->font->descent + xtext->fontsize * ent->sublines.size();
 		}
@@ -1091,7 +1109,7 @@ namespace {
 		ent_end = gtk_xtext_find_char(xtext, area->x + area->width,
 			area->y + area->height, nullptr, nullptr, nullptr);
 		if (!ent_end)
-			ent_end = xtext->buffer->text_last;
+			ent_end = xtext->buffer->impl->text_last;
 
 		/* can't set a clip here, because fgc/bgc are used to draw the DB too */
 		/*	backend_set_clip (xtext, area);*/
@@ -1152,7 +1170,7 @@ namespace {
 			gtk_xtext_render_ents(xtext, start->next, end);
 
 		/* now the incomplete upper line */
-		if (start == xtext->buffer->last_ent_start)
+		if (start == xtext->buffer->impl->last_ent_start)
 			xtext->jump_in_offset = xtext->buffer->last_offset_start;
 		else
 			xtext->jump_in_offset = start_offset;
@@ -1173,7 +1191,7 @@ namespace {
 			gtk_xtext_render_ents(xtext, start, end->prev);
 
 		/* now the incomplete bottom line */
-		if (end == xtext->buffer->last_ent_end)
+		if (end == xtext->buffer->impl->last_ent_end)
 			xtext->jump_out_offset = xtext->buffer->last_offset_end;
 		else
 			xtext->jump_out_offset = end_offset;
@@ -1193,7 +1211,7 @@ namespace {
 		xtext->skip_stamp = true;
 
 		/* force an optimized render if there was no previous selection */
-		if (xtext->buffer->last_ent_start == nullptr && start_ent == end_ent)
+		if (xtext->buffer->impl->last_ent_start == nullptr && start_ent == end_ent)
 		{
 			xtext->buffer->last_offset_start = start_offset;
 			xtext->buffer->last_offset_end = end_offset;
@@ -1201,8 +1219,8 @@ namespace {
 		}
 
 		/* mark changed within 1 ent only? */
-		if (xtext->buffer->last_ent_start == start_ent &&
-			xtext->buffer->last_ent_end == end_ent)
+		if (xtext->buffer->impl->last_ent_start == start_ent &&
+			xtext->buffer->impl->last_ent_end == end_ent)
 		{
 			/* when only 1 end of the selection is changed, we can really
 			save on rendering */
@@ -1259,14 +1277,14 @@ namespace {
 			xtext->jump_in_offset = 0;
 		}
 		/* marking downward? */
-		else if (xtext->buffer->last_ent_start == start_ent &&
+		else if (xtext->buffer->impl->last_ent_start == start_ent &&
 			xtext->buffer->last_offset_start == start_offset)
 		{
 			/* find the range that covers both old and new selection */
 			ent = start_ent;
 			while (ent)
 			{
-				if (ent == xtext->buffer->last_ent_end)
+				if (ent == xtext->buffer->impl->last_ent_end)
 				{
 					gtk_xtext_selection_down(xtext, ent, end_ent, end_offset);
 					/*gtk_xtext_render_ents (xtext, ent, end_ent);*/
@@ -1274,7 +1292,7 @@ namespace {
 				}
 				if (ent == end_ent)
 				{
-					gtk_xtext_selection_down(xtext, ent, xtext->buffer->last_ent_end, end_offset);
+					gtk_xtext_selection_down(xtext, ent, xtext->buffer->impl->last_ent_end, end_offset);
 					/*gtk_xtext_render_ents (xtext, ent, xtext->buffer->last_ent_end);*/
 					break;
 				}
@@ -1282,7 +1300,7 @@ namespace {
 			}
 		}
 		/* marking upward? */
-		else if (xtext->buffer->last_ent_end == end_ent &&
+		else if (xtext->buffer->impl->last_ent_end == end_ent &&
 			xtext->buffer->last_offset_end == end_offset)
 		{
 			ent = end_ent;
@@ -1290,11 +1308,11 @@ namespace {
 			{
 				if (ent == start_ent)
 				{
-					gtk_xtext_selection_up(xtext, xtext->buffer->last_ent_start, ent, start_offset);
+					gtk_xtext_selection_up(xtext, xtext->buffer->impl->last_ent_start, ent, start_offset);
 					/*gtk_xtext_render_ents (xtext, xtext->buffer->last_ent_start, ent);*/
 					break;
 				}
-				if (ent == xtext->buffer->last_ent_start)
+				if (ent == xtext->buffer->impl->last_ent_start)
 				{
 					gtk_xtext_selection_up(xtext, start_ent, ent, start_offset);
 					/*gtk_xtext_render_ents (xtext, start_ent, ent);*/
@@ -1306,15 +1324,15 @@ namespace {
 		else	/* cross-over mark (stretched or shrunk at both ends) */
 		{
 			/* unrender the old mark */
-			gtk_xtext_render_ents(xtext, xtext->buffer->last_ent_start, xtext->buffer->last_ent_end);
+			gtk_xtext_render_ents(xtext, xtext->buffer->impl->last_ent_start, xtext->buffer->impl->last_ent_end);
 			/* now render the new mark, but skip overlaps */
-			if (start_ent == xtext->buffer->last_ent_start)
+			if (start_ent == xtext->buffer->impl->last_ent_start)
 			{
 				/* if the new mark is a sub-set of the old, do nothing */
 				if (start_ent != end_ent)
 					gtk_xtext_render_ents(xtext, start_ent->next, end_ent);
 			}
-			else if (end_ent == xtext->buffer->last_ent_end)
+			else if (end_ent == xtext->buffer->impl->last_ent_end)
 			{
 				/* if the new mark is a sub-set of the old, do nothing */
 				if (start_ent != end_ent)
@@ -1324,8 +1342,8 @@ namespace {
 				gtk_xtext_render_ents(xtext, start_ent, end_ent);
 		}
 
-		xtext->buffer->last_ent_start = start_ent;
-		xtext->buffer->last_ent_end = end_ent;
+		xtext->buffer->impl->last_ent_start = start_ent;
+		xtext->buffer->impl->last_ent_end = end_ent;
 		xtext->buffer->last_offset_start = start_offset;
 		xtext->buffer->last_offset_end = end_offset;
 
@@ -1344,7 +1362,7 @@ namespace {
 		auto ent_start = gtk_xtext_find_char(xtext, xtext->select_start_x, xtext->select_start_y, &offset_start, &oob, &subline_start);
 		auto ent_end = gtk_xtext_find_char(xtext, xtext->select_end_x, xtext->select_end_y, &offset_end, &oob, &subline_end);
 
-		if ((!ent_start || !ent_end) && !xtext->buffer->text_last && xtext->adj->value != xtext->buffer->old_value)
+		if ((!ent_start || !ent_end) && !xtext->buffer->impl->text_last && xtext->adj->value != xtext->buffer->old_value)
 		{
 			gtk_xtext_render_page(xtext);
 			return;
@@ -1352,13 +1370,13 @@ namespace {
 
 		if (!ent_start)
 		{
-			ent_start = xtext->buffer->text_last;
+			ent_start = xtext->buffer->impl->text_last;
 			offset_start = ent_start->str.size();
 		}
 
 		if (!ent_end)
 		{
-			ent_end = xtext->buffer->text_last;
+			ent_end = xtext->buffer->impl->text_last;
 			offset_end = ent_end->str.size();
 		}
 
@@ -1459,8 +1477,8 @@ namespace {
 		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
 		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
-		if (buf->last_ent_end == nullptr ||	/* If context has changed OR */
-			buf->pagetop_ent == nullptr ||	/* pagetop_ent is reset OR */
+		if (buf->impl->last_ent_end == nullptr ||	/* If context has changed OR */
+			buf->impl->pagetop_ent == nullptr ||	/* pagetop_ent is reset OR */
 			p_y <= win_height ||			/* pointer not below bottom margin OR */
 			adj->value >= adj->upper - adj->page_size) 	/* we're scrolled to bottom */
 		{
@@ -1473,7 +1491,7 @@ namespace {
 		adj->value++;
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
-		gtk_xtext_render_ents(xtext, buf->pagetop_ent->next, buf->last_ent_end);
+		gtk_xtext_render_ents(xtext, buf->impl->pagetop_ent->next, buf->impl->last_ent_end);
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y - win_height),
 			(GSourceFunc)
 			gtk_xtext_scrolldown_timeout,
@@ -1491,8 +1509,8 @@ namespace {
 
 		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
 
-		if (buf->last_ent_start == nullptr ||	/* If context has changed OR */
-			buf->pagetop_ent == nullptr ||		/* pagetop_ent is reset OR */
+		if (buf->impl->last_ent_start == nullptr ||	/* If context has changed OR */
+			buf->impl->pagetop_ent == nullptr ||		/* pagetop_ent is reset OR */
 			p_y >= 0 ||							/* not above top margin OR */
 			adj->value == 0.0)						/* we're scrolled to the top */
 		{
@@ -1513,7 +1531,7 @@ namespace {
 		xtext->select_start_adj = static_cast<int>(adj->value);
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
-		gtk_xtext_render_ents(xtext, buf->pagetop_ent->prev, buf->last_ent_end);
+		gtk_xtext_render_ents(xtext, buf->impl->pagetop_ent->prev, buf->impl->last_ent_end);
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y),
 			(GSourceFunc)
 			gtk_xtext_scrollup_timeout,
@@ -1786,8 +1804,8 @@ namespace {
 			if (redraw)
 			{
 				xtext->force_stamp = true;
-				gtk_xtext_render_ents(xtext, xtext->buffer->last_ent_start,
-					xtext->buffer->last_ent_end);
+				gtk_xtext_render_ents(xtext, xtext->buffer->impl->last_ent_start,
+					xtext->buffer->impl->last_ent_end);
 				xtext->force_stamp = false;
 			}
 			return false;
@@ -1886,12 +1904,12 @@ namespace {
 		xtext.skip_border_fills = true;
 		xtext.skip_stamp = true;
 
-		xtext.jump_in_offset = buf->last_ent_start->mark_start;
+		xtext.jump_in_offset = buf->impl->last_ent_start->mark_start;
 		/* just a single ent was marked? */
-		if (buf->last_ent_start == buf->last_ent_end)
+		if (buf->impl->last_ent_start == buf->impl->last_ent_end)
 		{
-			xtext.jump_out_offset = buf->last_ent_start->mark_end;
-			buf->last_ent_end = nullptr;
+			xtext.jump_out_offset = buf->impl->last_ent_start->mark_end;
+			buf->impl->last_ent_end = nullptr;
 		}
 
 		gtk_xtext_selection_clear(xtext.buffer);
@@ -1899,13 +1917,13 @@ namespace {
 		/* FIXME: use jump_out on multi-line selects too! */
 		xtext.jump_in_offset = 0;
 		xtext.jump_out_offset = 0;
-		gtk_xtext_render_ents(&xtext, buf->last_ent_start, buf->last_ent_end);
+		gtk_xtext_render_ents(&xtext, buf->impl->last_ent_start, buf->impl->last_ent_end);
 
 		xtext.skip_border_fills = false;
 		xtext.skip_stamp = false;
 
-		xtext.buffer->last_ent_start = nullptr;
-		xtext.buffer->last_ent_end = nullptr;
+		xtext.buffer->impl->last_ent_start = nullptr;
+		xtext.buffer->impl->last_ent_end = nullptr;
 	}
 
 	static gboolean
@@ -1944,7 +1962,7 @@ namespace {
 			/*gdk_pointer_ungrab (0);*/
 
 			/* got a new selection? */
-			if (xtext->buffer->last_ent_start)
+			if (xtext->buffer->impl->last_ent_start)
 			{
 				xtext->color_paste = false;
 				if (event->state & STATE_CTRL || prefs.hex_text_autocopy_color)
@@ -1964,7 +1982,7 @@ namespace {
 
 			if (xtext->select_start_x == event->x &&
 				xtext->select_start_y == event->y &&
-				xtext->buffer->last_ent_start)
+				xtext->buffer->impl->last_ent_start)
 			{
 				gtk_xtext_unselect(*xtext);
 				xtext->mark_stamp = false;
@@ -2085,7 +2103,7 @@ namespace {
 
 		/* first find out how much we need to malloc ... */
 		int len = 0;
-		auto ent = buf->last_ent_start;
+		auto ent = buf->impl->last_ent_start;
 		while (ent)
 		{
 			if (ent->mark_start != -1)
@@ -2102,7 +2120,7 @@ namespace {
 				else
 					len++;
 			}
-			if (ent == buf->last_ent_end)
+			if (ent == buf->impl->last_ent_end)
 				break;
 			ent = ent->next;
 		}
@@ -2113,7 +2131,7 @@ namespace {
 		/* now allocate mem and copy buffer */
 		std::ostringstream out;
 		std::ostream_iterator<char> pos{ out };
-		ent = buf->last_ent_start;
+		ent = buf->impl->last_ent_start;
 		bool first = true;
 		while (ent)
 		{
@@ -2137,7 +2155,7 @@ namespace {
 					std::copy_n(ent->str.cbegin() + ent->mark_start, ent->mark_end - ent->mark_start, pos);
 				}
 			}
-			if (ent == buf->last_ent_end)
+			if (ent == buf->impl->last_ent_end)
 				break;
 			ent = ent->next;
 		}
@@ -3380,7 +3398,7 @@ namespace {
 		gtk_xtext_recalc_widths(xtext_buffer *buf, bool do_str_width)
 	{
 		/* since we have a new font, we have to recalc the text widths */
-		auto ent = buf->text_first;
+		auto ent = buf->impl->text_first;
 		while (ent)
 		{
 			if (do_str_width)
@@ -3474,7 +3492,7 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 	textentry *ent;
 	int newlen;
 
-	ent = xtext->buffer->text_first;
+	ent = xtext->buffer->impl->text_first;
 	while (ent)
 	{
 		glib_string buf((char*)gtk_xtext_strip_color(ent->str, nullptr,
@@ -3524,14 +3542,14 @@ namespace{
 			return;
 
 		int lines = 0;
-		auto ent = buf->text_first;
+		auto ent = buf->impl->text_first;
 		while (ent)
 		{
 			lines += gtk_xtext_lines_taken(buf, ent);
 			ent = ent->next;
 		}
 
-		buf->pagetop_ent = nullptr;
+		buf->impl->pagetop_ent = nullptr;
 		buf->num_lines = lines;
 		gtk_xtext_adjustment_set(buf, fire_signal);
 	}
@@ -3540,26 +3558,26 @@ namespace{
 	textentry * gtk_xtext_nth(GtkXText *xtext, int line, int *subline)
 	{
 		int lines = 0;
-		textentry * ent = xtext->buffer->text_first;
+		textentry * ent = xtext->buffer->impl->text_first;
 
 		/* -- optimization -- try to make a short-cut using the pagetop ent */
-		if (xtext->buffer->pagetop_ent)
+		if (xtext->buffer->impl->pagetop_ent)
 		{
 			if (line == xtext->buffer->pagetop_line)
 			{
 				*subline = xtext->buffer->pagetop_subline;
-				return xtext->buffer->pagetop_ent;
+				return xtext->buffer->impl->pagetop_ent;
 			}
 			if (line > xtext->buffer->pagetop_line)
 			{
 				/* lets start from the pagetop instead of the absolute beginning */
-				ent = xtext->buffer->pagetop_ent;
+				ent = xtext->buffer->impl->pagetop_ent;
 				lines = xtext->buffer->pagetop_line - xtext->buffer->pagetop_subline;
 			}
 			else if (line > xtext->buffer->pagetop_line - line)
 			{
 				/* move backwards from pagetop */
-				ent = xtext->buffer->pagetop_ent;
+				ent = xtext->buffer->impl->pagetop_ent;
 				lines = xtext->buffer->pagetop_line - xtext->buffer->pagetop_subline;
 				while (1)
 				{
@@ -3606,12 +3624,12 @@ namespace{
 
 		int lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
 		int line = 0;
-		auto orig_ent = xtext->buffer->pagetop_ent;
+		auto orig_ent = xtext->buffer->impl->pagetop_ent;
 		int subline = xtext->buffer->pagetop_subline;
 
 		/* used before a complete page is in buffer */
 		if (!orig_ent)
-			orig_ent = xtext->buffer->text_first;
+			orig_ent = xtext->buffer->impl->text_first;
 
 		/* check if enta is before the start of this page */
 		bool drawing = false;
@@ -3690,12 +3708,12 @@ namespace{
 
 		int subline = 0;
 		int line = 0;
-		auto ent = xtext->buffer->text_first;
+		auto ent = xtext->buffer->impl->text_first;
 
 		if (startline > 0)
 			ent = gtk_xtext_nth(xtext, startline, &subline);
 
-		xtext->buffer->pagetop_ent = ent;
+		xtext->buffer->impl->pagetop_ent = ent;
 		xtext->buffer->pagetop_subline = subline;
 		xtext->buffer->pagetop_line = startline;
 
@@ -3786,26 +3804,26 @@ namespace{
 		bool visible = buffer->xtext->buffer == buffer &&
 			gtk_xtext_check_ent_visibility(buffer->xtext, ent, 0);
 
-		if (ent == buffer->pagetop_ent)
-			buffer->pagetop_ent = nullptr;
+		if (ent == buffer->impl->pagetop_ent)
+			buffer->impl->pagetop_ent = nullptr;
 
-		if (ent == buffer->last_ent_start)
+		if (ent == buffer->impl->last_ent_start)
 		{
-			buffer->last_ent_start = ent->next;
+			buffer->impl->last_ent_start = ent->next;
 			buffer->last_offset_start = 0;
 		}
 
-		if (ent == buffer->last_ent_end)
+		if (ent == buffer->impl->last_ent_end)
 		{
-			buffer->last_ent_start = nullptr;
-			buffer->last_ent_end = nullptr;
+			buffer->impl->last_ent_start = nullptr;
+			buffer->impl->last_ent_end = nullptr;
 		}
 
-		if (buffer->marker_pos == ent)
+		if (buffer->impl->marker_pos == ent)
 		{
 			/* Allow for "Marker line reset because exceeded scrollback limit. to appear. */
-			buffer->marker_pos = ent->next;
-			buffer->marker_state = MARKER_RESET_BY_KILL;
+			buffer->impl->marker_pos = ent->next;
+			buffer->impl->marker_state = MARKER_RESET_BY_KILL;
 		}
 
 		if (ent->marks)
@@ -3819,7 +3837,7 @@ namespace{
 	/* remove the topline from the list */
 	void gtk_xtext_remove_top(xtext_buffer *buffer)
 	{
-		textentry *ent = buffer->text_first;
+		textentry *ent = buffer->impl->text_first;
 		if (!ent)
 			return;
 		if (buffer->impl->entries.empty())
@@ -3829,11 +3847,11 @@ namespace{
 		buffer->num_lines -= ent->sublines.size();
 		buffer->pagetop_line -= ent->sublines.size();
 		buffer->last_pixel_pos -= (ent->sublines.size() * buffer->xtext->fontsize);
-		buffer->text_first = ent->next;
-		if (buffer->text_first)
-			buffer->text_first->prev = nullptr;
+		buffer->impl->text_first = ent->next;
+		if (buffer->impl->text_first)
+			buffer->impl->text_first->prev = nullptr;
 		else
-			buffer->text_last = nullptr;
+			buffer->impl->text_last = nullptr;
 
 		buffer->old_value -= ent->sublines.size();
 		if (buffer->xtext->buffer == buffer)	/* is it the current buffer? */
@@ -3867,7 +3885,7 @@ namespace{
 	{
 		textentry *ent;
 
-		ent = buffer->text_last;
+		ent = buffer->impl->text_last;
 		if (!ent)
 			return;
 		if (buffer->impl->entries.empty())
@@ -3875,11 +3893,11 @@ namespace{
 			throw std::runtime_error("attempt to remove without anything in the store!");
 		}
 		buffer->num_lines -= ent->sublines.size();
-		buffer->text_last = ent->prev;
-		if (buffer->text_last)
-			buffer->text_last->next = nullptr;
+		buffer->impl->text_last = ent->prev;
+		if (buffer->impl->text_last)
+			buffer->impl->text_last->next = nullptr;
 		else
-			buffer->text_first = nullptr;
+			buffer->impl->text_first = nullptr;
 
 		if (gtk_xtext_kill_ent(buffer, ent))
 		{
@@ -3918,7 +3936,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			lines *= -1;
 			while (lines)
 			{
-				if (buf->text_last == buf->marker_pos)
+				if (buf->impl->text_last == buf->impl->marker_pos)
 					marker_reset = true;
 				gtk_xtext_remove_bottom(buf);
 				lines--;
@@ -3929,7 +3947,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 			/* delete lines from top */
 			while (lines)
 			{
-				if (buf->text_first == buf->marker_pos)
+				if (buf->impl->text_first == buf->impl->marker_pos)
 					marker_reset = true;
 				gtk_xtext_remove_top(buf);
 				lines--;
@@ -3944,21 +3962,21 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 		if (buf->xtext->auto_indent)
 			buf->indent = MARGIN;
 		buf->scrollbar_down = true;
-		buf->last_ent_start = nullptr;
-		buf->last_ent_end = nullptr;
-		buf->marker_pos = nullptr;
-		if (buf->text_first)
+		buf->impl->last_ent_start = nullptr;
+		buf->impl->last_ent_end = nullptr;
+		buf->impl->marker_pos = nullptr;
+		if (buf->impl->text_first)
 			marker_reset = true;
 		dontscroll(buf);
 		buf->impl->entries.clear();
-		buf->text_first = nullptr;
+		buf->impl->text_first = nullptr;
 		/*while (buf->text_first)
 		{
 			auto next = buf->text_first->next;
 			delete buf->text_first;
 			buf->text_first = next;
 		}*/
-		buf->text_last = nullptr;
+		buf->impl->text_last = nullptr;
 	}
 
 	if (buf->xtext->buffer == buf)
@@ -3972,7 +3990,7 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 	}
 
 	if (marker_reset)
-		buf->marker_state = MARKER_RESET_BY_CLEAR;
+		buf->impl->marker_state = MARKER_RESET_BY_CLEAR;
 }
 
 namespace{
@@ -3991,7 +4009,7 @@ namespace{
 
 		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
-		ent = buf->pagetop_ent;
+		ent = buf->impl->pagetop_ent;
 		/* If top line not completely displayed return false */
 		if (ent == find_ent && buf->pagetop_subline > 0)
 		{
@@ -4020,7 +4038,7 @@ namespace{
 void
 gtk_xtext_check_marker_visibility(GtkXText * xtext)
 {
-	if (gtk_xtext_check_ent_visibility(xtext, xtext->buffer->marker_pos, 1))
+	if (gtk_xtext_check_ent_visibility(xtext, xtext->buffer->impl->marker_pos, 1))
 		xtext->buffer->marker_seen = true;
 }
 
@@ -4153,9 +4171,9 @@ namespace{
 			buf->curmark = nullptr;
 			buf->curdata.u = 0;
 		}
-		if (buf->pagetop_ent == ent)
+		if (buf->impl->pagetop_ent == ent)
 		{
-			buf->pagetop_ent = nullptr;
+			buf->impl->pagetop_ent = nullptr;
 		}
 		if (buf->hintsearch == ent)
 		{
@@ -4251,7 +4269,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 	xtext_buffer *buf = xtext->buffer;
 
 
-	if (buf->text_first == nullptr)
+	if (buf->impl->text_first == nullptr)
 	{
 		return nullptr;
 	}
@@ -4266,7 +4284,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		if (newfollow && (newfollow != oldfollow))
 		{
 			auto gl = g_list_last(buf->search_found);
-			ent = static_cast<textentry *>(gl ? gl->data : buf->text_first);
+			ent = static_cast<textentry *>(gl ? gl->data : buf->impl->text_first);
 			for (; ent; ent = ent->next)
 			{
 				auto gl = gtk_xtext_search_textentry(buf, *ent);
@@ -4274,7 +4292,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			}
 		}
 		buf->search_flags = flags;
-		ent = buf->pagetop_ent;
+		ent = buf->impl->pagetop_ent;
 	}
 
 	/* if the text arg is "", the reset button has been clicked or Control-Shift-F has been hit */
@@ -4292,7 +4310,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			{
 				return nullptr;
 			}
-			for (ent = buf->text_first; ent; ent = ent->next)
+			for (ent = buf->impl->text_first; ent; ent = ent->next)
 			{
 				auto gl = gtk_xtext_search_textentry(buf, *ent);
 				gtk_xtext_search_textentry_add(buf, ent, gl, true);
@@ -4371,8 +4389,8 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		GtkAdjustment *adj = xtext->adj;
 		gdouble value;
 
-		buf->pagetop_ent = nullptr;
-		for (value = 0.0, ent = buf->text_first;
+		buf->impl->pagetop_ent = nullptr;
+		for (value = 0.0, ent = buf->impl->text_first;
 			ent && ent != buf->hintsearch; ent = ent->next)
 		{
 			value += ent->sublines.size();
@@ -4458,20 +4476,20 @@ namespace {
 			ent->indent = MARGIN;	  /* 2 pixels is the left margin */
 
 		/* append to our linked list */
-		if (buf->text_last)
-			buf->text_last->next = ent;
+		if (buf->impl->text_last)
+			buf->impl->text_last->next = ent;
 		else
-			buf->text_first = ent;
-		ent->prev = buf->text_last;
-		buf->text_last = ent;
+			buf->impl->text_first = ent;
+		ent->prev = buf->impl->text_last;
+		buf->impl->text_last = ent;
 
 		buf->num_lines += gtk_xtext_lines_taken(buf, ent);
 
-		if ((buf->marker_pos == nullptr || buf->marker_seen) && (buf->xtext->buffer != buf ||
+		if ((buf->impl->marker_pos == nullptr || buf->marker_seen) && (buf->xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(buf->xtext))))))
 		{
-			buf->marker_pos = ent;
-			buf->marker_state = MARKER_IS_SET;
+			buf->impl->marker_pos = ent;
+			buf->impl->marker_state = MARKER_IS_SET;
 			dontscroll(buf); /* force scrolling off */
 			buf->marker_seen = false;
 		}
@@ -4604,14 +4622,14 @@ gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 
 bool gtk_xtext_is_empty(const xtext_buffer &buf)
 {
-	return buf.text_first == nullptr;
+	return buf.impl->text_first == nullptr;
 }
 
 
 int
 gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 {
-	auto ent = search_area->text_first;
+	auto ent = search_area->impl->text_first;
 	int matches = 0;
 
 	while (ent)
@@ -4632,8 +4650,8 @@ gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 				gtk_xtext_append(out, boost::string_ref{ reinterpret_cast<const char*>(ent->str.c_str()), ent->str.size() }, 0);
 			}
 
-			out->text_last->stamp = ent->stamp;
-			gtk_xtext_search_textentry_add(out, out->text_last, gl, true);
+			out->impl->text_last->stamp = ent->stamp;
+			gtk_xtext_search_textentry_add(out, out->impl->text_last, gl, true);
 		}
 		ent = ent->next;
 	}
@@ -4701,19 +4719,19 @@ gtk_xtext_set_marker_last(session *sess)
 {
 	xtext_buffer *buf = static_cast<xtext_buffer *>(sess->res->buffer);
 
-	buf->marker_pos = buf->text_last;
-	buf->marker_state = MARKER_IS_SET;
+	buf->impl->marker_pos = buf->impl->text_last;
+	buf->impl->marker_state = MARKER_IS_SET;
 }
 
 void
 gtk_xtext_reset_marker_pos(GtkXText *xtext)
 {
-	if (xtext->buffer->marker_pos)
+	if (xtext->buffer->impl->marker_pos)
 	{
-		xtext->buffer->marker_pos = nullptr;
+		xtext->buffer->impl->marker_pos = nullptr;
 		dontscroll(xtext->buffer); /* force scrolling off */
 		gtk_xtext_render_page(xtext);
-		xtext->buffer->marker_state = MARKER_RESET_MANUALLY;
+		xtext->buffer->impl->marker_state = MARKER_RESET_MANUALLY;
 	}
 }
 
@@ -4721,17 +4739,17 @@ int
 gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 {
 	xtext_buffer *buf = xtext->buffer;
-	if (buf->marker_pos == nullptr)
-		return buf->marker_state;
+	if (buf->impl->marker_pos == nullptr)
+		return buf->impl->marker_state;
 
-	if (gtk_xtext_check_ent_visibility(xtext, buf->marker_pos, 1) == false)
+	if (gtk_xtext_check_ent_visibility(xtext, buf->impl->marker_pos, 1) == false)
 	{
-		textentry *ent = buf->text_first;
+		textentry *ent = buf->impl->text_first;
 		GtkAdjustment *adj = xtext->adj;
 		gdouble value = 0.0;
 		while (ent)
 		{
-			if (ent == buf->marker_pos)
+			if (ent == buf->impl->marker_pos)
 				break;
 			value += ent->sublines.size();
 			ent = ent->next;
@@ -4748,8 +4766,8 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 	}
 
 	/* If we previously lost marker position to scrollback limit -- */
-	if (buf->marker_pos == buf->text_first &&
-		buf->marker_state == MARKER_RESET_BY_KILL)
+	if (buf->impl->marker_pos == buf->impl->text_first &&
+		buf->impl->marker_state == MARKER_RESET_BY_KILL)
 		return MARKER_RESET_BY_KILL;
 	else
 		return MARKER_IS_SET;
@@ -4820,7 +4838,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 		else if (buf->window_height != h)
 		{
 			buf->window_height = h;
-			buf->pagetop_ent = nullptr;
+			buf->impl->pagetop_ent = nullptr;
 			if (buf->scrollbar_down)
 				xtext->adj->value = xtext->adj->upper;
 			gtk_xtext_adjustment_set(buf, false);
@@ -4844,20 +4862,14 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 	:impl(new xtext_impl),
 	xtext(parent),     /* attached to this widget */
 	old_value(-1.0), /* last known adj->value */
-	text_first(), text_last(),
 
-	last_ent_start(), /* this basically describes the last rendered */
-	last_ent_end(),   /* selection. */
 	last_offset_start(), last_offset_end(),
 
 	last_pixel_pos(),
 
 	pagetop_line(), pagetop_subline(),
-	pagetop_ent(), /* what's at xtext->adj->value */
 
 	num_lines(), indent(parent->space_width * 2), /* position of separator (pixels) from left */
-
-	marker_pos(), marker_state(),
 
 	window_width(), /* window size when last rendered. */
 	window_height(),

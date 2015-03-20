@@ -97,11 +97,6 @@ public:
 
 	gdouble old_value;					/* last known adj->value */
 	
-	textentry *text_first;
-	textentry *text_last;
-
-	textentry *last_ent_start;	  /* this basically describes the last rendered */
-	textentry *last_ent_end;	  /* selection. */
 	int last_offset_start;
 	int last_offset_end;
 
@@ -109,13 +104,9 @@ public:
 
 	int pagetop_line;
 	int pagetop_subline;
-	textentry *pagetop_ent;			/* what's at xtext->adj->value */
 
 	int num_lines;
 	int indent;						  /* position of separator (pixels) from left */
-
-	textentry *marker_pos;
-	marker_reset_reason marker_state;
 
 	int window_width;				/* window size when last rendered. */
 	int window_height;
