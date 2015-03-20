@@ -404,19 +404,19 @@ fe_idle (gpointer data)
 void
 fe_new_window (session *sess, int focus)
 {
-	int tab = FALSE;
+	bool tab = false;
 
 	if (sess->type == session::SESS_DIALOG)
 	{
 		if (prefs.hex_gui_tab_dialogs)
-			tab = TRUE;
+			tab = true;
 	} else
 	{
 		if (prefs.hex_gui_tab_chans)
-			tab = TRUE;
+			tab = true;
 	}
 
-	mg_changui_new (sess, NULL, tab, focus);
+	mg_changui_new (sess, nullptr, tab, focus);
 
 #ifdef WIN32
 	g_log_set_handler ("GLib", static_cast<GLogLevelFlags>(G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING), (GLogFunc)log_handler, 0);
@@ -683,8 +683,6 @@ fe_beep (session *sess)
 void
 fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags)
 {
-	xtext_buffer *lbuf;
-
 	auto buf = static_cast<xtext_buffer*>(sess->res->buffer);
 
 	if (buf && gtk_xtext_is_empty (*buf))
@@ -693,7 +691,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 		return;
 	}
 
-	lbuf = static_cast<xtext_buffer*>(lastlog_sess->res->buffer);
+	auto lbuf = static_cast<xtext_buffer*>(lastlog_sess->res->buffer);
 	if (flags & regexp)
 	{
 		GRegexCompileFlags gcf = (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS;

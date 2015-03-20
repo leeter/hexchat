@@ -91,7 +91,7 @@ enum
 
 static void mg_create_entry (session *sess, GtkWidget *box);
 static void mg_create_search (session *sess, GtkWidget *box);
-static void mg_link_irctab (session *sess, int focus);
+static void mg_link_irctab (session *sess, bool focus);
 
 static session_gui static_mg_gui;
 static session_gui *mg_gui = nullptr;	/* the shared irc tab */
@@ -1359,7 +1359,7 @@ mg_detach_tab_cb (GtkWidget *item, chan *ch)
 	if (chan_get_tag (ch) == TAG_IRC)	/* IRC tab */
 	{
 		/* userdata is session * */
-		mg_link_irctab(static_cast<session*>(chan_get_userdata(ch)), 1);
+		mg_link_irctab(static_cast<session*>(chan_get_userdata(ch)), true);
 		return;
 	}
 
@@ -1805,12 +1805,12 @@ namespace
 }
 
 static void
-mg_link_irctab (session *sess, int focus)
+mg_link_irctab (session *sess, bool focus)
 {
 	if (sess->gui->is_tab)
 	{
 		GtkWidgetPtr win{ mg_changui_destroy(sess) };
-		mg_changui_new (sess, sess->res, 0, focus);
+		mg_changui_new (sess, sess->res, false, focus);
 		mg_populate (sess);
 		hexchat_is_quitting = false;
 		return;
@@ -1818,7 +1818,7 @@ mg_link_irctab (session *sess, int focus)
 
 	mg_unpopulate (sess);
 	GtkWidgetPtr win{ mg_changui_destroy(sess) };
-	mg_changui_new (sess, sess->res, 1, focus);
+	mg_changui_new (sess, sess->res, true, focus);
 	/* the buffer is now attached to a different widget */
 	((xtext_buffer *)sess->res->buffer)->xtext = (GtkXText *)sess->gui->xtext;
 }
@@ -1831,16 +1831,16 @@ mg_detach (session *sess, int mode)
 	/* detach only */
 	case 1:
 		if (sess->gui->is_tab)
-			mg_link_irctab (sess, 1);
+			mg_link_irctab (sess, true);
 		break;
 	/* attach only */
 	case 2:
 		if (!sess->gui->is_tab)
-			mg_link_irctab (sess, 1);
+			mg_link_irctab (sess, true);
 		break;
 	/* toggle */
 	default:
-		mg_link_irctab (sess, 1);
+		mg_link_irctab (sess, true);
 	}
 }
 
@@ -3434,7 +3434,7 @@ restore_gui::restore_gui()
 	c_graph(){}
 
 void
-mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
+mg_changui_new (session *sess, restore_gui *res, bool tab, bool focus)
 {
 	bool first_run = false;
 	session_gui *gui;
