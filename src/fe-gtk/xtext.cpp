@@ -4840,7 +4840,7 @@ gtk_xtext_buffer_new(GtkXText *xtext)
 	return buf;
 }
 
-xtext_buffer::xtext_buffer(GtkXText* parent)
+xtext_buffer::xtext_buffer(GtkXText* parent) NOEXCEPT
 	:impl(new xtext_impl),
 	xtext(parent),     /* attached to this widget */
 	old_value(-1.0), /* last known adj->value */
@@ -4877,7 +4877,7 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 {
 }
 
-xtext_buffer::~xtext_buffer()
+xtext_buffer::~xtext_buffer() NOEXCEPT
 {
 	if (this->search_found)
 	{
