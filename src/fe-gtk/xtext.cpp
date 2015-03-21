@@ -432,20 +432,17 @@ namespace
 		}
 	}
 
-	static void
-		backend_draw_text_emph(GtkXText *xtext, bool dofill, GdkGC *gc, int x, int y,
+	static void backend_draw_text_emph(GtkXText *xtext, bool dofill, GdkGC *gc, int x, int y,
 		const char *str, int len, int str_width, int emphasis)
 	{
-		GdkGCValues val;
-		GdkColor col;
-		PangoLayoutLine *line;
-
 		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
 		pango_layout_set_text(xtext->layout, str, len);
 
 		if (dofill)
 		{
+			GdkGCValues val;
 			gdk_gc_get_values(gc, &val);
+			GdkColor col;
 			col.pixel = val.background.pixel;
 			gdk_gc_set_foreground(gc, &col);
 			gdk_draw_rectangle(xtext->draw_buf, gc, 1, x, y -
@@ -454,7 +451,7 @@ namespace
 			gdk_gc_set_foreground(gc, &col);
 		}
 
-		line = static_cast<PangoLayoutLine*>(pango_layout_get_lines(xtext->layout)->data);
+		auto line = static_cast<PangoLayoutLine*>(pango_layout_get_lines(xtext->layout)->data);
 
 		xtext_draw_layout_line(xtext->draw_buf, gc, x, y, line);
 	}
