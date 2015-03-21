@@ -167,7 +167,7 @@ server_send_real (server &serv, const boost::string_ref & buf)
 {
 	fe_add_rawlog (&serv, buf, true);
 
-	url_check_line(buf.data(), buf.size());
+	url_check_line(buf);
 
 	return tcp_send_real (serv.ssl, serv.sok, serv.encoding ? serv.encoding->c_str() : nullptr, serv.using_irc,
 		buf.data(), buf.size(), &serv);

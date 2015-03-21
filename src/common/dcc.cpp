@@ -434,7 +434,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 		return 0;
 	}
 
-	url_check_line(line, len);
+	url_check_line(boost::string_ref(line, len));
 
 	if (line[0] == 1 && !g_ascii_strncasecmp(line + 1, "ACTION", 6))
 	{

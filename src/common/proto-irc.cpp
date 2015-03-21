@@ -1563,7 +1563,7 @@ server::p_inline (const boost::string_ref& text)
 		buf = text.to_string();
 	}
 
-	url_check_line(buf.data(), buf.size());
+	url_check_line(buf);
 
 	/* split line into words and words_to_end_of_line */
 	process_data_init (&pdibuf[0], &buf[0], word, word_eol, false, false);

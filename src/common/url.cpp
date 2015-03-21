@@ -20,6 +20,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -28,6 +29,7 @@
 #include <string>
 #include <sstream>
 #include <set>
+#include <type_traits>
 #include <boost/utility/string_ref.hpp>
 
 #include "hexchat.hpp"
@@ -115,9 +117,10 @@ url_save_node (const std::string & url)
 }
 
 static void
-url_add (const char *urltext, int len)
+url_add (boost::string_ref urltext)
 {
-	int size;
+	if (urltext.empty())
+		return;
 
 	/* we don't need any URLs if we have neither URL grabbing nor URL logging enabled */
 	if (!prefs.hex_url_grabber && !prefs.hex_url_logging)
@@ -125,18 +128,18 @@ url_add (const char *urltext, int len)
 		return;
 	}
 
-	std::string data(urltext, len - 1);
-
-	if (data.back() == '.')	/* chop trailing dot */
+	urltext.remove_suffix(1);
+	if (urltext.back() == '.')	/* chop trailing dot */
 	{
-		data.erase(data.end() - 1);
+		urltext.remove_suffix(1);
 	}
 	/* chop trailing ) but only if there's no counterpart */
-	if (data.back() == ')' && data.find_first_of('(') == std::string::npos)
+	if (urltext.back() == ')' && urltext.find_first_of('(') == boost::string_ref::npos)
 	{
-		data.erase(data.end() - 1);
+		urltext.remove_suffix(1);
 	}
 
+	std::string data = urltext.to_string();
 	if (prefs.hex_url_logging)
 	{
 		url_save_node (data);
@@ -153,7 +156,7 @@ url_add (const char *urltext, int len)
 		return;
 	}
 
-	size = urlset().size();
+	auto size = urlset().size();
 	/* 0 is unlimited */
 	if (prefs.hex_url_grabber_limit > 0 && size >= prefs.hex_url_grabber_limit)
 	{
@@ -300,60 +303,50 @@ match_path (const char *word, int *start, int *end)
 }// end anonymous namespace
 /* List of IRC commands for which contents (and thus possible URLs)
  * are visible to the user.  NOTE:  Trailing blank required in each. */
-static char *commands[] = {
-	"NOTICE ",
-	"PRIVMSG ",
-	"TOPIC ",
-	"332 ",		/* RPL_TOPIC */
-	"372 "		/* RPL_MOTD */
-};
+static std::array<boost::string_ref, 5> commands = { {
+		"NOTICE ",
+		"PRIVMSG ",
+		"TOPIC ",
+		"332 ",		/* RPL_TOPIC */
+		"372 "		/* RPL_MOTD */
+	} };
 
-//#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-
-template<typename T, size_t N>
-BOOST_CONSTEXPR inline size_t array_size(const T(&)[N])
+void url_check_line(const boost::string_ref& buf)
 {
-	return N;
-}
-
-void
-url_check_line (const char *buf, int len)
-{
+	if (buf.empty()) return;
 	GRegex *re(void);
-	GMatchInfo *gmi = nullptr;
-	const char *po = buf;
-	int i;
+	auto po = buf;
 
 	/* Skip over message prefix */
-	if (*po == ':')
+	if (po[0] == ':')
 	{
-		po = strchr (po, ' ');
-		if (!po)
+		auto space_loc = po.find_first_of(' ');
+		if (space_loc == boost::string_ref::npos)
 			return;
-		po++;
+		po.remove_prefix(1);
 	}
+	int i;
 	/* Allow only commands from the above list */
-	for (i = 0; i < array_size(commands); i++)
+	for (i = 0; i < commands.size(); i++)
 	{
-		char *cmd = commands[i];
-		int len = strlen (cmd);
-
-		if (strncmp (cmd, po, len) == 0)
+		auto cmd = commands[i];
+		if (po.starts_with(cmd))
 		{
-			po += len;
+			po.remove_prefix(cmd.size());
 			break;
 		}
 	}
-	if (i == array_size(commands))
+	if (i == commands.size())
 		return;
 
 	/* Skip past the channel name or user nick */
-	po = strchr (po, ' ');
-	if (!po)
+	auto space_loc = po.find_first_of(' ');
+	if (space_loc == boost::string_ref::npos)
 		return;
-	po++;
-
-	g_regex_match(re_url(), po, static_cast<GRegexMatchFlags>(0), &gmi);
+	po.remove_prefix(1);
+	GMatchInfo *gmi = nullptr;
+	auto buffer = po.to_string();
+	g_regex_match(re_url(), buffer.c_str(), GRegexMatchFlags(), &gmi);
 	std::unique_ptr<GMatchInfo, decltype(&g_match_info_free)> match_info(gmi, g_match_info_free);
 	while (g_match_info_matches(gmi))
 	{
@@ -362,7 +355,8 @@ url_check_line (const char *buf, int len)
 		g_match_info_fetch_pos(gmi, 0, &start, &end);
 		while (end > start && (po[end - 1] == '\r' || po[end - 1] == '\n'))
 			end--;
-		url_add(po + start, end - start);
+
+		url_add(boost::string_ref(buffer.c_str() + start, end - start));
 		g_match_info_next(gmi, nullptr);
 	}
 }
@@ -379,10 +373,9 @@ namespace{
 
 	struct g_regex_deleter
 	{
-		void operator()(GRegex * re)
+		void operator()(GRegex * re) NOEXCEPT
 		{
-			if (re)
-				g_regex_unref(re);
+			g_regex_unref(re);
 		}
 	};
 
@@ -391,7 +384,7 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 {
 	GMatchInfo *gmi;
 
-	g_regex_match (re, word, static_cast<GRegexMatchFlags>(0), &gmi);
+	g_regex_match (re, word, GRegexMatchFlags(), &gmi);
 	std::unique_ptr<GMatchInfo, decltype(&g_match_info_free)> match_info(gmi, g_match_info_free);
 	if (!g_match_info_matches (gmi))
 	{
