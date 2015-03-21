@@ -41,6 +41,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include <locale>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 
@@ -248,16 +249,15 @@ namespace
 	static void
 		xtext_pango_init(GtkXText *xtext)
 	{
-		int i, j;
 		char buf[2] = "\000";
 
 		if (attr_lists[0])
 		{
-			for (i = 0; i < (EMPH_ITAL | EMPH_BOLD); i++)
+			for (int i = 0; i < (EMPH_ITAL | EMPH_BOLD); i++)
 				pango_attr_list_unref(attr_lists[i]);
 		}
 
-		for (i = 0; i < sizeof attr_lists / sizeof attr_lists[0]; i++)
+		for (std::size_t i = 0; i < std::extent<decltype(attr_lists)>::value; i++)
 		{
 			attr_lists[i] = pango_attr_list_new();
 			switch (i)
@@ -282,7 +282,7 @@ namespace
 
 			/* Now initialize fontwidths[i] */
 			pango_layout_set_attributes(xtext->layout, attr_lists[i]);
-			for (j = 0; j < 128; j++)
+			for (int j = 0; j < 128; j++)
 			{
 				buf[0] = j;
 				pango_layout_set_text(xtext->layout, buf, 1);

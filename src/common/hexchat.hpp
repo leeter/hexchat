@@ -82,7 +82,6 @@
 
 #ifdef WIN32						/* for win32 */
 #define OFLAGS O_BINARY
-#define sleep(t) Sleep(t*1000)
 #include <direct.h>
 #define	F_OK	0
 #define	X_OK	1
