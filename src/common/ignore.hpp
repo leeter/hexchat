@@ -25,6 +25,7 @@
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
 #include "serverfwd.hpp"
+#include "sessfwd.hpp"
 
 extern int ignored_ctcp;
 extern int ignored_priv;
