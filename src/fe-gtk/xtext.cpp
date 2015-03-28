@@ -3083,8 +3083,8 @@ namespace{
 		if (win_width >= ent->str_width + ent->indent)
 			return ent->str.size();
 
-		const unsigned char *last_space = str;
-		const unsigned char *orig_str = str;
+		auto last_space = str;
+		auto orig_str = str;
 		int str_width = indent;
 		int rcol = 0, bgcol = 0;
 		bool hidden = false;
@@ -3095,12 +3095,12 @@ namespace{
 		/* it does happen! */
 		if (win_width < 1)
 		{
-			ret = ent->str.size() - (str - ent->str.c_str());
+			ret = ent->str.size() - std::distance(ent->str.c_str(), str);
 			goto done;
 		}
 
 		/* Find emphasis value for the offset that is the first byte of our string */
-		for (auto & meta : ent->slp)
+		for (const auto & meta : ent->slp)
 		{
 			auto start = ent->str.c_str() + meta.off;
 			auto end = start + meta.len;
@@ -3163,19 +3163,19 @@ namespace{
 					{
 						if (xtext->wordwrap)
 						{
-							if (str - last_space > WORDWRAP_LIMIT + limit_offset)
-								ret = str - orig_str; /* fall back to character wrap */
+							if (std::distance(last_space, str) > WORDWRAP_LIMIT + limit_offset)
+								ret = std::distance(orig_str, str); /* fall back to character wrap */
 							else
 							{
 								if (*last_space == ' ')
 									last_space++;
-								ret = last_space - orig_str;
+								ret = std::distance(orig_str, last_space);
 								if (ret == 0) /* fall back to character wrap */
-									ret = str - orig_str;
+									ret = std::distance(orig_str, str);
 							}
 							goto done;
 						}
-						ret = str - orig_str;
+						ret = std::distance(orig_str, str);
 						goto done;
 					}
 
@@ -3195,7 +3195,7 @@ namespace{
 
 			if (str >= ent->str.c_str() + ent->str.size())
 			{
-				ret = str - orig_str;
+				ret = std::distance(orig_str, str);
 				break; // goto done;
 			}
 		}
@@ -3834,7 +3834,7 @@ namespace{
 	/* remove the topline from the list */
 	void gtk_xtext_remove_top(xtext_buffer *buffer)
 	{
-		textentry *ent = buffer->impl->text_first;
+		auto ent = buffer->impl->text_first;
 		if (!ent)
 			return;
 		if (buffer->impl->entries.empty())
