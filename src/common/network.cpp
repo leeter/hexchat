@@ -42,17 +42,6 @@
 #define NETWORK_PRIVATE
 #include "network.hpp"
 
-static int RAND_INT(int n)
-{
-	static std::random_device rd;
-	static std::mt19937 mt(rd());
-	std::uniform_int_distribution<int> dist(0, n);
-	return dist(mt);
-}
-
-//#define RAND_INT(n) ((int)(rand() / (RAND_MAX + 1.0) * (n)))
-
-
 /* ================== COMMON ================= */
 
 static void
@@ -197,7 +186,7 @@ net_resolve (netstore * ns, char *hostname, int port, char **real_host)
 		count ++;
 
 	count = RAND_INT(count);
-	
+
 	while (count--) ns->ip6_hostent = ns->ip6_hostent->ai_next;
 #endif
 
