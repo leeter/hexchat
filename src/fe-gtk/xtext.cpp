@@ -3076,12 +3076,12 @@ namespace{
 	/* walk through str until this line doesn't fit anymore */
 
 	static int
-		find_next_wrap(GtkXText * xtext, textentry * ent, const unsigned char str[],
+		find_next_wrap(GtkXText * xtext, const textentry & ent, const unsigned char str[],
 		int win_width, int indent)
 	{
 		/* single liners */
-		if (win_width >= ent->str_width + ent->indent)
-			return ent->str.size();
+		if (win_width >= ent.str_width + ent.indent)
+			return ent.str.size();
 
 		auto last_space = str;
 		auto orig_str = str;
@@ -3095,14 +3095,14 @@ namespace{
 		/* it does happen! */
 		if (win_width < 1)
 		{
-			ret = ent->str.size() - std::distance(ent->str.c_str(), str);
+			ret = ent.str.size() - std::distance(ent.str.c_str(), str);
 			goto done;
 		}
 
 		/* Find emphasis value for the offset that is the first byte of our string */
-		for (const auto & meta : ent->slp)
+		for (const auto & meta : ent.slp)
 		{
-			auto start = ent->str.c_str() + meta.off;
+			auto start = ent.str.c_str() + meta.off;
 			auto end = start + meta.len;
 			if (str >= start && str < end)
 			{
@@ -3193,7 +3193,7 @@ namespace{
 				}
 			}
 
-			if (str >= ent->str.c_str() + ent->str.size())
+			if (str >= ent.str.c_str() + ent.str.size())
 			{
 				ret = std::distance(orig_str, str);
 				break; // goto done;
@@ -3518,7 +3518,7 @@ namespace{
 
 		do
 		{
-			int len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
+			int len = find_next_wrap(buf->xtext, *ent, str, win_width, indent);
 			ent->sublines.push_back(str + len - ent->str.c_str());
 			indent = buf->indent;
 			str += len;
