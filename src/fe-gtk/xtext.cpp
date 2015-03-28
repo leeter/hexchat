@@ -3502,29 +3502,29 @@ gtk_xtext_save(GtkXText * xtext, int fh)
 namespace{
 	/* count how many lines 'ent' will take (with wraps) */
 
-	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry * ent)
+	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry & ent)
 	{
-		ent->sublines.clear();
+		ent.sublines.clear();
 		int win_width = buf->window_width - MARGIN;
 
-		if (win_width >= ent->indent + ent->str_width)
+		if (win_width >= ent.indent + ent.str_width)
 		{
-			ent->sublines.push_back(ent->str.size());
+			ent.sublines.push_back(ent.str.size());
 			return 1;
 		}
 
-		int indent = ent->indent;
-		auto str = ent->str.c_str();
+		int indent = ent.indent;
+		auto str = ent.str.c_str();
 
 		do
 		{
-			int len = find_next_wrap(buf->xtext, *ent, str, win_width, indent);
-			ent->sublines.push_back(str + len - ent->str.c_str());
+			int len = find_next_wrap(buf->xtext, ent, str, win_width, indent);
+			ent.sublines.push_back(str + len - ent.str.c_str());
 			indent = buf->indent;
 			str += len;
-		} while (str < ent->str.c_str() + ent->str.size());
+		} while (str < ent.str.c_str() + ent.str.size());
 
-		return ent->sublines.size();
+		return ent.sublines.size();
 	}
 
 	/* Calculate number of actual lines (with wraps), to set adj->lower. *
@@ -3542,7 +3542,7 @@ namespace{
 		auto ent = buf->impl->text_first;
 		while (ent)
 		{
-			lines += gtk_xtext_lines_taken(buf, ent);
+			lines += gtk_xtext_lines_taken(buf, *ent);
 			ent = ent->next;
 		}
 
@@ -4477,7 +4477,7 @@ namespace {
 		ent->prev = buf->impl->text_last;
 		buf->impl->text_last = ent;
 
-		buf->num_lines += gtk_xtext_lines_taken(buf, ent);
+		buf->num_lines += gtk_xtext_lines_taken(buf, *ent);
 
 		if ((buf->impl->marker_pos == nullptr || buf->marker_seen) && (buf->xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(buf->xtext))))))
