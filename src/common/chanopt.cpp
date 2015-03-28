@@ -158,13 +158,13 @@ int chanopt_command (session *sess, char *tbuf, char *word[], char *[])
 /* is a per-channel setting set? Or is it UNSET and
  * the global version is set? */
 
-gboolean
-chanopt_is_set (unsigned int global, guint8 per_chan_setting)
+bool
+chanopt_is_set (unsigned int global, std::uint8_t per_chan_setting)
 {
 	if (per_chan_setting == SET_ON || per_chan_setting == SET_OFF)
-		return per_chan_setting;
+		return !!per_chan_setting;
 	else
-		return global;
+		return !!global;
 }
 
 namespace {

@@ -20,10 +20,18 @@
 #ifndef HEXCHAT_CHANOPT_HPP
 #define HEXCHAT_CHANOPT_HPP
 
+#include <cstdint>
 #include "sessfwd.hpp"
 
+/* Per-Channel Settings */
+enum chanopt_val{
+	SET_OFF = 0,
+	SET_ON = 1,
+	SET_DEFAULT = 2 /* use global setting */
+};
+
 int chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[]);
-gboolean chanopt_is_set (unsigned int global, guint8 per_chan_setting);
+bool chanopt_is_set (unsigned int global, std::uint8_t per_chan_setting);
 void chanopt_save_all (void);
 void chanopt_save (session *sess);
 void chanopt_load (session *sess);

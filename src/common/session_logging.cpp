@@ -39,6 +39,7 @@
 
 #include "fe.hpp"
 #include "cfgfiles.hpp"
+#include "chanopt.hpp"
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "session.hpp"
