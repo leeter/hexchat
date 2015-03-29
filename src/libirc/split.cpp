@@ -1,5 +1,5 @@
-/* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+/* libirc
+* Copyright (C) 2014 - 2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,20 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#ifndef LIBIRC_CONFIG_HPP
-#define LIBIRC_CONFIG_HPP
+#include <string>
+#include <vector>
+#include <boost/utility/string_ref.hpp>
+#include "split.hpp"
 
-#if !defined(__clang__) && !defined(__has_feature)
-#define __has_feature(a) 0
-#endif
-
-#if defined(__clang__) && __has_feature(cxx_noexcept) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
-    defined(_MSC_FULL_VER) && _MSC_FULL_VER > 180031101
-#  define NOEXCEPT noexcept
-#elif defined(_MSC_VER)
-#  define NOEXCEPT throw()
-#else
-#error noexcept is required to compile this code!
-#endif
-
-#endif //LIBIRC_CONFIG_HPP
+namespace irc
+{
+	std::vector<std::string> split_for_send(
+		std::size_t cmd_length,
+		const boost::string_ref & channel,
+		const boost::string_ref & userhost,
+		const boost::string_ref & message,
+		std::codecvt<char, char, std::mbstate_t> & cvt)
+	{
+		return{};
+	}
+}

@@ -18,6 +18,7 @@
     <ClInclude Include="irc_proto.hpp" />
     <ClInclude Include="message.hpp" />
     <ClInclude Include="server.hpp" />
+    <ClInclude Include="split.hpp" />
     <ClInclude Include="sutter.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
@@ -29,6 +30,7 @@
     <ClCompile Include="irc_proto.cpp" />
     <ClCompile Include="message.cpp" />
     <ClCompile Include="server.cpp" />
+    <ClCompile Include="split.cpp" />
     <ClCompile Include="tcp_connection.cpp" />
     <ClCompile Include="throttled_queue.cpp" />
     <ClCompile Include="w32crypt_seed.cpp" />
