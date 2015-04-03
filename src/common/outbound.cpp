@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <locale>
@@ -696,14 +697,14 @@ cmd_country (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	/* search? */
 	if (strcmp(code, "-s") == 0)
 	{
-		country_search(word[3], sess, PrintTextf);
+		country_search(word[3], sess, static_cast<void(*)(session*, const boost::format &)>(PrintTextf));
 		return true;
 	}
 
 	/* search, but forgot the -s */
 	if (strchr(code, '*'))
 	{
-		country_search(code, sess, PrintTextf);
+		country_search(code, sess, static_cast<void(*)(session*, const boost::format &)>(PrintTextf));
 		return true;
 	}
 

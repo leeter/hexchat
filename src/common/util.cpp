@@ -1099,35 +1099,35 @@ static const std::unordered_map<std::string, std::string> domain =
 		{"ZW", N_("Zimbabwe") },
 }};
 
-const char *
-country (const std::string &hostname)
+std::string
+country (const boost::string_ref &hostname)
 {
 	std::locale loc;
 
 	if (!hostname.empty() || std::isdigit(hostname[hostname.size() - 1], loc))
 	{
-		return nullptr;
+		return{};
 	}
 	auto dot_loc = hostname.find_last_of('.');
-	std::string host = dot_loc != std::string::npos ? hostname.substr(dot_loc + 1) : hostname;
+	std::string host = static_cast<std::string>(dot_loc != boost::string_ref::npos ? hostname.substr(dot_loc + 1) : hostname);
 
 	boost::algorithm::to_upper(host, loc);
 	auto dom = domain.find(host);
 
 	if (dom == domain.cend())
-		return nullptr;
+		return{};
 
 	return _(dom->second.c_str());
 }
 
 void
-country_search (char *pattern, session *ud, void (*print)(session *, const char [], ...))
+country_search (char *pattern, session *ud, const std::function<void(session*, const boost::format &)> & print)
 {
 	for (const auto & bucket : domain)
 	{
 		if (match (pattern, bucket.first.c_str()) || match (pattern, _(bucket.second.c_str())))
 		{
-			print(ud, "%s = %s\n", bucket.first.c_str(), _(bucket.second.c_str()));
+			print(ud, boost::format("%s = %s\n") % bucket.first % _(bucket.second.c_str()));
 		}
 	}
 }

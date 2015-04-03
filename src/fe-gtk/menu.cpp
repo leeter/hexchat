@@ -599,7 +599,6 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 {
 	char buf[512];
 	char unknown[96];
-	const char *users_country;
 	gboolean missing = false;
 	GtkWidget *item;
 
@@ -634,13 +633,13 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->account ? &(*user->account)[0] : unknown);
 
-	users_country = user->hostname ? country(user->hostname.get()) : nullptr;
-	if (users_country)
+	static std::string users_country = user->hostname ? country(user->hostname.get()) : nullptr;
+	if (!users_country.empty())
 	{
-		snprintf (buf, sizeof (buf), fmt, _ ("Country:"), users_country);
+		snprintf (buf, sizeof (buf), fmt, _ ("Country:"), users_country.c_str());
 		item = menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 		g_signal_connect (G_OBJECT (item), "activate",
-			G_CALLBACK (copy_to_clipboard_cb), (gpointer)users_country);
+			G_CALLBACK (copy_to_clipboard_cb), (gpointer)users_country.c_str());
 	}
 
 	snprintf (buf, sizeof (buf), fmt, _("Server:"),
