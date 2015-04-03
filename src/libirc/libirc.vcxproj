@@ -14,6 +14,8 @@
     <ClInclude Include="config.hpp" />
     <ClInclude Include="connection.hpp" />
     <ClInclude Include="connection_fwd.hpp" />
+    <ClInclude Include="detail\connection_detail.hpp" />
+    <ClInclude Include="detail\inbound.hpp" />
     <ClInclude Include="irc_ctype.hpp" />
     <ClInclude Include="irc_proto.hpp" />
     <ClInclude Include="message.hpp" />
@@ -27,6 +29,7 @@
     <ClInclude Include="w32crypt_seed.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="detail\inbound.cpp" />
     <ClCompile Include="irc_ctype.cpp" />
     <ClCompile Include="irc_proto.cpp" />
     <ClCompile Include="message.cpp" />

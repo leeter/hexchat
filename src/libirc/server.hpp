@@ -50,7 +50,7 @@ namespace irc
 		void swap(server&) NOEXCEPT;
 		void send(const ::boost::string_ref&) override final;
 		void throttle(bool);
-		void message_handler(const std::function<bool(server&, const message&)>& new_handler);
+		void message_handler(const std::function<bool(connection&, const message&)>& new_handler);
 
 	public:
 		::std::string hostname() const;

@@ -24,21 +24,26 @@
 #include "tcp_connection.hpp"
 #include "throttled_queue.hpp"
 #include "message.hpp"
+#include "detail/connection_detail.hpp"
+#include "detail/inbound.hpp"
 
 namespace irc
 {
-	class server_impl : public connection
+	class server_impl : public detail::connection_detail
 	{
 		server_impl(const server_impl&) = delete;
 		std::string _hostname;
 		std::unique_ptr<io::tcp::connection> p_connection;
 		::io::irc::throttled_queue outbound_queue;
-		std::function<bool(server&, const message&)> _message_handler;
+		std::function<bool(connection&, const message&)> _message_handler;
 		bool _throttle;
 	public:
 		server_impl(std::unique_ptr<io::tcp::connection> connection)
 			:p_connection(std::move(connection)), _throttle(false)
 		{
+			p_connection->on_message.connect([this](const std::string& message, std::size_t length){
+				irc::detail::inbound::handle_inbound_message(*this, message, length);
+			});
 		}
 
 	public:
@@ -65,7 +70,7 @@ namespace irc
 			_throttle = do_throttle;
 		}
 
-		void message_handler(const std::function<bool(server&, const message&)>& new_handler)
+		void message_handler(const std::function<bool(connection&, const message&)>& new_handler)
 		{
 			_message_handler = new_handler;
 		}
@@ -89,6 +94,11 @@ namespace irc
 		explicit operator bool() const NOEXCEPT
 		{
 			return p_connection->connected();
+		}
+
+		const std::function<bool(::irc::connection&, const message&)> & message_handler() const NOEXCEPT override final
+		{
+			return _message_handler;
 		}
 	};
 
@@ -144,7 +154,7 @@ namespace irc
 		p_impl->throttle(do_throttle);
 	}
 
-	void server::message_handler(const std::function<bool(server&, const message&)>& new_handler)
+	void server::message_handler(const std::function<bool(connection&, const message&)>& new_handler)
 	{
 		p_impl->message_handler(new_handler);
 	}
