@@ -16,39 +16,16 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#ifndef LIBIRC_MESSAGE_HPP
-#define LIBIRC_MESSAGE_HPP
+#ifndef LIBIRC_MESSAGEFWD_HPP
+#define LIBIRC_MESSAGEFWD_HPP
 
 #ifdef _MSC_VER
 #pragma once
 #endif
 
-#include <string>
-#include <boost/optional.hpp>
-#include "message_fwd.hpp"
-
 namespace irc
 {
-	struct message
-	{
-		enum numeric_reply
-		{
-			RPL_WELCOME = 1,
-			RPL_YOURHOST,
-			RPL_CREATED,
-			RPL_MYINFO,
-			RPL_BOUNCE,
-
-			RPL_TRACELINK = 200,
-			RPL_TRACECONNECTING
-		};
-		boost::optional<numeric_reply> command_n;
-		std::string command_s;
-		boost::optional<std::string> prefix;
-		boost::optional<std::string> params;
-	};
-
-	boost::optional<message> parse(const std::string & inbound);
+	struct message;
 }
 
-#endif
+#endif // LIBIRC_MESSAGEFWD_HPP

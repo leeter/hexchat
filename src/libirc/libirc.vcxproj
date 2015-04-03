@@ -17,6 +17,7 @@
     <ClInclude Include="irc_ctype.hpp" />
     <ClInclude Include="irc_proto.hpp" />
     <ClInclude Include="message.hpp" />
+    <ClInclude Include="message_fwd.hpp" />
     <ClInclude Include="server.hpp" />
     <ClInclude Include="split.hpp" />
     <ClInclude Include="sutter.hpp" />

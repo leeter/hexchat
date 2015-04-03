@@ -23,6 +23,7 @@
 #include "sutter.hpp"
 #include "tcp_connection.hpp"
 #include "throttled_queue.hpp"
+#include "message.hpp"
 
 namespace irc
 {
@@ -32,6 +33,7 @@ namespace irc
 		std::string _hostname;
 		std::unique_ptr<io::tcp::connection> p_connection;
 		::io::irc::throttled_queue outbound_queue;
+		std::function<bool(server&, const message&)> _message_handler;
 		bool _throttle;
 	public:
 		server_impl(std::unique_ptr<io::tcp::connection> connection)
@@ -63,6 +65,11 @@ namespace irc
 			_throttle = do_throttle;
 		}
 
+		void message_handler(const std::function<bool(server&, const message&)>& new_handler)
+		{
+			_message_handler = new_handler;
+		}
+
 	public:
 		std::string hostname() const
 		{
@@ -77,6 +84,11 @@ namespace irc
 		io::irc::throttled_queue::size_type queue_length() const NOEXCEPT
 		{
 			return outbound_queue.queue_length();
+		}
+
+		explicit operator bool() const NOEXCEPT
+		{
+			return p_connection->connected();
 		}
 	};
 
@@ -132,6 +144,11 @@ namespace irc
 		p_impl->throttle(do_throttle);
 	}
 
+	void server::message_handler(const std::function<bool(server&, const message&)>& new_handler)
+	{
+		p_impl->message_handler(new_handler);
+	}
+
 	// Accessors
 	std::string server::hostname() const
 	{
@@ -146,6 +163,11 @@ namespace irc
 	bool server::throttle() const NOEXCEPT
 	{
 		return p_impl->throttle();
+	}
+
+	server::operator bool() const NOEXCEPT
+	{
+		return static_cast<bool>(*p_impl);
 	}
 
 }// namespace irc

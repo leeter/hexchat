@@ -27,6 +27,7 @@
 #include "config.hpp"
 #include "connection.hpp"
 #include "tcpfwd.hpp"
+#include "message_fwd.hpp"
 
 namespace irc
 {
@@ -49,11 +50,15 @@ namespace irc
 		void swap(server&) NOEXCEPT;
 		void send(const ::boost::string_ref&) override final;
 		void throttle(bool);
+		void message_handler(const std::function<bool(server&, const message&)>& new_handler);
 
 	public:
 		::std::string hostname() const;
 		bool throttle() const NOEXCEPT;
 		std::size_t queue_length() const NOEXCEPT;
+
+		// indicates the connection is still live
+		explicit operator bool() const NOEXCEPT;
 	};
 } // namespace irc
 
