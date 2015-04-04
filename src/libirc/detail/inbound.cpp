@@ -27,11 +27,11 @@ namespace irc
 	{
 		namespace inbound
 		{
-			void handle_inbound_message(irc::detail::connection_detail & con, const std::string & message, std::size_t length)
+			void handle_inbound_message(irc::detail::connection_detail & con, const std::string & message, std::size_t)
 			{
 				const auto & inbound_handler = con.message_handler();
-				irc::message parsed_message;
-				if (inbound_handler && inbound_handler(con, parsed_message))
+				auto parsed_message = irc::parse(message);
+				if (!parsed_message || inbound_handler && inbound_handler(con, parsed_message.get()))
 				{
 					return;
 				}

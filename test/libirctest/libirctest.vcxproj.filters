@@ -18,5 +18,8 @@
     <ClCompile Include="irc_proto_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="message_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

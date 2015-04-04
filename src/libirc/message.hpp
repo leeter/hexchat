@@ -33,6 +33,7 @@ namespace irc
 	{
 		enum numeric_reply
 		{
+			NON_NUMERIC = 0,
 			RPL_WELCOME = 1,
 			RPL_YOURHOST,
 			RPL_CREATED,
@@ -40,12 +41,17 @@ namespace irc
 			RPL_BOUNCE,
 
 			RPL_TRACELINK = 200,
-			RPL_TRACECONNECTING
+			RPL_TRACECONNECTING,
+
+			RPL_USERHOST = 302,
+			RPL_ISON
 		};
-		boost::optional<numeric_reply> command_n;
-		std::string command_s;
-		boost::optional<std::string> prefix;
-		boost::optional<std::string> params;
+		std::string prefix;
+		numeric_reply reply;
+		std::string command;
+		std::string params;
+		std::string nick;
+		std::string host;
 	};
 
 	boost::optional<message> parse(const std::string & inbound);

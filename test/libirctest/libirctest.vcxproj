@@ -95,6 +95,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="irc_proto_test.cpp" />
+    <ClCompile Include="message_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\libirc\libirc.vcxproj">
