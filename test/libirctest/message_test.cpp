@@ -47,4 +47,28 @@ BOOST_AUTO_TEST_CASE(parse_numeric_reply)
 	BOOST_REQUIRE_EQUAL(result->params, "a b c d");
 	BOOST_REQUIRE_EQUAL(result->prefix, "irc.example.net");
 }
+
+BOOST_AUTO_TEST_CASE(parse_invalid_no_terminator)
+{
+	auto result = irc::parse("foo");
+	BOOST_REQUIRE_MESSAGE(!static_cast<bool>(result), "An improperly formatted message should return none");
+}
+
+BOOST_AUTO_TEST_CASE(parse_invalid_too_long)
+{
+	auto result = irc::parse(
+	    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris "
+	    "aliquet et lacus id congue. Vivamus magna ipsum, aliquet varius "
+	    "erat sed, vulputate suscipit lacus. Aenean faucibus non lacus at "
+	    "dapibus. Maecenas et fringilla orci, vel scelerisque mi. Vivamus "
+	    "non urna vel metus volutpat accumsan. Etiam vel nulla ultrices, "
+	    "volutpat dolor id, aliquam nulla. Curabitur elementum lacinia "
+	    "velit nec sollicitudin. Donec scelerisque diam erat, tincidunt "
+	    "pretium est varius id. Phasellus dignissim mauris sit amet "
+	    "nullam. ");
+	BOOST_REQUIRE_MESSAGE(
+	    !static_cast<bool>(result),
+	    "An improperly formatted message should return none");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

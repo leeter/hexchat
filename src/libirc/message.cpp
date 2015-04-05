@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#define BOOST_SPIRIT_DEBUG
+//#define BOOST_SPIRIT_DEBUG
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
@@ -46,17 +46,23 @@ namespace
 		const std::string::size_type max_prefix_len = 64;
 		const std::string::size_type max_message_len = 512;
 	}
-	//using newline_type = qi::
+
 	template <typename It, typename Skipper = qi::space_type>
-	struct parser : qi::grammar < It, irc::message(), Skipper >
+	struct parser : qi::grammar<It, irc::message(), Skipper>
 	{
 		parser() : parser::base_type(start)
 		{
-			numeric = (qi::int_[qi::_val = phx::static_cast_<irc::message::numeric_reply>(qi::_1)] > +qi::lit(' ')) | qi::attr(irc::message::numeric_reply::NON_NUMERIC);
-			prefix %= qi::lit(':') > +(qi::char_ - qi::space) > +qi::lit(' ');
+			numeric =
+			    (qi::int_[qi::_val = phx::static_cast_<
+					  irc::message::numeric_reply>(
+					  qi::_1)] > +qi::lit(' ')) |
+			    qi::attr(irc::message::numeric_reply::NON_NUMERIC);
+			prefix %= qi::lit(':') > +(qi::char_ - qi::space) >
+				  +qi::lit(' ');
 			command = +(qi::alpha - qi::space);
-			params %= -qi::lit(':') >> *(qi::char_ - "\r\n") | qi::attr(std::string{});
-			//start %= prefix >> (command | numeric) >> params > "\r\n";
+			params %= -qi::lit(':') >> *(qi::char_ - "\r\n") |
+				  qi::attr(std::string{});
+
 			start %= -prefix >> -numeric >> -command >> params;
 			BOOST_SPIRIT_DEBUG_NODE(prefix);
 			BOOST_SPIRIT_DEBUG_NODE(numeric);
@@ -64,14 +70,15 @@ namespace
 			BOOST_SPIRIT_DEBUG_NODE(params);
 			BOOST_SPIRIT_DEBUG_NODE(start);
 		}
-	private:
+
+	      private:
 		qi::rule<It, irc::message::numeric_reply()> numeric;
 		qi::rule<It, std::string()> prefix;
 		qi::rule<It, std::string()> command;
 		qi::rule<It, std::string() /* lexeme */> params;
 		qi::rule<It, irc::message(), Skipper> start;
 	};
-}
+	}
 
 namespace irc
 {
