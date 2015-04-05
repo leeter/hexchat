@@ -27,8 +27,10 @@
     defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
     defined(_MSC_FULL_VER) && _MSC_FULL_VER > 180031101
 #  define NOEXCEPT noexcept
+#  define CONSTEXPR_OR_CONST constexpr
 #elif defined(_MSC_VER)
 #  define NOEXCEPT throw()
+#  define CONSTEXPR_OR_CONST const
 #else
 #error noexcept is required to compile this code!
 #endif
