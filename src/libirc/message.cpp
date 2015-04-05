@@ -18,12 +18,11 @@
 
 #include <cstdlib>
 #include <string>
-#include <vector>
 //#define BOOST_SPIRIT_DEBUG
 #define BOOST_SPIRIT_USE_PHOENIX_V3
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
-#include <boost/fusion/adapted.hpp>
+#include <boost/fusion/adapted/struct.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix.hpp>
 #include "message.hpp"
@@ -71,29 +70,25 @@ namespace
 			BOOST_SPIRIT_DEBUG_NODE(start);
 		}
 
-	      private:
+	 private:
 		qi::rule<It, irc::message::numeric_reply()> numeric;
 		qi::rule<It, std::string()> prefix;
 		qi::rule<It, std::string()> command;
 		qi::rule<It, std::string() /* lexeme */> params;
 		qi::rule<It, irc::message(), Skipper> start;
 	};
-	}
+}
 
 namespace irc
 {
 	boost::optional<message> parse(const std::string & inbound)
 	{
-		
-		using boost::spirit::ascii::space;
 		// if we're getting garbage, just ignore it
-		if (inbound.size() > rfc2812::max_message_len)
+		if (inbound.size() > rfc2812::max_message_len ||
+			!boost::ends_with(inbound, "\r\n")) // a message must end with a crlf
 		{
 			return boost::none;
 		}
-		// a message must end with a crlf
-		if (!boost::ends_with(inbound, "\r\n"))
-			return boost::none;
 
 		message m;
 		typedef std::string::const_iterator iterator_type;
