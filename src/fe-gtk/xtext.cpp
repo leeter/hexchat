@@ -4196,8 +4196,8 @@ namespace{
 		g_list_foreach(buf->search_found, gtk_xtext_search_textentry_fini, 0);
 		g_list_free(buf->search_found);
 		buf->search_found = nullptr;
-		buf->search_text = nullptr;
-		buf->search_nee = nullptr;
+		buf->search_text.clear();
+		buf->search_nee.clear();
 		buf->search_flags = gtk_xtext_search_flags();
 		buf->cursearch = nullptr;
 		buf->curmark = nullptr;
