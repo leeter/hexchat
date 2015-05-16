@@ -1375,6 +1375,7 @@ servlist_save (void)
 
 	g_free (buf);
 #endif
+#undef fprintf
 	fprintf (fp, "v=" PACKAGE_VERSION "\n\n");
 
 	list = network_list;

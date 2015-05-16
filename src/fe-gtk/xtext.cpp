@@ -882,11 +882,12 @@ namespace {
 		int off, len, wid, mbl, mbw;
 
 		/* Skip to the first chunk of stuff for the subline */
-		std::vector<offlen_t>::const_iterator meta, hid;
+		std::vector<offlen_t>::const_iterator meta, hid = ent->slp.cend();
 		if (subline > 0)
 		{
 			suboff = ent->sublines[subline - 1];
-			for (meta = ent->slp.cbegin(); meta != ent->slp.cend(); ++meta)
+			decltype(meta) end = ent->slp.cend();
+			for (meta = ent->slp.cbegin(); meta != end; ++meta)
 			{
 				if (meta->off + meta->len > suboff)
 					break;
@@ -4557,7 +4558,8 @@ time_t stamp)
 	//std::unique_ptr<textentry> ent{ new textentry };
 	ent->str.resize(left_len + right_len + 1, '\0');
 	auto str = ent->str.begin();
-	std::copy_n(left_text, left_len, str);
+	if (left_text)
+		std::copy_n(left_text, left_len, str);
 	str[left_len] = ' ';
 	std::copy_n(right_text, right_len, str + left_len + 1);
 

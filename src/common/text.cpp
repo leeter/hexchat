@@ -197,6 +197,9 @@ static void scrollback_shrink (session &sess)
 
 static void scrollback_save (session &sess, const std::string & text)
 {
+#ifdef _DEBUG
+#define g_open open
+#endif
 	if (sess.type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
 

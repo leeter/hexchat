@@ -36,8 +36,8 @@ using ssize_t = std::intptr_t;
 #endif
 
 #ifndef fstat
-#define fstat _fstat
-#define stat _stat
+//#define fstat _fstat
+//#define stat _stat
 #endif
 
 #endif

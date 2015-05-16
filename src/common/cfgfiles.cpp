@@ -975,6 +975,9 @@ bool save_config (void)
 	auto config = default_file ();
 	glib_string new_config(g_strconcat (config, ".new", NULL));
 	
+#ifdef _DEBUG
+#define g_open open
+#endif
 	int fh = g_open (new_config.get(), OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh == -1)
 	{
@@ -1260,6 +1263,9 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
+#ifdef _DEBUG
+#define g_open open
+#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
 		if (xof_flags & io::fs::XOF_DOMODE)
@@ -1274,13 +1280,18 @@ int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 		return g_open (buf.string().c_str(), flags | OFLAGS, mode);
 	}
 	return g_open(buf.string().c_str(), flags | OFLAGS, 0);
+#undef g_open
 }
 
 FILE * hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {
+#ifdef _DEBUG
+#define g_fopen fopen
+#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 		return g_fopen (file, mode);
 
 	auto buf = io::fs::make_path(config::config_dir()) / file;
 	return g_fopen (buf.string().c_str(), mode);
+#undef g_fopen
 }
