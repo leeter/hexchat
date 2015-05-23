@@ -576,6 +576,8 @@ exec_notify_kill (session * sess)
 		close (re->myfd);
 		delete re;
 	}
+#else
+	UNREFERENCED_PARAMETER(sess);
 #endif
 }
 
@@ -795,7 +797,7 @@ sigusr2_handler (int signal, siginfo_t *si, void *un)
 #endif
 
 static gint
-xchat_auto_connect (gpointer userdata)
+xchat_auto_connect (gpointer)
 {
 	servlist_auto_connect (nullptr);
 	return 0;
