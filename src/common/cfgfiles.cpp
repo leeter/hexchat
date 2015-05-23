@@ -1031,12 +1031,12 @@ bool save_config (void)
 }
 
 static void
-set_showval (session *sess, const struct prefs *var, char *buf)
+set_showval(session *sess, const struct prefs & var)
 {
 	std::ostringstream buffer;
 	std::ostream_iterator<char> tbuf(buffer);
-	auto len = strlen (var->name);
-	std::copy_n(var->name, len, tbuf);
+	auto len = std::strlen (var.name);
+	std::copy_n(var.name, len, tbuf);
 	size_t dots = len > 29 ? 0 : 29 - len;
 
 	*tbuf++ = '\003';
@@ -1047,16 +1047,16 @@ set_showval (session *sess, const struct prefs *var, char *buf)
 		*tbuf++ = '.';
 	}
 
-	switch (var->type)
+	switch (var.type)
 	{
 		case TYPE_STR:
-			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var->offset);
+			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var.offset);
 			break;
 		case TYPE_INT:
-			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var->offset);
+			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var.offset);
 			break;
 		case TYPE_BOOL:
-			if (*((int *) &prefs + var->offset))
+			if (*((int *) &prefs + var.offset))
 			{
 				buffer << boost::format(_("\0033:\017 %s\n")) % _("ON");
 			}
@@ -1071,12 +1071,12 @@ set_showval (session *sess, const struct prefs *var, char *buf)
 }
 
 static void
-set_list (session * sess, char *tbuf)
+set_list (session * sess)
 {
 	int i = 0;
 	do
 	{
-		set_showval (sess, &vars[i], tbuf);
+		set_showval (sess, vars[i]);
 		i++;
 	}
 	while (vars[i].name);
@@ -1100,7 +1100,7 @@ cfg_get_bool (const char *var)
 	return -1;
 }
 
-int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+int cmd_set (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	bool wild = false;
 	bool or_token = false;
@@ -1143,7 +1143,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (!*var)
 	{
-		set_list (sess, tbuf);
+		set_list (sess);
 		return TRUE;
 	}
 
@@ -1191,7 +1191,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				}
 				else
 				{
-					set_showval (sess, &vars[i], tbuf);
+					set_showval (sess, vars[i]);
 				}
 				break;
 			case TYPE_INT:
@@ -1240,7 +1240,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				}
 				else
 				{
-					set_showval (sess, &vars[i], tbuf);
+					set_showval (sess, vars[i]);
 				}
 				break;
 			}
