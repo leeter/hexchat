@@ -237,7 +237,7 @@ bool alert_match_word (const char *word, const char *masks)
 	std::unique_ptr<char[]> mutable_masks(new_strdup(masks));
 	char *p = mutable_masks.get();
 
-	while (1)
+	for (;;)
 	{
 		/* if it's a 0, space or comma, the word has ended. */
 		if (*p == 0 || *p == ' ' || *p == ',')
@@ -267,7 +267,7 @@ bool alert_match_text (const char text[], const char masks[])
 	unsigned char *p = reinterpret_cast<unsigned char*>(mutable_text.get());
 	char * i_text = mutable_text.get();
 
-	while (1)
+	for (;;)
 	{
 		if (*p >= '0' && *p <= '9')
 		{

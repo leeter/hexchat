@@ -458,7 +458,7 @@ dcc_read_chat(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	char portbuf[32];
 	char lbuf[2050];
 
-	while (1)
+	for (;;)
 	{
 		if (dcc->throttled)
 		{
@@ -587,7 +587,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		dcc_close(dcc, STAT_FAILED, FALSE);
 		return TRUE;
 	}
-	while (1)
+	for (;;)
 	{
 		if (dcc->throttled)
 		{
@@ -1408,7 +1408,7 @@ dcc_read_ack(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 {
 	int len;
 
-	while (1)
+	for (;;)
 	{
 		/* try to fill up 4 bytes */
 		len = recv(dcc->sok, (char*)dcc->ack_buf, 4 - dcc->ack_pos, 0);

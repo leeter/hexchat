@@ -432,14 +432,7 @@ create_mask(session * sess, std::string mask, const boost::string_ref &mode, con
 		auto fullhost = mask.substr(at + 1);
 
 		auto dot = fullhost.find_first_of('.');
-		std::string domain;
-		if (dot != std::string::npos)
-		{
-			domain = fullhost.substr(dot);
-		} else
-		{
-			domain = fullhost;
-		}
+		auto domain = dot != std::string::npos ? fullhost.substr(dot) : fullhost;
 
 		if (!typestr.empty())
 			type = std::stoi(typestr);
