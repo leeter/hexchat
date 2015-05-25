@@ -2156,7 +2156,7 @@ static void
 mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 {
 	session *sess = current_sess;
-	int word_type = 0, start, end;
+	int word_type = 0, start = 0, end = 0;
 
 	if (word)
 	{

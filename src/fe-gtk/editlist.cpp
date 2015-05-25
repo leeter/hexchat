@@ -202,19 +202,19 @@ static void editlist_edited (GtkCellRendererText *render, gchar *pathstr, gchar 
 static gboolean editlist_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer)
 {
 	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
-	gboolean handled = FALSE;
-	int delta;
+	bool handled = false;
+	int delta = 0;
 
 	if (evt->state & GDK_SHIFT_MASK)
 	{
 		if (evt->keyval == GDK_KEY_Up)
 		{
-			handled = TRUE;
+			handled = true;
 			delta = -1;
 		}
 		else if (evt->keyval == GDK_KEY_Down)
 		{
-			handled = TRUE;
+			handled = true;
 			delta = 1;
 		}
 	}

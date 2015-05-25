@@ -23,7 +23,9 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include <array>
 #include <functional>
+#include <numeric>
 #include <string>
 #include <sstream>
 #include <cstdio>
@@ -49,13 +51,14 @@
 #include "../common/userlist.hpp"
 #include "../common/session.hpp"
 #include "gtkutil.hpp"
+#include "gtk_helpers.hpp"
 #include "maingui.hpp"
 #include "banlist.hpp"
 
 namespace {
 struct mode_info {
-	const std::string& name;		/* Checkbox name, e.g. "Bans" */
-	const std::string& type;		/* Type for type column, e.g. "Ban" */
+	std::string name;		/* Checkbox name, e.g. "Bans" */
+	std::string type;		/* Type for type column, e.g. "Ban" */
 	char letter;	/* /mode-command letter, e.g. 'b' for MODE_BAN */
 	int code;		/* rfc RPL_foo code, e.g. 367 for RPL_BANLIST */
 	int endcode;	/* rfc RPL_ENDOFfoo code, e.g. 368 for RPL_ENDOFBANLIST */
@@ -70,44 +73,44 @@ static void supports_exempt (banlist_info &, int);
 static void supports_invite (banlist_info &, int);
 static void supports_quiet (banlist_info &, int);
 
-static const mode_info modes[MODE_CT] = {
+static const std::array<mode_info, MODE_CT> modes = { {
 	{
 		N_("Bans"),
 		N_("Ban"),
 		'b',
 		RPL_BANLIST,
 		RPL_ENDOFBANLIST,
-		1<<MODE_BAN,
+		1 << MODE_BAN,
 		supports_bans
 	}
-	,{
+	, {
 		N_("Exempts"),
 		N_("Exempt"),
 		'e',
 		RPL_EXCEPTLIST,
 		RPL_ENDOFEXCEPTLIST,
-		1<<MODE_EXEMPT,
+		1 << MODE_EXEMPT,
 		supports_exempt
 	}
-	,{
+	, {
 		N_("Invites"),
 		N_("Invite"),
 		'I',
 		RPL_INVITELIST,
 		RPL_ENDOFINVITELIST,
-		1<<MODE_INVITE,
+		1 << MODE_INVITE,
 		supports_invite
 	}
-	,{
+	, {
 		N_("Quiets"),
 		N_("Quiet"),
 		'q',
 		RPL_QUIETLIST,
 		RPL_ENDOFQUIETLIST,
-		1<<MODE_QUIET,
+		1 << MODE_QUIET,
 		supports_quiet
 	}
-};
+	} };
 
 /* model for the banlist tree */
 enum
@@ -210,17 +213,17 @@ yes:
 }
 }
 
-/* fe_add_ban_list() and fe_ban_list_end() return TRUE if consumed, FALSE otherwise */
+/* fe_add_ban_list() and fe_ban_list_end() return true if consumed, false otherwise */
 gboolean
 fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rplcode)
 {
 	banlist_info *banl = sess->res->banlist;
+
+	if (!banl)
+		return false;
 	int i;
 	GtkListStore *store;
 	GtkTreeIter iter;
-
-	if (!banl)
-		return FALSE;
 
 	for (i = 0; i < MODE_CT; i++)
 		if (modes[i].code == rplcode)
@@ -228,7 +231,7 @@ fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rp
 	if (i == MODE_CT)
 	{
 		/* printf ("Unexpected value in fe_add_ban_list:  %d\n", rplcode); */
-		return FALSE;
+		return false;
 	}
 	if (banl->pending & 1<<i)
 	{
@@ -239,41 +242,40 @@ fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rp
 						FROM_COLUMN, who, DATE_COLUMN, when, -1);
 
 		banl->line_ct++;
-		return TRUE;
+		return true;
 	}
-	else return FALSE;
+	else return false;
 }
 
 /* Sensitize checkboxes and buttons as appropriate for the moment  */
 static void
 banlist_sensitize (banlist_info *banl)
 {
-	int checkable, i;
-	bool is_op = false;
-
 	if (banl->sess->me == nullptr)
 		return;
 
+	int checkable;
+	bool is_op = false;
 	/* FIXME: More access levels than these can unban */
 	if (banl->sess->me->op || banl->sess->me->hop)
 		is_op = true;
 
 	/* CHECKBOXES -- */
 	checkable = is_op? banl->writeable: banl->readable;
-	for (i = 0; i < MODE_CT; i++)
+	for (int i = 0; i < MODE_CT; i++)
 	{
 		if (banl->checkboxes[i] == nullptr)
 			continue;
 		if ((checkable & 1<<i) == 0)
 		/* Checkbox is not checkable.  Grey it and uncheck it. */
 		{
-			gtk_widget_set_sensitive (banl->checkboxes[i], FALSE);
-			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (banl->checkboxes[i]), FALSE);
+			gtk_widget_set_sensitive (banl->checkboxes[i], false);
+			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (banl->checkboxes[i]), false);
 		}
 		else
 		/* Checkbox is checkable.  Be sure it's sensitive. */
 		{
-			gtk_widget_set_sensitive (banl->checkboxes[i], TRUE);
+			gtk_widget_set_sensitive (banl->checkboxes[i], true);
 		}
 	}
 
@@ -281,60 +283,60 @@ banlist_sensitize (banlist_info *banl)
 	if (!is_op || banl->line_ct == 0)
 	{
 		/* If user is not op or list is empty, buttons should be all greyed */
-		gtk_widget_set_sensitive (banl->but_clear, FALSE);
-		gtk_widget_set_sensitive (banl->but_crop, FALSE);
-		gtk_widget_set_sensitive (banl->but_remove, FALSE);
+		gtk_widget_set_sensitive (banl->but_clear, false);
+		gtk_widget_set_sensitive (banl->but_crop, false);
+		gtk_widget_set_sensitive (banl->but_remove, false);
 	}
 	else
 	{
 		/* If no lines are selected, only the CLEAR button should be sensitive */
 		if (banl->select_ct == 0)
 		{
-			gtk_widget_set_sensitive (banl->but_clear, TRUE);
-			gtk_widget_set_sensitive (banl->but_crop, FALSE);
-			gtk_widget_set_sensitive (banl->but_remove, FALSE);
+			gtk_widget_set_sensitive (banl->but_clear, true);
+			gtk_widget_set_sensitive (banl->but_crop, false);
+			gtk_widget_set_sensitive (banl->but_remove, false);
 		}
 		/* If any lines are selected, only the REMOVE and CROP buttons should be sensitive */
 		else
 		{
-			gtk_widget_set_sensitive (banl->but_clear, FALSE);
-			gtk_widget_set_sensitive (banl->but_crop, banl->line_ct == banl->select_ct? FALSE: TRUE);
-			gtk_widget_set_sensitive (banl->but_remove, TRUE);
+			gtk_widget_set_sensitive (banl->but_clear, false);
+			gtk_widget_set_sensitive (banl->but_crop, banl->line_ct == banl->select_ct? false: true);
+			gtk_widget_set_sensitive (banl->but_remove, true);
 		}
 	}
 
 	/* Set "Refresh" sensitvity */
-	gtk_widget_set_sensitive (banl->but_refresh, banl->pending? FALSE: banl->checked? TRUE: FALSE);
+	gtk_widget_set_sensitive (banl->but_refresh, banl->pending? false: banl->checked? true: false);
 }
-/* fe_ban_list_end() returns TRUE if consumed, FALSE otherwise */
+/* fe_ban_list_end() returns true if consumed, false otherwise */
 gboolean
 fe_ban_list_end (struct session *sess, int rplcode)
 {
 	banlist_info *banl = sess->res->banlist;
-	int i;
 
 	if (!banl)
-		return FALSE;
+		return false;
 
+	int i;
 	for (i = 0; i < MODE_CT; i++)
 		if (modes[i].endcode == rplcode)
 			break;
 	if (i == MODE_CT)
 	{
 		/* printf ("Unexpected rplcode value in fe_ban_list_end:  %d\n", rplcode); */
-		return FALSE;
+		return false;
 	}
 	if (banl->pending & modes[i].bit)
 	{
 		banl->pending &= ~modes[i].bit;
 		if (!banl->pending)
 		{
-			gtk_widget_set_sensitive (banl->but_refresh, TRUE);
+			gtk_widget_set_sensitive (banl->but_refresh, true);
 			banlist_sensitize (banl);
 		}
-		return TRUE;
+		return true;
 	}
-	else return FALSE;
+	else return false;
 }
 
 static void
@@ -346,7 +348,6 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 	GValue mask = { 0 };
 	GValue from = { 0 };
 	GValue date = { 0 };
-	char *str;
 	
 	/* get selection (which should have been set on click)
 	 * and temporarily switch to single mode to get selected iter */
@@ -359,19 +360,17 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 		gtk_tree_model_get_value (model, &iter, DATE_COLUMN, &date);
 
 		/* poor way to get which is selected but it works */
-		if (strcmp (_("Copy mask"), gtk_menu_item_get_label (GTK_MENU_ITEM(menuitem))) == 0)
-			str = g_value_dup_string (&mask);
-		else
-			str = g_strdup_printf (_("%s on %s by %s"), g_value_get_string (&mask),
-								g_value_get_string (&date), g_value_get_string (&from));
+		glib_string str = std::strcmp(_("Copy mask"), gtk_menu_item_get_label(GTK_MENU_ITEM(menuitem))) == 0
+			? glib_string(g_value_dup_string(&mask))
+			: glib_string(g_strdup_printf(_("%s on %s by %s"), g_value_get_string(&mask),
+			g_value_get_string(&date), g_value_get_string(&from)));
 
 		if (str[0] != 0)
-			gtkutil_copy_to_clipboard (menuitem, nullptr, str);
+			gtkutil_copy_to_clipboard (menuitem, nullptr, str.get());
 			
 		g_value_unset (&mask);
 		g_value_unset (&from);
 		g_value_unset (&date);
-		g_free (str);
 	}
 	gtk_tree_selection_set_mode (sel, GTK_SELECTION_MULTIPLE);
 }
@@ -379,22 +378,20 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 static gboolean
 banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer)
 {
-	GtkTreePath *path;
-	GtkWidget *menu, *maskitem, *allitem;
-
 	/* Check for right click */
 	if (event->type == GDK_BUTTON_PRESS && event->button == 3)
 	{
+		GtkTreePath *path;
 		if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (wid), event->x, event->y,
 												&path, nullptr, nullptr, nullptr))
 		{
+			GtkTreePathPtr path_ptr(path);
 			/* Must set the row active for use in callback */
-			gtk_tree_view_set_cursor (GTK_TREE_VIEW(wid), path, nullptr, FALSE);
-			gtk_tree_path_free (path);
+			gtk_tree_view_set_cursor (GTK_TREE_VIEW(wid), path, nullptr, false);
 			
-			menu = gtk_menu_new ();
-			maskitem = gtk_menu_item_new_with_label (_("Copy mask"));
-			allitem = gtk_menu_item_new_with_label (_("Copy entry"));
+			auto menu = gtk_menu_new ();
+			auto maskitem = gtk_menu_item_new_with_label (_("Copy mask"));
+			auto allitem = gtk_menu_item_new_with_label (_("Copy entry"));
 			g_signal_connect (maskitem, "activate", G_CALLBACK(banlist_copyentry), wid);
 			g_signal_connect (allitem, "activate", G_CALLBACK(banlist_copyentry), wid);
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), maskitem);
@@ -405,22 +402,20 @@ banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer)
 							event->button, gtk_get_current_event_time ());
 		}
 		
-		return TRUE;
+		return true;
 	}
 	
-	return FALSE;
+	return false;
 }
 
 static void
 banlist_select_changed (GtkWidget *item, banlist_info *banl)
 {
-	GList *list;
-
 	if (banl->line_ct == 0)
 		banl->select_ct = 0;
 	else
 	{
-		list = gtk_tree_selection_get_selected_rows (GTK_TREE_SELECTION (item), nullptr);
+		auto list = gtk_tree_selection_get_selected_rows (GTK_TREE_SELECTION (item), nullptr);
 		banl->select_ct = g_list_length (list);
 		g_list_foreach (list, (GFunc) gtk_tree_path_free, nullptr);
 		g_list_free (list);
@@ -435,8 +430,7 @@ static void
 banlist_do_refresh (banlist_info *banl)
 {
 	session *sess = banl->sess;
-	char tbuf[256];
-	int i;
+	
 
 	banlist_sensitize (banl);
 
@@ -453,11 +447,12 @@ banlist_do_refresh (banlist_info *banl)
 		banl->pending = banl->checked;
 		if (banl->pending)
 		{
-			for (i = 0; i < MODE_CT; i++)
+			for (int i = 0; i < MODE_CT; i++)
 				if (banl->pending & 1<<i)
 				{
+					char tbuf[256];
 					g_snprintf (tbuf, sizeof tbuf, "quote mode %s +%c", sess->channel, modes[i].letter);
-					handle_command (sess, tbuf, FALSE);
+					handle_command (sess, tbuf, false);
 				}
 		}
 	}
@@ -480,7 +475,7 @@ banlist_refresh (GtkWidget *, banlist_info *banl)
 }
 
 static int
-banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
+banlist_unban_inner (gpointer, banlist_info *banl, const mode_info & mode)
 {
 	session *sess = banl->sess;
 	/* grab the list of selected items */
@@ -502,7 +497,7 @@ banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
 			glib_string mask_ptr(mask);
 			glib_string type_ptr(type);
 			/* If it's the wrong type of mask, just continue */
-			if (strcmp (_(modes[mode_num].type.c_str()), type) != 0)
+			if (std::strcmp (_(mode.type.c_str()), type) != 0)
 				continue;
 
 			/* Otherwise add it to our array of mask pointers */
@@ -513,7 +508,7 @@ banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
 
 	/* and send to server */
 	if (!masks.empty())
-		send_channel_modes (sess, masks, 0, masks.size(), '-', modes[mode_num].letter, 0);
+		send_channel_modes (sess, masks, 0, masks.size(), '-', mode.letter, 0);
 
 	return masks.size();
 }
@@ -521,10 +516,14 @@ banlist_unban_inner (gpointer, banlist_info *banl, int mode_num)
 static void
 banlist_unban (GtkWidget * wid, banlist_info *banl)
 {
-	int i, num = 0;
-
-	for (i = 0; i < MODE_CT; i++)
-		num += banlist_unban_inner (wid, banl, i);
+	auto num = std::accumulate(
+		std::begin(modes),
+		std::end(modes),
+		0,
+		[wid, banl](int init, const mode_info& mode)
+		{
+			return init + banlist_unban_inner(wid, banl, mode);
+		});
 
 	/* This really should not occur with the redesign */
 	if (num < 1)
@@ -555,9 +554,7 @@ banlist_clear_cb (GtkDialog *dialog, gint response, gpointer data)
 static void
 banlist_clear (GtkWidget *, banlist_info *banl)
 {
-	GtkWidget *dialog;
-
-	dialog = gtk_message_dialog_new (nullptr, static_cast<GtkDialogFlags>(0),
+	auto dialog = gtk_message_dialog_new (nullptr, static_cast<GtkDialogFlags>(0),
 								GTK_MESSAGE_QUESTION, GTK_BUTTONS_OK_CANCEL,
 					_("Are you sure you want to remove all listed items in %s?"), banl->sess->channel);
 
@@ -617,9 +614,9 @@ static void
 banlist_toggle (GtkWidget *item, gpointer data)
 {
 	banlist_info *banl = static_cast<banlist_info*>(data);
-	int i, bit = 0;
+	int bit = 0;
 
-	for (i = 0; i < MODE_CT; i++)
+	for (int i = 0; i < MODE_CT; i++)
 		if (banl->checkboxes[i] == item)
 		{
 			bit = 1<<i;
@@ -698,15 +695,14 @@ gint
 banlist_date_sort (GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer)
 {
 	/*struct tm tm1, tm2;*/
-	time_t t1, t2;
 	char *time1, *time2;
 
 	gtk_tree_model_get(model, a, DATE_COLUMN, &time1, -1);
 	gtk_tree_model_get(model, b, DATE_COLUMN, &time2, -1);
 	/*banlist_strptime (time1, &tm1);
 	banlist_strptime (time2, &tm2);*/
-	t1 = banlist::get_time(time1);
-	t2 = banlist::get_time(time2);
+	auto t1 = banlist::get_time(time1);
+	auto t2 = banlist::get_time(time2);
 
 	if (t1 < t2) return 1;
 	if (t1 == t2) return 0;
@@ -741,7 +737,7 @@ banlist_treeview_new (GtkWidget *box, banlist_info *banl)
 	gtk_tree_view_column_set_min_width (col, 100);
 	gtk_tree_view_column_set_sort_column_id (col, MASK_COLUMN);
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), TYPE_COLUMN);
 	gtk_tree_view_column_set_alignment (col, 0.5);
@@ -751,13 +747,13 @@ banlist_treeview_new (GtkWidget *box, banlist_info *banl)
 	gtk_tree_view_column_set_alignment (col, 0.5);
 	gtk_tree_view_column_set_sort_column_id (col, FROM_COLUMN);
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), DATE_COLUMN);
 	gtk_tree_view_column_set_alignment (col, 0.5);
 	gtk_tree_view_column_set_sort_column_id (col, DATE_COLUMN);
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 
 	select = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
 	g_signal_connect (G_OBJECT (select), "changed", G_CALLBACK (banlist_select_changed), banl);
@@ -783,7 +779,6 @@ void
 banlist_opengui (struct session *sess)
 {
 	banlist_info *banl;
-	int i;
 	GtkWidget *table, *vbox, *bbox;
 	char tbuf[256];
 
@@ -812,7 +807,7 @@ banlist_opengui (struct session *sess)
 	/* New banlist for this session -- Initialize it */
 	banl->sess = sess;
 	/* For each mode set its bit in capable/readable/writeable */
-	for (i = 0; i < MODE_CT; i++)
+	for (int i = 0; i < MODE_CT; i++)
 		modes[i].tester (*banl, i);
 	/* Force on the checkmark in the "Bans" box */
 	banl->checked = 1<<MODE_BAN;
@@ -820,8 +815,8 @@ banlist_opengui (struct session *sess)
 	g_snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME ": Ban List (%s)"),
 					sess->server->servername);
 
-	banl->window = mg_create_generic_tab ("BanList", tbuf, FALSE,
-		TRUE, G_CALLBACK(banlist_closegui), banl, 550, 200, &vbox, sess->server);
+	banl->window = mg_create_generic_tab ("BanList", tbuf, false,
+		true, G_CALLBACK(banlist_closegui), banl, 550, 200, &vbox, sess->server);
 	gtkutil_destroy_on_esc (banl->window);
 
 	gtk_container_set_border_width (GTK_CONTAINER (banl->window), 3);
@@ -830,16 +825,16 @@ banlist_opengui (struct session *sess)
 	/* create banlist view */
 	banl->treeview = banlist_treeview_new (vbox, banl);
 
-	table = gtk_table_new (1, MODE_CT, FALSE);
+	table = gtk_table_new (1, MODE_CT, false);
 	gtk_table_set_col_spacings (GTK_TABLE (table), 16);
 	gtk_box_pack_start (GTK_BOX (vbox), table, 0, 0, 0);
 
-	for (i = 0; i < MODE_CT; i++)
+	for (int i = 0; i < MODE_CT; i++)
 	{
 		if (!(banl->capable & 1<<i))
 			continue;
 		banl->checkboxes[i] = gtk_check_button_new_with_label (_(modes[i].name.c_str()));
-		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (banl->checkboxes[i]), (banl->checked & 1<<i? TRUE: FALSE));
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (banl->checkboxes[i]), (banl->checked & 1<<i? true: false));
 		g_signal_connect (G_OBJECT (banl->checkboxes[i]), "toggled",
 								G_CALLBACK (banlist_toggle), banl);
 		gtk_table_attach (GTK_TABLE (table), banl->checkboxes[i], i+1, i+2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
