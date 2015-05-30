@@ -195,7 +195,7 @@ xit:
 static hexchat_plugin_internal *
 plugin_list_add (hexchat_context *ctx,  const char filename[], const char *name,
 					  const char *desc, const char *version, void *handle,
-					  plugin_deinit_func deinit_func, bool fake, bool free_strings)
+					  plugin_deinit_func deinit_func, bool fake, bool)
 {
 	auto pl = new hexchat_plugin_internal();
 	pl->handle = handle;
@@ -224,16 +224,16 @@ plugin_list_add (hexchat_context *ctx,  const char filename[], const char *name,
 
 	return pl;
 }
-
+#ifndef WIN32
 static int
 hexchat_dummy(hexchat_plugin *, void *, char *, int *)
 {
 	return -1;
 }
 
-#ifdef WIN32
+#else
 static int
-hexchat_read_fd (hexchat_plugin *ph, GIOChannel *source, char *buf, int *len)
+hexchat_read_fd (hexchat_plugin *, GIOChannel *source, char *buf, int *len)
 {
 	GError *error = NULL;
 
@@ -550,7 +550,7 @@ plugin_hook_run(session *sess, const char *name, const char *const word[], const
 	int ret, eat = 0;
 
 	list = hook_list;
-	while (1)
+	for (;;)
 	{
 		list = plugin_hook_find (list, type, name);
 		if (!list)
@@ -620,21 +620,16 @@ plugin_emit_command (session *sess, char *name, char *word[], char *word_eol[])
 }
 
 hexchat_event_attrs *
-hexchat_event_attrs_create (hexchat_plugin *ph)
+hexchat_event_attrs_create (hexchat_plugin *)
 {
-	hexchat_event_attrs *attrs;
-
-	attrs = static_cast<hexchat_event_attrs *>(g_malloc(sizeof(*attrs)));
-
-	attrs->server_time_utc = (time_t) 0;
-
+	hexchat_event_attrs *attrs = new hexchat_event_attrs();
 	return attrs;
 }
 
 void
-hexchat_event_attrs_free (hexchat_plugin *ph, hexchat_event_attrs *attrs)
+hexchat_event_attrs_free (hexchat_plugin *, hexchat_event_attrs *attrs)
 {
-	g_free (attrs);
+	delete attrs;
 }
 
 /* got a server PRIVMSG, NOTICE, numeric etc... */
@@ -884,11 +879,11 @@ plugin_show_help (session *sess, const char *cmd)
 /* ========================================================= */
 
 void *
-hexchat_unhook (hexchat_plugin *ph, hexchat_hook *hook)
+hexchat_unhook (hexchat_plugin *, hexchat_hook *hook)
 {
 	/* perl.c trips this */
 	if (!g_slist_find (hook_list, hook) || hook->type == HOOK_DELETED)
-		return NULL;
+		return nullptr;
 
 	if (hook->type == HOOK_TIMER && hook->tag != 0)
 		fe_timeout_remove (hook->tag);
@@ -1303,7 +1298,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 }
 
 void
-hexchat_list_free (hexchat_plugin *ph, hexchat_list *xlist)
+hexchat_list_free (hexchat_plugin *, hexchat_list *xlist)
 {
 	if (xlist->type == LIST_USERS)
 		g_slist_free (xlist->head);
@@ -1311,7 +1306,7 @@ hexchat_list_free (hexchat_plugin *ph, hexchat_list *xlist)
 }
 
 int
-hexchat_list_next (hexchat_plugin *ph, hexchat_list *xlist)
+hexchat_list_next (hexchat_plugin *, hexchat_list *xlist)
 {
 	if (xlist->is_vector)
 	{
@@ -1325,7 +1320,7 @@ hexchat_list_next (hexchat_plugin *ph, hexchat_list *xlist)
 			return 0;
 		}
 	}
-	if (xlist->next == NULL)
+	if (xlist->next == nullptr)
 		return 0;
 
 	xlist->pos = xlist->next;
@@ -1345,7 +1340,7 @@ hexchat_list_next (hexchat_plugin *ph, hexchat_list *xlist)
 }
 
 const char * const *
-hexchat_list_fields (hexchat_plugin *ph, const char *name)
+hexchat_list_fields (hexchat_plugin *, const char *name)
 {
 	static const char * const dcc_fields[] =
 	{
@@ -1395,7 +1390,7 @@ hexchat_list_fields (hexchat_plugin *ph, const char *name)
 }
 
 time_t
-hexchat_list_time (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
+hexchat_list_time (hexchat_plugin *, hexchat_list *xlist, const char *name)
 {
 	guint32 hash = str_hash (name);
 	gpointer data;
@@ -1649,7 +1644,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 void *
 hexchat_plugingui_add (hexchat_plugin *ph, const char *filename,
 							const char *name, const char *desc,
-							const char *version, char *reserved)
+							const char *version, char * /*reserved*/)
 {
 #ifdef USE_PLUGIN
 	ph = plugin_list_add (NULL, filename, name, desc,
@@ -1678,7 +1673,7 @@ hexchat_emit_print (hexchat_plugin *ph, const char *event_name, ...)
 	int i = 0;
 
 	va_start (args, event_name);
-	while (1)
+	for (;;)
 	{
 		argv[i] = va_arg (args, char *);
 		if (!argv[i])
@@ -1706,7 +1701,7 @@ hexchat_emit_print_attrs (hexchat_plugin *ph, hexchat_event_attrs *attrs,
 	int i = 0;
 
 	va_start (args, event_name);
-	while (1)
+	for (;;)
 	{
 		argv[i] = va_arg (args, char *);
 		if (!argv[i])
@@ -1724,7 +1719,7 @@ hexchat_emit_print_attrs (hexchat_plugin *ph, hexchat_event_attrs *attrs,
 }
 
 char *
-hexchat_gettext (hexchat_plugin *ph, const char *msgid)
+hexchat_gettext (hexchat_plugin *, const char *msgid)
 {
 	/* so that plugins can use HexChat's internal gettext strings. */
 	/* e.g. The EXEC plugin uses this on Windows. */
@@ -1739,13 +1734,13 @@ hexchat_send_modes (hexchat_plugin *ph, const char **targets, int ntargets, int 
 }
 
 char *
-hexchat_strip (hexchat_plugin *ph, const char *str, int len, int flags)
+hexchat_strip (hexchat_plugin *, const char *str, int len, int flags)
 {
-	return g_strdup(strip_color (str, static_cast<strip_flags>(flags)).c_str());
+	return g_strdup(strip_color (boost::string_ref(str, len), static_cast<strip_flags>(flags)).c_str());
 }
 
 void
-hexchat_free (hexchat_plugin *ph, void *ptr)
+hexchat_free (hexchat_plugin *, void *ptr)
 {
 	g_free (ptr);
 }

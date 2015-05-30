@@ -280,7 +280,7 @@ key_get_action_from_string (const std::string & text)
 static void
 key_free (gpointer data) NOEXCEPT
 {
-	g_return_if_fail(data != NULL);
+	g_return_if_fail(data != nullptr);
 	std::unique_ptr<key_binding> kb(static_cast<key_binding*>(data));
 }
 
@@ -314,7 +314,7 @@ key_free (gpointer data) NOEXCEPT
    char *data1, *data2;  Pointers to strings, these must be freed 
    struct key_binding *next;
    }
-   * remember that is (data1 || data2) != NULL then they need to be free()'ed
+   * remember that is (data1 || data2) != nullptr then they need to be free()'ed
 
    --AGL
 
@@ -351,7 +351,7 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 		}
 	}
 	if (!list)
-		return FALSE;
+		return false;
 	current_sess = sess;
 
 	if (plugin_emit_keypress (sess, evt->state, evt->keyval, evt->length, evt->string))
@@ -406,7 +406,7 @@ enum
 	N_COLUMNS
 };
 
-static GtkWidget *key_dialog = NULL;
+static GtkWidget *key_dialog = nullptr;
 
 static GtkTreeModel *
 get_store (void) NOEXCEPT
@@ -451,7 +451,7 @@ key_dialog_combo_changed (GtkCellRendererCombo *combo, gchar *pathstr,
 {
 	auto xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
 	auto model = GTK_TREE_MODEL (data);
-	gchar *actiontext = NULL;
+	gchar *actiontext = nullptr;
 	gtk_tree_model_get (model, new_iter, 0, &actiontext, -1);
 	glib_string actiontext_ptr(actiontext);
 	if (actiontext)
@@ -486,19 +486,19 @@ static gboolean
 key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
-	gboolean handled = FALSE;
-	int delta;
+	bool handled = false;
+	int delta = 0;
 
 	if (evt->state & GDK_SHIFT_MASK)
 	{
 		if (evt->keyval == GDK_KEY_Up)
 		{
-			handled = TRUE;
+			handled = true;
 			delta = -1;
 		}
 		else if (evt->keyval == GDK_KEY_Down)
 		{
-			handled = TRUE;
+			handled = true;
 			delta = 1;
 		}
 	}
@@ -527,7 +527,7 @@ key_dialog_selection_changed (GtkTreeSelection *sel, gpointer)
 	GtkTreeModel *model;
 	GtkTreeIter iter;
 	
-	if (!gtk_tree_selection_get_selected (sel, &model, &iter) || model == NULL)
+	if (!gtk_tree_selection_get_selected (sel, &model, &iter) || model == nullptr)
 		return;
 
 	auto xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
@@ -547,7 +547,7 @@ static void
 key_dialog_close (GtkWidget *, gpointer) NOEXCEPT
 {
 	gtk_widget_destroy (key_dialog);
-	key_dialog = NULL;
+	key_dialog = nullptr;
 }
 
 static void
@@ -597,7 +597,7 @@ key_dialog_save (GtkWidget *wid, gpointer)
 	}
 
 	if (key_save_kbs () == 0)
-		key_dialog_close (wid, NULL);
+		key_dialog_close (wid, nullptr);
 }
 
 static void
@@ -612,8 +612,8 @@ key_dialog_add (GtkWidget *wid, gpointer) NOEXCEPT
 	/* make sure the new row is visible and selected */
 	GtkTreePathPtr path (gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
 	auto col = gtk_tree_view_get_column (view, ACTION_COLUMN);
-	gtk_tree_view_scroll_to_cell (view, path.get(), NULL, FALSE, 0.0f, 0.0f);
-	gtk_tree_view_set_cursor (view, path.get(), col, TRUE);
+	gtk_tree_view_scroll_to_cell (view, path.get(), nullptr, false, 0.0f, 0.0f);
+	gtk_tree_view_set_cursor (view, path.get(), col, true);
 }
 
 static void
@@ -629,8 +629,8 @@ key_dialog_delete (GtkWidget *wid, gpointer) NOEXCEPT
 		if (gtk_list_store_remove (store, &iter))
 		{
 			GtkTreePathPtr path(gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter));
-			gtk_tree_view_scroll_to_cell (view, path.get(), NULL, TRUE, 1.0, 0.0);
-			gtk_tree_view_set_cursor (view, path.get(), NULL, FALSE);
+			gtk_tree_view_scroll_to_cell (view, path.get(), nullptr, true, 1.0, 0.0);
+			gtk_tree_view_set_cursor (view, path.get(), nullptr, false);
 		}
 	}
 }
@@ -638,44 +638,44 @@ key_dialog_delete (GtkWidget *wid, gpointer) NOEXCEPT
 static GtkWidget *
 key_dialog_treeview_new (GtkWidget *box)
 {
-	auto scroll = gtk_scrolled_window_new (NULL, NULL);
+	auto scroll = gtk_scrolled_window_new (nullptr, nullptr);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_IN);
 
 	auto store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
 								G_TYPE_STRING, G_TYPE_STRING);
-	g_return_val_if_fail (store != NULL, NULL);
+	g_return_val_if_fail (store != nullptr, nullptr);
 
 	auto view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
-	gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), TRUE);
-	gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
+	gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), true);
+	gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), false);
 
 	g_signal_connect (G_OBJECT (view), "key-press-event",
-					G_CALLBACK (key_dialog_keypress), NULL);
+					G_CALLBACK (key_dialog_keypress), nullptr);
 	g_signal_connect (G_OBJECT (gtk_tree_view_get_selection (GTK_TREE_VIEW(view))),
-					"changed", G_CALLBACK (key_dialog_selection_changed), NULL);
+					"changed", G_CALLBACK (key_dialog_selection_changed), nullptr);
 
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), true);
 
 	auto render = gtk_cell_renderer_accel_new ();
-	g_object_set (render, "editable", TRUE,
+	g_object_set (render, "editable", true,
 #ifndef WIN32
 					"accel-mode", GTK_CELL_RENDERER_ACCEL_MODE_OTHER,
 #endif
-					NULL);
+					nullptr);
 	g_signal_connect (G_OBJECT (render), "accel-edited",
-					G_CALLBACK (key_dialog_set_key), NULL);
+					G_CALLBACK (key_dialog_set_key), nullptr);
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), KEY_COLUMN,
 												"Key", render,
 												"text", KEY_COLUMN,
-												NULL);
+												nullptr);
 
 	render = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (
 							GTK_TREE_VIEW (view), ACCEL_COLUMN,
 							"Accel", render,
 							"text", ACCEL_COLUMN,
-							NULL);
+							nullptr);
 
 	auto combostore = gtk_list_store_new (1, G_TYPE_STRING);
 	for (int i = 0; i <= KEY_MAX_ACTIONS; i++)
@@ -690,10 +690,10 @@ key_dialog_treeview_new (GtkWidget *box)
 
 	render = gtk_cell_renderer_combo_new ();
 	g_object_set (G_OBJECT (render), "model", combostore,
-									"has-entry", FALSE,
-									"editable", TRUE, 
+									"has-entry", false,
+									"editable", true, 
 									"text-column", 0,
-									NULL);
+									nullptr);
 	g_signal_connect (G_OBJECT (render), "edited",
 					G_CALLBACK (key_dialog_entry_edited), GINT_TO_POINTER (ACTION_COLUMN));
 	g_signal_connect (G_OBJECT (render), "changed",
@@ -701,43 +701,43 @@ key_dialog_treeview_new (GtkWidget *box)
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), ACTION_COLUMN,
 													"Action", render,
 													"text", ACTION_COLUMN, 
-													NULL);
+													nullptr);
 
 	render = gtk_cell_renderer_text_new ();
-	g_object_set (render, "editable", TRUE, NULL);
+	g_object_set (render, "editable", true, nullptr);
 	g_signal_connect (G_OBJECT (render), "edited",
 				G_CALLBACK (key_dialog_entry_edited), GINT_TO_POINTER (D1_COLUMN));
 	gtk_tree_view_insert_column_with_attributes (
 							GTK_TREE_VIEW (view), D1_COLUMN,
 							"Data1", render,
 							"text", D1_COLUMN,
-							NULL);
+							nullptr);
 
 	render = gtk_cell_renderer_text_new ();
-	g_object_set (render, "editable", TRUE, NULL);
+	g_object_set (render, "editable", true, nullptr);
 	g_signal_connect (G_OBJECT (render), "edited",
 				G_CALLBACK (key_dialog_entry_edited), GINT_TO_POINTER (D2_COLUMN));
 	gtk_tree_view_insert_column_with_attributes (
 							GTK_TREE_VIEW (view), D2_COLUMN,
 							"Data2", render,
 							"text", D2_COLUMN,
-							NULL);
+							nullptr);
 
 	auto col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), KEY_COLUMN);
 	gtk_tree_view_column_set_fixed_width (col, 200);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), ACCEL_COLUMN);
-	gtk_tree_view_column_set_visible (col, FALSE);
+	gtk_tree_view_column_set_visible (col, false);
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), ACTION_COLUMN);
 	gtk_tree_view_column_set_fixed_width (col, 160);
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), D1_COLUMN);
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 	gtk_tree_view_column_set_min_width (col, 80);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 	col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), D2_COLUMN);
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 	gtk_tree_view_column_set_min_width (col, 80);
-	gtk_tree_view_column_set_resizable (col, TRUE);
+	gtk_tree_view_column_set_resizable (col, true);
 
 	gtk_container_add (GTK_CONTAINER (scroll), view);
 	gtk_container_add (GTK_CONTAINER (box), scroll);
@@ -775,11 +775,11 @@ key_dialog_show ()
 
 	GtkWidget *vbox = nullptr;
 	key_dialog = mg_create_generic_tab ("editkeys", _(DISPLAY_NAME": Keyboard Shortcuts"),
-		TRUE, FALSE, G_CALLBACK(key_dialog_close), NULL, 600, 360, &vbox, 0);
+		true, false, G_CALLBACK(key_dialog_close), nullptr, 600, 360, &vbox, 0);
 
 	auto view = key_dialog_treeview_new (vbox);
 	auto xtext = gtk_xtext_new (colors, false);
-	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
+	gtk_box_pack_start (GTK_BOX (vbox), xtext, false, true, 2);
 	gtk_xtext_set_font (GTK_XTEXT (xtext), prefs.hex_text_font);
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);
@@ -787,17 +787,17 @@ key_dialog_show ()
 
 	auto box = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_SPREAD);
-	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX (vbox), box, false, false, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
 
-	gtkutil_button(box, GTK_STOCK_NEW, NULL, G_CALLBACK(key_dialog_add),
-					NULL, _("Add"));
-	gtkutil_button(box, GTK_STOCK_DELETE, NULL, G_CALLBACK(key_dialog_delete),
-					NULL, _("Delete"));
-	gtkutil_button(box, GTK_STOCK_CANCEL, NULL, G_CALLBACK(key_dialog_close),
-					NULL, _("Cancel"));
-	gtkutil_button(box, GTK_STOCK_SAVE, NULL, G_CALLBACK(key_dialog_save),
-					NULL, _("Save"));
+	gtkutil_button(box, GTK_STOCK_NEW, nullptr, G_CALLBACK(key_dialog_add),
+					nullptr, _("Add"));
+	gtkutil_button(box, GTK_STOCK_DELETE, nullptr, G_CALLBACK(key_dialog_delete),
+					nullptr, _("Delete"));
+	gtkutil_button(box, GTK_STOCK_CANCEL, nullptr, G_CALLBACK(key_dialog_close),
+					nullptr, _("Cancel"));
+	gtkutil_button(box, GTK_STOCK_SAVE, nullptr, G_CALLBACK(key_dialog_save),
+					nullptr, _("Save"));
 
 	auto store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
 	key_dialog_load (store);
@@ -1089,7 +1089,7 @@ static int
 session_check_is_tab(session *sess) NOEXCEPT
 {
 	if (!sess || !sess->gui)
-		return FALSE;
+		return false;
 
 	return (sess->gui->is_tab);
 }
@@ -1144,9 +1144,9 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 	if (!d2)
 		num--;
 	if (!d2 || d2[0] == 0)
-		mg_switch_page (FALSE, num);
+		mg_switch_page (false, num);
 	else
-		mg_switch_page (TRUE, num);
+		mg_switch_page (true, num);
 	return 0;
 }
 
@@ -1284,14 +1284,14 @@ double_chan_cb (session *lsess, GList **list) NOEXCEPT
 {
 	if (lsess->type == session::SESS_CHANNEL)
 		*list = g_list_prepend(*list, lsess->channel);
-	return TRUE;
+	return true;
 }
 
 /* convert a slist -> list. */
 static GList *
 chanlist_double_list (GSList *inlist) NOEXCEPT
 {
-	GList *list = NULL;
+	GList *list = nullptr;
 	g_slist_foreach(inlist, (GFunc)double_chan_cb, &list);
 	return list;
 }
@@ -1303,14 +1303,14 @@ double_cmd_cb (struct popup *pop, GList **list)
 	// TODO: THIS is not particularly safe... but is safe in this instance because it's not modified
 	// we should still fix it to use a mutable pointer or better yet... another data structure
 	*list = g_list_prepend(*list, (gpointer) pop->name.c_str());
-	return TRUE;
+	return true;
 }
 
 /* convert a slist -> list. */
 static GList *
 cmdlist_double_list (GSList *inlist)
 {
-	GList *list = NULL;
+	GList *list = nullptr;
 	g_slist_foreach (inlist, (GFunc)double_cmd_cb, &list);
 	return list;
 }
@@ -1373,14 +1373,14 @@ struct session *sess)
 	int len = 0, elen = 0, i = 0, cursor_pos, ent_start = 0, comp = 0,
 		prefix_len, skip_len = 0;
 	bool found = false, is_nick = false, is_cmd = false, has_nick_prefix = false;
-	char ent[CHANLEN], *postfix = NULL, *result, *ch;
-	GList *list = NULL, *tmp_list = NULL;
+	char ent[CHANLEN], *postfix = nullptr, *result, *ch;
+	GList *list = nullptr, *tmp_list = nullptr;
 	const char *text;
 	std::string buf;
 	GCompletionPtr gcomp;
 	/* force the IM Context to reset */
-	SPELL_ENTRY_SET_EDITABLE(t, FALSE);
-	SPELL_ENTRY_SET_EDITABLE(t, TRUE);
+	SPELL_ENTRY_SET_EDITABLE(t, false);
+	SPELL_ENTRY_SET_EDITABLE(t, true);
 
 	text = SPELL_ENTRY_GET_TEXT(t);
 	if (text[0] == 0)
@@ -1477,7 +1477,7 @@ struct session *sess)
 			if (is_cmd)
 			{
 				tmp_list = cmdlist_double_list (command_list);
-				for(i = 0; xc_cmds[i].name != NULL ; i++)
+				for(i = 0; xc_cmds[i].name != nullptr ; i++)
 				{
 					tmp_list = g_list_prepend (tmp_list, const_cast<char*>(xc_cmds[i].name));
 				}
@@ -1502,7 +1502,7 @@ struct session *sess)
 
 		list = g_completion_complete_utf8 (gcomp.get(), comp ? old_gcomp.data : ent, &result);
 		
-		if (result == NULL) /* No matches found */
+		if (result == nullptr) /* No matches found */
 		{
 			return 2;
 		}
@@ -1523,14 +1523,14 @@ struct session *sess)
 			{
 				if (!(d1 && d1[0])) /* not holding down shift */
 				{
-					if (g_list_next(list) == NULL)
+					if (g_list_next(list) == nullptr)
 						list = g_list_first(list);
 					else
 						list = g_list_next(list);
 				}
 				else
 				{
-					if (g_list_previous(list) == NULL)
+					if (g_list_previous(list) == nullptr)
 						list = g_list_last(list);
 					else
 						list = g_list_previous(list);
@@ -1558,7 +1558,7 @@ struct session *sess)
 			else
 			{
 				/* bash style completion */
-				if (g_list_next(list) != NULL)
+				if (g_list_next(list) != nullptr)
 				{
 					buf.reserve(std::max(COMP_BUF, size_t(len + NICKLEN)));
 					if (strlen (result) > elen) /* the largest common prefix is larger than nick, change the data */
@@ -1720,7 +1720,7 @@ replace_handle (GtkWidget *t)
 	len = strlen (word);
 	if (word[0] == '\'' && word[len] == '\'')
 		return;
-	postfix_pnt = NULL;
+	postfix_pnt = nullptr;
 	for (c = 0; c < len; c++)
 	{
 		if (word[c] == '\'')
@@ -1731,7 +1731,7 @@ replace_handle (GtkWidget *t)
 		}
 	}
 
-	if (postfix_pnt != NULL)
+	if (postfix_pnt != nullptr)
 	{
 		if (strlen (postfix_pnt) > sizeof (postfix) - 12)
 			return;
@@ -1744,7 +1744,7 @@ replace_handle (GtkWidget *t)
 		{
 			std::copy_n(text, xlen, std::begin(outbuf));
 			outbuf[xlen] = 0;
-			if (postfix_pnt == NULL)
+			if (postfix_pnt == nullptr)
 				snprintf (word, sizeof (word), "%s", pop->cmd.c_str());
 			else
 				snprintf (word, sizeof (word), "%s%s", pop->cmd.c_str(), postfix);

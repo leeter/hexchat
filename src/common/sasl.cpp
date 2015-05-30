@@ -214,7 +214,7 @@ std::string encode_sasl_pass_plain(const std::string &user, const std::string &p
 std::string encode_sasl_pass_blowfish(const std::string & user, const std::string& pass, const std::string & data)
 {
 	auto pass_len = pass.size() + (8 - (pass.size() % 8));
-	auto user_len = user.size();
+	//auto user_len = user.size();
 
 	dh_setup setup;
 	if (!parse_dh(data, setup))
@@ -235,7 +235,7 @@ std::string encode_sasl_pass_blowfish(const std::string & user, const std::strin
 		BF_ecb_encrypt(reinterpret_cast<unsigned char*>(in_ptr), out_ptr, &key, BF_ENCRYPT);
 
 	/* Create response */
-	auto length = 2 + BN_num_bytes(setup.dh()->pub_key) + pass_len + user_len + 1;
+	//auto length = 2 + BN_num_bytes(setup.dh()->pub_key) + pass_len + user_len + 1;
 	std::ostringstream response;
 
 	/* our key */
