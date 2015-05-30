@@ -28,12 +28,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <strstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/utility/string_ref.hpp>
 
@@ -78,7 +80,7 @@ list_addentry(GSList ** list, std::string cmd, std::string name)
 /* read it in from a buffer to our linked list */
 
 static void
-list_load_from_data (GSList ** list, const std::string &ibuf)
+list_load_from_data (GSList ** list, std::istream &data)
 {
 	char cmd[384];
 	char name[128];
@@ -86,9 +88,7 @@ list_load_from_data (GSList ** list, const std::string &ibuf)
 	cmd[0] = 0;
 	name[0] = 0;
 
-	std::istringstream buffer(ibuf);
-
-	for (std::string buf; std::getline(buffer, buf, '\n');)
+	for (std::string buf; std::getline(data, buf, '\n');)
 	{
 		if (buf[0] != '#')
 		{
@@ -110,32 +110,21 @@ list_load_from_data (GSList ** list, const std::string &ibuf)
 	}
 }
 
-void list_loadconf (const char *file, GSList ** list, const char *defaultconf)
+#ifdef _DEBUG
+#define g_open open
+#endif
+
+void list_loadconf(const char *file, GSList ** list, const char *defaultconf)
 {
+	namespace fs = boost::filesystem;
 	auto filebuf = io::fs::make_path(config::config_dir()) / file;
-	int fd = g_open (filebuf.string().c_str(), O_RDONLY | OFLAGS, 0);
-
-	if (fd == -1)
+	fs::ifstream infile(filebuf, std::ios::binary | std::ios::in);
+	list_load_from_data(list, infile);
+	if (!*list && defaultconf)
 	{
-		if (defaultconf)
-		{
-			list_load_from_data(list, defaultconf);
-		}			
-		return;
+		std::istrstream dconf(defaultconf);
+		list_load_from_data(list, dconf);
 	}
-
-	struct stat st;
-	if (fstat (fd, &st) != 0)
-	{
-		perror ("fstat");
-		abort ();
-	}
-
-	std::string ibuf(st.st_size, '\0');
-	read (fd, &ibuf[0], st.st_size);
-	close (fd);
-
-	list_load_from_data (list, ibuf);
 }
 
 void
@@ -172,7 +161,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 
 	snprintf (buffer, sizeof(buffer), "%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
-	while (1)
+	for (;;)
 	{
 		auto var_len = strlen(var);
 		if (!g_ascii_strncasecmp (buffer, cfg, var_len + 1))
@@ -974,10 +963,7 @@ bool save_config (void)
 
 	auto config = default_file ();
 	glib_string new_config(g_strconcat (config, ".new", NULL));
-	
-#ifdef _DEBUG
-#define g_open open
-#endif
+
 	int fh = g_open (new_config.get(), OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh == -1)
 	{
