@@ -97,7 +97,7 @@ file_part (char *file)
 	char *filepart = file;
 	if (!file)
 		return "";
-	while (1)
+	for (;;)
 	{
 		switch (*file)
 		{
@@ -206,7 +206,7 @@ waitline (int sok, char *buf, int bufsize, int use_recv)
 {
 	int i = 0;
 
-	while (1)
+	for (;;)
 	{
 		if (use_recv)
 		{
@@ -235,7 +235,7 @@ waitline2 (GIOChannel *source, char *buf, int bufsize)
 	gsize len;
 	GError *error = NULL;
 
-	while (1)
+	for (;;)
 	{
 		g_io_channel_set_buffered (source, FALSE);
 		g_io_channel_set_encoding (source, NULL, &error);
@@ -1436,7 +1436,7 @@ token_foreach (char *str, char sep,
 {
 	char t, *start = str;
 
-	while (1)
+	for (;;)
 	{
 		if (*str == sep || *str == 0)
 		{
@@ -1498,7 +1498,7 @@ str_ihash (const unsigned char *key)
 void
 safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 {
-	while (1)
+	for (;;)
 	{
 		int mbl = g_utf8_skip[*((unsigned char *)src)];
 

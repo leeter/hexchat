@@ -265,7 +265,7 @@ void scrollback_load (session &sess)
 	char *text;
 	time_t stamp;
 
-	while (1)
+	for (;;)
 	{
 		gsize n_bytes;
 		gchar* buf_ptr;
@@ -1229,7 +1229,7 @@ static int pevent_find (const char name[], int &i_i)
 	int i = i_i, j;
 
 	j = i + 1;
-	while (1)
+	for (;;)
 	{
 		if (j == NUM_XP)
 			j = 0;
