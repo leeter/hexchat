@@ -1148,7 +1148,7 @@ servlist_load_defaults (void)
 	ircnet *net = NULL;
 	guint def_hash = g_str_hash ("freenode");
 
-	while (true)
+	for (;;)
 	{
 		if (def[i].network)
 		{

@@ -105,7 +105,7 @@ static void log_insert_vars(char *buf, size_t bufsize, const char *fmt, const ch
 {
 	char *end = buf + bufsize;
 
-	while (1)
+	for (;;)
 	{
 		switch (fmt[0])
 		{

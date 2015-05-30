@@ -135,7 +135,7 @@ timer_showlist (void)
 }
 
 static int
-timer_cb(const char * const word[], const char * const word_eol[], void *userdata)
+timer_cb(const char * const word[], const char * const word_eol[], void *)
 {
 	int repeat = 1;
 	float timeout;
@@ -193,7 +193,7 @@ timer_plugin_init
 hexchat_plugin_init
 #endif
 				(hexchat_plugin *plugin_handle, char **plugin_name,
-				char **plugin_desc, char **plugin_version, char *arg)
+				char **plugin_desc, char **plugin_version, char *)
 {
 	/* we need to save this for use with any hexchat_* functions */
 	ph = plugin_handle;

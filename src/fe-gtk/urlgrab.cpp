@@ -104,7 +104,7 @@ url_treeview_new (GtkWidget *box)
 }
 
 static void
-url_closegui (GtkWidget *wid, gpointer userdata)
+url_closegui (GtkWidget *, gpointer)
 {
 	urlgrabberwindow = 0;
 }

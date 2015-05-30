@@ -454,6 +454,9 @@ irc_init (session *sess)
 
 session::session(struct server *serv, const char *from, ::session::session_type type)
 	:server(serv),
+	session_name(),
+	channelkey(),
+	limit(),
 	logfd(-1),
 	scrollfd(-1),
 	scrollwritten(),

@@ -2089,6 +2089,8 @@ namespace {
 #ifndef WIN32
 		if (xtext->buffer->impl->last_ent_start)
 			gtk_xtext_unselect(*xtext);
+#else
+		UNREFERENCED_PARAMETER(xtext);
 #endif
 		return true;
 	}
@@ -3112,7 +3114,7 @@ namespace{
 			}
 		}
 
-		while (1)
+		for (;;)
 		{
 			if (rcol > 0 && (std::isdigit<char>(*str, locale) || (*str == ',' && std::isdigit<char>(str[1], locale) && !bgcol)))
 			{
@@ -3577,7 +3579,7 @@ namespace{
 				/* move backwards from pagetop */
 				ent = xtext->buffer->impl->pagetop_ent;
 				lines = xtext->buffer->pagetop_line - xtext->buffer->pagetop_subline;
-				while (1)
+				for (;;)
 				{
 					if (lines <= line)
 					{
