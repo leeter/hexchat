@@ -24,6 +24,7 @@
 #endif
 
 #include <iterator>
+#include <type_traits>
 
 #include <glib.h>
 
@@ -105,6 +106,50 @@ namespace glib_helper
 	inline bool operator!=(glist_iterator<T, L> const& lhs, glist_iterator<T, L> const& rhs)
 	{
 		return !lhs.equal(rhs);
+	}
+
+	template<typename T, typename L = GSList>
+	class glist_iterable
+	{
+		using iterator = typename glist_iterator < T, L > ;
+		using const_iterator = typename const iterator;
+
+		L * list_;
+	public:
+		glist_iterable(L* list)
+			:list_(list)
+		{
+		}
+
+		iterator begin();
+		iterator end();
+
+		const_iterator cbegin() const;
+		const_iterator cend() const;
+	};
+
+	template<typename T, typename L>
+	auto glist_iterable<T, L>::begin() -> iterator
+	{
+		return iterator(list_);
+	}
+
+	template<typename T, typename L>
+	auto glist_iterable<T, L>::end() -> iterator
+	{
+		return iterator();
+	}
+
+	template<typename T, typename L>
+	auto glist_iterable<T, L>::cbegin() const -> const_iterator
+	{
+		return iterator(list_);
+	}
+
+	template<typename T, typename L>
+	auto glist_iterable<T, L>::cend() const -> const_iterator
+	{
+		return iterator();
 	}
 } // namespace glib_helper
 
