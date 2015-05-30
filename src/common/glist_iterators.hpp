@@ -111,8 +111,8 @@ namespace glib_helper
 	template<typename T, typename L = GSList>
 	class glist_iterable
 	{
-		using iterator = typename glist_iterator < T, L > ;
-		using const_iterator = typename const iterator;
+		using iterator = glist_iterator < T, L > ;
+		using const_iterator = const iterator;
 
 		L * list_;
 	public:

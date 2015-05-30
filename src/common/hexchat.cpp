@@ -229,29 +229,24 @@ session * find_dialog(const server &serv, const boost::string_ref &nick)
 
 session *find_channel(const server &serv, const boost::string_ref &chan)
 {
-	session *sess;
-	GSList *list = sess_list;
-	while (list)
+	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if ((&serv == sess->server) && sess->type == session::SESS_CHANNEL)
+		if ((&serv == sess.server) && sess.type == session::SESS_CHANNEL)
 		{
-			if (!serv.compare(chan, sess->channel))
-				return sess;
+			if (!serv.compare(chan, sess.channel))
+				return &sess;
 		}
-		list = list->next;
 	}
 	return nullptr;
 }
 
 static void
 lagcheck_update (void)
-{
-	GSList *list = serv_list;
-	
+{	
 	if (!prefs.hex_gui_lagometer)
 		return;
 
+	GSList *list = serv_list;
 	while (list)
 	{
 		auto serv = static_cast<server*>(list->data);
@@ -266,40 +261,36 @@ void
 lag_check (void)
 {
 	using namespace boost;
-	server *serv;
-	GSList *list = serv_list;
 	unsigned long tim;
 	char tbuf[128];
 	auto now = chrono::steady_clock::now();
 
 	tim = make_ping_time ();
 
-	while (list)
+	for (auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		serv = static_cast<server*>(list->data);
-		if (serv->connected && serv->end_of_motd)
+		if (serv.connected && serv.end_of_motd)
 		{
-			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv->ping_recv).count();
+			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv.ping_recv).count();
 			if (prefs.hex_net_ping_timeout && seconds > prefs.hex_net_ping_timeout && seconds > 0)
 			{
 				snprintf (tbuf, sizeof(tbuf), "%d", seconds);
-				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv->server_session, tbuf, nullptr,
+				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv.server_session, tbuf, nullptr,
 								 nullptr, nullptr, 0);
 				if (prefs.hex_net_auto_reconnect)
-					serv->auto_reconnect (false, -1);
+					serv.auto_reconnect (false, -1);
 			} else
 			{
 				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
-				serv->p_ping({}, tbuf);
+				serv.p_ping({}, tbuf);
 				
-				if (!serv->lag_sent)
+				if (!serv.lag_sent)
 				{
-					serv->lag_sent = tim;
-					fe_set_lag (serv, -1);
+					serv.lag_sent = tim;
+					fe_set_lag (&serv, -1);
 				}
 			}
 		}
-		list = list->next;
 	}
 }
 
