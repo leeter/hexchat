@@ -54,6 +54,7 @@
 #include "../common/dcc.hpp"
 #include "../common/charset_helpers.hpp"
 #include "../common/session.hpp"
+#include "../common/glist_iterators.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "pixmaps.hpp"
@@ -618,20 +619,16 @@ fe_progressbar_start (session *sess)
 void
 fe_progressbar_end (server *serv)
 {
-	GSList *list = sess_list;
-	session *sess;
-
-	while (list)				  /* check all windows that use this server and  *
-									   * remove the connecting graph, if it has one. */
+	/* check all windows that use this server and  *
+	 * remove the connecting graph, if it has one. */
+	for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == serv)
+		if (sess.server == serv)
 		{
-			if (sess->gui->bar)
-				mg_progressbar_destroy (sess->gui);
-			sess->res->c_graph = false;
+			if (sess.gui->bar)
+				mg_progressbar_destroy (sess.gui);
+			sess.res->c_graph = false;
 		}
-		list = list->next;
 	}
 }
 
@@ -726,8 +723,6 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 void
 fe_set_lag (server *serv, long lag)
 {
-	GSList *list = sess_list;
-	session *sess;
 	char lagtext[64];
 	char lagtip[128];
 	unsigned long nowtim;
@@ -753,37 +748,33 @@ fe_set_lag (server *serv, long lag)
 	snprintf (lagtip, sizeof (lagtip) - 1, "Lag: %s%ld.%ld seconds",
 				 serv->lag_sent ? "+" : "", lag / 1000, (lag/100) % 10);
 
-	while (list)
+	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == serv)
+		if (sess.server == serv)
 		{
-			sess->res->lag_tip = lagtip;
+			sess.res->lag_tip = lagtip;
 
-			if (!sess->gui->is_tab || current_tab == sess)
+			if (!sess.gui->is_tab || current_tab == &sess)
 			{
-				if (sess->gui->lagometer)
+				if (sess.gui->lagometer)
 				{
-					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess->gui->lagometer, per);
-					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->lagometer), lagtip);
+					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess.gui->lagometer, per);
+					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess.gui->lagometer), lagtip);
 				}
-				if (sess->gui->laginfo)
-					gtk_label_set_text ((GtkLabel *) sess->gui->laginfo, lagtext);
+				if (sess.gui->laginfo)
+					gtk_label_set_text ((GtkLabel *) sess.gui->laginfo, lagtext);
 			} else
 			{
-				sess->res->lag_value = per;
-				sess->res->lag_text = lagtext;
+				sess.res->lag_value = per;
+				sess.res->lag_text = lagtext;
 			}
 		}
-		list = list->next;
 	}
 }
 
 void
 fe_set_throttle (server *serv)
 {
-	GSList *list = sess_list;
-	struct session *sess;
 	char tbuf[96];
 	char tip[160];
 
@@ -791,32 +782,30 @@ fe_set_throttle (server *serv)
 	if (per > 1.0)
 		per = 1.0;
 
-	while (list)
+	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == serv)
+		if (sess.server == serv)
 		{
 			snprintf (tbuf, sizeof (tbuf) - 1, _("%d bytes"), serv->sendq_len);
 			snprintf (tip, sizeof (tip) - 1, _("Network send queue: %d bytes"), serv->sendq_len);
 
-			sess->res->queue_tip = tip;
+			sess.res->queue_tip = tip;
 
-			if (!sess->gui->is_tab || current_tab == sess)
+			if (!sess.gui->is_tab || current_tab == &sess)
 			{
-				if (sess->gui->throttlemeter)
+				if (sess.gui->throttlemeter)
 				{
-					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess->gui->throttlemeter, per);
-					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess->gui->throttlemeter), tip);
+					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess.gui->throttlemeter, per);
+					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess.gui->throttlemeter), tip);
 				}
-				if (sess->gui->throttleinfo)
-					gtk_label_set_text ((GtkLabel *) sess->gui->throttleinfo, tbuf);
+				if (sess.gui->throttleinfo)
+					gtk_label_set_text ((GtkLabel *) sess.gui->throttleinfo, tbuf);
 			} else
 			{
-				sess->res->queue_value = per;
-				sess->res->queue_text = tbuf;
+				sess.res->queue_value = per;
+				sess.res->queue_text = tbuf;
 			}
 		}
-		list = list->next;
 	}
 }
 
@@ -1082,15 +1071,11 @@ fe_open_url (const char *url)
 void
 fe_server_event(server *serv, fe_serverevents type, int arg)
 {
-	GSList *list = sess_list;
-	session *sess;
-
-	while (list)
+	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == serv && (current_tab == sess || !sess->gui->is_tab))
+		if (sess.server == serv && (current_tab == &sess || !sess.gui->is_tab))
 		{
-			session_gui *gui = sess->gui;
+			session_gui *gui = sess.gui;
 
 			switch (type)
 			{
@@ -1122,7 +1107,6 @@ fe_server_event(server *serv, fe_serverevents type, int arg)
 				joind_close (serv);
 			}
 		}
-		list = list->next;
 	}
 }
 
