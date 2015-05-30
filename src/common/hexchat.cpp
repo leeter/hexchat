@@ -64,6 +64,7 @@
 #include "hexchatc.hpp"
 #include "dcc.hpp"
 #include "userlist.hpp"
+#include "glist_iterators.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
 #include <glib-object.h>			/* for g_type_init() */
@@ -215,18 +216,13 @@ is_session (session * sess)
 
 session * find_dialog(const server &serv, const boost::string_ref &nick)
 {
-	GSList *list = sess_list;
-	session *sess;
-
-	while (list)
+	for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == &serv && sess->type == session::SESS_DIALOG)
+		if (sess.server == &serv && sess.type == session::SESS_DIALOG)
 		{
-			if (!serv.compare (nick, sess->channel))
-				return (sess);
+			if (!serv.compare (nick, sess.channel))
+				return &sess;
 		}
-		list = list->next;
 	}
 	return nullptr;
 }

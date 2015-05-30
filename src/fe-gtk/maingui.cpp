@@ -2093,11 +2093,10 @@ mg_dialog_button (GtkWidget *box, const char *name, const char *cmd)
 static void
 mg_create_dialogbuttons (GtkWidget *box)
 {
-	using pop_itr = glib_helper::glist_iterator < popup > ;
-	for (pop_itr pop{ dlgbutton_list }, end; pop != end; ++pop)
+	for (const auto & pop : glib_helper::glist_iterable<popup>(dlgbutton_list))
 	{
-		if (!pop->cmd.empty())
-			mg_dialog_button (box, pop->name.c_str(), pop->cmd.c_str());
+		if (!pop.cmd.empty())
+			mg_dialog_button (box, pop.name.c_str(), pop.cmd.c_str());
 	}
 }
 
