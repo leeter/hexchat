@@ -59,34 +59,34 @@ void fe_main(void) { return; }
 
 void fe_exit(void) {}
 
-void fe_new_server(struct server *serv) {}
+void fe_new_server(struct server *) {}
 
-void fe_message(const boost::string_ref &msg, int) {}
+void fe_message(const boost::string_ref &, int) {}
 
-void fe_close_window(struct session *sess) {}
+void fe_close_window(struct session *) {}
 
-void fe_beep(session *sess) { putchar(7); }
+void fe_beep(session *) { putchar(7); }
 
 void fe_add_rawlog(struct server *, const boost::string_ref &, bool) {}
 void fe_set_topic(session *, const std::string &, const std::string &) {}
 void fe_cleanup(void) {}
-void fe_set_hilight(struct session *sess) {}
-void fe_set_tab_color(struct session *sess, int col) {}
-void fe_update_mode_buttons(struct session *sess, char mode, char sign) {}
-void fe_update_channel_key(struct session *sess) {}
-void fe_update_channel_limit(struct session *sess) {}
-int fe_is_chanwindow(struct server *serv) { return 0; }
+void fe_set_hilight(struct session *) {}
+void fe_set_tab_color(struct session *, fe_tab_color) {}
+void fe_update_mode_buttons(struct session *, char , char ) {}
+void fe_update_channel_key(struct session *) {}
+void fe_update_channel_limit(struct session *) {}
+int fe_is_chanwindow(struct server *) { return 0; }
 
-void fe_add_chan_list(struct server *serv, char *chan, char *users, char *topic)
+void fe_add_chan_list(struct server *, char *, char *, char *)
 {
 }
-void fe_chan_list_end(struct server *serv) {}
-gboolean fe_add_ban_list(struct session *sess, char *mask, char *who,
-			 char *when, int rplcode)
+void fe_chan_list_end(struct server *) {}
+gboolean fe_add_ban_list(struct session *, char *, char *,
+			 char *, int)
 {
 	return 0;
 }
-gboolean fe_ban_list_end(struct session *sess, int rplcode) { return 0; }
+gboolean fe_ban_list_end(struct session *, int) { return 0; }
 void fe_notify_update(const std::string *) {}
 namespace hexchat
 {

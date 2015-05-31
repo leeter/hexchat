@@ -188,20 +188,14 @@ fe_flash_window (session *sess)
 /* set a tab plain, red, light-red, or blue */
 
 void
-fe_set_tab_color (struct session *sess, int col)
+fe_set_tab_color(struct session *sess, fe_tab_color col)
 {
 	struct session *server_sess = sess->server->server_session;
-	if (sess->gui->is_tab && (col == 0 || sess != current_tab))
+	if (sess->gui->is_tab && (col == fe_tab_color::theme_default || sess != current_tab))
 	{
 		switch (col)
 		{
-		case 0:	/* no particular color (theme default) */
-			sess->new_data = false;
-			sess->msg_said = false;
-			sess->nick_said = false;
-			chan_set_color(static_cast<chan *>(sess->res->tab), plain_list);
-			break;
-		case 1:	/* new data has been displayed (dark red) */
+		case fe_tab_color::new_data:	/* new data has been displayed (dark red) */
 			sess->new_data = true;
 			sess->msg_said = false;
 			sess->nick_said = false;
@@ -218,7 +212,7 @@ fe_set_tab_color (struct session *sess, int col)
 			}
 				
 			break;
-		case 2:	/* new message arrived in channel (light red) */
+		case fe_tab_color::new_message:	/* new message arrived in channel (light red) */
 			sess->new_data = false;
 			sess->msg_said = true;
 			sess->nick_said = false;
@@ -235,7 +229,7 @@ fe_set_tab_color (struct session *sess, int col)
 			}
 			
 			break;
-		case 3:	/* your nick has been seen (blue) */
+		case fe_tab_color::nick_seen:	/* your nick has been seen (blue) */
 			sess->new_data = false;
 			sess->msg_said = false;
 			sess->nick_said = true;
@@ -249,6 +243,12 @@ fe_set_tab_color (struct session *sess, int col)
 				chan_set_color(chan_get_parent(static_cast<chan *>(sess->res->tab)), nickseen_list);
 			}
 				
+			break;
+		default: /* no particular color (theme default) */
+			sess->new_data = false;
+			sess->msg_said = false;
+			sess->nick_said = false;
+			chan_set_color(static_cast<chan *>(sess->res->tab), plain_list);
 			break;
 		}
 		lastact_update (sess);
@@ -555,7 +555,7 @@ mg_focus (session *sess)
 		/* when called via mg_changui_new, is_tab might be true, but
 			sess->res->tab is still nullptr. */
 		if (sess->res->tab)
-			fe_set_tab_color (sess, 0);
+			fe_set_tab_color (sess, fe_tab_color::theme_default);
 	}
 }
 

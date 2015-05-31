@@ -536,7 +536,7 @@ void
 fe_set_hilight (struct session *sess)
 {
 	if (sess->gui->is_tab)
-		fe_set_tab_color (sess, 3);	/* set tab to blue */
+		fe_set_tab_color (sess, fe_tab_color::nick_seen);	/* set tab to blue */
 
 	if (prefs.hex_input_flash_hilight && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 		fe_flash_window (sess); /* taskbar flash */
@@ -644,9 +644,9 @@ fe_print_text (session &sess, char *text, time_t stamp,
 		sess.new_data = true;
 		lastact_update (&sess);
 		if (sess.msg_said)
-			fe_set_tab_color (&sess, 2);
+			fe_set_tab_color (&sess, fe_tab_color::new_message);
 		else
-			fe_set_tab_color (&sess, 1);
+			fe_set_tab_color (&sess, fe_tab_color::new_data);
 	}
 }
 
@@ -830,7 +830,7 @@ fe_ctrl_gui (session *sess, fe_gui_action action, int arg)
 	case FE_GUI_FLASH:
 		fe_flash_window (sess); break;
 	case FE_GUI_COLOR:
-		fe_set_tab_color (sess, arg); break;
+		fe_set_tab_color (sess, static_cast<fe_tab_color>(arg)); break;
 	case FE_GUI_ICONIFY:
 		gtk_window_iconify (GTK_WINDOW (sess->gui->window)); break;
 	case FE_GUI_MENU:
