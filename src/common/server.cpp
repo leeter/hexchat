@@ -1168,7 +1168,7 @@ server::find_channel(const boost::string_ref &chan)
 server::cleanup_result
 server::cleanup ()
 {
-	fe_set_lag (this, 0);
+	fe_set_lag (*this, 0);
 
 	if (this->death_timer)
 	{

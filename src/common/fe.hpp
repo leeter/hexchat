@@ -126,7 +126,7 @@ void fe_set_nick (const server &serv, const char *newnick);
 void fe_ignore_update (int level);
 void fe_beep (session *sess);
 void fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags);
-void fe_set_lag (server *serv, long lag);
+void fe_set_lag (server &serv, long lag);
 void fe_set_throttle (server *serv);
 void fe_set_away (server &serv);
 void fe_serverlist_open (session *sess);

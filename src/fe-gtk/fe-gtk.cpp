@@ -721,7 +721,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 }
 
 void
-fe_set_lag (server *serv, long lag)
+fe_set_lag (server &serv, long lag)
 {
 	char lagtext[64];
 	char lagtip[128];
@@ -729,14 +729,14 @@ fe_set_lag (server *serv, long lag)
 
 	if (lag == -1)
 	{
-		if (!serv->lag_sent)
+		if (!serv.lag_sent)
 			return;
 		nowtim = make_ping_time ();
-		lag = nowtim - serv->lag_sent;
+		lag = nowtim - serv.lag_sent;
 	}
 
 	/* if there is no pong for >30s report the lag as +30s */
-	if (lag > 30000 && serv->lag_sent)
+	if (lag > 30000 && serv.lag_sent)
 		lag=30000;
 
 	auto per = static_cast<double>(lag) / 1000.0;
@@ -744,30 +744,33 @@ fe_set_lag (server *serv, long lag)
 		per = 1.0;
 
 	snprintf (lagtext, sizeof (lagtext) - 1, "%s%ld.%lds",
-			  serv->lag_sent ? "+" : "", lag / 1000, (lag/100) % 10);
+			  serv.lag_sent ? "+" : "", lag / 1000, (lag/100) % 10);
 	snprintf (lagtip, sizeof (lagtip) - 1, "Lag: %s%ld.%ld seconds",
-				 serv->lag_sent ? "+" : "", lag / 1000, (lag/100) % 10);
+				 serv.lag_sent ? "+" : "", lag / 1000, (lag/100) % 10);
 
 	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		if (sess.server == serv)
+		if (sess.server != &serv)
 		{
-			sess.res->lag_tip = lagtip;
+			continue;
+		}
 
-			if (!sess.gui->is_tab || current_tab == &sess)
+		sess.res->lag_tip = lagtip;
+
+		if (!sess.gui->is_tab || current_tab == &sess)
+		{
+			if (sess.gui->lagometer)
 			{
-				if (sess.gui->lagometer)
-				{
-					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess.gui->lagometer, per);
-					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess.gui->lagometer), lagtip);
-				}
-				if (sess.gui->laginfo)
-					gtk_label_set_text ((GtkLabel *) sess.gui->laginfo, lagtext);
-			} else
-			{
-				sess.res->lag_value = per;
-				sess.res->lag_text = lagtext;
+				gtk_progress_bar_set_fraction((GtkProgressBar *)sess.gui->lagometer, per);
+				gtk_widget_set_tooltip_text(gtk_widget_get_parent(sess.gui->lagometer), lagtip);
 			}
+			if (sess.gui->laginfo)
+				gtk_label_set_text((GtkLabel *)sess.gui->laginfo, lagtext);
+		}
+		else
+		{
+			sess.res->lag_value = per;
+			sess.res->lag_text = lagtext;
 		}
 	}
 }
@@ -784,27 +787,29 @@ fe_set_throttle (server *serv)
 
 	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		if (sess.server == serv)
+		if (sess.server != serv)
 		{
-			snprintf (tbuf, sizeof (tbuf) - 1, _("%d bytes"), serv->sendq_len);
-			snprintf (tip, sizeof (tip) - 1, _("Network send queue: %d bytes"), serv->sendq_len);
+			continue;
+		}
+		snprintf(tbuf, sizeof(tbuf) - 1, _("%d bytes"), serv->sendq_len);
+		snprintf(tip, sizeof(tip) - 1, _("Network send queue: %d bytes"), serv->sendq_len);
 
-			sess.res->queue_tip = tip;
+		sess.res->queue_tip = tip;
 
-			if (!sess.gui->is_tab || current_tab == &sess)
+		if (!sess.gui->is_tab || current_tab == &sess)
+		{
+			if (sess.gui->throttlemeter)
 			{
-				if (sess.gui->throttlemeter)
-				{
-					gtk_progress_bar_set_fraction ((GtkProgressBar *) sess.gui->throttlemeter, per);
-					gtk_widget_set_tooltip_text (gtk_widget_get_parent (sess.gui->throttlemeter), tip);
-				}
-				if (sess.gui->throttleinfo)
-					gtk_label_set_text ((GtkLabel *) sess.gui->throttleinfo, tbuf);
-			} else
-			{
-				sess.res->queue_value = per;
-				sess.res->queue_text = tbuf;
+				gtk_progress_bar_set_fraction((GtkProgressBar *)sess.gui->throttlemeter, per);
+				gtk_widget_set_tooltip_text(gtk_widget_get_parent(sess.gui->throttlemeter), tip);
 			}
+			if (sess.gui->throttleinfo)
+				gtk_label_set_text((GtkLabel *)sess.gui->throttleinfo, tbuf);
+		}
+		else
+		{
+			sess.res->queue_value = per;
+			sess.res->queue_text = tbuf;
 		}
 	}
 }

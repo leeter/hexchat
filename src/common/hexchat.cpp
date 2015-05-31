@@ -104,7 +104,7 @@ GSList *tabmenu_list = nullptr;
  * session with the most important/recent activity.
  */
 GList *sess_list_by_lastact[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
-
+using sess_itr = glib_helper::glist_iterator < session >;
 
 static std::atomic_bool in_hexchat_exit = { false };
 std::atomic_bool hexchat_is_quitting = { false };
@@ -216,28 +216,28 @@ is_session (session * sess)
 
 session * find_dialog(const server &serv, const boost::string_ref &nick)
 {
-	for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
-	{
-		if (sess.server == &serv && sess.type == session::SESS_DIALOG)
+	sess_itr end;
+	auto result = std::find_if(
+		sess_itr(sess_list),
+		end,
+		[&nick, &serv](const session& sess)
 		{
-			if (!serv.compare (nick, sess.channel))
-				return &sess;
-		}
-	}
-	return nullptr;
+			return (sess.server == &serv && sess.type == session::SESS_DIALOG) && !serv.compare(nick, sess.channel);
+		});
+	return result != end ? &(*result) : nullptr;
 }
 
 session *find_channel(const server &serv, const boost::string_ref &chan)
 {
-	for (auto & sess : glib_helper::glist_iterable<session>(sess_list))
+	sess_itr end;
+	auto result = std::find_if(
+		sess_itr(sess_list),
+		end,
+		[&chan, &serv](const session& sess)
 	{
-		if ((&serv == sess.server) && sess.type == session::SESS_CHANNEL)
-		{
-			if (!serv.compare(chan, sess.channel))
-				return &sess;
-		}
-	}
-	return nullptr;
+		return (sess.server == &serv && sess.type == session::SESS_CHANNEL) && !serv.compare(chan, sess.channel);
+	});
+	return result != end ? &(*result) : nullptr;
 }
 
 static void
@@ -246,14 +246,10 @@ lagcheck_update (void)
 	if (!prefs.hex_gui_lagometer)
 		return;
 
-	GSList *list = serv_list;
-	while (list)
+	for (auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		auto serv = static_cast<server*>(list->data);
-		if (serv->lag_sent)
+		if (serv.lag_sent)
 			fe_set_lag (serv, -1);
-
-		list = list->next;
 	}
 }
 
@@ -287,7 +283,7 @@ lag_check (void)
 				if (!serv.lag_sent)
 				{
 					serv.lag_sent = tim;
-					fe_set_lag (&serv, -1);
+					fe_set_lag (serv, -1);
 				}
 			}
 		}

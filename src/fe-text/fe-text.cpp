@@ -825,7 +825,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 {
 }
 void
-fe_set_lag (server * serv, long lag)
+fe_set_lag (server &, long)
 {
 }
 void

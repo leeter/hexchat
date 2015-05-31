@@ -1485,8 +1485,6 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 
 	std::string buf = check_special_chars (input, true);
 
-	auto len = buf.size();
-
 	clen = output_index = 0;
 	auto input_itr = buf.cbegin();
 	auto end = buf.cend();
@@ -1604,12 +1602,12 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 /* also light/dark gray (14/15) */
 /* 5,7,8 are all shades of yellow which happen to look damn near the same */
 
-static const char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
+static const std::array<char, 9> rcolors{ { 19, 20, 22, 24, 25, 26, 27, 28, 29 } };
 
 int text_color_of(const boost::string_ref &name)
 {
 	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
-	sum %= sizeof (rcolors) / sizeof (char);
+	sum %= rcolors.size();
 	return rcolors[sum];
 }
 

@@ -866,7 +866,7 @@ inbound_ping_reply (session *sess, char *timestring, char *from,
 	{
 		sess->server->lag_sent = 0;
 		sess->server->lag = dif;
-		fe_set_lag (sess->server, dif);
+		fe_set_lag (*sess->server, dif);
 		return;
 	}
 
