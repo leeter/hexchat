@@ -1178,6 +1178,25 @@ rfc_casecmp (const char *s1, const char *s2)
 	return (res);
 }
 
+int rfc_casecmp(const unsigned char* low1, const unsigned char* high1, const unsigned char* low2, const unsigned char *high2)
+{
+	int res = 0;
+	while ((res = rfc_tolower(*low1) - rfc_tolower(*low2)) == 0)
+	{
+		++low1;
+		++low2;
+		bool s1_done = low1 == high1;
+		bool s2_done = low2 == high2;
+		if (s1_done && s2_done)
+			return 0;
+		else if (s1_done)
+			return -1;
+		else if (s2_done)
+			return 1;
+	}
+	return res;
+}
+
 int
 rfc_ncasecmp (const char *str1, const char *str2, size_t n)
 {
@@ -1204,7 +1223,12 @@ namespace
 		int do_compare(const char * low1, const char * high1,
 			const char * low2, const char* high2) const
 		{
-			return rfc_casecmp(low1, low2);
+			return rfc_casecmp(
+				reinterpret_cast<const unsigned char*>(low1),
+				reinterpret_cast<const unsigned char*>(high1),
+				reinterpret_cast<const unsigned char*>(low2),
+				reinterpret_cast<const unsigned char*>(high2)
+			);
 		}
 	};
 
