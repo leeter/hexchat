@@ -883,7 +883,7 @@ dcc_socks_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC 
 		sc.port = htons(dcc->port);
 		sc.address = htonl(dcc->addr);
 
-		strncpy(sc.username, prefs.hex_irc_user_name, 9);
+		safe_strcpy(sc.username, prefs.hex_irc_user_name);
 		memcpy(proxy->buffer, &sc, sizeof(sc));
 		proxy->buffersize = 8 + strlen(sc.username) + 1;
 		proxy->bufferused = 0;
