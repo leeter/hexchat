@@ -201,7 +201,7 @@ namespace
 	static void gtk_xtext_search_textentry_fini(gpointer, gpointer);
 	static void gtk_xtext_search_fini(xtext_buffer *);
 	static bool gtk_xtext_search_init(xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr);
-	static char * gtk_xtext_get_word(GtkXText * xtext, int x, int y, textentry ** ret_ent, int *ret_off, int *ret_len, std::vector<offlen_t> *slp);
+	static const char * gtk_xtext_get_word(GtkXText * xtext, int x, int y, textentry ** ret_ent, int *ret_off, int *ret_len, std::vector<offlen_t> *slp);
 
 	/* Avoid warning messages for this unused function */
 #if 0
@@ -1569,7 +1569,7 @@ namespace {
 		}
 	}
 
-	static char *
+	static const char *
 		gtk_xtext_get_word(GtkXText * xtext, int x, int y, textentry ** ret_ent,
 		int *ret_off, int *ret_len, std::vector<offlen_t> *slp)
 	{
@@ -1712,16 +1712,15 @@ namespace {
 	static int
 		gtk_xtext_get_word_adjust(GtkXText *xtext, int x, int y, textentry **word_ent, int *offset, int *len)
 	{
-		unsigned char *word;
 		int word_type = 0;
 		std::vector<offlen_t> slp;
 
-		word = (unsigned char*)gtk_xtext_get_word(xtext, x, y, word_ent, offset, len, &slp);
+		auto word = gtk_xtext_get_word(xtext, x, y, word_ent, offset, len, &slp);
 		if (word)
 		{
 			int laststart, lastend;
 
-			word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word));
+			word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), word);
 			if (word_type > 0)
 			{
 				if (url_last(&laststart, &lastend))
@@ -1758,7 +1757,6 @@ namespace {
 		GtkXText *xtext = GTK_XTEXT(widget);
 		GdkModifierType mask;
 		int redraw, tmp, x, y, offset, len, line_x;
-		textentry *word_ent;
 		int word_type;
 
 		gdk_window_get_pointer(widget->window, &x, &y, &mask);
@@ -1828,6 +1826,7 @@ namespace {
 		if (xtext->urlcheck_function == nullptr)
 			return false;
 
+		textentry *word_ent;
 		word_type = gtk_xtext_get_word_adjust(xtext, x, y, &word_ent, &offset, &len);
 		if (word_type > 0)
 		{
@@ -1989,7 +1988,7 @@ namespace {
 
 			if (!xtext->hilighting)
 			{
-				auto word = (unsigned char*)gtk_xtext_get_word(xtext, event->x, event->y, 0, 0, 0, 0);
+				auto word = gtk_xtext_get_word(xtext, event->x, event->y, 0, 0, 0, 0);
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0, word ? word : nullptr, event);
 			}
 			else
@@ -2006,15 +2005,13 @@ namespace {
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
 		GdkModifierType mask;
-		textentry *ent;
-		char *word;
 		int line_x, x, y, offset, len;
 
 		gdk_window_get_pointer(widget->window, &x, &y, &mask);
 
 		if (event->button == 3 || event->button == 2) /* right/middle click */
 		{
-			word = gtk_xtext_get_word(xtext, x, y, 0, 0, 0, 0);
+			auto word = gtk_xtext_get_word(xtext, x, y, 0, 0, 0, 0);
 			if (word)
 			{
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0,
@@ -2031,6 +2028,7 @@ namespace {
 
 		if (event->type == GDK_2BUTTON_PRESS)	/* WORD select */
 		{
+			textentry *ent;
 			gtk_xtext_check_mark_stamp(xtext, mask);
 			if (gtk_xtext_get_word(xtext, x, y, &ent, &offset, &len, 0))
 			{
@@ -2048,6 +2046,7 @@ namespace {
 
 		if (event->type == GDK_3BUTTON_PRESS)	/* LINE select */
 		{
+			textentry *ent;
 			gtk_xtext_check_mark_stamp(xtext, mask);
 			if (gtk_xtext_get_word(xtext, x, y, &ent, 0, 0, 0))
 			{
@@ -3798,7 +3797,6 @@ namespace{
 
 	bool gtk_xtext_kill_ent(xtext_buffer *buffer, textentry *ent)
 	{
-		//std::unique_ptr<textentry> entry(ent);
 		/* Set visible to true if this is the current buffer */
 		/* and this ent shows up on the screen now */
 		bool visible = buffer->xtext->buffer == buffer &&
