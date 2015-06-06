@@ -188,7 +188,7 @@ namespace
 	static void gtk_xtext_render_page(GtkXText * xtext);
 	static void gtk_xtext_calc_lines(xtext_buffer *buf, bool);
 	static std::string gtk_xtext_selection_get_text(GtkXText *xtext);
-	static textentry *gtk_xtext_nth(GtkXText *xtext, int line, int *subline);
+	static textentry *gtk_xtext_nth(GtkXText *xtext, int line, int &subline);
 	static void gtk_xtext_adjustment_changed(GtkAdjustment * adj,
 		GtkXText * xtext);
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
@@ -600,12 +600,10 @@ namespace
 	}
 } // end anonymous namespace
 
-GtkWidget *
-gtk_xtext_new(GdkColor palette[], bool separator)
+GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator)
 {
-	GtkXText *xtext;
-
-	xtext = static_cast<GtkXText*>(g_object_new(gtk_xtext_get_type(), nullptr));
+	GtkXText *xtext = static_cast<GtkXText *>(
+	    g_object_new(gtk_xtext_get_type(), nullptr));
 	xtext->separator = separator;
 	xtext->wordwrap = true;
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
@@ -735,14 +733,13 @@ namespace {
 	static void
 		gtk_xtext_realize(GtkWidget * widget)
 	{
-		GtkXText *xtext;
 		GdkWindowAttr attributes;
 		GdkGCValues val;
 		GdkColor col;
 		GdkColormap *cmap;
 
 		gtk_widget_set_realized(widget, true);
-		xtext = GTK_XTEXT(widget);
+		auto xtext = GTK_XTEXT(widget);
 
 		attributes.x = widget->allocation.x;
 		attributes.y = widget->allocation.y;
@@ -831,8 +828,8 @@ namespace {
 		requisition->height = 90;
 	}
 
-	static void
-		gtk_xtext_size_allocate(GtkWidget * widget, GtkAllocation * allocation)
+	static void gtk_xtext_size_allocate(GtkWidget *widget,
+					    GtkAllocation *allocation)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
 		bool height_only = false;
@@ -841,25 +838,29 @@ namespace {
 			height_only = true;
 
 		widget->allocation = *allocation;
-		if (gtk_widget_get_realized(GTK_WIDGET(widget)))
+		if (!gtk_widget_get_realized(GTK_WIDGET(widget)))
 		{
-			xtext->buffer->window_width = allocation->width;
-			xtext->buffer->window_height = allocation->height;
-
-			gdk_window_move_resize(widget->window, allocation->x, allocation->y,
-				allocation->width, allocation->height);
-			dontscroll(xtext->buffer);	/* force scrolling off */
-			if (!height_only)
-				gtk_xtext_calc_lines(xtext->buffer, false);
-			else
-			{
-				xtext->buffer->impl->pagetop_ent = nullptr;
-				gtk_xtext_adjustment_set(xtext->buffer, false);
-			}
-			if (xtext->buffer->scrollbar_down)
-				gtk_adjustment_set_value(xtext->adj, xtext->adj->upper -
-				xtext->adj->page_size);
+			return;
 		}
+
+		xtext->buffer->window_width = allocation->width;
+		xtext->buffer->window_height = allocation->height;
+
+		gdk_window_move_resize(widget->window, allocation->x,
+				       allocation->y, allocation->width,
+				       allocation->height);
+		dontscroll(xtext->buffer); /* force scrolling off */
+		if (!height_only)
+			gtk_xtext_calc_lines(xtext->buffer, false);
+		else
+		{
+			xtext->buffer->impl->pagetop_ent = nullptr;
+			gtk_xtext_adjustment_set(xtext->buffer, false);
+		}
+		if (xtext->buffer->scrollbar_down)
+			gtk_adjustment_set_value(xtext->adj,
+						 xtext->adj->upper -
+						     xtext->adj->page_size);
 	}
 
 	static int
@@ -1002,7 +1003,7 @@ namespace {
 
 		int subline;
 		int line = (y + xtext->pixel_offset) / xtext->fontsize;
-		auto ent = gtk_xtext_nth(xtext, line + (int)xtext->adj->value, &subline);
+		auto ent = gtk_xtext_nth(xtext, line + (int)xtext->adj->value, subline);
 		if (!ent)
 			return nullptr;
 
@@ -3643,7 +3644,7 @@ namespace{
 	}
 
 	/* find the n-th line in the linked list, this includes wrap calculations */
-	textentry * gtk_xtext_nth(GtkXText *xtext, int line, int *subline)
+	textentry * gtk_xtext_nth(GtkXText *xtext, int line, int &subline)
 	{
 		int lines = 0;
 		textentry * ent = xtext->buffer->impl->text_first;
@@ -3653,7 +3654,7 @@ namespace{
 		{
 			if (line == xtext->buffer->pagetop_line)
 			{
-				*subline = xtext->buffer->pagetop_subline;
+				subline = xtext->buffer->pagetop_subline;
 				return xtext->buffer->impl->pagetop_ent;
 			}
 			if (line > xtext->buffer->pagetop_line)
@@ -3671,7 +3672,7 @@ namespace{
 				{
 					if (lines <= line)
 					{
-						*subline = line - lines;
+						subline = line - lines;
 						return ent;
 					}
 					ent = ent->prev;
@@ -3689,7 +3690,7 @@ namespace{
 			lines += ent->sublines.size();
 			if (lines > line)
 			{
-				*subline = ent->sublines.size() - (lines - line);
+				subline = ent->sublines.size() - (lines - line);
 				return ent;
 			}
 			ent = ent->next;
@@ -3799,7 +3800,7 @@ namespace{
 		auto ent = xtext->buffer->impl->text_first;
 
 		if (startline > 0)
-			ent = gtk_xtext_nth(xtext, startline, &subline);
+			ent = gtk_xtext_nth(xtext, startline, subline);
 
 		xtext->buffer->impl->pagetop_ent = ent;
 		xtext->buffer->pagetop_subline = subline;
