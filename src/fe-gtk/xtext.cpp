@@ -55,6 +55,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include "../common/url.hpp"
 #include "../common/marshal.h"
 #include "../common/session.hpp"
+#include "../common/glist_iterators.hpp"
 #include "fe-gtk.hpp"
 #include "xtext.hpp"
 #include "fkeys.hpp"
@@ -417,29 +418,24 @@ namespace
 
 	/* simplified version of gdk_draw_layout_line_with_colors() */
 
-	static void
-		xtext_draw_layout_line(GdkDrawable      *drawable,
-		GdkGC            *gc,
-		gint              x,
-		gint              y,
-		PangoLayoutLine  *line)
+	static void xtext_draw_layout_line(GdkDrawable *drawable, GdkGC *gc,
+					   gint x, gint y,
+					   const PangoLayoutLine *line)
 	{
-		GSList *tmp_list = line->runs;
 		PangoRectangle logical_rect;
 		gint x_off = 0;
 
-		while (tmp_list)
+		for (const auto &run :
+		     glib_helper::glist_iterable<PangoLayoutRun>(line->runs))
 		{
-			PangoLayoutRun *run = static_cast<PangoLayoutRun*>(tmp_list->data);
+			pango_glyph_string_extents(run.glyphs,
+						   run.item->analysis.font,
+						   nullptr, &logical_rect);
 
-			pango_glyph_string_extents(run->glyphs, run->item->analysis.font,
-				nullptr, &logical_rect);
-
-			gdk_draw_glyphs(drawable, gc, run->item->analysis.font,
-				x + x_off / PANGO_SCALE, y, run->glyphs);
+			gdk_draw_glyphs(drawable, gc, run.item->analysis.font,
+					x + x_off / PANGO_SCALE, y, run.glyphs);
 
 			x_off += logical_rect.width;
-			tmp_list = tmp_list->next;
 		}
 	}
 
@@ -532,30 +528,32 @@ namespace
 	{
 		GtkAdjustment *adj = buf->xtext->adj;
 
-		if (buf->xtext->buffer == buf)
+		if (buf->xtext->buffer != buf)
 		{
-			adj->lower = 0;
-			adj->upper = buf->num_lines;
-
-			if (adj->upper == 0)
-				adj->upper = 1;
-
-			adj->page_size = GTK_WIDGET(buf->xtext)->allocation.height /
-				buf->xtext->fontsize;
-			adj->page_increment = adj->page_size;
-
-			if (adj->value > adj->upper - adj->page_size)
-			{
-				buf->scrollbar_down = true;
-				adj->value = adj->upper - adj->page_size;
-			}
-
-			if (adj->value < 0)
-				adj->value = 0;
-
-			if (fire_signal)
-				gtk_adjustment_changed(adj);
+			return;
 		}
+
+		adj->lower = 0;
+		adj->upper = buf->num_lines;
+
+		if (adj->upper == 0)
+			adj->upper = 1;
+
+		adj->page_size = GTK_WIDGET(buf->xtext)->allocation.height /
+			buf->xtext->fontsize;
+		adj->page_increment = adj->page_size;
+
+		if (adj->value > adj->upper - adj->page_size)
+		{
+			buf->scrollbar_down = true;
+			adj->value = adj->upper - adj->page_size;
+		}
+
+		if (adj->value < 0)
+			adj->value = 0;
+
+		if (fire_signal)
+			gtk_adjustment_changed(adj);
 	}
 
 	static gint
