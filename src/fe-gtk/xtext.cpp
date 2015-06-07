@@ -3651,9 +3651,9 @@ namespace{
 	* This should only be called when the window resizes.               */
 	void gtk_xtext_calc_lines(xtext_buffer *buf, bool fire_signal)
 	{
-		int height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
-		int width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(buf->xtext)));
-		width -= MARGIN;
+		auto window = gtk_widget_get_window(GTK_WIDGET(buf->xtext));
+		int height = gdk_window_get_height(window);
+		int width = gdk_window_get_width(window) - MARGIN;
 
 		if (width < 30 || height < buf->xtext->fontsize || width < buf->indent + 30)
 			return;
