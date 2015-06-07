@@ -3757,9 +3757,9 @@ namespace{
 		if (xtext->buffer->indent < MARGIN)
 			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
 
-		int height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
-		int width = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(xtext)));
-		width -= MARGIN;
+		auto window = gtk_widget_get_window(GTK_WIDGET(xtext));
+		int height = gdk_window_get_height(window);
+		int width = gdk_window_get_width(window) - MARGIN;
 
 		if (width < 32 || height < xtext->fontsize || width < xtext->buffer->indent + 30)
 			return 0;
@@ -4672,16 +4672,10 @@ namespace {
 
 /* the main two public functions */
 
-void
-gtk_xtext_append_indent(xtext_buffer *buf,
-const unsigned char left_text[], int left_len,
-const unsigned char right_text[], int right_len,
-time_t stamp)
+void gtk_xtext_append_indent(xtext_buffer *buf, const unsigned char left_text[],
+			     int left_len, const unsigned char right_text[],
+			     int right_len, time_t stamp)
 {
-	int space;
-	int tempindent;
-	int left_width;
-
 	if (left_len == -1)
 		left_len = std::char_traits<unsigned char>::length(left_text);
 
@@ -4702,20 +4696,19 @@ time_t stamp)
 	str[left_len] = ' ';
 	std::copy_n(right_text, right_len, str + left_len + 1);
 
-	left_width = gtk_xtext_text_width(buf->xtext, ustring_ref(left_text, left_len));
+	auto left_width =
+	    gtk_xtext_text_width(buf->xtext, ustring_ref(left_text, left_len));
 
 	ent.left_len = left_len;
 	ent.indent = (buf->indent - left_width) - buf->xtext->space_width;
 
-	if (buf->time_stamp)
-		space = buf->xtext->stamp_width;
-	else
-		space = 0;
+	auto space = buf->time_stamp ? buf->xtext->stamp_width : 0;
 
 	/* do we need to auto adjust the separator position? */
 	if (buf->xtext->auto_indent && ent.indent < MARGIN + space)
 	{
-		tempindent = MARGIN + space + buf->xtext->space_width + left_width;
+		auto tempindent =
+		    MARGIN + space + buf->xtext->space_width + left_width;
 
 		if (tempindent > buf->indent)
 			buf->indent = tempindent;
@@ -4726,15 +4719,15 @@ time_t stamp)
 		gtk_xtext_fix_indent(buf);
 		gtk_xtext_recalc_widths(buf, false);
 
-		ent.indent = (buf->indent - left_width) - buf->xtext->space_width;
+		ent.indent =
+		    (buf->indent - left_width) - buf->xtext->space_width;
 		buf->xtext->force_render = true;
 	}
 
 	gtk_xtext_append_entry(buf, std::move(ent), stamp);
 }
 
-void
-gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
+void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 {
 	if (text.back() == '\n')
 		text.remove_suffix(text.size() - 1);
@@ -4745,7 +4738,7 @@ gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 	textentry ent;
 	if (!text.empty())
 	{
-		ent.str = ustring{ text.cbegin(), text.cend() };
+		ent.str = ustring{text.cbegin(), text.cend()};
 	}
 	ent.indent = 0;
 	ent.left_len = -1;
@@ -4932,11 +4925,13 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 		xtext->io_tag = 0;
 	}
 
-	if (!gtk_widget_get_realized(GTK_WIDGET(xtext)))
-		gtk_widget_realize(GTK_WIDGET(xtext));
+	auto widget = GTK_WIDGET(xtext);
+	if (!gtk_widget_get_realized(widget))
+		gtk_widget_realize(widget);
 
-	int h = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
-	int w = gdk_window_get_width(gtk_widget_get_window(GTK_WIDGET(xtext)));
+	auto window = gtk_widget_get_window(widget);
+	int h = gdk_window_get_height(window);
+	int w = gdk_window_get_width(window);
 
 	/* after a font change */
 	if (buf->needs_recalc)
@@ -5029,14 +5024,6 @@ xtext_buffer::~xtext_buffer() NOEXCEPT
 	{
 		gtk_xtext_search_fini(this);
 	}
-
-	/*auto ent = this->text_first;
-	while (ent)
-	{
-		auto next = ent->next;
-		std::unique_ptr<textentry> ent_ptr(ent);
-		ent = next;
-	}*/
 }
 
 void

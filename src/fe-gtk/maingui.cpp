@@ -3686,10 +3686,11 @@ mg_drag_begin_cb (GtkWidget *widget, GdkDragContext *context, gpointer)
 		return false;
 
 	auto cmap = gtk_widget_get_colormap (widget);
-	auto width = gdk_window_get_width (gtk_widget_get_window (widget));
-	auto height = gdk_window_get_height (gtk_widget_get_window (widget));
+	auto window = gtk_widget_get_window(widget);
+	auto width = gdk_window_get_width (window);
+	auto height = gdk_window_get_height (window);
 
-	auto pix = gdk_pixbuf_get_from_drawable (nullptr, gtk_widget_get_window (widget), cmap, 0, 0, 0, 0, width, height);
+	auto pix = gdk_pixbuf_get_from_drawable (nullptr, window, cmap, 0, 0, 0, 0, width, height);
 	auto pix2 = gdk_pixbuf_scale_simple (pix, width * 4 / 5, height / 2, GDK_INTERP_HYPER);
 	g_object_unref (pix);
 
@@ -3741,45 +3742,47 @@ namespace
 }
 /* draw highlight rectangle in the destination */
 
-gboolean
-mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint time, gpointer scbar)
+gboolean mg_drag_motion_cb(GtkWidget *widget, GdkDragContext *context, int x,
+			   int y, guint time, gpointer scbar)
 {
 	/* ignore file drops */
-	if (!mg_is_gui_target (context))
+	if (!mg_is_gui_target(context))
 		return false;
-	
+
 	int ox, oy;
 	int width, height;
-	GdkDrawable *draw;
-	if (scbar)	/* scrollbar */
+	auto window = gtk_widget_get_window(widget);
+	if (scbar) /* scrollbar */
 	{
 		GtkAllocation allocation;
-		gtk_widget_get_allocation (widget, &allocation);
+		gtk_widget_get_allocation(widget, &allocation);
 		ox = allocation.x;
 		oy = allocation.y;
 		width = allocation.width;
 		height = allocation.height;
-		draw = gtk_widget_get_window (widget);
 	}
 	else
 	{
 		ox = oy = 0;
-		width = gdk_window_get_width (gtk_widget_get_window (widget));
-		height = gdk_window_get_height (gtk_widget_get_window (widget));
-		draw = gtk_widget_get_window (widget);
+		width = gdk_window_get_width(window);
+		height = gdk_window_get_height(window);
 	}
+
 	GdkGCValues val = {};
 	val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 	val.graphics_exposures = 0;
 	val.function = GDK_XOR;
 
-	GdkGCPtr gc{ gdk_gc_new_with_values(gtk_widget_get_window(widget), &val, static_cast<GdkGCValuesMask>(GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW | GDK_GC_FUNCTION)) };
+	GdkGCPtr gc{gdk_gc_new_with_values(window, &val, GDK_GC_EXPOSURES |
+							     GDK_GC_SUBWINDOW |
+							     GDK_GC_FUNCTION)};
 	GdkColor col = {};
 	col.red = RAND_INT(RAND_MAX) % 0xffff;
 	col.green = RAND_INT(RAND_MAX) % 0xffff;
 	col.blue = RAND_INT(RAND_MAX) % 0xffff;
-	gdk_colormap_alloc_color (gtk_widget_get_colormap (widget), &col, false, true);
-	gdk_gc_set_foreground (gc.get(), &col);
+	gdk_colormap_alloc_color(gtk_widget_get_colormap(widget), &col, false,
+				 true);
+	gdk_gc_set_foreground(gc.get(), &col);
 
 	int half = height / 2;
 
@@ -3797,15 +3800,20 @@ mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, gui
 
 	if (y < half)
 	{
-		gdk_draw_rectangle (draw, gc.get(), false, 1 + ox, 2 + oy, width - 3, half - 4);
-		gdk_draw_rectangle (draw, gc.get(), false, 0 + ox, 1 + oy, width - 1, half - 2);
-		gtk_widget_queue_draw_area (widget, ox, half + oy, width, height - half);
+		gdk_draw_rectangle(window, gc.get(), false, 1 + ox, 2 + oy,
+				   width - 3, half - 4);
+		gdk_draw_rectangle(window, gc.get(), false, 0 + ox, 1 + oy,
+				   width - 1, half - 2);
+		gtk_widget_queue_draw_area(widget, ox, half + oy, width,
+					   height - half);
 	}
 	else
 	{
-		gdk_draw_rectangle (draw, gc.get(), false, 0 + ox, half + 1 + oy, width - 1, half - 2);
-		gdk_draw_rectangle (draw, gc.get(), false, 1 + ox, half + 2 + oy, width - 3, half - 4);
-		gtk_widget_queue_draw_area (widget, ox, oy, width, half);
+		gdk_draw_rectangle(window, gc.get(), false, 0 + ox, half + 1 + oy,
+				   width - 1, half - 2);
+		gdk_draw_rectangle(window, gc.get(), false, 1 + ox, half + 2 + oy,
+				   width - 3, half - 4);
+		gtk_widget_queue_draw_area(widget, ox, oy, width, half);
 	}
 	return true;
 }
