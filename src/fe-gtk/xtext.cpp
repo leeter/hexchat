@@ -3515,27 +3515,29 @@ namespace {
 		dontscroll(buf);	/* force scrolling off */
 	}
 
-	static void
-		gtk_xtext_recalc_widths(xtext_buffer *buf, bool do_str_width)
+	static void gtk_xtext_recalc_widths(xtext_buffer *buf,
+					    bool do_str_width)
 	{
-		/* since we have a new font, we have to recalc the text widths */
-		auto ent = buf->impl->text_first;
-		while (ent)
+		/* since we have a new font, we have to recalc the text widths
+		 */
+		for (auto &ent : buf->impl->entries)
 		{
 			if (do_str_width)
 			{
-				ent->str_width = gtk_xtext_text_width_ent(buf->xtext, *ent);
+				ent.str_width =
+				    gtk_xtext_text_width_ent(buf->xtext, ent);
 			}
-			if (ent->left_len != -1)
+			if (ent.left_len != -1)
 			{
-				ent->indent =
-					(buf->indent -
-					gtk_xtext_text_width(buf->xtext, ustring_ref(ent->str.c_str(),
-					ent->left_len))) - buf->xtext->space_width;
-				if (ent->indent < MARGIN)
-					ent->indent = MARGIN;
+				ent.indent = (buf->indent -
+					      gtk_xtext_text_width(
+						  buf->xtext,
+						  ustring_ref(ent.str.c_str(),
+							      ent.left_len))) -
+					     buf->xtext->space_width;
+				if (ent.indent < MARGIN)
+					ent.indent = MARGIN;
 			}
-			ent = ent->next;
 		}
 
 		gtk_xtext_calc_lines(buf, false);
