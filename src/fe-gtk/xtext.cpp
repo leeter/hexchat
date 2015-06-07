@@ -2392,6 +2392,7 @@ namespace{
 		c.len1 = 0;
 	}
 
+	/* deprecated */
 	unsigned char * gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
 		int *newlen, std::vector<offlen_t> * slp, int strip_hidden)
 	{
@@ -2571,17 +2572,20 @@ namespace{
 	}
 
 	/* gives width of a string, excluding the mIRC codes */
-
-	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry *ent)
+	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry &ent)
 	{
-		ent->slp.clear();
-		auto new_buf = gtk_xtext_strip_color(ent->str, &ent->slp, 2);
+		ent.slp.clear();
+		auto new_buf = gtk_xtext_strip_color(ent.str, &ent.slp, 2);
 
-		auto width = backend_get_text_width_slp(xtext, new_buf.c_str(), ent->slp);
+		auto width =
+		    backend_get_text_width_slp(xtext, new_buf.c_str(), ent.slp);
 
-		for (auto & meta : ent->slp)
+		for (auto &meta : ent.slp)
 		{
-			meta.width = backend_get_text_width_emph(xtext, ustring_ref(ent->str.c_str() + meta.off, meta.len), meta.emph);
+			meta.width = backend_get_text_width_emph(
+			    xtext,
+			    ustring_ref(ent.str.c_str() + meta.off, meta.len),
+			    meta.emph);
 		}
 		return width;
 	}
@@ -2594,69 +2598,97 @@ namespace{
 		return backend_get_text_width_slp(xtext, new_buf.c_str(), slp);
 	}
 
-	/* actually draw text to screen (one run with the same color/attribs) */
+	void gtk_xtext_draw_underline(GtkXText *xtext, int dest_x, int dest_y,
+				      int x, int y, int str_width,
+				      bool drawable, GdkGC *gc)
+	{
+		// used to check if the pixmap existed, why does this matter?
+		if (drawable)
+			y = dest_y + xtext->font->ascent + 1;
+		else
+		{
+			y++;
+			dest_x = x;
+		}
+		/* draw directly to window, it's out of the range of our
+		* DB */
+		gdk_draw_line(xtext->draw_buf, gc, dest_x, y,
+			      dest_x + str_width - 1, y);
+	}
 
-	static int
-		gtk_xtext_render_flush(GtkXText * xtext, int x, int y, const unsigned char str[],
-		int len, GdkGC *gc, int *emphasis)
+	/* actually draw text to screen (one run with the same color/attribs) */
+	static int gtk_xtext_render_flush(GtkXText *xtext, int x, int y,
+					  const unsigned char str[], int len,
+					  GdkGC *gc, int *emphasis)
 	{
 		if (xtext->dont_render || len < 1 || xtext->hidden)
 			return 0;
 
-		auto str_width = backend_get_text_width_emph(xtext, ustring_ref(str, len), *emphasis);
+		auto str_width = backend_get_text_width_emph(
+		    xtext, ustring_ref(str, len), *emphasis);
 
 		if (xtext->dont_render2)
 			return str_width;
 
-		/* roll-your-own clipping (avoiding XftDrawString is always good!) */
+		/* roll-your-own clipping (avoiding XftDrawString is always
+		 * good!) */
 		if (x > xtext->clip_x2 || x + str_width < xtext->clip_x)
 			return str_width;
-		if (y - xtext->font->ascent > xtext->clip_y2 || (y - xtext->font->ascent) + xtext->fontsize < xtext->clip_y)
+		if (y - xtext->font->ascent > xtext->clip_y2 ||
+		    (y - xtext->font->ascent) + xtext->fontsize < xtext->clip_y)
 			return str_width;
 
-		GdkDrawable *pix = nullptr;
 		int dest_x = 0, dest_y = 0;
-		bool dofill;
 		if (xtext->render_hilights_only)
 		{
-			if (!xtext->in_hilight)	/* is it a hilight prefix? */
+			if (!xtext->in_hilight) /* is it a hilight prefix? */
 				return str_width;
-			if (!xtext->un_hilight)	/* doing a hilight? no need to draw the text */
-				goto dounder;
+			if (!xtext->un_hilight) /* doing a hilight? no need to
+						   draw the text */
+			{
+				gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, gc);
+				return str_width;
+			}
 		}
 
-		pix = gdk_pixmap_new(xtext->draw_buf, str_width, xtext->fontsize, xtext->depth);
+		auto pix = gdk_pixmap_new(xtext->draw_buf, str_width,
+				     xtext->fontsize, xtext->depth);
 		if (pix)
 		{
 			dest_x = x;
 			dest_y = y - xtext->font->ascent;
 
-			gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x - x, xtext->ts_y - dest_y);
+			gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x - x,
+					     xtext->ts_y - dest_y);
 
 			x = 0;
 			y = xtext->font->ascent;
 			xtext->draw_buf = pix;
 		}
 
-		dofill = true;
+		bool dofill = true;
 
 		/* backcolor is always handled by XDrawImageString */
 		if (!xtext->backcolor && xtext->pixmap)
 		{
-			/* draw the background pixmap behind the text - CAUSES FLICKER HERE!! */
-			xtext_draw_bg(xtext, x, y - xtext->font->ascent, str_width,
-				xtext->fontsize);
-			dofill = false;	/* already drawn the background */
+			/* draw the background pixmap behind the text - CAUSES
+			 * FLICKER HERE!! */
+			xtext_draw_bg(xtext, x, y - xtext->font->ascent,
+				      str_width, xtext->fontsize);
+			dofill = false; /* already drawn the background */
 		}
 
-		backend_draw_text_emph(xtext, dofill, gc, x, y, (const char*)str, len, str_width, *emphasis);
+		backend_draw_text_emph(xtext, dofill, gc, x, y,
+				       (const char *)str, len, str_width,
+				       *emphasis);
 
 		if (pix)
 		{
 			GdkRectangle clip;
 			GdkRectangle dest;
 
-			gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x, xtext->ts_y);
+			gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x,
+					     xtext->ts_y);
 			xtext->draw_buf = GTK_WIDGET(xtext)->window;
 			clip.x = xtext->clip_x;
 			clip.y = xtext->clip_y;
@@ -2669,26 +2701,18 @@ namespace{
 			dest.height = xtext->fontsize;
 
 			if (gdk_rectangle_intersect(&clip, &dest, &dest))
-				/* dump the DB to window, but only within the clip_x/x2/y/y2 */
-				gdk_draw_drawable(xtext->draw_buf, xtext->bgc, pix,
-				dest.x - dest_x, dest.y - dest_y,
-				dest.x, dest.y, dest.width, dest.height);
+				/* dump the DB to window, but only within the
+				 * clip_x/x2/y/y2 */
+				gdk_draw_drawable(
+				    xtext->draw_buf, xtext->bgc, pix,
+				    dest.x - dest_x, dest.y - dest_y, dest.x,
+				    dest.y, dest.width, dest.height);
 			g_object_unref(pix);
 		}
 
 		if (xtext->underline)
 		{
-		dounder:
-
-			if (pix)
-				y = dest_y + xtext->font->ascent + 1;
-			else
-			{
-				y++;
-				dest_x = x;
-			}
-			/* draw directly to window, it's out of the range of our DB */
-			gdk_draw_line(xtext->draw_buf, gc, dest_x, y, dest_x + str_width - 1, y);
+			gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, pix != nullptr, gc);
 		}
 
 		return str_width;
@@ -3500,7 +3524,7 @@ namespace {
 		{
 			if (do_str_width)
 			{
-				ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
+				ent->str_width = gtk_xtext_text_width_ent(buf->xtext, *ent);
 			}
 			if (ent->left_len != -1)
 			{
@@ -4548,7 +4572,7 @@ namespace {
 		ent->stamp = stamp;
 		if (stamp == 0)
 			ent->stamp = time(nullptr);
-		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, ent);
+		ent->str_width = gtk_xtext_text_width_ent(buf->xtext, *ent);
 		ent->mark_start = -1;
 		ent->mark_end = -1;
 		ent->next = nullptr;
