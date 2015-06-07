@@ -89,34 +89,35 @@ struct offlen_t {
 struct textentry
 {
 	textentry()
-		:next(),
-		prev(),
-		stamp(),
+		:tag(),
 		str_width(),
 		mark_start(),
 		mark_end(),
 		indent(),
 		left_len(),
-		tag(),
+		stamp(),
+		next(),
+		prev(),
 		marks(){}
 
-	textentry *next;
-	textentry *prev;
-	ustring str;
-	time_t stamp;
+	guchar tag;
 	gint16 str_width;
 	gint16 mark_start;
 	gint16 mark_end;
 	gint16 indent;
 	gint16 left_len;
+	time_t stamp;
+	textentry *next;
+	textentry *prev;
+	GList *marks;	/* List of found strings */
 	std::vector<offlen_t> slp;
 	std::vector<int> sublines;
-	guchar tag;
-	GList *marks;	/* List of found strings */
+	ustring str;
 };
 
 struct xtext_impl
 {
+	marker_reset_reason marker_state;
 	textentry *text_first;
 	textentry *text_last;
 
@@ -125,16 +126,17 @@ struct xtext_impl
 	textentry *pagetop_ent;			/* what's at xtext->adj->value */
 
 	textentry *marker_pos;
-	marker_reset_reason marker_state;
+	
 	std::deque<textentry> entries;
 
 	xtext_impl()
-		:text_first(), text_last(),
+		:marker_state(),
+		text_first(), text_last(),
 
 		last_ent_start(), /* this basically describes the last rendered */
 		last_ent_end(),   /* selection. */
 		pagetop_ent(), /* what's at xtext->adj->value */
-		marker_pos(), marker_state()
+		marker_pos()
 	{}
 };
 
@@ -1652,7 +1654,7 @@ namespace {
 				return 0;
 		}
 
-		return (char*)word;
+		return reinterpret_cast<const char*>(word);
 	}
 
 	static void
@@ -3532,7 +3534,7 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 	xtext->fontsize = xtext->font->ascent + xtext->font->descent;
 
 	{
-		auto time_str = xtext_get_stamp_str(time(0));
+		auto time_str = xtext_get_stamp_str(std::time(nullptr));
 		xtext->stamp_width =
 			gtk_xtext_text_width(xtext, ustring_ref(reinterpret_cast<const unsigned char*>(time_str.c_str()), time_str.size())) + MARGIN;
 	}
@@ -4085,26 +4087,21 @@ namespace{
 	static bool
 		gtk_xtext_check_ent_visibility(GtkXText * xtext, textentry *find_ent, int add)
 	{
-		textentry *ent;
-		int lines;
-		xtext_buffer *buf = xtext->buffer;
-		int height;
-
 		if (!find_ent)
 		{
 			return false;
 		}
 
-		height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
-
-		ent = buf->impl->pagetop_ent;
+		auto height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		xtext_buffer *buf = xtext->buffer;
+		auto ent = buf->impl->pagetop_ent;
 		/* If top line not completely displayed return false */
 		if (ent == find_ent && buf->pagetop_subline > 0)
 		{
 			return false;
 		}
 		/* Loop through line positions looking for find_ent */
-		lines = ((height + xtext->pixel_offset) / xtext->fontsize) + buf->pagetop_subline + add;
+		auto lines = ((height + xtext->pixel_offset) / xtext->fontsize) + buf->pagetop_subline + add;
 		while (ent)
 		{
 			lines -= ent->sublines.size();
@@ -4152,8 +4149,8 @@ namespace{
 		}
 
 		off2 = off1;
-		auto meta = slp.cbegin();
-		for (; meta != slp.cend(); ++meta)
+		auto meta = slp.cbegin(), end_itr = slp.cend();
+		for (; meta != end_itr; ++meta)
 		{
 			if (end < meta->len)
 			{
@@ -4163,7 +4160,7 @@ namespace{
 			curlen += meta->len;
 			end -= meta->len;
 		}
-		if (meta == slp.cend())
+		if (meta == end_itr)
 		{
 			off2 = maxo;
 		}
@@ -4711,35 +4708,39 @@ bool gtk_xtext_is_empty(const xtext_buffer &buf)
 	return buf.impl->text_first == nullptr;
 }
 
-
-int
-gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
+int gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 {
-	auto ent = search_area->impl->text_first;
 	int matches = 0;
 
-	while (ent)
+	for (const auto &ent : search_area->impl->entries)
 	{
-		auto gl = gtk_xtext_search_textentry(out, *ent);
-		if (gl)
+		auto gl = gtk_xtext_search_textentry(out, ent);
+		if (!gl)
 		{
-			matches++;
-			/* copy the text over */
-			if (search_area->xtext->auto_indent)
-			{
-				gtk_xtext_append_indent(out, ent->str.c_str(), ent->left_len,
-					ent->str.c_str() + ent->left_len + 1,
-					ent->str.size() - ent->left_len - 1, 0);
-			}
-			else
-			{
-				gtk_xtext_append(out, boost::string_ref{ reinterpret_cast<const char*>(ent->str.c_str()), ent->str.size() }, 0);
-			}
-
-			out->impl->text_last->stamp = ent->stamp;
-			gtk_xtext_search_textentry_add(out, out->impl->text_last, gl, true);
+			continue;
 		}
-		ent = ent->next;
+		++matches;
+		/* copy the text over */
+		if (search_area->xtext->auto_indent)
+		{
+			gtk_xtext_append_indent(
+			    out, ent.str.c_str(), ent.left_len,
+			    ent.str.c_str() + ent.left_len + 1,
+			    ent.str.size() - ent.left_len - 1, 0);
+		}
+		else
+		{
+			gtk_xtext_append(
+			    out,
+			    boost::string_ref{
+				reinterpret_cast<const char *>(ent.str.c_str()),
+				ent.str.size()},
+			    0);
+		}
+
+		out->impl->text_last->stamp = ent.stamp;
+		gtk_xtext_search_textentry_add(out, out->impl->text_last, gl,
+					       true);
 	}
 	out->search_found = g_list_reverse(out->search_found);
 
