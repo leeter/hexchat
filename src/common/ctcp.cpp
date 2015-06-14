@@ -77,7 +77,7 @@ static bool
 
 	while (list)
 	{
-		pop = (struct popup *) list->data;
+		pop = static_cast<popup *>(list->data);
 		if (!g_ascii_strcasecmp(ctcp, pop->name.c_str()))
 		{
 			ctcp_reply(sess, nick, word, word_eol, pop->cmd);

@@ -19,17 +19,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <boost/filesystem/fstream.hpp>
 
 #include <gdk/gdkkeysyms.h>
-
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 #include "fe-gtk.hpp"
 
@@ -37,11 +29,13 @@
 #include "../common/cfgfiles.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/fe.hpp"
+#include "../common/filesystem.hpp"
 #include "menu.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
 #include "editlist.hpp"
 #include "gtk_helpers.hpp"
+
 namespace {
 enum
 {
@@ -50,8 +44,8 @@ enum
 	N_COLUMNS
 };
 
-static GtkWidget *editlist_win = NULL;
-static GSList *editlist_list = NULL;
+static GtkWidget *editlist_win = nullptr;
+static GSList *editlist_list = nullptr;
 
 static GtkTreeModel *get_store (void)
 {
@@ -60,44 +54,40 @@ static GtkTreeModel *get_store (void)
 
 static void editlist_save (GtkWidget *igad, gchar *file)
 {
-	int fh = hexchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh == -1)
-	{
-		return;
-	}
-
 	GtkTreeModel *store = get_store();
 	GtkTreeIter iter;
 
-	if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))
+	if (gtk_tree_model_get_iter_first(store, &iter))
 	{
+		boost::filesystem::ofstream file_stream(
+		    io::fs::make_config_path(file),
+		    std::ios::binary | std::ios::out | std::ios::trunc);
 		do
 		{
-			char buf[512];
-			gchar* name = NULL;
-			gchar* cmd = NULL;
-			gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, NAME_COLUMN, &name, CMD_COLUMN, &cmd, -1);
-			g_snprintf (buf, sizeof (buf), "NAME %s\nCMD %s\n\n", name, cmd);
-			write (fh, buf, strlen (buf));
-			g_free (name);
-			g_free (cmd);
-		} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
+			gchar *name = nullptr;
+			gchar *cmd = nullptr;
+			gtk_tree_model_get(store, &iter, NAME_COLUMN, &name,
+					   CMD_COLUMN, &cmd, -1);
+			glib_string name_ptr{name};
+			glib_string cmd_ptr{cmd};
+			file_stream << "NAME " << name << "\nCMD " << cmd
+				    << "\n\n";
+		} while (file_stream && gtk_tree_model_iter_next(store, &iter));
 	}
 
-	close (fh);
 	gtk_widget_destroy (editlist_win);
 	if (editlist_list == replace_list)
 	{
 		list_free (&replace_list);
-		list_loadconf (file, &replace_list, 0);
+		list_loadconf (file, &replace_list, nullptr);
 	} else if (editlist_list == popup_list)
 	{
 		list_free (&popup_list);
-		list_loadconf (file, &popup_list, 0);
+		list_loadconf (file, &popup_list, nullptr);
 	} else if (editlist_list == button_list)
 	{
 		list_free (&button_list);
-		list_loadconf (file, &button_list, 0);
+		list_loadconf (file, &button_list, nullptr);
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);;
@@ -106,7 +96,7 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 	} else if (editlist_list == dlgbutton_list)
 	{
 		list_free (&dlgbutton_list);
-		list_loadconf (file, &dlgbutton_list, 0);
+		list_loadconf (file, &dlgbutton_list, nullptr);
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);
@@ -115,20 +105,20 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 	} else if (editlist_list == ctcp_list)
 	{
 		list_free (&ctcp_list);
-		list_loadconf (file, &ctcp_list, 0);
+		list_loadconf (file, &ctcp_list, nullptr);
 	} else if (editlist_list == command_list)
 	{
 		list_free (&command_list);
-		list_loadconf (file, &command_list, 0);
+		list_loadconf (file, &command_list, nullptr);
 	} else if (editlist_list == usermenu_list)
 	{
 		list_free (&usermenu_list);
-		list_loadconf (file, &usermenu_list, 0);
+		list_loadconf (file, &usermenu_list, nullptr);
 		usermenu_update ();
 	} else
 	{
 		list_free (&urlhandler_list);
-		list_loadconf (file, &urlhandler_list, 0);
+		list_loadconf (file, &urlhandler_list, nullptr);
 	}
 }
 
