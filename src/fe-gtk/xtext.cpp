@@ -192,8 +192,6 @@ namespace
 
 	static GtkWidgetClass *parent_class = nullptr;
 
-
-
 	enum
 	{
 		WORD_CLICK,
@@ -537,22 +535,19 @@ namespace
 		xtext->dont_render2 = false;
 		gtk_xtext_scroll_adjustments(xtext, nullptr, nullptr);
 
-		{
-			static const GtkTargetEntry targets[] = {
-				{ "UTF8_STRING", 0, TARGET_UTF8_STRING },
-				{ "STRING", 0, TARGET_STRING },
-				{ "TEXT", 0, TARGET_TEXT },
-				{ "COMPOUND_TEXT", 0, TARGET_COMPOUND_TEXT }
-			};
-			static const gint n_targets = sizeof(targets) / sizeof(targets[0]);
+		static const GtkTargetEntry targets[] = {
+			{ "UTF8_STRING", 0, TARGET_UTF8_STRING },
+			{ "STRING", 0, TARGET_STRING },
+			{ "TEXT", 0, TARGET_TEXT },
+			{ "COMPOUND_TEXT", 0, TARGET_COMPOUND_TEXT }
+		};
 
-			gtk_selection_add_targets(GTK_WIDGET(xtext), GDK_SELECTION_PRIMARY,
-				targets, n_targets);
-		}
+		gtk_selection_add_targets(GTK_WIDGET(xtext), GDK_SELECTION_PRIMARY,
+			targets, std::extent<decltype(targets)>::value);
 	}
 
-	static void
-		gtk_xtext_adjustment_set(xtext_buffer *buf, bool fire_signal)
+	static void gtk_xtext_adjustment_set(xtext_buffer *buf,
+					     bool fire_signal)
 	{
 		GtkAdjustment *adj = buf->xtext->adj;
 
@@ -561,24 +556,27 @@ namespace
 			return;
 		}
 
-		adj->lower = 0;
-		adj->upper = buf->num_lines;
+		adj->lower = 0.0;
+		adj->upper = static_cast<gdouble>(buf->num_lines);
 
-		if (adj->upper == 0)
-			adj->upper = 1;
+		if (adj->upper == 0.0)
+			adj->upper = 1.0;
 
-		adj->page_size = GTK_WIDGET(buf->xtext)->allocation.height /
-			buf->xtext->fontsize;
+		adj->page_size = static_cast<gdouble>(
+		    GTK_WIDGET(buf->xtext)->allocation.height /
+		    buf->xtext->fontsize);
 		adj->page_increment = adj->page_size;
 
-		if (adj->value > adj->upper - adj->page_size)
+		// TODO: need a better name for this
+		auto adjustment = adj->upper - adj->page_size;
+		if (adj->value > adjustment)
 		{
 			buf->scrollbar_down = true;
-			adj->value = adj->upper - adj->page_size;
+			adj->value = adjustment;
 		}
 
-		if (adj->value < 0)
-			adj->value = 0;
+		if (adj->value < 0.0)
+			adj->value = 0.0;
 
 		if (fire_signal)
 			gtk_adjustment_changed(adj);
@@ -637,10 +635,11 @@ GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator)
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
 	xtext->orig_buffer = xtext->buffer;
 
-	gtk_widget_set_double_buffered(GTK_WIDGET(xtext), false);
+	auto widget = GTK_WIDGET(xtext);
+	gtk_widget_set_double_buffered(widget, false);
 	gtk_xtext_set_palette(xtext, palette);
 
-	return GTK_WIDGET(xtext);
+	return widget;
 }
 
 namespace {
@@ -1756,40 +1755,41 @@ namespace {
 	static int
 		gtk_xtext_get_word_adjust(GtkXText *xtext, int x, int y, textentry **word_ent, int *offset, int *len)
 	{
-		int word_type = 0;
 		std::vector<offlen_t> slp;
 
 		auto word = gtk_xtext_get_word(xtext, x, y, word_ent, offset, len, &slp);
-		if (word)
+		if (!word)
 		{
-			int laststart, lastend;
+			return 0;
+		}
 
-			word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), word);
-			if (word_type > 0)
+		int laststart, lastend;
+
+		int word_type = xtext->urlcheck_function(GTK_WIDGET(xtext), word);
+		if (word_type > 0)
+		{
+			if (url_last(&laststart, &lastend))
 			{
-				if (url_last(&laststart, &lastend))
-				{
-					int cumlen = 0, startadj = 0, endadj = 0;
+				int cumlen = 0, startadj = 0, endadj = 0;
 
-					for (const auto & meta : slp)
-					{
-						startadj = meta.off - cumlen;
-						cumlen += meta.len;
-						if (laststart < cumlen)
-							break;
-					}
-					cumlen = 0;
-					for (const auto & meta : slp)
-					{
-						endadj = meta.off - cumlen;
-						cumlen += meta.len;
-						if (lastend < cumlen)
-							break;
-					}
-					laststart += startadj;
-					*offset += laststart;
-					*len = lastend + endadj - laststart;
+				for (const auto & meta : slp)
+				{
+					startadj = meta.off - cumlen;
+					cumlen += meta.len;
+					if (laststart < cumlen)
+						break;
 				}
+				cumlen = 0;
+				for (const auto & meta : slp)
+				{
+					endadj = meta.off - cumlen;
+					cumlen += meta.len;
+					if (lastend < cumlen)
+						break;
+				}
+				laststart += startadj;
+				*offset += laststart;
+				*len = lastend + endadj - laststart;
 			}
 		}
 		return word_type;
@@ -4876,14 +4876,15 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 	{
 		textentry *ent = buf->impl->text_first;
 		GtkAdjustment *adj = xtext->adj;
-		gdouble value = 0.0;
-		while (ent)
+		std::size_t ivalue = 0;
+		for(const auto & ent : buf->impl->entries)
 		{
-			if (ent == buf->impl->marker_pos)
+			if (&ent == buf->impl->marker_pos)
 				break;
-			value += ent->sublines.size();
-			ent = ent->next;
+			ivalue += ent.sublines.size();
 		}
+
+		gdouble value = static_cast<gdouble>(ivalue);
 		if (value >= adj->value && value < adj->value + adj->page_size)
 			return MARKER_IS_SET;
 		value -= adj->page_size / 2.0;
