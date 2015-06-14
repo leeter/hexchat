@@ -467,29 +467,26 @@ menu_extract_icon (const std::string & name, char **label, char **icon)
 /* append items to "menu" using the (struct popup*) list provided */
 
 void
-menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
+menu_create (GtkWidget *menu, const std::vector<popup> &list, char *target, int check_path)
 {
-	struct popup *pop;
 	GtkWidget *tempmenu = menu, *subitem = nullptr;
 	int childcount = 0;
 
 	submenu_list = g_slist_prepend (0, menu);
-	while (list)
+	for (const auto & pop : list)
 	{
-		pop = (struct popup *) list->data;
-
-		if (!g_ascii_strncasecmp (pop->name.c_str(), "SUB", 3))
+		if (!g_ascii_strncasecmp (pop.name.c_str(), "SUB", 3))
 		{
 			childcount = 0;
-			tempmenu = menu_quick_sub (pop->cmd.c_str(), tempmenu, &subitem, XCMENU_DOLIST|XCMENU_MNEMONIC, -1);
+			tempmenu = menu_quick_sub (pop.cmd.c_str(), tempmenu, &subitem, XCMENU_DOLIST|XCMENU_MNEMONIC, -1);
 
-		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "TOGGLE", 6))
+		} else if (!g_ascii_strncasecmp (pop.name.c_str(), "TOGGLE", 6))
 		{
 			childcount++;
-			menu_toggle_item (pop->name.c_str() + 7, tempmenu, G_CALLBACK(toggle_cb), (void*)pop->cmd.c_str(),
-									cfg_get_bool (pop->cmd.c_str()));
+			menu_toggle_item (pop.name.c_str() + 7, tempmenu, G_CALLBACK(toggle_cb), (void*)pop.cmd.c_str(),
+									cfg_get_bool (pop.cmd.c_str()));
 
-		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "ENDSUB", 6))
+		} else if (!g_ascii_strncasecmp (pop.name.c_str(), "ENDSUB", 6))
 		{
 			/* empty sub menu due to no programs in PATH? */
 			if (check_path && childcount < 1)
@@ -500,42 +497,36 @@ menu_create (GtkWidget *menu, GSList *list, char *target, int check_path)
 				tempmenu = menu_quick_endsub ();
 			/* If we get here and tempmenu equals menu that means we havent got any submenus to exit from */
 
-		} else if (!g_ascii_strncasecmp (pop->name.c_str(), "SEP", 3))
+		} else if (!g_ascii_strncasecmp (pop.name.c_str(), "SEP", 3))
 		{
 			menu_quick_item (0, 0, tempmenu, XCMENU_SHADED, 0, 0);
 
 		} else
 		{
-			char *icon, *label;
-
 			/* default command in hexchat.c */
-			if (pop->cmd[0] == 'n' && pop->cmd == "notify -n ASK %s")
+			if (pop.cmd[0] == 'n' && pop.cmd == "notify -n ASK %s")
 			{
 				/* don't create this item if already in notify list */
 				if (!target || notify_is_in_list (*(current_sess->server), target))
 				{
-					list = list->next;
 					continue;
 				}
 			}
 
-			menu_extract_icon (pop->name, &label, &icon);
-
-			if (!check_path || pop->cmd[0] != '!')
+			char *icon, *label;
+			menu_extract_icon (pop.name, &label, &icon);
+			glib_string label_ptr{ label };
+			glib_string icon_ptr{ icon };
+			if (!check_path || pop.cmd[0] != '!')
 			{
-				menu_quick_item (&pop->cmd, label, tempmenu, 0, target, icon);
+				menu_quick_item (&pop.cmd, label, tempmenu, 0, target, icon);
 			/* check if the program is in path, if not, leave it out! */
-			} else if (is_in_path (pop->cmd.c_str()))
+			} else if (is_in_path (pop.cmd.c_str()))
 			{
 				childcount++;
-				menu_quick_item (&pop->cmd, label, tempmenu, 0, target, icon);
+				menu_quick_item (&pop.cmd, label, tempmenu, 0, target, icon);
 			}
-
-			g_free (label);
-			g_free (icon);
 		}
-
-		list = list->next;
 	}
 
 	/* Let's clean up the linked list from mem */
@@ -1570,20 +1561,20 @@ menu_ctcpguiopen (void)
 }
 
 static void
-menu_docs (GtkWidget *wid, gpointer none)
+menu_docs (GtkWidget *, gpointer)
 {
 	fe_open_url ("http://hexchat.readthedocs.org");
 }
 
 static void
-menu_dcc_win (GtkWidget *wid, gpointer none)
+menu_dcc_win (GtkWidget *, gpointer)
 {
 	fe_dcc_open_recv_win (false);
 	fe_dcc_open_send_win (false);
 }
 
 static void
-menu_dcc_chat_win (GtkWidget *wid, gpointer none)
+menu_dcc_chat_win (GtkWidget *, gpointer)
 {
 	fe_dcc_open_chat_win (false);
 }
@@ -1605,7 +1596,7 @@ menu_change_layout (void)
 }
 
 static void
-menu_layout_cb (GtkWidget *item, gpointer none)
+menu_layout_cb (GtkWidget *item, gpointer)
 {
 	prefs.hex_gui_tab_layout = 2;
 	if (GTK_CHECK_MENU_ITEM (item)->active)
@@ -1621,7 +1612,7 @@ menu_apply_metres_cb (session *sess)
 }
 
 static void
-menu_metres_off (GtkWidget *item, gpointer none)
+menu_metres_off (GtkWidget *item, gpointer)
 {
 	if (GTK_CHECK_MENU_ITEM (item)->active)
 	{
@@ -1643,7 +1634,7 @@ menu_metres_text (GtkWidget *item, gpointer none)
 }
 
 static void
-menu_metres_graph (GtkWidget *item, gpointer none)
+menu_metres_graph (GtkWidget *item, gpointer)
 {
 	if (GTK_CHECK_MENU_ITEM (item)->active)
 	{
@@ -1654,7 +1645,7 @@ menu_metres_graph (GtkWidget *item, gpointer none)
 }
 
 static void
-menu_metres_both (GtkWidget *item, gpointer none)
+menu_metres_both (GtkWidget *item, gpointer)
 {
 	if (GTK_CHECK_MENU_ITEM (item)->active)
 	{

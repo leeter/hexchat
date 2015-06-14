@@ -21,8 +21,10 @@
 #define NOMINMAX
 #endif
 #include <cstring>
+#include <locale>
 #include <string>
 #include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -64,8 +66,6 @@ static bool
 {
 	bool ret = false;
 	char *po;
-	struct popup *pop;
-	GSList *list = ctcp_list;
 
 	po = std::strchr(ctcp, '\001');
 	if (po)
@@ -75,15 +75,14 @@ static bool
 	if (po)
 		*po = 0;
 
-	while (list)
+	std::locale locale;
+	for (const auto & pop : ctcp_list)
 	{
-		pop = static_cast<popup *>(list->data);
-		if (!g_ascii_strcasecmp(ctcp, pop->name.c_str()))
+		if (!boost::iequals(pop.name, ctcp))
 		{
-			ctcp_reply(sess, nick, word, word_eol, pop->cmd);
+			ctcp_reply(sess, nick, word, word_eol, pop.cmd);
 			ret = true;
 		}
-		list = list->next;
 	}
 	return ret;
 }

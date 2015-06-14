@@ -1560,7 +1560,7 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 		G_CALLBACK(mg_detach_tab_cb), ch);
 	mg_create_icon_item (_("_Close"), GTK_STOCK_CLOSE, menu,
 		G_CALLBACK(mg_destroy_tab_cb), ch);
-	if (sess && tabmenu_list)
+	if (sess && !tabmenu_list.empty())
 		menu_create (menu, tabmenu_list, sess->channel, false);
 	if (sess)
 		menu_add_plugin_items (menu, "\x4$TAB", sess->channel);
@@ -1693,19 +1693,16 @@ mg_userlist_button (GtkWidget * box, const char *label, const char *cmd,
 static GtkWidget *
 mg_create_userlistbuttons (GtkWidget *box)
 {
-	struct popup *pop;
-	GSList *list = button_list;
 	int a = 0, b = 0;
 
 	auto tab = gtk_table_new (5, 2, false);
 	gtk_box_pack_end (GTK_BOX (box), tab, false, false, 0);
 
-	while (list)
+	for (const auto & pop : button_list)
 	{
-		pop = static_cast<popup*>(list->data);
-		if (pop->cmd[0])
+		if (!pop.cmd.empty())
 		{
-			mg_userlist_button (tab, pop->name.c_str(), pop->cmd.c_str(), a, a + 1, b, b + 1);
+			mg_userlist_button (tab, pop.name.c_str(), pop.cmd.c_str(), a, a + 1, b, b + 1);
 			a++;
 			if (a == 2)
 			{
@@ -1713,7 +1710,6 @@ mg_create_userlistbuttons (GtkWidget *box)
 				b++;
 			}
 		}
-		list = list->next;
 	}
 
 	return tab;
@@ -2093,7 +2089,7 @@ mg_dialog_button (GtkWidget *box, const char *name, const char *cmd)
 static void
 mg_create_dialogbuttons (GtkWidget *box)
 {
-	for (const auto & pop : glib_helper::glist_iterable<popup>(dlgbutton_list))
+	for (const auto & pop : dlgbutton_list)
 	{
 		if (!pop.cmd.empty())
 			mg_dialog_button (box, pop.name.c_str(), pop.cmd.c_str());

@@ -24,8 +24,7 @@
 
 #include <cstdio>
 #include <string>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
+#include <vector>
 
 #include "sessfwd.hpp"
 #include "hexchat.hpp"
@@ -52,11 +51,8 @@ bool make_config_dirs (void);
 int make_dcc_dirs (void);
 int load_config (void);
 bool save_config (void);
-void list_free (GSList ** list);
-void list_loadconf (const char *file, GSList ** list, const char *defaultconf);
-bool list_delentry (GSList ** list,const char name[]);
-// deliberately pass by value to force any allocation exceptions to happen before the allocation inside
-void list_addentry (GSList ** list, std::string cmd, std::string name);
+void list_loadconf(const std::string & file, std::vector<popup> & list, const char* defaultconf);
+bool list_delentry(std::vector<popup> & list, const char name[]);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);
 FILE *hexchat_fopen_file (const char *file, const char *mode, int xof_flags);

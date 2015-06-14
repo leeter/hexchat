@@ -16,9 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <string>
+#include <vector>
 #include <boost/filesystem/fstream.hpp>
 
 #include <gdk/gdkkeysyms.h>
@@ -45,7 +44,7 @@ enum
 };
 
 static GtkWidget *editlist_win = nullptr;
-static GSList *editlist_list = nullptr;
+static std::vector<popup> * editlist_list = nullptr;
 
 static GtkTreeModel *get_store (void)
 {
@@ -76,66 +75,54 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 	}
 
 	gtk_widget_destroy (editlist_win);
-	if (editlist_list == replace_list)
+	if (editlist_list == &replace_list)
 	{
-		list_free (&replace_list);
-		list_loadconf (file, &replace_list, nullptr);
-	} else if (editlist_list == popup_list)
+		list_loadconf (file, replace_list, nullptr);
+	} else if (editlist_list == &popup_list)
 	{
-		list_free (&popup_list);
-		list_loadconf (file, &popup_list, nullptr);
-	} else if (editlist_list == button_list)
+		list_loadconf (file, popup_list, nullptr);
+	} else if (editlist_list == &button_list)
 	{
-		list_free (&button_list);
-		list_loadconf (file, &button_list, nullptr);
+		list_loadconf (file, button_list, nullptr);
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);;
 			fe_buttons_update (sess);
 		}
-	} else if (editlist_list == dlgbutton_list)
+	} else if (editlist_list == &dlgbutton_list)
 	{
-		list_free (&dlgbutton_list);
-		list_loadconf (file, &dlgbutton_list, nullptr);
+		list_loadconf (file, dlgbutton_list, nullptr);
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);
 			fe_dlgbuttons_update (sess);
 		}
-	} else if (editlist_list == ctcp_list)
+	} else if (editlist_list == &ctcp_list)
 	{
-		list_free (&ctcp_list);
-		list_loadconf (file, &ctcp_list, nullptr);
-	} else if (editlist_list == command_list)
+		list_loadconf (file, ctcp_list, nullptr);
+	} else if (editlist_list == &command_list)
 	{
-		list_free (&command_list);
-		list_loadconf (file, &command_list, nullptr);
-	} else if (editlist_list == usermenu_list)
+		list_loadconf (file, command_list, nullptr);
+	} else if (editlist_list == &usermenu_list)
 	{
-		list_free (&usermenu_list);
-		list_loadconf (file, &usermenu_list, nullptr);
+		list_loadconf (file, usermenu_list, nullptr);
 		usermenu_update ();
 	} else
 	{
-		list_free (&urlhandler_list);
-		list_loadconf (file, &urlhandler_list, nullptr);
+		list_loadconf (file, urlhandler_list, nullptr);
 	}
 }
 
-static void editlist_load (GtkListStore *store, GSList *list)
+static void editlist_load (GtkListStore *store, const std::vector<popup>& list)
 {
 	GtkTreeIter iter;
 
-	for (; list; list = list->next)
+	for (const auto & pop : list)
 	{
-		auto pop = static_cast<popup *>(list->data);
-		auto name = pop->name.c_str();
-		auto cmd = pop->cmd.c_str();
-
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter,
-						NAME_COLUMN, name,
-						CMD_COLUMN, cmd, -1);
+						NAME_COLUMN, pop.name.c_str(),
+						CMD_COLUMN, pop.cmd.c_str(), -1);
 	}
 }
 
@@ -284,7 +271,7 @@ static GtkWidget *editlist_treeview_new (GtkWidget *box, const char *title1, con
 }
 }
 
-void editlist_gui_open (const char *title1, const char *title2, GSList *list, char *title, char *wmclass,
+void editlist_gui_open (const char *title1, const char *title2, std::vector<popup> &list, char *title, char *wmclass,
 					char *file, char *help)
 {
 	GtkWidget *vbox, *box;
@@ -300,7 +287,7 @@ void editlist_gui_open (const char *title1, const char *title2, GSList *list, ch
 	editlist_win = mg_create_generic_tab (wmclass, title, TRUE, FALSE,
 		G_CALLBACK(editlist_close), NULL, 450, 250, &vbox, 0);
 
-	editlist_list = list;
+	editlist_list = &list;
 
 	view = editlist_treeview_new (vbox, title1, title2);
 	g_object_set_data (G_OBJECT (editlist_win), "view", view);

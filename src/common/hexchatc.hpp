@@ -38,17 +38,17 @@ extern gint arg_existing;
 extern session *current_sess;
 extern session *current_tab;
 
-extern GSList *popup_list;
-extern GSList *button_list;
-extern GSList *dlgbutton_list;
-extern GSList *command_list;
-extern GSList *ctcp_list;
-extern GSList *replace_list;
+extern std::vector<popup> popup_list;
+extern std::vector<popup> button_list;
+extern std::vector<popup> dlgbutton_list;
+extern std::vector<popup> command_list;
+extern std::vector<popup> ctcp_list;
+extern std::vector<popup> replace_list;
+extern std::vector<popup> usermenu_list;
+extern std::vector<popup> urlhandler_list;
+extern std::vector<popup> tabmenu_list;
 extern GSList *sess_list;
 extern GSList *dcc_list;
-extern GSList *usermenu_list;
-extern GSList *urlhandler_list;
-extern GSList *tabmenu_list;
 extern GList *sess_list_by_lastact[];
 
 session * find_channel(const server &serv, const boost::string_ref &chan);

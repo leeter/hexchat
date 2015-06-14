@@ -29,6 +29,7 @@
 #include <ctime>
 #include <chrono>
 #include <new>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/utility/string_ref.hpp>
@@ -76,17 +77,17 @@
 
 namespace dcc = hexchat::dcc;
 
-GSList *popup_list = nullptr;
-GSList *button_list = nullptr;
-GSList *dlgbutton_list = nullptr;
-GSList *command_list = nullptr;
-GSList *ctcp_list = nullptr;
-GSList *replace_list = nullptr;
+std::vector<popup> popup_list;
+std::vector<popup> button_list;
+std::vector<popup> dlgbutton_list;
+std::vector<popup> command_list;
+std::vector<popup> ctcp_list;
+std::vector<popup> replace_list;
+std::vector<popup> usermenu_list;
+std::vector<popup> urlhandler_list;
+std::vector<popup> tabmenu_list;
 GSList *sess_list = nullptr;
 GSList *dcc_list = nullptr;
-GSList *usermenu_list = nullptr;
-GSList *urlhandler_list = nullptr;
-GSList *tabmenu_list = nullptr;
 
 /*
  * This array contains 5 double linked lists, one for each priority in the
@@ -912,7 +913,7 @@ xchat_init (void)
 		_("KickBan"),
 		_("KickBan"));
 
-	list_loadconf ("popup.conf", &popup_list, buf);
+	list_loadconf ("popup.conf", popup_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"				"CMD part\n\n"
@@ -926,7 +927,7 @@ xchat_init (void)
 				_("Server Links"),
 				_("Ping Server"),
 				_("Hide Version"));
-	list_loadconf ("usermenu.conf", &usermenu_list, buf);
+	list_loadconf ("usermenu.conf", usermenu_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"		"CMD op %%a\n\n"
@@ -943,7 +944,7 @@ xchat_init (void)
 				_("Enter reason to kick %s:"),
 				_("Sendfile"),
 				_("Dialog"));
-	list_loadconf ("buttons.conf", &button_list, buf);
+	list_loadconf ("buttons.conf", button_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"				"CMD whois %%s %%s\n\n"
@@ -956,13 +957,13 @@ xchat_init (void)
 				_("Chat"),
 				_("Clear"),
 				_("Ping"));
-	list_loadconf ("dlgbuttons.conf", &dlgbutton_list, buf);
+	list_loadconf ("dlgbuttons.conf", dlgbutton_list, buf);
 
-	list_loadconf ("tabmenu.conf", &tabmenu_list, nullptr);
-	list_loadconf ("ctcpreply.conf", &ctcp_list, defaultconf_ctcp);
-	list_loadconf ("commands.conf", &command_list, defaultconf_commands);
-	list_loadconf ("replace.conf", &replace_list, defaultconf_replace);
-	list_loadconf ("urlhandlers.conf", &urlhandler_list,
+	list_loadconf ("tabmenu.conf", tabmenu_list, nullptr);
+	list_loadconf ("ctcpreply.conf", ctcp_list, defaultconf_ctcp);
+	list_loadconf ("commands.conf", command_list, defaultconf_commands);
+	list_loadconf ("replace.conf", replace_list, defaultconf_replace);
+	list_loadconf ("urlhandlers.conf", urlhandler_list,
 						defaultconf_urlhandlers);
 
 	servlist_init ();							/* load server list */
@@ -1155,4 +1156,21 @@ main (int argc, char *argv[])
 #endif
 
 	return 0;
+}
+popup::popup(std::string cmd, std::string name)
+	:cmd(std::move(cmd)), name(std::move(name))
+{
+}
+popup::popup(popup && other)
+{
+	this->operator=(std::forward<popup&&>(other));
+}
+popup& popup::operator=(popup&& other)
+{
+	if (this != &other)
+	{
+		std::swap(this->name, other.name);
+		std::swap(this->cmd, other.cmd);
+	}
+	return *this;
 }

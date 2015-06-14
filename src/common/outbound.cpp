@@ -235,11 +235,11 @@ cmd_addbutton (struct session *sess, char *, char *word[],
 	{
 		if (sess->type == session::SESS_DIALOG)
 		{
-			list_addentry (&dlgbutton_list, word_eol[3], word[2]);
+			dlgbutton_list.emplace_back(word_eol[3], word[2]);
 			fe_dlgbuttons_update (sess);
 		} else
 		{
-			list_addentry (&button_list, word_eol[3], word[2]);
+			button_list.emplace_back(word_eol[3], word[2]);
 			fe_buttons_update (sess);
 		}
 		return true;
@@ -890,11 +890,11 @@ cmd_delbutton (struct session *sess, char *, char *word[],
 	{
 		if (sess->type == session::SESS_DIALOG)
 		{
-			if (list_delentry (&dlgbutton_list, word[2]))
+			if (list_delentry (dlgbutton_list, word[2]))
 				fe_dlgbuttons_update (sess);
 		} else
 		{
-			if (list_delentry (&button_list, word[2]))
+			if (list_delentry (button_list, word[2]))
 				fe_buttons_update (sess);
 		}
 		return true;
@@ -2008,7 +2008,6 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
 {
 	int i = 0, longfmt = 0;
 	const char *helpcmd = "";
-	GSList *list;
 
 	if (tbuf)
 		helpcmd = word[2];
@@ -2020,7 +2019,6 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
 		help (sess, tbuf, helpcmd, false);
 	} else
 	{
-		struct popup *pop;
 		std::string buf(4096, '\0');
 		help_list hl;
 
@@ -2047,12 +2045,9 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
 		buf[2] = 0;
 		hl.t = 0;
 		hl.i = 0;
-		list = command_list;
-		while (list)
+		for (const auto & pop : command_list)
 		{
-			pop = static_cast<popup*>(list->data);
-			show_help_line (sess, &hl, pop->name.c_str(), pop->cmd.c_str());
-			list = list->next;
+			show_help_line (sess, &hl, pop.name.c_str(), pop.cmd.c_str());
 		}
 		strcat (&buf[0], "\n");
 		PrintText (sess, buf);
@@ -3842,23 +3837,19 @@ static const commands * find_internal_command (const char *name)
 static gboolean
 usercommand_show_help (session *sess, const char *name)
 {
-	struct popup *pop;
-	gboolean found = false;
+	bool found = false;
 	char buf[1024];
-	GSList *list;
 
-	list = command_list;
-	while (list)
+	std::locale locale;
+	for (const auto & pop : command_list)
 	{
-		pop = (struct popup *) list->data;
-		if (!g_ascii_strcasecmp (pop->name.c_str(), name))
+		if (boost::iequals(pop.name, name, locale))
 		{
-			snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop->cmd.c_str());
+			snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop.cmd.c_str());
 			PrintText (sess, buf);
 
 			found = true;
 		}
-		list = list->next;
 	}
 
 	return found;
@@ -4457,15 +4448,14 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	}
 
 	/* first see if it's a userCommand */
-	for (auto list = command_list; list; list = g_slist_next(list))
+	std::locale locale;
+	for (const auto & pop : command_list)
 	{
-		auto pop = static_cast<popup *>(list->data);
-		if (!g_ascii_strcasecmp (pop->name.c_str(), word[1]))
+		if (boost::iequals(pop.name, word[1], locale))
 		{
-			user_command (sess, &tbuf[0], pop->cmd, word, word_eol);
+			user_command (sess, &tbuf[0], pop.cmd, word, word_eol);
 			user_cmd = true;
 		}
-		
 	}
 
 	if (user_cmd)

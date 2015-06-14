@@ -31,6 +31,7 @@
 #include <strstream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -70,40 +71,32 @@ const char * const languages[LANGUAGES_LENGTH] = {
 void
 list_addentry(GSList ** list, std::string cmd, std::string name)
 {
-	std::unique_ptr<popup> pop(new popup);
-	pop->name = std::move(name);
-	pop->cmd = std::move(cmd);
+	std::unique_ptr<popup> pop(new popup(std::move(cmd), std::move(name)));
 
 	*list = g_slist_append (*list, pop.release());
 }
 
-/* read it in from a buffer to our linked list */
-
-static void
-list_load_from_data (GSList ** list, std::istream &data)
+static void list_load_from_data(std::vector<popup> & list, std::istream & data)
 {
-	char cmd[384];
-	char name[128];
-
-	cmd[0] = 0;
-	name[0] = 0;
-
+	std::string name;
+	std::string cmd;
+	std::locale locale;
 	for (std::string buf; std::getline(data, buf, '\n');)
 	{
-		if (buf[0] != '#')
+		if (!buf.empty() && buf[0] != '#')
 		{
-			if (!g_ascii_strncasecmp (buf.c_str(), "NAME ", 5))
+			if (buf.size() > 5 && boost::istarts_with(buf, "NAME ", locale))
 			{
-				safe_strcpy (name, buf.c_str() + 5, sizeof (name));
+				name = buf.substr(5);
 			}
-			else if (!g_ascii_strncasecmp (buf.c_str(), "CMD ", 4))
+			else if (buf.size() > 4 && boost::istarts_with(buf, "CMD ", locale))
 			{
-				safe_strcpy (cmd, buf.c_str() + 4, sizeof (cmd));
-				if (*name)
+				cmd = buf.substr(4);
+				if (!name.empty())
 				{
-					list_addentry (list, cmd, name);
-					cmd[0] = 0;
-					name[0] = 0;
+					list.emplace_back(cmd, name);
+					name.clear();
+					cmd.clear();
 				}
 			}
 		}
@@ -114,44 +107,34 @@ list_load_from_data (GSList ** list, std::istream &data)
 #define g_open open
 #endif
 
-void list_loadconf(const char *file, GSList ** list, const char *defaultconf)
+void list_loadconf(const std::string &file, std::vector<popup> &list,
+		   const char *defaultconf)
 {
-	namespace fs = boost::filesystem;
-	auto filebuf = io::fs::make_path(config::config_dir()) / file;
-	fs::ifstream infile(filebuf, std::ios::binary | std::ios::in);
+	list.clear();
+	boost::filesystem::ifstream infile(io::fs::make_config_path(file),
+					   std::ios::binary | std::ios::in);
 	list_load_from_data(list, infile);
-	if (!*list && defaultconf)
+	if (list.empty() && defaultconf)
 	{
 		std::istrstream dconf(defaultconf);
 		list_load_from_data(list, dconf);
 	}
 }
 
-void
-list_free (GSList ** list)
+bool list_delentry(std::vector<popup> & list, const char name[])
 {
-	while (*list)
-	{
-		std::unique_ptr<popup> data(static_cast<popup *>((*list)->data));
-		*list = g_slist_remove(*list, data.get());
-	}
-}
+	std::string name_str(name);
+	auto removal_loc = std::remove_if(list.begin(), list.end(), [&name_str](const popup& pop){
+		return boost::iequals(pop.name, name_str);
+	});
 
-bool list_delentry(GSList ** list, const char name[])
-{
-	GSList *alist = *list;
-	while (alist)
+	if (removal_loc == list.end())
 	{
-		auto pop = static_cast<popup *>(alist->data);
-		if (!g_ascii_strcasecmp (name, pop->name.c_str()))
-		{
-			std::unique_ptr<popup> pop_ptr(pop);
-			*list = g_slist_remove (*list, pop_ptr.get());
-			return true;
-		}
-		alist = alist->next;
+		return false;
 	}
-	return false;
+	
+	list.erase(removal_loc, list.end());
+	return true;
 }
 
 char *

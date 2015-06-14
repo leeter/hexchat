@@ -1296,22 +1296,17 @@ chanlist_double_list (GSList *inlist) NOEXCEPT
 	return list;
 }
 
-/* handle commands */
-static int
-double_cmd_cb (struct popup *pop, GList **list)
-{
-	// TODO: THIS is not particularly safe... but is safe in this instance because it's not modified
-	// we should still fix it to use a mutable pointer or better yet... another data structure
-	*list = g_list_prepend(*list, (gpointer) pop->name.c_str());
-	return true;
-}
-
 /* convert a slist -> list. */
 static GList *
-cmdlist_double_list (GSList *inlist)
+cmdlist_double_list (const std::vector<popup> & inlist)
 {
+	// TODO: THIS is not particularly safe... but is safe in this instance because it's not modified
+	// we should still fix it to use a mutable pointer or better yet... another data structur
 	GList *list = nullptr;
-	g_slist_foreach (inlist, (GFunc)double_cmd_cb, &list);
+	for (const auto & pop : inlist)
+	{
+		list = g_list_prepend(list, (gpointer)pop.name.c_str());
+	}
 	return list;
 }
 
@@ -1690,8 +1685,6 @@ static void
 replace_handle (GtkWidget *t)
 {
 	const char *text, *postfix_pnt;
-	struct popup *pop;
-	GSList *list = replace_list;
 	char word[256];
 	char postfix[256];
 	char outbuf[4096];
@@ -1737,23 +1730,21 @@ replace_handle (GtkWidget *t)
 			return;
 		strcpy (postfix, postfix_pnt);
 	}
-	while (list)
+	for (const auto & pop : replace_list)
 	{
-		pop = (struct popup *) list->data;
-		if (pop->name == word)
+		if (pop.name == word)
 		{
 			std::copy_n(text, xlen, std::begin(outbuf));
 			outbuf[xlen] = 0;
 			if (postfix_pnt == nullptr)
-				snprintf (word, sizeof (word), "%s", pop->cmd.c_str());
+				snprintf (word, sizeof (word), "%s", pop.cmd.c_str());
 			else
-				snprintf (word, sizeof (word), "%s%s", pop->cmd.c_str(), postfix);
+				snprintf (word, sizeof (word), "%s%s", pop.cmd.c_str(), postfix);
 			g_strlcat(outbuf, word, sizeof(outbuf));
 			SPELL_ENTRY_SET_TEXT (t, outbuf);
 			SPELL_ENTRY_SET_POS (t, -1);
 			return;
 		}
-		list = list->next;
 	}
 }
 
