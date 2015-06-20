@@ -88,6 +88,7 @@
     <ClCompile Include="sasl.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="servlist.cpp" />
+    <ClCompile Include="session.cpp" />
     <ClCompile Include="session_logging.cpp" />
     <ClCompile Include="ssl.cpp" />
     <ClCompile Include="text.cpp" />
