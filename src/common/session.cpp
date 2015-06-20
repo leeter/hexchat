@@ -36,6 +36,12 @@
 // TODO move out
 #include "plugin-timer.hpp"
 
+#ifdef USE_DBUS
+#include "dbus/dbus-client.h"
+#include "dbus/dbus-plugin.h"
+#endif /* USE_DBUS */
+
+
 
 // TODO: move out
 static void
