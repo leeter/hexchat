@@ -19,11 +19,8 @@
 #ifndef HEXCHAT_FILESYSTEM_HPP
 #define HEXCHAT_FILESYSTEM_HPP
 
-#include <iosfwd>
 #include <string>
-#include <vector>
 #include <boost/filesystem.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
 
 namespace io
 {
@@ -32,21 +29,14 @@ namespace io
 		boost::filesystem::path make_config_path(const boost::filesystem::path &);
 
 		boost::filesystem::path make_path(const std::string & path);
-		boost::filesystem::path make_path(const std::vector<std::string>& segments);
 
 		typedef int xof_flags;
 		enum xof{
 			XOF_DOMODE = 1,
 			XOF_FULLPATH = 2
 		};
-		boost::iostreams::file_descriptor
-			open_stream(const std::string& file, std::ios::openmode flags, int mode, xof_flags xof_flags);
-		boost::iostreams::file_descriptor
-			open_stream(const boost::filesystem::path &file_path, std::ios::openmode flags);
 		
 		bool create_file_with_mode(const boost::filesystem::path&, int mode);
-		
-		bool exists(const std::string & path);
 	}
 }
 
