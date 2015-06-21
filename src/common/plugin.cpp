@@ -660,16 +660,14 @@ plugin_emit_print(session *sess, const char *const word[], time_t server_time)
 }
 
 int
-plugin_emit_dummy_print (session *sess, char *name)
+plugin_emit_dummy_print (session *sess, const char name[])
 {
-	char *word[32];
-	int i;
-
+	const char *word[32];
 	word[0] = name;
-	for (i = 1; i < 32; i++)
+	for (int i = 1; i < 32; ++i)
 		word[i] = "\000";
 
-	return plugin_hook_run (sess, name, word, NULL, NULL, HOOK_PRINT);
+	return plugin_hook_run (sess, name, word, nullptr, nullptr, HOOK_PRINT);
 }
 
 int

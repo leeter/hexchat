@@ -23,6 +23,7 @@
 
 #include <atomic>
 #include <random>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -257,7 +258,7 @@ lag_check (void)
 			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv.ping_recv).count();
 			if (prefs.hex_net_ping_timeout && seconds > prefs.hex_net_ping_timeout && seconds > 0)
 			{
-				snprintf (tbuf, sizeof(tbuf), "%d", seconds);
+				snprintf(tbuf, sizeof(tbuf), "%" PRId64, seconds);
 				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv.server_session, tbuf, nullptr,
 								 nullptr, nullptr, 0);
 				if (prefs.hex_net_auto_reconnect)
@@ -453,7 +454,7 @@ static const char defaultconf_urlhandlers[] =
 /* Close and open log files on SIGUSR1. Usefull for log rotating */
 
 static void 
-sigusr1_handler (int signal, siginfo_t *si, void *un)
+sigusr1_handler (int /*signal*/, siginfo_t * /*si*/, void *)
 {
 	GSList *list = sess_list;
 	session *sess;
@@ -469,7 +470,7 @@ sigusr1_handler (int signal, siginfo_t *si, void *un)
 /* Execute /SIGUSR2 when SIGUSR2 received */
 
 static void
-sigusr2_handler (int signal, siginfo_t *si, void *un)
+sigusr2_handler (int /*signal*/, siginfo_t *, void *)
 {
 	session *sess = current_sess;
 

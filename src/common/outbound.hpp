@@ -43,6 +43,6 @@ void server_sendpart(server & serv, const std::string& channel, const boost::opt
 void server_sendquit (session * sess);
 bool menu_streq (const char s1[], const char s2[], bool def);
 session *open_query (server &serv, const char *nick, gboolean focus_existing);
-gboolean load_perform_file (session *sess, char *file);
+gboolean load_perform_file (session *sess, const char file[]);
 
 #endif

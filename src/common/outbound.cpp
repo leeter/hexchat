@@ -2315,7 +2315,7 @@ cmd_list (struct session *sess, char *, char *[], char *word_eol[])
 }// end anonymous namespace
 
 gboolean
-load_perform_file (session *sess, char *file)
+load_perform_file (session *sess, const char file[])
 {
 	char tbuf[1024 + 4];
 	char *nl;

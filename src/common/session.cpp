@@ -255,8 +255,8 @@ irc_init(session *sess)
 		notify_tag = fe_timeout_add(prefs.hex_notify_timeout * 1000,
 		(GSourceFunc)notify_checklist, 0);
 
-	fe_timeout_add(prefs.hex_away_timeout * 1000, (GSourceFunc)away_check, 0);
-	fe_timeout_add(500, (GSourceFunc)hexchat_misc_checks, 0);
+	fe_timeout_add(prefs.hex_away_timeout * 1000, (GSourceFunc)away_check, nullptr);
+	fe_timeout_add(500, (GSourceFunc)hexchat_misc_checks, nullptr);
 
 	if (arg_url != nullptr)
 	{
