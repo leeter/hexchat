@@ -473,9 +473,11 @@ static void
 sigusr2_handler (int /*signal*/, siginfo_t *, void *)
 {
 	session *sess = current_sess;
-
 	if (sess)
-		handle_command (sess, "SIGUSR2", FALSE);
+	{
+		char cmd[] = "SIGUSR2";
+		handle_command (sess, cmd, false);
+	}
 }
 #endif
 
