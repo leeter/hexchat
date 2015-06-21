@@ -245,11 +245,10 @@ void
 lag_check (void)
 {
 	using namespace boost;
-	unsigned long tim;
 	char tbuf[128];
 	auto now = chrono::steady_clock::now();
 
-	tim = make_ping_time ();
+	auto tim = make_ping_time ();
 
 	for (auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
@@ -289,21 +288,16 @@ static void
 send_quit_or_part (session * killsess)
 {
 	bool willquit = true;
-	GSList *list;
-	session *sess;
 	server *killserv = killsess->server;
 
 	/* check if this is the last session using this server */
-	list = sess_list;
-	while (list)
+	for(const auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = (session *) list->data;
-		if (sess->server == killserv && sess != killsess)
+		if (sess.server == killserv && (&sess) != killsess)
 		{
 			willquit = false;
-			list = 0;
-		} else
-			list = list->next;
+			break;
+		}
 	}
 
 	if (hexchat_is_quitting)
@@ -334,8 +328,6 @@ void
 session_free (session *killsess)
 {
 	server *killserv = killsess->server;
-	session *sess;
-	GSList *list;
 	int oldidx;
 
 	plugin_emit_dummy_print (killsess, "Close Context");
@@ -350,18 +342,15 @@ session_free (session *killsess)
 	{
 		/* front_session is closed, find a valid replacement */
 		killserv->front_session = nullptr;
-		list = sess_list;
-		while (list)
+		for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
 		{
-			sess = static_cast<session *>( list->data);
-			if (sess != killsess && sess->server == killserv)
+			if (&sess != killsess && sess.server == killserv)
 			{
-				killserv->front_session = sess;
+				killserv->front_session = &sess;
 				if (!killserv->server_session)
-					killserv->server_session = sess;
+					killserv->server_session = &sess;
 				break;
 			}
-			list = list->next;
 		}
 	}
 
@@ -394,13 +383,10 @@ session_free (session *killsess)
 	if (!sess_list && !in_hexchat_exit)
 		hexchat_exit ();						/* sess_list is empty, quit! */
 
-	list = sess_list;
-	while (list)
+	for (const auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = (session *) list->data;
-		if (sess->server == killserv)
+		if (sess.server == killserv)
 			return;					  /* this server is still being used! */
-		list = list->next;
 	}
 
 	server_free (killserv);

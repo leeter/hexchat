@@ -70,15 +70,7 @@ exec_notify_kill(session * sess)
 }
 
 session::session(struct server *serv, const char *from, ::session::session_type type)
-	:server(serv),
-	session_name(),
-	channelkey(),
-	limit(),
-	logfd(-1),
-	scrollfd(-1),
-	scrollwritten(),
-	type(type),
-	alert_beep(SET_DEFAULT),
+	:alert_beep(SET_DEFAULT),
 	alert_taskbar(SET_DEFAULT),
 	alert_tray(SET_DEFAULT),
 
@@ -86,24 +78,30 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	text_logging(SET_DEFAULT),
 	text_scrollback(SET_DEFAULT),
 	text_strip(SET_DEFAULT),
-
-	lastact_idx(LACT_NONE),
+	server(serv),
 	me(nullptr),
 	channel(),
 	waitchannel(),
 	willjoinchannel(),
-
-	lastlog_sess(nullptr),
-	running_exec(nullptr),
-	gui(nullptr),
-	res(nullptr),
-
-	scrollback_replay_marklast(nullptr),
-
+	session_name(),
+	channelkey(),
+	limit(),
+	logfd(-1),
+	scrollfd(-1),
+	scrollwritten(),
+	lastnick(),
 	ops(),
 	hops(),
 	voices(),
 	total(),
+	mode_timeout_tag(),
+	lastlog_sess(nullptr),
+	running_exec(nullptr),
+	gui(nullptr),
+	res(nullptr),
+	type(type),
+	lastact_idx(LACT_NONE),
+	
 	new_data(),
 	nick_said(),
 	msg_said(),
@@ -113,7 +111,8 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	end_of_names(),
 	doing_who(),
 	done_away_check(),
-	lastlog_flags()
+	lastlog_flags(),
+	scrollback_replay_marklast(nullptr)
 {
 	if (from)
 	{
