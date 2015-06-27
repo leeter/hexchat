@@ -45,7 +45,7 @@ struct ircnet
 	~ircnet();
 	std::string name;
 	boost::optional<std::string> nick;
-	char *nick2;
+	boost::optional<std::string> nick2;
 	char *user;
 	char *real;
 	char *pass;

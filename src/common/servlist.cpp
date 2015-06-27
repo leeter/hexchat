@@ -64,8 +64,7 @@ free_and_clear(char *str)
 }
 
 ircnet::ircnet()
-	:nick2(),
-	user(),
+	:user(),
 	real(),
 	pass(),
 	logintype(),
@@ -80,7 +79,6 @@ ircnet::ircnet()
 
 ircnet::~ircnet()
 {
-	free(this->nick2);
 	free(this->user);
 	free(this->real);
 	free_and_clear(this->pass);
@@ -1154,7 +1152,7 @@ static bool servlist_load (void)
 				net->nick = buf.substr(2);
 				break;
 			case 'i':
-				net->nick2 = strdup (buf.c_str() + 2);
+				net->nick2 = buf.substr(2);
 				break;
 			case 'U':
 				net->user = strdup (buf.c_str() + 2);
@@ -1284,7 +1282,7 @@ bool servlist_save (void)
 		if (net.nick)
 			outfile << "I=" << net.nick.get() << '\n';
 		if (net.nick2)
-			outfile << "i=" << net.nick2 << '\n';
+			outfile << "i=" << net.nick2.get() << '\n';
 		if (net.user)
 			outfile << "U=" << net.user << '\n';
 		if (net.real)

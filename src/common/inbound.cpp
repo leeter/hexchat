@@ -1163,7 +1163,7 @@ inbound_next_nick (session *sess, char *nick, int error,
 	char *newnick;
 	server *serv = sess->server;
 	ircnet *net;
-
+	glib_string newnick_ptr;
 	serv->nickcount++;
 
 	switch (serv->nickcount)
@@ -1174,7 +1174,8 @@ inbound_next_nick (session *sess, char *nick, int error,
 		/* use network specific "Second choice"? */
 		if (net && !(net->flags & FLAG_USE_GLOBAL) && net->nick2)
 		{
-			newnick = net->nick2;
+			newnick_ptr.reset(g_strdup(net->nick2->c_str()));
+			newnick = newnick_ptr.get();
 		}
 		serv->p_change_nick (newnick);
 		if (error)

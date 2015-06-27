@@ -672,7 +672,7 @@ static void
 servlist_edit_update (ircnet &net)
 {
 	net.nick = servlist_update_from_entry (edit_entry_nick);
-	servlist_update_from_entry (net.nick2, edit_entry_nick2);
+	net.nick2 = servlist_update_from_entry(edit_entry_nick2);
 	servlist_update_from_entry (net.user, edit_entry_user);
 	servlist_update_from_entry (net.real, edit_entry_real);
 	servlist_update_from_entry (net.pass, edit_entry_pass);
@@ -1815,7 +1815,7 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	servlist_create_check (1, net->flags & FLAG_USE_GLOBAL, table3, 5, 0, _("Use global user information"));
 
 	edit_entry_nick = servlist_create_entry (table3, _("_Nick name:"), 6, net->nick ? net->nick->c_str() : nullptr, &edit_label_nick, 0);
-	edit_entry_nick2 = servlist_create_entry (table3, _("Second choice:"), 7, net->nick2, &edit_label_nick2, 0);
+	edit_entry_nick2 = servlist_create_entry (table3, _("Second choice:"), 7, net->nick2 ? net->nick2->c_str() : nullptr, &edit_label_nick2, 0);
 	edit_entry_real = servlist_create_entry (table3, _("Rea_l name:"), 8, net->real, &edit_label_real, 0);
 	edit_entry_user = servlist_create_entry (table3, _("_User name:"), 9, net->user, &edit_label_user, 0);
 
