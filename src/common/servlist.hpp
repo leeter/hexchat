@@ -39,8 +39,21 @@ struct favchannel
 	boost::optional<std::string> key;
 };
 
+enum ircnet_flags_enum
+{
+	FLAG_CYCLE			=	1,
+	FLAG_USE_GLOBAL		=	2,
+	FLAG_USE_SSL		=	4,
+	FLAG_AUTO_CONNECT	=	8,
+	FLAG_USE_PROXY		=	16,
+	FLAG_ALLOW_INVALID	=	32,
+	FLAG_FAVORITE		=	64,
+	FLAG_COUNT			=	7
+};
+
 struct ircnet
 {
+	using ircnetflags = int;
 	ircnet();
 	~ircnet();
 	std::string name;
@@ -56,19 +69,10 @@ struct ircnet
 	GSList *commandlist;
 	GSList *favchanlist;
 	int selected;
-	guint32 flags;
+	ircnetflags flags;
 };
 
 extern GSList *network_list;
-
-#define FLAG_CYCLE				1
-#define FLAG_USE_GLOBAL			2
-#define FLAG_USE_SSL			4
-#define FLAG_AUTO_CONNECT		8
-#define FLAG_USE_PROXY			16
-#define FLAG_ALLOW_INVALID		32
-#define FLAG_FAVORITE			64
-#define FLAG_COUNT				7
 
 /* Login methods. Use server password by default - if we had a NickServ password, it'd be set to 2 already by servlist_load() */
 enum login_method{
