@@ -64,8 +64,7 @@ free_and_clear(char *str)
 }
 
 ircnet::ircnet()
-	:nick(),
-	nick2(),
+	:nick2(),
 	user(),
 	real(),
 	pass(),
@@ -81,7 +80,6 @@ ircnet::ircnet()
 
 ircnet::~ircnet()
 {
-	free(this->nick);
 	free(this->nick2);
 	free(this->user);
 	free(this->real);
@@ -704,7 +702,7 @@ servlist_connect (session *sess, ircnet &net, bool join)
 	else
 	{
 		if (net.nick)
-			safe_strcpy(serv->nick, net.nick);
+			safe_strcpy(serv->nick, net.nick->c_str());
 	}
 
 	serv->dont_use_proxy = (net.flags & FLAG_USE_PROXY) ? false : true;
@@ -1153,7 +1151,7 @@ static bool servlist_load (void)
 			switch (buf[0])
 			{
 			case 'I':
-				net->nick = strdup (buf.c_str() + 2);
+				net->nick = buf.substr(2);
 				break;
 			case 'i':
 				net->nick2 = strdup (buf.c_str() + 2);
@@ -1284,7 +1282,7 @@ bool servlist_save (void)
 	{
 		outfile << "N=" << net.name << '\n';
 		if (net.nick)
-			outfile << "I=" << net.nick << '\n';
+			outfile << "I=" << net.nick.get() << '\n';
 		if (net.nick2)
 			outfile << "i=" << net.nick2 << '\n';
 		if (net.user)

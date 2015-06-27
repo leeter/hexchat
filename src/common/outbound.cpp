@@ -4320,7 +4320,7 @@ namespace
 			case 'n':
 				if (net->nick)
 				{
-					return net->nick;
+					return net->nick.get();
 				}
 				else
 				{

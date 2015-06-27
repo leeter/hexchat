@@ -351,7 +351,7 @@ servlist_networks_populate (GtkWidget *treeview, GSList *netlist)
 }
 
 static void
-servlist_server_row_cb (GtkTreeSelection *sel, gpointer user_data)
+servlist_server_row_cb (GtkTreeSelection *sel, gpointer)
 {
 	if (!selected_net)
 		return;
@@ -373,7 +373,7 @@ servlist_server_row_cb (GtkTreeSelection *sel, gpointer user_data)
 }
 
 static void
-servlist_command_row_cb (GtkTreeSelection *sel, gpointer user_data)
+servlist_command_row_cb (GtkTreeSelection *sel, gpointer)
 {	
 	if (!selected_net)
 		return;
@@ -395,7 +395,7 @@ servlist_command_row_cb (GtkTreeSelection *sel, gpointer user_data)
 }
 
 static void
-servlist_channel_row_cb (GtkTreeSelection *sel, gpointer user_data)
+servlist_channel_row_cb (GtkTreeSelection *sel, gpointer)
 {
 	if (!selected_net)
 		return;
@@ -492,7 +492,7 @@ servlist_addchannel (void)
 }
 
 static void
-servlist_addnet_cb (GtkWidget *item, GtkTreeView *treeview)
+servlist_addnet_cb (GtkWidget * /*item*/, GtkTreeView *treeview)
 {
 	auto net = servlist_net_add (_("New Network"), "", true);
 	net->encoding = strdup (IRC_DEFAULT_CHARSET);
@@ -572,7 +572,7 @@ servlist_move_item (GtkTreeView *view, GSList *list, gpointer item, int delta)
 }
 
 static gboolean
-servlist_net_keypress_cb (GtkWidget *wid, GdkEventKey *evt, gpointer tree)
+servlist_net_keypress_cb (GtkWidget * /*wid*/, GdkEventKey *evt, gpointer tree)
 {
 	gboolean handled = false;
 	
@@ -605,7 +605,7 @@ servlist_compare (ircnet *net1, ircnet *net2)
 }
 
 static void
-servlist_sort (GtkWidget *button, gpointer none)
+servlist_sort (GtkWidget * /*button*/, gpointer)
 {
 	network_list=g_slist_sort(network_list,(GCompareFunc)servlist_compare);
 	servlist_networks_populate (networks_tree, network_list);
@@ -648,46 +648,55 @@ servlist_favor (GtkWidget *, gpointer)
 }
 
 static void
-servlist_update_from_entry (char **str, GtkWidget *entry)
+servlist_update_from_entry (char *&str, GtkWidget *entry)
 {
-	if (*str)
-		free (*str);
+	if (str)
+		free (str);
 
 	if (gtk_entry_get_text (GTK_ENTRY (entry))[0] == 0)
-		*str = nullptr;
+		str = nullptr;
 	else
-		*str = strdup (gtk_entry_get_text (GTK_ENTRY (entry)));
+		str = strdup (gtk_entry_get_text (GTK_ENTRY (entry)));
 }
 
-static void
-servlist_edit_update (ircnet *net)
+static boost::optional<std::string> servlist_update_from_entry(GtkWidget *entry)
 {
-	servlist_update_from_entry (&net->nick, edit_entry_nick);
-	servlist_update_from_entry (&net->nick2, edit_entry_nick2);
-	servlist_update_from_entry (&net->user, edit_entry_user);
-	servlist_update_from_entry (&net->real, edit_entry_real);
-	servlist_update_from_entry (&net->pass, edit_entry_pass);
+	const char* text = gtk_entry_get_text(GTK_ENTRY(entry));
+	if (!text || text[0] == 0)
+		return boost::none;
+	else
+		return std::string(text);
 }
 
 static void
-servlist_edit_close_cb (GtkWidget *button, gpointer userdata)
+servlist_edit_update (ircnet &net)
+{
+	net.nick = servlist_update_from_entry (edit_entry_nick);
+	servlist_update_from_entry (net.nick2, edit_entry_nick2);
+	servlist_update_from_entry (net.user, edit_entry_user);
+	servlist_update_from_entry (net.real, edit_entry_real);
+	servlist_update_from_entry (net.pass, edit_entry_pass);
+}
+
+static void
+servlist_edit_close_cb (GtkWidget * /*button*/, gpointer)
 {
 	if (selected_net)
-		servlist_edit_update (selected_net);
+		servlist_edit_update (*selected_net);
 
 	gtk_widget_destroy (edit_win);
 	edit_win = nullptr;
 }
 
 static gint
-servlist_editwin_delete_cb (GtkWidget *win, GdkEventAny *event, gpointer none)
+servlist_editwin_delete_cb (GtkWidget * /*win*/, GdkEventAny *, gpointer)
 {
 	servlist_edit_close_cb (nullptr, nullptr);
 	return false;
 }
 
 static gboolean
-servlist_configure_cb (GtkWindow *win, GdkEventConfigure *event, gpointer none)
+servlist_configure_cb (GtkWindow *win, GdkEventConfigure *, gpointer)
 {
 	/* remember the window size */
 	gtk_window_get_size (win, &netlist_win_width, &netlist_win_height);
@@ -695,7 +704,7 @@ servlist_configure_cb (GtkWindow *win, GdkEventConfigure *event, gpointer none)
 }
 
 static gboolean
-servlist_edit_configure_cb (GtkWindow *win, GdkEventConfigure *event, gpointer none)
+servlist_edit_configure_cb (GtkWindow *win, GdkEventConfigure *, gpointer)
 {
 	/* remember the window size */
 	gtk_window_get_size (win, &netedit_win_width, &netedit_win_height);
@@ -703,7 +712,7 @@ servlist_edit_configure_cb (GtkWindow *win, GdkEventConfigure *event, gpointer n
 }
 
 static void
-servlist_edit_cb (GtkWidget *but, gpointer none)
+servlist_edit_cb (GtkWidget * /*but*/, gpointer)
 {
 	if (!servlist_has_selection (GTK_TREE_VIEW (networks_tree)))
 		return;
@@ -721,7 +730,7 @@ servlist_edit_cb (GtkWidget *but, gpointer none)
 }
 
 static void
-servlist_deletenet_cb (GtkWidget *item, ircnet *net)
+servlist_deletenet_cb (GtkWidget * /*item*/, ircnet *net)
 {
 	if (!servlist_has_selection (GTK_TREE_VIEW (networks_tree)))
 		return;
@@ -763,7 +772,7 @@ servlist_deleteserver (ircserver *serv, GtkTreeModel *model)
 }
 
 static void
-servlist_editbutton_cb (GtkWidget *item, GtkNotebook *notebook)
+servlist_editbutton_cb (GtkWidget * /*item*/, GtkNotebook *notebook)
 {
 	servlist_start_editing (GTK_TREE_VIEW (edit_trees[gtk_notebook_get_current_page(notebook)]));
 }
@@ -897,7 +906,7 @@ servlist_find_selected_net (GtkTreeSelection *sel)
 }
 
 static void
-servlist_network_row_cb (GtkTreeSelection *sel, gpointer user_data)
+servlist_network_row_cb (GtkTreeSelection *sel, gpointer)
 {
 	ircnet *net;
 
@@ -950,7 +959,7 @@ servlist_get_iter_from_name (GtkTreeModel *model, gchar *name, GtkTreeIter *iter
 }
 
 static void
-servlist_addbutton_cb (GtkWidget *item, GtkNotebook *notebook)
+servlist_addbutton_cb (GtkWidget * /*item*/, GtkNotebook *notebook)
 {
 	switch (gtk_notebook_get_current_page (notebook))
 	{
@@ -969,7 +978,7 @@ servlist_addbutton_cb (GtkWidget *item, GtkNotebook *notebook)
 }
 
 static void
-servlist_deletebutton_cb (GtkWidget *item, GtkNotebook *notebook)
+servlist_deletebutton_cb (GtkWidget * /*item*/, GtkNotebook *notebook)
 {
 	switch (gtk_notebook_get_current_page (notebook))
 	{
@@ -988,7 +997,7 @@ servlist_deletebutton_cb (GtkWidget *item, GtkNotebook *notebook)
 }
 
 static gboolean
-servlist_keypress_cb (GtkWidget *wid, GdkEventKey *evt, GtkNotebook *notebook)
+servlist_keypress_cb (GtkWidget * /*wid*/, GdkEventKey *evt, GtkNotebook *notebook)
 {
 	bool handled = false;
 	int delta = 0;
@@ -1071,7 +1080,7 @@ servlist_toggle_global_user (gboolean sensitive)
 }
 
 static void
-servlist_connect_cb (GtkWidget *button, gpointer userdata)
+servlist_connect_cb (GtkWidget * /*button*/, gpointer)
 {
 	if (!selected_net)
 		return;
@@ -1195,32 +1204,36 @@ servlist_create_check (int num, int state, GtkWidget *table, int row, int col, c
 	return but;
 }
 
-static GtkWidget *
-servlist_create_entry (GtkWidget *table, char *labeltext, int row,
-							  char *def, GtkWidget **label_ret, char *tip)
+static GtkWidget *servlist_create_entry(GtkWidget *table, const char *labeltext,
+					int row, const char *def,
+					GtkWidget **label_ret, char *tip)
 {
 	GtkWidget *label, *entry;
 
-	label = gtk_label_new_with_mnemonic (labeltext);
+	label = gtk_label_new_with_mnemonic(labeltext);
 	if (label_ret)
 		*label_ret = label;
-	gtk_widget_show (label);
-	gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row + 1, GTK_FILL, GtkAttachOptions(), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
-	gtk_misc_set_alignment (GTK_MISC (label), 0, 0.5);
+	gtk_widget_show(label);
+	gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row + 1, GTK_FILL,
+			 GtkAttachOptions(), SERVLIST_X_PADDING,
+			 SERVLIST_Y_PADDING);
+	gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 
-	entry = gtk_entry_new ();
-	gtk_widget_set_tooltip_text (entry, tip);
-	gtk_widget_show (entry);
-	gtk_entry_set_text (GTK_ENTRY (entry), def ? def : "");
-	gtk_label_set_mnemonic_widget (GTK_LABEL (label), entry);
+	entry = gtk_entry_new();
+	gtk_widget_set_tooltip_text(entry, tip);
+	gtk_widget_show(entry);
+	gtk_entry_set_text(GTK_ENTRY(entry), def ? def : "");
+	gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
 
-	gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row + 1, GTK_FILL | GTK_EXPAND, GtkAttachOptions(), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
+	gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row + 1,
+			 GTK_FILL | GTK_EXPAND, GtkAttachOptions(),
+			 SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
 
 	return entry;
 }
 
 static gint
-servlist_delete_cb (GtkWidget *win, GdkEventAny *event, gpointer userdata)
+servlist_delete_cb (GtkWidget * /*win*/, GdkEventAny *, gpointer)
 {
 	servlist_savegui ();
 	serverlist_win = nullptr;
@@ -1233,7 +1246,7 @@ servlist_delete_cb (GtkWidget *win, GdkEventAny *event, gpointer userdata)
 }
 
 static void
-servlist_close_cb (GtkWidget *button, gpointer userdata)
+servlist_close_cb (GtkWidget * /*button*/, gpointer)
 {
 	servlist_savegui ();
 	gtk_widget_destroy (serverlist_win);
@@ -1247,7 +1260,7 @@ servlist_close_cb (GtkWidget *button, gpointer userdata)
 /* convert "host:port" format to "host/port" */
 
 static char *
-servlist_sanitize_hostname (char *host)
+servlist_sanitize_hostname (const char host[])
 {
 	char *ret, *c, *e;
 
@@ -1278,7 +1291,7 @@ servlist_sanitize_command (const std::string& cmd)
 }
 
 static void
-servlist_editserver_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpointer user_data)
+servlist_editserver_cb (GtkCellRendererText *, gchar *name, gchar *newval, gpointer user_data)
 {
 	if (!selected_net)
 	{
@@ -1286,7 +1299,7 @@ servlist_editserver_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, g
 	}
 
 	GtkTreeIter iter;
-	GtkTreeModel *model = (GtkTreeModel *)user_data;
+	GtkTreeModel *model = static_cast<GtkTreeModel *>(user_data);
 	if (!servlist_get_iter_from_name (model, name, &iter))
 	{
 		return;
@@ -1312,9 +1325,9 @@ servlist_editserver_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, g
 }
 
 static void
-servlist_editcommand_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpointer user_data)
+servlist_editcommand_cb (GtkCellRendererText *, gchar *name, gchar *newval, gpointer user_data)
 {
-	GtkTreeModel *model = (GtkTreeModel *)user_data;
+	GtkTreeModel *model = static_cast<GtkTreeModel *>(user_data);
 	GtkTreeIter iter;
 	char *cmd;
 	commandentry *entry;
@@ -1348,7 +1361,7 @@ servlist_editcommand_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, 
 }
 
 static void
-servlist_editchannel_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpointer user_data)
+servlist_editchannel_cb (GtkCellRendererText *, gchar *name, gchar *newval, gpointer user_data)
 {
 	GtkTreeModel *model = (GtkTreeModel *)user_data;
 	GtkTreeIter iter;
@@ -1385,7 +1398,7 @@ servlist_editchannel_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, 
 }
 
 static void
-servlist_editkey_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpointer user_data)
+servlist_editkey_cb (GtkCellRendererText *, gchar *name, gchar *newval, gpointer user_data)
 {
 	GtkTreeModel *model = (GtkTreeModel *)user_data;
 	GtkTreeIter iter;
@@ -1423,7 +1436,7 @@ servlist_editkey_cb (GtkCellRendererText *cell, gchar *name, gchar *newval, gpoi
 }
 
 static gboolean
-servlist_edit_tabswitch_cb (GtkNotebook *nb, gpointer *newtab, guint newindex, gpointer user_data)
+servlist_edit_tabswitch_cb (GtkNotebook *, gpointer * /*newtab*/, guint newindex, gpointer /*user_data*/)
 {
 	/* remember the active tab */
 	netedit_active_tab = newindex;
@@ -1432,7 +1445,7 @@ servlist_edit_tabswitch_cb (GtkNotebook *nb, gpointer *newtab, guint newindex, g
 }
 
 static void
-servlist_combo_cb (GtkEntry *entry, gpointer userdata)
+servlist_combo_cb (GtkEntry *entry, gpointer)
 {
 	if (!selected_net)
 		return;
@@ -1564,7 +1577,7 @@ servlist_create_logintypecombo (GtkWidget *data)
 }
 
 static void
-no_servlist (GtkWidget * igad, gpointer serv)
+no_servlist (GtkWidget * igad, gpointer)
 {
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (igad)))
 		prefs.hex_gui_slist_skip = true;
@@ -1573,7 +1586,7 @@ no_servlist (GtkWidget * igad, gpointer serv)
 }
 
 static void
-fav_servlist (GtkWidget * igad, gpointer serv)
+fav_servlist (GtkWidget * igad, gpointer)
 {
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (igad)))
 		prefs.hex_gui_slist_fav = true;
@@ -1801,7 +1814,7 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 #endif
 	servlist_create_check (1, net->flags & FLAG_USE_GLOBAL, table3, 5, 0, _("Use global user information"));
 
-	edit_entry_nick = servlist_create_entry (table3, _("_Nick name:"), 6, net->nick, &edit_label_nick, 0);
+	edit_entry_nick = servlist_create_entry (table3, _("_Nick name:"), 6, net->nick ? net->nick->c_str() : nullptr, &edit_label_nick, 0);
 	edit_entry_nick2 = servlist_create_entry (table3, _("Second choice:"), 7, net->nick2, &edit_label_nick2, 0);
 	edit_entry_real = servlist_create_entry (table3, _("Rea_l name:"), 8, net->real, &edit_label_real, 0);
 	edit_entry_user = servlist_create_entry (table3, _("_User name:"), 9, net->user, &edit_label_user, 0);
