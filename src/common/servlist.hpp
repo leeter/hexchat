@@ -42,6 +42,7 @@ struct favchannel
 struct ircnet
 {
 	ircnet();
+	~ircnet();
 	std::string name;
 	char *nick;
 	char *nick2;
@@ -94,12 +95,12 @@ enum login_method{
 const char IRC_DEFAULT_CHARSET[] = "UTF-8 (Unicode)";
 
 void servlist_init (void);
-int servlist_save (void);
+bool servlist_save (void);
 bool servlist_cycle (server *serv);
-void servlist_connect (session *sess, ircnet *net, bool join);
-int servlist_connect_by_netname (session *sess, char *network, bool join);
-int servlist_auto_connect (session *sess);
-int servlist_have_auto (void);
+void servlist_connect (session *sess, ircnet &net, bool join);
+bool servlist_connect_by_netname (session *sess, char *network, bool join);
+bool servlist_auto_connect (session *sess);
+bool servlist_have_auto (void);
 bool servlist_check_encoding (std::string charset);
 void servlist_cleanup (void);
 

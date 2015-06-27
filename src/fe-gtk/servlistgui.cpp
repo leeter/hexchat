@@ -1111,7 +1111,7 @@ servlist_connect_cb (GtkWidget *button, gpointer userdata)
 		servlist_sess = chosen;
 	}
 
-	servlist_connect (servlist_sess, selected_net, true);
+	servlist_connect (servlist_sess, *selected_net, true);
 
 	gtk_widget_destroy (serverlist_win);
 	serverlist_win = nullptr;
