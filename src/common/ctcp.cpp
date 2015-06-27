@@ -78,7 +78,7 @@ static bool
 	std::locale locale;
 	for (const auto & pop : ctcp_list)
 	{
-		if (!boost::iequals(pop.name, ctcp))
+		if (boost::iequals(pop.name, ctcp, locale))
 		{
 			ctcp_reply(sess, nick, word, word_eol, pop.cmd);
 			ret = true;
