@@ -28,6 +28,9 @@
 #include <sstream>
 #include <string>
 #include <boost/format.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/utility/string_ref.hpp>
 
 #ifndef WIN32
@@ -37,6 +40,7 @@
 #include "hexchat.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
+#include "filesystem.hpp"
 #include "server.hpp"
 #include "text.hpp"
 #include "util.hpp" /* token_foreach */
@@ -611,7 +615,7 @@ servlist_connect (session *sess, ircnet *net, bool join)
 	server *serv;
 
 	if (!sess)
-		sess = new_ircwindow(NULL, NULL, session::SESS_SERVER, TRUE);
+		sess = new_ircwindow(NULL, NULL, session::SESS_SERVER, true);
 
 	serv = sess->server;
 
@@ -666,12 +670,12 @@ servlist_connect (session *sess, ircnet *net, bool join)
 			strcpy (serv->nick, net->nick);
 	}
 
-	serv->dont_use_proxy = (net->flags & FLAG_USE_PROXY) ? FALSE : TRUE;
+	serv->dont_use_proxy = (net->flags & FLAG_USE_PROXY) ? false : true;
 
 #ifdef USE_OPENSSL
-	serv->use_ssl = (net->flags & FLAG_USE_SSL) ? TRUE : FALSE;
+	serv->use_ssl = (net->flags & FLAG_USE_SSL) ? true : false;
 	serv->accept_invalid_cert =
-		(net->flags & FLAG_ALLOW_INVALID) ? TRUE : FALSE;
+		(net->flags & FLAG_ALLOW_INVALID) ? true : false;
 #endif
 
 	serv->network = net;
@@ -685,7 +689,7 @@ servlist_connect (session *sess, ircnet *net, bool join)
 		if (port[1] == '+')
 		{
 #ifdef USE_OPENSSL
-			serv->use_ssl = TRUE;
+			serv->use_ssl = true;
 #endif
 			serv->connect (ircserv->hostname, atoi (port + 2), false);
 		} else
@@ -1152,7 +1156,7 @@ servlist_load_defaults (void)
 	{
 		if (def[i].network)
 		{
-			net = servlist_net_add (def[i].network, def[i].host, FALSE);
+			net = servlist_net_add (def[i].network, def[i].host, false);
 			if (def[i].channel)
 			{
 				servlist_favchan_add (net, def[i].channel);
@@ -1196,71 +1200,68 @@ servlist_load_defaults (void)
 static int
 servlist_load (void)
 {
-	FILE *fp;
-	char buf[2048];
-	int len;
-	ircnet *net = NULL;
+	namespace bfs = boost::filesystem;
+	namespace bs = boost::system;
+	ircnet *net = nullptr;
 
 	/* simple migration we will keep for a short while */
-	char *oldfile = g_build_filename (get_xdir (), "servlist_.conf", NULL);
-	char *newfile = g_build_filename (get_xdir (), "servlist.conf", NULL);
-
-	if (g_file_test (oldfile, G_FILE_TEST_EXISTS) && !g_file_test (newfile, G_FILE_TEST_EXISTS))
+	auto oldfile = io::fs::make_config_path("servlist_.conf");
+	auto newfile = io::fs::make_config_path("servlist.conf");
+	
+	bs::error_code ec;
+	if (bfs::exists(oldfile, ec) && !bfs::exists(newfile, ec))
 	{
-		g_rename (oldfile, newfile);
+		bfs::rename(oldfile, newfile, ec);
 	}
 
-	g_free (oldfile);
-	g_free (newfile);
-
-	fp = hexchat_fopen_file ("servlist.conf", "r", 0);
+	bfs::ifstream infile(io::fs::make_config_path("servlist.conf"), std::ios::in);
+	if (!infile)
+		return false;
+	/*fp = hexchat_fopen_file ("servlist.conf", "r", 0);
 	if (!fp)
-		return FALSE;
+		return false;*/
 
-	while (fgets (buf, sizeof (buf) - 2, fp))
+	for(std::string buf; std::getline(infile, buf);) //while (fgets (buf, sizeof (buf) - 2, fp))
 	{
-		len = strlen (buf);
-		buf[len] = 0;
-		buf[len-1] = 0;	/* remove the trailing \n */
 		if (net)
 		{
 			switch (buf[0])
 			{
 			case 'I':
-				net->nick = strdup (buf + 2);
+				net->nick = strdup (buf.c_str() + 2);
 				break;
 			case 'i':
-				net->nick2 = strdup (buf + 2);
+				net->nick2 = strdup (buf.c_str() + 2);
 				break;
 			case 'U':
-				net->user = strdup (buf + 2);
+				net->user = strdup (buf.c_str() + 2);
 				break;
 			case 'R':
-				net->real = strdup (buf + 2);
+				net->real = strdup (buf.c_str() + 2);
 				break;
 			case 'P':
-				net->pass = strdup (buf + 2);
+				net->pass = strdup (buf.c_str() + 2);
 				break;
 			case 'L':
-				net->logintype = atoi (buf + 2);
+				net->logintype = std::atoi (buf.c_str() + 2);
 				break;
 			case 'E':
-				net->encoding = strdup (buf + 2);
+				net->encoding = strdup (buf.c_str() + 2);
 				break;
 			case 'F':
-				net->flags = atoi (buf + 2);
+				net->flags = std::atoi (buf.c_str() + 2);
 				break;
 			case 'S':	/* new server/hostname for this network */
-				servlist_server_add (net, buf + 2);
+				servlist_server_add (net, buf.c_str() + 2);
 				break;
 			case 'C':
-				servlist_command_add (net, buf + 2);
+				servlist_command_add (net, buf.c_str() + 2);
 				break;
 			case 'J':
-				servlist_favchan_add (net, buf + 2);
+				servlist_favchan_add (net, buf.c_str() + 2);
 				break;
 			case 'D':
-				net->selected = atoi (buf + 2);
+				net->selected = std::atoi (buf.c_str() + 2);
 				break;
 			/* FIXME Migration code. In 2.9.5 the order was:
 			 *
@@ -1275,7 +1276,7 @@ servlist_load (void)
 			case 'A':
 				if (!net->pass)
 				{
-					net->pass = strdup (buf + 2);
+					net->pass = strdup (buf.c_str() + 2);
 					if (!net->logintype)
 					{
 						net->logintype = LOGIN_SASL;
@@ -1284,7 +1285,7 @@ servlist_load (void)
 			case 'B':
 				if (!net->pass)
 				{
-					net->pass = strdup (buf + 2);
+					net->pass = strdup (buf.c_str() + 2);
 					if (!net->logintype)
 					{
 						net->logintype = LOGIN_NICKSERV;
@@ -1292,12 +1293,11 @@ servlist_load (void)
 				}
 			}
 		}
-		if (buf[0] == 'N')
-			net = servlist_net_add (buf + 2, /* comment */ NULL, FALSE);
+		if (!buf.empty() && buf[0] == 'N')
+			net = servlist_net_add (buf.c_str() + 2, /* comment */ nullptr, false);
 	}
-	fclose (fp);
 
-	return TRUE;
+	return true;
 }
 
 void
@@ -1309,35 +1309,27 @@ servlist_init (void)
 }
 
 /* check if a charset is known by Iconv */
-int
-servlist_check_encoding (char *charset)
+bool
+servlist_check_encoding(std::string charset)
 {
-	GIConv gic;
-	char *c;
+	auto space = charset.find_first_of(' ');
+	if (space != std::string::npos)
+		charset.resize(space);
 
-	c = strchr (charset, ' ');
-	if (c)
-		c[0] = 0;
-
-	if (!g_ascii_strcasecmp (charset, "IRC")) /* special case */
+	if (!g_ascii_strcasecmp (charset.c_str(), "IRC")) /* special case */
 	{
-		if (c)
-			c[0] = ' ';
-		return TRUE;
+		return true;
 	}
 
-	gic = g_iconv_open (charset, "UTF-8");
-
-	if (c)
-		c[0] = ' ';
+	auto gic = g_iconv_open (charset.c_str(), "UTF-8");
 
 	if (gic != (GIConv)-1)
 	{
 		g_iconv_close (gic);
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 int
@@ -1366,7 +1358,7 @@ servlist_save (void)
 #ifndef WIN32
 		g_free (buf);
 #endif
-		return FALSE;
+		return false;
 	}
 
 #ifndef WIN32
@@ -1446,14 +1438,14 @@ servlist_save (void)
 		if (fprintf (fp, "\n") < 1)
 		{
 			fclose (fp);
-			return FALSE;
+			return false;
 		}
 
 		list = list->next;
 	}
 
 	fclose (fp);
-	return TRUE;
+	return true;
 }
 
 static int

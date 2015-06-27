@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
-#include <new>
 #include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -727,14 +726,14 @@ set_locale (void)
 #ifdef WIN32
 	char hexchat_lang[13] = { 0 };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
 
-	strcpy (hexchat_lang, "LC_ALL=");
-
 	if (0 <= prefs.hex_gui_lang && prefs.hex_gui_lang < LANGUAGES_LENGTH)
-		strcat (hexchat_lang, languages[prefs.hex_gui_lang]);
+		std::strcat (hexchat_lang, languages[prefs.hex_gui_lang]);
 	else
-		strcat (hexchat_lang, "en");
+		std::strcat (hexchat_lang, "en");
 
-	putenv (hexchat_lang);
+	auto result = _putenv_s("LC_ALL", hexchat_lang);
+	if (result != 0)
+		std::terminate();
 
 	// Create and install global locale
 	std::locale::global(boost::locale::generator().generate(""));
@@ -747,7 +746,7 @@ set_locale (void)
 int
 main (int argc, char *argv[])
 {
-	srand (time (nullptr));	/* CL: do this only once! */
+	std::srand (static_cast<unsigned>(std::time (nullptr)));	/* CL: do this only once! */
 
 	/* We must check for the config dir parameter, otherwise load_config() will behave incorrectly.
 	 * load_config() must come before fe_args() because fe_args() calls gtk_init() which needs to
@@ -757,7 +756,7 @@ main (int argc, char *argv[])
 	{
 		for (int i = 1; i < argc; i++)
 		{
-			if ((strcmp (argv[i], "-d") == 0 || strcmp (argv[i], "--cfgdir") == 0)
+			if ((std::strcmp (argv[i], "-d") == 0 || std::strcmp (argv[i], "--cfgdir") == 0)
 				&& i + 1 < argc)
 			{
 				xdir = new_strdup (argv[i + 1]);
@@ -769,9 +768,10 @@ main (int argc, char *argv[])
 
 			if (xdir != NULL)
 			{
-				if (xdir[strlen (xdir) - 1] == G_DIR_SEPARATOR)
+				const auto xdir_len = std::strlen(xdir);
+				if (xdir[xdir_len - 1] == G_DIR_SEPARATOR)
 				{
-					xdir[strlen (xdir) - 1] = 0;
+					xdir[xdir_len - 1] = 0;
 				}
 				break;
 			}

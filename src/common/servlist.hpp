@@ -100,7 +100,7 @@ void servlist_connect (session *sess, ircnet *net, bool join);
 int servlist_connect_by_netname (session *sess, char *network, bool join);
 int servlist_auto_connect (session *sess);
 int servlist_have_auto (void);
-int servlist_check_encoding (char *charset);
+bool servlist_check_encoding (std::string charset);
 void servlist_cleanup (void);
 
 ircnet *servlist_net_add (const char *name, const char *comment, int prepend);
