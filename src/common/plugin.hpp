@@ -32,7 +32,6 @@ typedef int(*plugin_init_func)(hexchat_plugin *plugin_handle, char **plugin_name
 	char **plugin_desc, char **plugin_version, char *arg);
 typedef int(*plugin_deinit_func)(hexchat_plugin *);
 
-//#ifdef PLUGIN_C
 struct hexchat_plugin_internal : public hexchat_plugin
 {
 	/* PRIVATE FIELDS! */
@@ -45,7 +44,6 @@ struct hexchat_plugin_internal : public hexchat_plugin
 	plugin_deinit_func deinit_callback;	/* pointer to hexchat_plugin_deinit */
 	bool fake;		/* fake plugin. Added by hexchat_plugingui_add() */
 };
-//#endif
 
 const char *plugin_load (session *sess, const char *filename, char *arg);
 int plugin_reload (session *sess, const char *name, bool by_filename);
@@ -62,9 +60,5 @@ int plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval
 GList* plugin_command_list(GList *tmp_list);
 int plugin_show_help (session *sess, const char *cmd);
 void plugin_command_foreach (session *sess, void *userdata, void (*cb) (session *sess, void *userdata, char *name, char *usage));
-
-//#ifdef __cplusplus
-//}
-//#endif
 
 #endif
