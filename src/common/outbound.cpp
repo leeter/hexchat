@@ -3424,57 +3424,58 @@ url_join_only (server *serv, char *, const char channel[], const char key[])
 static int
 cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	if (word[2][0])
+	if (!word[2][0])
 	{
-		char *server_name = nullptr;
-		char *port = nullptr;
-		char *channel = nullptr;
-		char *key = nullptr;
-		glib_string url{ g_strdup(word[2]) };
-		bool use_ssl = false;
-		void *net;
-		server *serv;
-
-		if (parse_irc_url (url.get(), &server_name, &port, &channel, &key, use_ssl))
-		{
-			/* maybe we're already connected to this net */
-
-			/* check for "FreeNode" */
-			net = servlist_net_find (server_name, nullptr, g_ascii_strcasecmp);
-			/* check for "irc.eu.freenode.net" */
-			if (!net)
-				net = servlist_net_find_from_server (server_name);
-
-			if (net)
-			{
-				/* found the network, but are we connected? */
-				serv = find_server_from_net (net);
-				if (serv)
-				{
-					url_join_only (serv, tbuf, channel, key);
-					return true;
-				}
-			}
-			else
-			{
-				/* an un-listed connection */
-				serv = find_server_from_hostname (server_name);
-				if (serv)
-				{
-					url_join_only (serv, tbuf, channel, key);
-					return true;
-				}
-			}
-
-			/* not connected to this net, open new window */
-			cmd_newserver (sess, tbuf, word, word_eol);
-
-		} else
-			fe_open_url (word[2]);
-		return true;
+		return false;
 	}
 
-	return false;
+	char *server_name = nullptr;
+	char *port = nullptr;
+	char *channel = nullptr;
+	char *key = nullptr;
+	glib_string url{ g_strdup(word[2]) };
+	bool use_ssl = false;
+	void *net;
+	server *serv;
+
+	if (parse_irc_url(url.get(), &server_name, &port, &channel, &key, use_ssl))
+	{
+		/* maybe we're already connected to this net */
+
+		/* check for "FreeNode" */
+		net = servlist_net_find(server_name, nullptr, g_ascii_strcasecmp);
+		/* check for "irc.eu.freenode.net" */
+		if (!net)
+			net = servlist_net_find_from_server(server_name);
+
+		if (net)
+		{
+			/* found the network, but are we connected? */
+			serv = find_server_from_net(net);
+			if (serv)
+			{
+				url_join_only(serv, tbuf, channel, key);
+				return true;
+			}
+		}
+		else
+		{
+			/* an un-listed connection */
+			serv = find_server_from_hostname(server_name);
+			if (serv)
+			{
+				url_join_only(serv, tbuf, channel, key);
+				return true;
+			}
+		}
+
+		/* not connected to this net, open new window */
+		cmd_newserver(sess, tbuf, word, word_eol);
+
+	}
+	else
+		fe_open_url(word[2]);
+	return true;
 }
 
 static int
