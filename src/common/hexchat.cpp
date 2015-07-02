@@ -456,15 +456,15 @@ static const char defaultconf_urlhandlers[] =
 static void 
 sigusr1_handler (int /*signal*/, siginfo_t * /*si*/, void *)
 {
-	GSList *list = sess_list;
-	session *sess;
+	//GSList *list = sess_list;
+	//session *sess;
 
-	while (list)
-	{
-		sess = static_cast<session*>(list->data);
-		log_open_or_close (sess);
-		list = list->next;
-	}
+	//while (list)
+	//{
+	//	sess = static_cast<session*>(list->data);
+	//	//log_open_or_close (sess);
+	//	list = list->next;
+	//}
 }
 
 /* Execute /SIGUSR2 when SIGUSR2 received */
