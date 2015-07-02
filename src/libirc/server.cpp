@@ -16,11 +16,11 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#include <memory>
 #include <string>
 #include <boost/utility/string_ref.hpp>
 #include <boost/optional.hpp>
 #include "server.hpp"
-#include "sutter.hpp"
 #include "tcp_connection.hpp"
 #include "throttled_queue.hpp"
 #include "message.hpp"

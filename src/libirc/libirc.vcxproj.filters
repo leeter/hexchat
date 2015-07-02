@@ -32,9 +32,6 @@
     <ClInclude Include="irc_ctype.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sutter.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="throttled_queue.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

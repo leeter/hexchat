@@ -30,7 +30,6 @@
     <ClInclude Include="message_fwd.hpp" />
     <ClInclude Include="server.hpp" />
     <ClInclude Include="split.hpp" />
-    <ClInclude Include="sutter.hpp" />
     <ClInclude Include="tcpfwd.hpp" />
     <ClInclude Include="tcp_connection.hpp" />
     <ClInclude Include="throttled_queue.hpp" />

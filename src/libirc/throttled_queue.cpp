@@ -17,6 +17,7 @@
 */
 
 #include <chrono>
+#include <memory>
 #include <queue>
 #include <string>
 #include <boost/algorithm/string.hpp>
@@ -24,7 +25,6 @@
 #include "config.hpp"
 #include "throttled_queue.hpp"
 #include "tcp_connection.hpp"
-#include "sutter.hpp"
 
 namespace io
 {

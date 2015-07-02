@@ -28,7 +28,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
-#include "sutter.hpp"
 
 #ifdef WIN32
 #include "w32crypt_seed.hpp"
