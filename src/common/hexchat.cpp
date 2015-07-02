@@ -364,7 +364,7 @@ session_free (session *killsess)
 	if (oldidx != LACT_NONE)
 		sess_list_by_lastact[oldidx] = g_list_remove(sess_list_by_lastact[oldidx], killsess);
 
-	log_close (*killsess);
+	//log_close (*killsess);
 	scrollback_close (*killsess);
 	chanopt_save (killsess);
 

@@ -110,7 +110,7 @@ namespace irc
 			boost::asio::detail::throw_error(resolved.first, "resolve");
 		}
 		auto connection = io::tcp::connection::create_connection(sec, io_service);
-		auto impl = sutter::make_unique<server_impl>(std::move(connection));
+		auto impl = std::make_unique<server_impl>(std::move(connection));
 		return{ std::move(impl) };
 	}
 

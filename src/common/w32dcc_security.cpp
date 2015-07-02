@@ -37,18 +37,18 @@ namespace w32
 	{
 		bool mark_file_as_downloaded(const std::wstring & path)
 		{
-			::w32::com::CCoInitialize init(COINIT_APARTMENTTHREADED);
+			::w32::com::CCoInitialize init{ COINIT_APARTMENTTHREADED };
 
-			if (FAILED(static_cast<HRESULT>(init)))
+			if (!init)
 				return false;
 			try
 			{
-				IZoneIdentifierPtr zone_identifer(CLSID_PersistentZoneIdentifier);
+				IZoneIdentifierPtr zone_identifer{ CLSID_PersistentZoneIdentifier };
 				if (!zone_identifer)
 					return false;
 
 				_com_util::CheckError(zone_identifer->SetId(URLZONE_INTRANET));
-				IPersistFilePtr persist_file(zone_identifer);
+				IPersistFilePtr persist_file{ zone_identifer };
 				if (!persist_file)
 					return false;
 

@@ -37,6 +37,7 @@ namespace w32{
 			explicit CCoInitialize(COINIT init) : m_hr(CoInitializeEx(nullptr, init)) { }
 			~CCoInitialize() { if (SUCCEEDED(m_hr)) CoUninitialize(); }
 			explicit operator HRESULT() const { return m_hr; }
+			explicit operator bool() const { return SUCCEEDED(m_hr); }
 		};
 	}
 }

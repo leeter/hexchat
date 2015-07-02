@@ -5,8 +5,8 @@ localedir = $(datadir)/locale
 
 bin_PROGRAMS = hexchat
 
-AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
-AM_CFLAGS = $(GUI_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
+AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(GUI_CFLAGS) $(CPPFLAGS) -std=c++14 -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
+AM_CFLAGS = $(GUI_CFLAGS) $(CFLAGS) -std=c11 -Wall -Wextra -pedantic -DLOCALEDIR=\"$(localedir)\" -D_FORTIFY_SOURCE=2
 
 hexchat_LDADD = ../common/libhexchatcommon.a ../libirc/libirc.a $(GUI_LIBS) $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_THREAD_LIBS) $(BOOST_REGEX_LIBS) $(BOOST_CHRONO_LIBS)
 

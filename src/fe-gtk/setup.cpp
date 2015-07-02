@@ -1980,7 +1980,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 {
 	GSList *list;
 	session *sess;
-	int done_main = FALSE;
+	bool done_main = false;
 
 	/* remove trailing slashes */
 	unslash (prefs.hex_dcc_dir);
@@ -2007,7 +2007,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 			/* only apply to main tabwindow once */
 			if (!done_main)
 			{
-				done_main = TRUE;
+				done_main = true;
 				setup_apply_to_sess (sess->gui);
 			}
 		} else
@@ -2015,7 +2015,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 			setup_apply_to_sess (sess->gui);
 		}
 
-		log_open_or_close (sess);
+		//log_open_or_close (sess);
 
 		if (do_ulist)
 			userlist_rehash (sess);

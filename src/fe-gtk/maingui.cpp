@@ -1477,8 +1477,8 @@ mg_set_guint8 (GtkCheckMenuItem *item, guint8 *setting)
 		*setting = SET_ON;
 
 	/* has the logging setting changed? */
-	if (logging != sess->text_logging)
-		log_open_or_close (sess);
+	/*if (logging != sess->text_logging)
+		log_open_or_close (sess);*/
 
 	chanopt_save (sess);
 	chanopt_save_all ();

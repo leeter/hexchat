@@ -117,7 +117,7 @@ namespace io
 
 
 		throttled_queue::throttled_queue()
-			:impl(sutter::make_unique<throttled_queue::p_impl>())
+			:impl(std::make_unique<throttled_queue::p_impl>())
 		{}
 
 		throttled_queue::size_type throttled_queue::queue_length() const NOEXCEPT

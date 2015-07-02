@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <boost/utility/string_ref.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -76,7 +77,7 @@ clear_channel (session &sess)
 	sess.doing_who = false;
 	sess.done_away_check = false;
 
-	log_close (sess);
+	//log_close (sess);
 
 	sess.current_modes.erase();
 
@@ -189,12 +190,15 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 
 		if (ip && ip[0])
 		{
-			if (prefs.hex_irc_logging && sess->logfd != -1 &&
+			if (prefs.hex_irc_logging &&
 				(sess->topic.empty() || sess->topic != ip))
 			{
-				char tbuf[1024];
+				std::ostringstream buf;
+				buf << boost::format("[%s has address %s]\n") % from % ip;
+				sess->log.write(buf.str(), 0);
+				/*char tbuf[1024];
 				snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", from, ip);
-				write (sess->logfd, tbuf, strlen (tbuf));
+				write (sess->logfd, tbuf, strlen (tbuf));*/
 			}
 			set_topic (sess, ip, ip);
 		}
@@ -603,7 +607,7 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 	fe_set_nonchannel (sess, true);
 	userlist_clear (sess);
 
-	log_open_or_close (sess);
+	//log_open_or_close (sess);
 
 	sess->waitchannel[0] = 0;
 	sess->ignore_date = true;
@@ -954,7 +958,7 @@ inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip, int id,
 				fe_set_title (*sess);
 				fe_set_nonchannel (sess, false);
 				userlist_clear (sess);
-				log_open_or_close (sess);
+				//log_open_or_close (sess);
 			}
 			/* Avoid redundancy with some Undernet notices */
 			if (!strncmp (msg, "*** Notice -- ", 14))
@@ -1315,8 +1319,8 @@ inbound_login_start (session *sess, char *nick, char *servname,
 		throw std::runtime_error("Invalid server reference");
 	inbound_newnick (*(sess->server), sess->server->nick, nick, true, tags_data);
 	sess->server->set_name(servname);
-	if (sess->type == session::SESS_SERVER)
-		log_open_or_close (sess);
+	/*if (sess->type == session::SESS_SERVER)
+		log_open_or_close (sess);*/
 	/* reset our away status */
 	if (sess->server->reconnect_away)
 	{

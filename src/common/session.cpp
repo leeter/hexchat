@@ -86,7 +86,7 @@ session::session(struct server *serv, const char *from, ::session::session_type 
 	session_name(),
 	channelkey(),
 	limit(),
-	logfd(-1),
+	log(*this),
 	scrollfd(-1),
 	scrollwritten(),
 	lastnick(),
@@ -318,7 +318,7 @@ new_ircwindow(server *serv, const char *name, ::session::session_type type, int 
 		break;
 	case session::SESS_DIALOG:
 		sess = session_new(serv, name, type, focus);
-		log_open_or_close(sess);
+		//log_open_or_close(sess);
 		break;
 	default:
 		/*	case SESS_CHANNEL:

@@ -2,7 +2,7 @@
 
 noinst_LIBRARIES = libirc.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -D_FORTIFY_SOURCE=2
+AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++14 -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -D_FORTIFY_SOURCE=2
 
 EXTRA_DIST = \
     connection.hpp \

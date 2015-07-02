@@ -510,7 +510,7 @@ void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t ti
 		buf = "\n";
 	}
 
-	log_write(*sess, buf, timestamp);
+	sess->log.write(buf, timestamp);
 	scrollback_save(*sess, buf);
 	fe_print_text(*sess, &buf[0], timestamp, FALSE);
 }
