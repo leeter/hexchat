@@ -109,6 +109,7 @@ using sess_itr = glib_helper::glist_iterator < session >;
 
 static std::atomic_bool in_hexchat_exit = { false };
 std::atomic_bool hexchat_is_quitting = { false };
+
 /* command-line args */
 int arg_dont_autoconnect = FALSE;
 int arg_skip_plugins = FALSE;
@@ -318,7 +319,7 @@ send_quit_or_part (session * killsess)
 			if (killsess->type == session::SESS_CHANNEL && killsess->channel[0] &&
 				 !killserv->sent_quit)
 			{
-				server_sendpart (*killserv, killsess->channel, nullptr);
+				server_sendpart (*killserv, killsess->channel, boost::none);
 			}
 		}
 	}
