@@ -35,6 +35,9 @@
 
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/system/error_code.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -1303,17 +1306,20 @@ menu_flushbuffer (GtkWidget * wid, gpointer none)
 static void
 savebuffer_req_done (session *sess, char *file)
 {
-	int fh;
-
+	namespace bfs = boost::filesystem;
 	if (!file)
 		return;
+	bfs::path file_path{ file };
+	bfs::ofstream outfile{ file_path, std::ios::trunc | std::ios::out | std::ios::binary };
 
-	fh = g_open (file, O_TRUNC | O_WRONLY | O_CREAT, 0600);
-	if (fh != -1)
+	if (!outfile)
 	{
-		gtk_xtext_save (GTK_XTEXT (sess->gui->xtext), fh);
-		close (fh);
+		return;
 	}
+	xtext::save(*GTK_XTEXT(sess->gui->xtext), outfile);
+	outfile.flush();
+	boost::system::error_code ec;
+	bfs::permissions(file_path, bfs::owner_read | bfs::owner_write, ec);
 }
 
 static void

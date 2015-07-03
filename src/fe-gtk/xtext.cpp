@@ -40,6 +40,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include <iterator>
 #include <functional>
 #include <locale>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -3635,16 +3636,22 @@ gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap)
 	}
 }
 
-void
-gtk_xtext_save(GtkXText * xtext, int fh)
-{
-	for (const auto & ent : xtext->buffer->impl->entries)
+namespace xtext{
+	void save(const GtkXText & xtext, std::ostream & outfile)
 	{
-		auto buf = gtk_xtext_strip_color(ent.str, nullptr, false);
-		write(fh, buf.c_str(), buf.size());
-		write(fh, "\n", 1);
+		for (const auto & ent : xtext.buffer->impl->entries)
+		{
+			if (!outfile)
+			{
+				break;
+			}
+			auto buf = gtk_xtext_strip_color(ent.str, nullptr, false);
+			boost::string_ref ref(reinterpret_cast<const char*>(buf.data()), buf.length());
+			outfile << ref << '\n';
+		}
 	}
 }
+
 namespace{
 	/* count how many lines 'ent' will take (with wraps) */
 

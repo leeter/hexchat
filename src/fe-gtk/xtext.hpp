@@ -267,7 +267,9 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[]);
 void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
 void gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[]);
 void gtk_xtext_clear(xtext_buffer *buf, int lines);
-void gtk_xtext_save(GtkXText * xtext, int fh);
+namespace xtext{
+	void save(const GtkXText & xtext, std::ostream & outfile);
+}
 void gtk_xtext_refresh(GtkXText * xtext);
 int gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area);
 textentry *gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
