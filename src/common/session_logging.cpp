@@ -254,26 +254,26 @@ static boost::filesystem::path log_create_pathname(const char *servname, const c
 	return ret;
 }
 
-static int log_open_file(const char *servname, const char *channame, const char *netname)
-{
-	auto file = log_create_pathname(servname, channame, netname);
-	int fd;
-#ifdef WIN32
-	fd = _wopen(file.c_str(), O_CREAT | O_APPEND | O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
-#else
-	fd = open(file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
-#endif
-
-	if (fd == -1)
-		return -1;
-	auto currenttime = time(NULL);
-	char buf[512];
-	write(fd, buf,
-		snprintf(buf, sizeof(buf), _("**** BEGIN LOGGING AT %s\n"),
-		std::ctime(&currenttime)));
-
-	return fd;
-}
+//static int log_open_file(const char *servname, const char *channame, const char *netname)
+//{
+//	auto file = log_create_pathname(servname, channame, netname);
+//	int fd;
+//#ifdef WIN32
+//	fd = _wopen(file.c_str(), O_CREAT | O_APPEND | O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+//#else
+//	fd = open(file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+//#endif
+//
+//	if (fd == -1)
+//		return -1;
+//	auto currenttime = time(NULL);
+//	char buf[512];
+//	write(fd, buf,
+//		snprintf(buf, sizeof(buf), _("**** BEGIN LOGGING AT %s\n"),
+//		std::ctime(&currenttime)));
+//
+//	return fd;
+//}
 
 //static void log_open(session &sess)
 //{

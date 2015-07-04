@@ -65,7 +65,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
 #ifdef WIN32
-#include <io.h>
+//#include <io.h>
 #else
 #include <unistd.h>
 #ifdef GDK_WINDOWING_X11
@@ -76,8 +76,8 @@ enum{ MARGIN = 2 };					/* dont touch. */
 char *nocasestrstr(const char *text, const char *tofind);	/* util.c */
 std::string xtext_get_stamp_str(time_t);
 
-typedef std::basic_string<unsigned char> ustring;
-typedef boost::basic_string_ref<unsigned char> ustring_ref;
+using ustring = std::basic_string<unsigned char>;
+using ustring_ref = boost::basic_string_ref<unsigned char>;
 
 /* For use by gtk_xtext_strip_color() and its callers -- */
 struct offlen_t {

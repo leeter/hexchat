@@ -68,7 +68,7 @@ enum WinStatus
 	WS_HIDDEN
 };
 
-typedef GdkPixbuf* TrayIcon;
+using TrayIcon = GdkPixbuf*;
 #define tray_icon_from_file(f) gdk_pixbuf_new_from_file(f,NULL)
 #define tray_icon_free(i) g_object_unref(i)
 

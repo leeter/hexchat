@@ -63,7 +63,7 @@
 struct EnchantDict;
 struct EnchantBroker;
 
-typedef void (*EnchantDictDescribeFn) (const char * const lang_tag,
+using EnchantDictDescribeFn = void(*) (const char * const lang_tag,
 									   const char * const provider_name,
 									   const char * const provider_desc,
 									   const char * const provider_file,

@@ -63,15 +63,13 @@ enum
 GdkPixbuf *
 get_user_icon (server *serv, struct User *user)
 {
-	int level;
-
 	if (!user)
-		return NULL;
+		return nullptr;
 
 	/* these ones are hardcoded */
 	switch (user->prefix[0])
 	{
-		case 0: return NULL;
+		case 0: return nullptr;
 		case '+': return pix_ulist_voice;
 		case '%': return pix_ulist_halfop;
 		case '@': return pix_ulist_op;
@@ -82,8 +80,8 @@ get_user_icon (server *serv, struct User *user)
 	if (pre != std::string::npos && pre)
 	{
 		pre--;
-		level = 0;
-		while (1)
+		int level = 0;
+		for (;;)
 		{
 			if (serv->nick_prefixes[pre] == user->prefix[0])
 			{
@@ -102,7 +100,7 @@ get_user_icon (server *serv, struct User *user)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void
@@ -119,7 +117,7 @@ fe_userlist_numbers (session &sess)
 			gtk_label_set_text (GTK_LABEL (sess.gui->namelistinfo), tbuf);
 		} else
 		{
-			gtk_label_set_text (GTK_LABEL (sess.gui->namelistinfo), NULL);
+			gtk_label_set_text (GTK_LABEL (sess.gui->namelistinfo), nullptr);
 		}
 
 		if (sess.type == session::SESS_CHANNEL && prefs.hex_gui_win_ucount)
@@ -133,7 +131,7 @@ scroll_to_iter (GtkTreeIter *iter, GtkTreeView *treeview, GtkTreeModel *model)
 	GtkTreePathPtr path(gtk_tree_model_get_path (model, iter));
 	if (path)
 	{
-		gtk_tree_view_scroll_to_cell (treeview, path.get(), NULL, TRUE, 0.5, 0.5);
+		gtk_tree_view_scroll_to_cell (treeview, path.get(), nullptr, TRUE, 0.5, 0.5);
 	}
 }
 
@@ -322,7 +320,7 @@ fe_userlist_rehash (session *sess, struct User const *user)
 
 	gtk_list_store_set (GTK_LIST_STORE (sess->res->user_model), result.first.get(),
 							  COL_HOST, user->hostname ? user->hostname->c_str() : nullptr,
-							  COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
+							  COL_GDKCOLOR, nick_color ? &colors[nick_color] : nullptr,
 							  -1);
 }
 
@@ -344,7 +342,7 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 	{		
 		if (newuser->prefix[0] || newuser->prefix[0] != ' ')
 			nick.insert(nick.begin(), newuser->prefix[0]);
-		pix = NULL;
+		pix = nullptr;
 	}
 
 	gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, row,
@@ -352,7 +350,7 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 									COL_NICK, nick.c_str(),
 									COL_HOST, newuser->hostname ? newuser->hostname->c_str() : nullptr,
 									COL_USER, newuser,
-									COL_GDKCOLOR, nick_color ? &colors[nick_color] : NULL,
+									COL_GDKCOLOR, nick_color ? &colors[nick_color] : nullptr,
 								  -1);
 
 	/* is it me? */
@@ -391,7 +389,7 @@ userlist_dnd_drop (GtkTreeView *widget, GdkDragContext *context,
 {
 	struct User *user;
 	GtkTreePath *path;
-	if (!gtk_tree_view_get_path_at_pos (widget, x, y, &path, NULL, NULL, NULL))
+	if (!gtk_tree_view_get_path_at_pos (widget, x, y, &path, nullptr, nullptr, nullptr))
 		return;
 
 	GtkTreePathPtr path_ptr(path);
@@ -415,7 +413,7 @@ userlist_dnd_motion (GtkTreeView *widget, GdkDragContext *context, gint x,
 		return FALSE;
 
 	GtkTreePath *path;
-	if (gtk_tree_view_get_path_at_pos (widget, x, y, &path, NULL, NULL, NULL))
+	if (gtk_tree_view_get_path_at_pos (widget, x, y, &path, nullptr, nullptr, nullptr))
 	{
 		GtkTreePathPtr path_ptr(path);
 		auto sel = gtk_tree_view_get_selection (widget);
@@ -446,30 +444,30 @@ userlist_add_columns (GtkTreeView * treeview)
 	/* icon column */
 	auto renderer = gtk_cell_renderer_pixbuf_new ();
 	if (prefs.hex_gui_compact)
-		g_object_set (G_OBJECT (renderer), "ypad", 0, NULL);
+		g_object_set (G_OBJECT (renderer), "ypad", 0, nullptr);
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
-																-1, NULL, renderer,
-																"pixbuf", 0, NULL);
+																-1, nullptr, renderer,
+																"pixbuf", 0, nullptr);
 
 	/* nick column */
 	renderer = gtk_cell_renderer_text_new ();
 	if (prefs.hex_gui_compact)
-		g_object_set (G_OBJECT (renderer), "ypad", 0, NULL);
+		g_object_set (G_OBJECT (renderer), "ypad", 0, nullptr);
 	gtk_cell_renderer_text_set_fixed_height_from_font (GTK_CELL_RENDERER_TEXT (renderer), 1);
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
-																-1, NULL, renderer,
-													"text", 1, "foreground-gdk", 4, NULL);
+																-1, nullptr, renderer,
+													"text", 1, "foreground-gdk", 4, nullptr);
 
 	if (prefs.hex_gui_ulist_show_hosts)
 	{
 		/* hostname column */
 		renderer = gtk_cell_renderer_text_new ();
 		if (prefs.hex_gui_compact)
-			g_object_set (G_OBJECT (renderer), "ypad", 0, NULL);
+			g_object_set (G_OBJECT (renderer), "ypad", 0, nullptr);
 		gtk_cell_renderer_text_set_fixed_height_from_font (GTK_CELL_RENDERER_TEXT (renderer), 1);
 		gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
-																	-1, NULL, renderer,
-																	"text", 2, NULL);
+																	-1, nullptr, renderer,
+																	"text", 2, nullptr);
 	}
 }
 
@@ -554,7 +552,7 @@ userlist_create (GtkWidget *box)
 		{"HEXCHAT_USERLIST", GTK_TARGET_SAME_APP, 75 }
 	};
 
-	auto sw = gtk_scrolled_window_new (NULL, NULL);
+	auto sw = gtk_scrolled_window_new (nullptr, nullptr);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
 													 GTK_SHADOW_ETCHED_IN);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
@@ -592,13 +590,13 @@ userlist_create (GtkWidget *box)
 
 	/* tree/chanview DND */
 	g_signal_connect (G_OBJECT (treeview), "drag_begin",
-							G_CALLBACK (mg_drag_begin_cb), NULL);
+							G_CALLBACK (mg_drag_begin_cb), nullptr);
 	g_signal_connect (G_OBJECT (treeview), "drag_drop",
-							G_CALLBACK (mg_drag_drop_cb), NULL);
+							G_CALLBACK (mg_drag_drop_cb), nullptr);
 	g_signal_connect (G_OBJECT (treeview), "drag_motion",
-							G_CALLBACK (mg_drag_motion_cb), NULL);
+							G_CALLBACK (mg_drag_motion_cb), nullptr);
 	g_signal_connect (G_OBJECT (treeview), "drag_end",
-							G_CALLBACK (mg_drag_end_cb), NULL);
+							G_CALLBACK (mg_drag_end_cb), nullptr);
 
 	userlist_add_columns (GTK_TREE_VIEW (treeview));
 

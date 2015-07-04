@@ -46,7 +46,7 @@
 #include "palette.hpp"
 #include "textgui.hpp"
 #include "gtk_helpers.hpp"
-typedef std::char_traits < unsigned char > uchar_traits;
+using uchar_traits = std::char_traits < unsigned char >;
 extern const text_event te[];
 extern std::array<std::string, NUM_XP> pntevts_text;
 extern std::array<std::string, NUM_XP> pntevts;

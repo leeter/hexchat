@@ -23,7 +23,7 @@
 #include <gtk/gtk.h>
 #include "../common/fe.hpp"
 
-typedef void (*filereqcallback) (void *, char *file);
+using filereqcallback = void(*) (void *, char *file);
 
 void gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, const char filter[], const char extensions[], int flags);
 void gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad);
