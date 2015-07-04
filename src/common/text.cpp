@@ -1191,8 +1191,8 @@ void pevent_make_pntevts ()
 				pntevts_text[i] = _(te[i].def);
 			if (pevt_build_string (pntevts_text[i], pntevts[i], m) != 0)
 			{
-				fprintf (stderr,
-							"HexChat CRITICAL *** default event text failed to build!\n");
+				std::perror(_(
+							"HexChat CRITICAL *** default event text failed to build!"));
 				abort ();
 			}
 		}

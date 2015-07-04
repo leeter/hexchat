@@ -37,7 +37,9 @@ enum word_types{
 };
 
 void url_clear (void);
-void url_save_tree (const char *fname, const char *mode, gboolean fullpath);
+namespace url{
+	void save_tree(const char *fname);
+}
 int url_last (int *, int *);
 int url_check_word (const char *word);
 void url_check_line (const boost::string_ref& buf);

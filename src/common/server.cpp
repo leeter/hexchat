@@ -401,8 +401,8 @@ server_read_cb(server * serv, const std::string & message, size_t length)
 		default:
 			serv->linebuf[serv->pos] = message[i];
 			if (serv->pos >= (sizeof(serv->linebuf) - 1))
-				fprintf(stderr,
-				"*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
+				std::perror(
+				_("*** HEXCHAT WARNING: Buffer overflow - shit server!"));
 			else
 				serv->pos++;
 		}
@@ -473,8 +473,8 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 			default:
 				serv->linebuf[serv->pos] = lbuf[i];
 				if (serv->pos >= (sizeof (serv->linebuf) - 1))
-					fprintf (stderr,
-								"*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
+					std::perror(_(
+								"*** HEXCHAT WARNING: Buffer overflow - shit server!\n"));
 				else
 					serv->pos++;
 			}

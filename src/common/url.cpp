@@ -31,11 +31,14 @@
 #include <set>
 #include <type_traits>
 #include <boost/utility/string_ref.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
 #include "cfgfiles.hpp"
 #include "fe.hpp"
+#include "filesystem.hpp"
 #include "server.hpp"
 #include "session.hpp"
 #include "url.hpp"
@@ -79,41 +82,35 @@ url_clear (void)
 	urlset().clear();
 }
 
-void
-url_save_tree (const char *fname, const char *mode, gboolean fullpath)
+namespace url
 {
-	FILE *fd;
-
-	if (fullpath)
-		fd = hexchat_fopen_file (fname, mode, XOF_FULLPATH);
-	else
-		fd = hexchat_fopen_file (fname, mode, 0);
-	if (fd == NULL)
+void save_tree(const char *fname)
+{
+	namespace bfs = boost::filesystem;
+	bfs::ofstream outfile{fname, std::ios::out | std::ios::trunc |
+					 std::ios::binary};
+	if (!outfile)
 		return;
 
-	for (const auto & url : urlset())
+	for (const auto &url : urlset())
 	{
-		fprintf(fd, "%s\n", url.c_str());
+		outfile << url << '\n';
 	}
-
-	fclose (fd);
+}
 }
 
 namespace {
-static void
-url_save_node (const std::string & url)
+static void url_save_node(const std::string &url)
 {
-	FILE *fd;
-
-	/* open <config>/url.log in append mode */
-	fd = hexchat_fopen_file ("url.log", "a", 0);
-	if (fd == NULL)
-	{
+	namespace bfs = boost::filesystem;
+	// open <config>/url.log in append mode
+	static bfs::ofstream outfile{io::fs::make_config_path("url.log"),
+				     std::ios::out | std::ios::app |
+					 std::ios::binary};
+	if (!outfile)
 		return;
-	}
-
-	fprintf (fd, "%s\n", url.c_str());
-	fclose (fd);	
+	outfile << url << '\n';
+	outfile.flush();
 }
 
 static void

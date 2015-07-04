@@ -135,11 +135,11 @@ url_button_copy (GtkWidget *widget, gpointer data)
 }
 
 static void
-url_save_callback (void *arg1, char *file)
+url_save_callback (void *, char *file)
 {
 	if (file)
 	{
-		url_save_tree (file, "w", TRUE);
+		url::save_tree (file);
 	}
 }
 
