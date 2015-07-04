@@ -1,9 +1,28 @@
+/* HexChat
+* Copyright (C) 2015 Leetsoftwerx.
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+*/
 
+//#define BOOST_TEST_MODULE common_tests
 #include <ctime>
 #include <glib.h>
 #include <fe.hpp>
 #include <util.hpp>
 #include <dcc.hpp>
+#include <boost/test/unit_test.hpp>
 
 void fe_new_window(struct session *sess, int focus) {}
 
@@ -49,13 +68,24 @@ int fe_input_add(int sok, fia_flags flags, GIOFunc func, void *data)
 	return tag;
 }
 
+boost::unit_test::test_suite *init_function(int, char *[])
+{
+	// create test cases and suites and return a pointer to any enclosing
+	// suite, or 0.
+	return nullptr;
+}
+
 /* === command-line parameter parsing : requires glib 2.6 === */
 
-int fe_args(int argc, char *argv[]) { return -1; }
+int fe_args(int argc, char *argv[]) {
+	return -1; 
+}
 
 void fe_init(void) {}
 
-void fe_main(void) { return; }
+void fe_main(void) {
+	return;
+}
 
 void fe_exit(void) {}
 
@@ -145,7 +175,7 @@ void fe_lastlog(session *, session *, char *,
 		gtk_xtext_search_flags)
 {
 }
-void fe_set_lag(server *, long) {}
+void fe_set_lag(server &, long) {}
 void fe_set_throttle(server *) {}
 void fe_set_away(server &) {}
 void fe_serverlist_open(session *) {}

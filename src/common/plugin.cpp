@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <istream>
+#include <locale>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -48,6 +49,7 @@
 
 #include "hexchat.hpp"
 #include "fe.hpp"
+#include "filesystem.hpp"
 #include "util.hpp"
 #include "outbound.hpp"
 #include "cfgfiles.hpp"
@@ -253,6 +255,57 @@ hexchat_read_fd (hexchat_plugin *, GIOChannel *source, char *buf, int *len)
 
 /* Load a static plugin */
 
+void plugin_setup(hexchat_plugin_internal* pl)
+{
+	/* win32 uses these because it doesn't have --export-dynamic! */
+	pl->hexchat_hook_command = hexchat_hook_command;
+	pl->hexchat_hook_server = hexchat_hook_server;
+	pl->hexchat_hook_print = hexchat_hook_print;
+	pl->hexchat_hook_timer = hexchat_hook_timer;
+	pl->hexchat_hook_fd = hexchat_hook_fd;
+	pl->hexchat_unhook = hexchat_unhook;
+	pl->hexchat_print = hexchat_print;
+	pl->hexchat_printf = hexchat_printf;
+	pl->hexchat_command = hexchat_command;
+	pl->hexchat_commandf = hexchat_commandf;
+	pl->hexchat_nickcmp = hexchat_nickcmp;
+	pl->hexchat_set_context = hexchat_set_context;
+	pl->hexchat_find_context = hexchat_find_context;
+	pl->hexchat_get_context = hexchat_get_context;
+	pl->hexchat_get_info = hexchat_get_info;
+	pl->hexchat_get_prefs = hexchat_get_prefs;
+	pl->hexchat_list_get = hexchat_list_get;
+	pl->hexchat_list_free = hexchat_list_free;
+	pl->hexchat_list_fields = hexchat_list_fields;
+	pl->hexchat_list_str = hexchat_list_str;
+	pl->hexchat_list_next = hexchat_list_next;
+	pl->hexchat_list_int = hexchat_list_int;
+	pl->hexchat_plugingui_add = hexchat_plugingui_add;
+	pl->hexchat_plugingui_remove = hexchat_plugingui_remove;
+	pl->hexchat_emit_print = hexchat_emit_print;
+#ifdef WIN32
+	pl->hexchat_read_fd = reinterpret_cast<int(*) (hexchat_plugin *, void *, char *, int *)>(hexchat_read_fd);
+#else
+	pl->hexchat_read_fd = hexchat_dummy;
+#endif
+	pl->hexchat_list_time = hexchat_list_time;
+	pl->hexchat_gettext = hexchat_gettext;
+	pl->hexchat_send_modes = hexchat_send_modes;
+	pl->hexchat_strip = hexchat_strip;
+	pl->hexchat_free = hexchat_free;
+	pl->hexchat_pluginpref_set_str = hexchat_pluginpref_set_str;
+	pl->hexchat_pluginpref_get_str = hexchat_pluginpref_get_str;
+	pl->hexchat_pluginpref_set_int = hexchat_pluginpref_set_int;
+	pl->hexchat_pluginpref_get_int = hexchat_pluginpref_get_int;
+	pl->hexchat_pluginpref_delete = hexchat_pluginpref_delete;
+	pl->hexchat_pluginpref_list = hexchat_pluginpref_list;
+	pl->hexchat_hook_server_attrs = hexchat_hook_server_attrs;
+	pl->hexchat_hook_print_attrs = hexchat_hook_print_attrs;
+	pl->hexchat_emit_print_attrs = hexchat_emit_print_attrs;
+	pl->hexchat_event_attrs_create = hexchat_event_attrs_create;
+	pl->hexchat_event_attrs_free = hexchat_event_attrs_free;
+}
+
 void
 plugin_add (session *sess, const char *filename, void *handle, plugin_init_func init_func,
 				plugin_deinit_func deinit_func, char *arg, bool fake)
@@ -262,54 +315,7 @@ plugin_add (session *sess, const char *filename, void *handle, plugin_init_func 
 
 	if (!fake)
 	{
-		/* win32 uses these because it doesn't have --export-dynamic! */
-		pl->hexchat_hook_command = hexchat_hook_command;
-		pl->hexchat_hook_server = hexchat_hook_server;
-		pl->hexchat_hook_print = hexchat_hook_print;
-		pl->hexchat_hook_timer = hexchat_hook_timer;
-		pl->hexchat_hook_fd = hexchat_hook_fd;
-		pl->hexchat_unhook = hexchat_unhook;
-		pl->hexchat_print = hexchat_print;
-		pl->hexchat_printf = hexchat_printf;
-		pl->hexchat_command = hexchat_command;
-		pl->hexchat_commandf = hexchat_commandf;
-		pl->hexchat_nickcmp = hexchat_nickcmp;
-		pl->hexchat_set_context = hexchat_set_context;
-		pl->hexchat_find_context = hexchat_find_context;
-		pl->hexchat_get_context = hexchat_get_context;
-		pl->hexchat_get_info = hexchat_get_info;
-		pl->hexchat_get_prefs = hexchat_get_prefs;
-		pl->hexchat_list_get = hexchat_list_get;
-		pl->hexchat_list_free = hexchat_list_free;
-		pl->hexchat_list_fields = hexchat_list_fields;
-		pl->hexchat_list_str = hexchat_list_str;
-		pl->hexchat_list_next = hexchat_list_next;
-		pl->hexchat_list_int = hexchat_list_int;
-		pl->hexchat_plugingui_add = hexchat_plugingui_add;
-		pl->hexchat_plugingui_remove = hexchat_plugingui_remove;
-		pl->hexchat_emit_print = hexchat_emit_print;
-#ifdef WIN32
-		pl->hexchat_read_fd = reinterpret_cast<int(*) (hexchat_plugin *,void *, char *,int *)>(hexchat_read_fd);
-#else
-		pl->hexchat_read_fd = hexchat_dummy;
-#endif
-		pl->hexchat_list_time = hexchat_list_time;
-		pl->hexchat_gettext = hexchat_gettext;
-		pl->hexchat_send_modes = hexchat_send_modes;
-		pl->hexchat_strip = hexchat_strip;
-		pl->hexchat_free = hexchat_free;
-		pl->hexchat_pluginpref_set_str = hexchat_pluginpref_set_str;
-		pl->hexchat_pluginpref_get_str = hexchat_pluginpref_get_str;
-		pl->hexchat_pluginpref_set_int = hexchat_pluginpref_set_int;
-		pl->hexchat_pluginpref_get_int = hexchat_pluginpref_get_int;
-		pl->hexchat_pluginpref_delete = hexchat_pluginpref_delete;
-		pl->hexchat_pluginpref_list = hexchat_pluginpref_list;
-		pl->hexchat_hook_server_attrs = hexchat_hook_server_attrs;
-		pl->hexchat_hook_print_attrs = hexchat_hook_print_attrs;
-		pl->hexchat_emit_print_attrs = hexchat_emit_print_attrs;
-		pl->hexchat_event_attrs_create = hexchat_event_attrs_create;
-		pl->hexchat_event_attrs_free = hexchat_event_attrs_free;
-
+		plugin_setup(pl);
 		/* run hexchat_plugin_init, if it returns 0, close the plugin */
 		char* name;
 		char* desc;
@@ -1926,29 +1932,28 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 		canonalize_key(token.get());
 		snprintf(confname, sizeof(confname), "addon_%s.conf", token.get());
 	}
-
+	auto config_path = io::fs::make_config_path(confname);
 	boost::system::error_code ec;
-	if (!bfs::exists(confname, ec)) /* no existing config file, no parsing */
-		return 0;
+	if (!bfs::exists(config_path, ec)) /* no existing config file, no parsing */
+		return false;
 
 	/* clean up garbage */
 	strcpy(dest, "");
-	bfs::ifstream stream(confname, std::ios::in | std::ios::binary);
+	bfs::ifstream stream(config_path, std::ios::in | std::ios::binary);
+	std::locale locale;
+	std::vector<std::string> prefs;
 	for (std::string line; std::getline(stream, line, '\n');)
 	{
 		auto eq = line.find_first_of('=');
 		if (eq == std::string::npos)
 			continue;
 		auto part1 = line.substr(0, eq);
-		auto part2 = line.substr(eq);
-		boost::algorithm::trim(part1);
-		boost::algorithm::trim(part2);
-		// we have no idea how long dest is...
-		g_strlcat(dest, part1.c_str(), 4096);
-		g_strlcat(dest, ",", 4096);
-		g_strlcat(dest, part2.c_str(), 4096);
-		g_strlcat(dest, ",", 4096);
+		boost::algorithm::trim_right(part1, locale);
+		prefs.emplace_back(part1);
 	}
+	auto prefs_joined = boost::join(prefs, ",");
+	// we have no idea how long dest is...
+	g_strlcat(dest, prefs_joined.c_str(), 4096);
 
-	return 1;
+	return true;
 }

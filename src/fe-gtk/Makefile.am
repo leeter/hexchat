@@ -32,7 +32,7 @@ endif
 
 hexchat_SOURCES = ascii.cpp banlist.cpp chanlist.cpp chanview.cpp custom-list.cpp \
 	dccgui.cpp editlist.cpp fe-gtk.cpp fkeys.cpp gtkutil.cpp ignoregui.cpp joind.cpp menu.cpp \
-	maingui.cpp notifygui.cpp palette.cpp pixmaps.cpp plugin-tray.cpp $(plugingui_c) \
+	main.cpp maingui.cpp notifygui.cpp palette.cpp pixmaps.cpp plugin-tray.cpp $(plugingui_c) \
 	rawlog.cpp resources.c servlistgui.cpp setup.cpp $(iso_codes_c) \
 	sexy-spell-entry.cpp textgui.cpp urlgrab.cpp userlistgui.cpp xtext.cpp
 hexchat_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_builddir)/src/common -I$(top_builddir)/src/libirc

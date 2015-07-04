@@ -745,7 +745,7 @@ set_locale (void)
 }
 
 int
-main (int argc, char *argv[])
+hexmain (int argc, char *argv[])
 {
 	std::srand (static_cast<unsigned>(std::time (nullptr)));	/* CL: do this only once! */
 

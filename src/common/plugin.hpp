@@ -24,6 +24,7 @@
 #ifndef PLUGIN_C
 #define PLUGIN_C
 #endif
+#include <glib.h>
 #include "sessfwd.hpp"
 typedef struct session hexchat_context;
 #include "hexchat-plugin.h"

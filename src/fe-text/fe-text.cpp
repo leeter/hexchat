@@ -945,3 +945,8 @@ fe_get_default_font (void)
 {
 	return NULL;
 }
+
+int main(int argc, char *argv[])
+{
+	return hexmain(argc, argv);
+}

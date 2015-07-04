@@ -21,5 +21,8 @@
     <ClCompile Include="fe_stub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="plugintest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
