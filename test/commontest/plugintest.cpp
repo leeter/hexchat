@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(plugin_save_str)
 
 	auto result = hexchat_pluginpref_set_str(ph.get(), test_val_name, test_val);
 	BOOST_REQUIRE_EQUAL(!!result, true);
+	hexchat_pluginpref_delete(ph.get(), test_val_name);
 }
 
 BOOST_AUTO_TEST_CASE(plugin_save_str_roundtrip)
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(plugin_save_str_roundtrip)
 	auto res2 = hexchat_pluginpref_get_str(ph.get(), test_val_name, test_buffer);
 	BOOST_REQUIRE_EQUAL(!!res2, true);
 	BOOST_ASSERT(std::strcmp(test_val, test_buffer) == 0);
+	hexchat_pluginpref_delete(ph.get(), test_val_name);
 }
 
 BOOST_AUTO_TEST_CASE(plugin_get_preflist_single)
@@ -68,8 +70,9 @@ BOOST_AUTO_TEST_CASE(plugin_get_preflist_single)
 	char test_buffer[4096] = { 0 };
 	auto res2 = hexchat_pluginpref_list(ph.get(), test_buffer);
 	BOOST_REQUIRE_EQUAL(!!res2, true);
-	BOOST_REQUIRE_EQUAL(std::strlen(test_val), std::strlen(test_buffer));
-	BOOST_ASSERT(std::strcmp(test_val, test_buffer) == 0);
+	BOOST_REQUIRE_EQUAL(std::strlen(test_val_name), std::strlen(test_buffer));
+	BOOST_ASSERT(std::strcmp(test_val_name, test_buffer) == 0);
+	hexchat_pluginpref_delete(ph.get(), test_val_name);
 }
 
 
@@ -91,6 +94,8 @@ BOOST_AUTO_TEST_CASE(plugin_get_preflist_multi)
 	BOOST_REQUIRE_EQUAL(!!res2, true);
 	BOOST_REQUIRE_EQUAL(std::strlen(expected_list), std::strlen(test_buffer));
 	BOOST_ASSERT(std::strcmp(expected_list, test_buffer) == 0);
+	hexchat_pluginpref_delete(ph.get(), test_val_name);
+	hexchat_pluginpref_delete(ph.get(), test_val2_name);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
