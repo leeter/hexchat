@@ -1,6 +1,6 @@
+include $(top_srcdir)/common.mk
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++14 -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../../src/libirc -D_FORTIFY_SOURCE=2
-AM_CFLAGS = $(COMMON_CFLAGS) $(CFLAGS) -std=c11 -Wall -Wextra -pedantic -I$(top_srcdir) -I../../src/libirc -D_FORTIFY_SOURCE=2
+AM_CPPFLAGS += -I$(top_srcdir) -I../../src/libirc
 
 noinst_PROGRAMS = libirc-test
 libirc_test_SOURCES = irc_proto_test.cpp message_test.cpp

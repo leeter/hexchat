@@ -1,8 +1,7 @@
 ## Process this file with automake to produce Makefile.in
+include $(top_srcdir)/common.mk
 
 noinst_LIBRARIES = libirc.a
-
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++14 -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -D_FORTIFY_SOURCE=2
 
 EXTRA_DIST = \
     connection.hpp \
@@ -15,7 +14,6 @@ EXTRA_DIST = \
     tcpfwd.hpp
 
 libirc_a_SOURCES = detail/inbound.cpp irc_proto.cpp message.cpp server.cpp tcp_connection.cpp throttled_queue.cpp
-libirc_a_CFLAGS = $(LIBPROXY_CFLAGS) $(CPPFLAGS)
-libirc_a_LIBS = $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_SIGNALS2_LIBS)
+libirc_a_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)
 
 CLEANFILES = $(BUILT_SOURCES)
