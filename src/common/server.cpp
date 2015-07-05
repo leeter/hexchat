@@ -2151,7 +2151,7 @@ server::server()
 #endif
 {}
 
-server::~server(){}
+server::~server() = default;
 
 server *
 server_new (void)
