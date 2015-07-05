@@ -596,7 +596,15 @@ public:
 
 	void foreach_alpha(std::function<void(User&)> func)
 	{
+		if (!func)
+		{
+			return;
+		}
 
+		for (auto u : this->users_alpha_)
+		{
+			func(*u);
+		}
 	}
 };
 
