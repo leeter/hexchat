@@ -604,8 +604,7 @@ userlist::userlist()
 	:impl_(new userlist::userlist_impl)
 {}
 
-userlist::~userlist()
-{}
+userlist::~userlist() = default;
 
 userlist::size_type userlist::ops() const
 {
