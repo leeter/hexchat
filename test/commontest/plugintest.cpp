@@ -26,18 +26,26 @@
 #include <hexchat-plugin.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/system/error_code.hpp>
 
 extern char * xdir;
-
+static const char * testdir = "testconf";
 struct MyConfig {
-	MyConfig()   { xdir = g_strdup("."); }
+	MyConfig()   
+	{ 
+		boost::filesystem::create_directory(testdir);
+		xdir = g_strdup(testdir); 
+	}
+	~MyConfig() {
+		boost::system::error_code ec;
+		boost::filesystem::remove(testdir, ec);
+	}
 };
-
-BOOST_GLOBAL_FIXTURE(MyConfig);
 
 BOOST_AUTO_TEST_SUITE(plugin_test)
 
-BOOST_AUTO_TEST_CASE(plugin_save_str)
+BOOST_FIXTURE_TEST_CASE(plugin_save_str, MyConfig)
 {
 	const char * test_val_name = "foobar";
 	const char * test_val = "barfoo";
@@ -49,7 +57,7 @@ BOOST_AUTO_TEST_CASE(plugin_save_str)
 	hexchat_pluginpref_delete(ph.get(), test_val_name);
 }
 
-BOOST_AUTO_TEST_CASE(plugin_save_str_roundtrip)
+BOOST_FIXTURE_TEST_CASE(plugin_save_str_roundtrip, MyConfig)
 {
 	const char * test_val_name = "foobar";
 	const char * test_val = "barfoo";
@@ -65,7 +73,7 @@ BOOST_AUTO_TEST_CASE(plugin_save_str_roundtrip)
 	hexchat_pluginpref_delete(ph.get(), test_val_name);
 }
 
-BOOST_AUTO_TEST_CASE(plugin_get_preflist_single)
+BOOST_FIXTURE_TEST_CASE(plugin_get_preflist_single, MyConfig)
 {
 	const char * test_val_name = "foobar";
 	const char * test_val = "barfoo";
@@ -84,7 +92,7 @@ BOOST_AUTO_TEST_CASE(plugin_get_preflist_single)
 }
 
 
-BOOST_AUTO_TEST_CASE(plugin_get_preflist_multi)
+BOOST_FIXTURE_TEST_CASE(plugin_get_preflist_multi, MyConfig)
 {
 	const char * test_val_name = "foobar";
 	const char * test_val2_name = "barfoo";
