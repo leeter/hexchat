@@ -56,7 +56,7 @@ void fe_cleanup (void);
 void fe_exit (void);
 int fe_timeout_add(int interval, GSourceFunc callback, void *userdata);
 void fe_timeout_remove (int tag);
-void fe_new_window (struct session *sess, int focus);
+void fe_new_window (struct session *sess, bool focus);
 void fe_new_server (struct server *serv);
 void fe_add_rawlog (struct server *serv, const boost::string_ref & text, bool outbound);
 enum fe_msg

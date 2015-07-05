@@ -679,7 +679,7 @@ xchat_init (void)
 			/* and no serverlist gui ... */
 			if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
 				/* we'll have to open one. */
-				new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+				new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 		} else
 		{
 			fe_idle_add (xchat_auto_connect, nullptr);
@@ -687,7 +687,7 @@ xchat_init (void)
 	} else
 	{
 		if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
-			new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+			new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 	}
 }
 

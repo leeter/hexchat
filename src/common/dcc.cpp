@@ -50,10 +50,8 @@
 #include "w32dcc_security.hpp"
 #else
 #include <unistd.h>
-#ifndef SOCKET
-#define SOCKET int;
+using SOCKET = int;
 #define INVALID_SOCKET -1
-#endif
 #endif
 
 #include "dcc.hpp"

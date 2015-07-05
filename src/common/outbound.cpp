@@ -2256,7 +2256,7 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 
 	lastlog_sess = find_dialog (*(sess->server), "(lastlog)");
 	if (!lastlog_sess)
-		lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, 0);
+		lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, false);
 
 	lastlog_sess->lastlog_sess = sess;
 	lastlog_sess->lastlog_flags = flags;
@@ -2647,11 +2647,11 @@ cmd_newserver (struct session *sess, char *tbuf, char *word[],
 {
 	if (strcmp (word[2], "-noconnect") == 0)
 	{
-		new_ircwindow(nullptr, word[3], session::SESS_SERVER, 0);
+		new_ircwindow(nullptr, word[3], session::SESS_SERVER, false);
 		return true;
 	}
 	
-	sess = new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 1);
+	sess = new_ircwindow(nullptr, nullptr, session::SESS_SERVER, true);
 	cmd_server (sess, tbuf, word, word_eol);
 	return true;
 }
@@ -2796,7 +2796,7 @@ cmd_ping (struct session *sess, char *, char *word[], char *[])
 }
 
 session *
-open_query (server &serv, const char nick[], gboolean focus_existing)
+open_query (server &serv, const char nick[], bool focus_existing)
 {
 	session *sess;
 
@@ -2815,7 +2815,7 @@ cmd_query (struct session *sess, char *, char *word[], char *word_eol[])
 	char *nick = word[2];
 	char *msg = word_eol[3];
 	char *split_text = nullptr;
-	gboolean focus = true;
+	bool focus = true;
 	int cmd_length = 13; /* " PRIVMSG ", " ", :, \r, \n */
 	int offset = 0;
 

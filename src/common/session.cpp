@@ -289,7 +289,7 @@ irc_init(session *sess)
 
 
 static session *
-session_new(server *serv, const char *from, int type, int focus)
+session_new(server *serv, const char *from, int type, bool focus)
 {
 	session *sess = new session(serv, from, type);
 
@@ -301,7 +301,7 @@ session_new(server *serv, const char *from, int type, int focus)
 }
 
 session *
-new_ircwindow(server *serv, const char *name, ::session::session_type type, int focus)
+new_ircwindow(server *serv, const char *name, ::session::session_type type, bool focus)
 {
 	session *sess;
 

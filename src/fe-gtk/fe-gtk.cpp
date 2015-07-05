@@ -369,7 +369,7 @@ static void
 log_handler (const gchar   *log_domain,
 			   GLogLevelFlags log_level,
 			   const gchar   *message,
-			   gpointer	      unused_data)
+			   gpointer)
 {
 	session *sess;
 
@@ -390,7 +390,7 @@ log_handler (const gchar   *log_domain,
 /* install tray stuff */
 
 static int
-fe_idle (gpointer data)
+fe_idle (gpointer)
 {
 	session *sess = static_cast<session*>(sess_list->data);
 
@@ -405,7 +405,7 @@ fe_idle (gpointer data)
 }
 
 void
-fe_new_window (session *sess, int focus)
+fe_new_window (session *sess, bool focus)
 {
 	bool tab = false;
 

@@ -80,8 +80,8 @@ notify_treecell_property_mapper (GtkTreeViewColumn *col, GtkCellRenderer *cell,
 	gtk_tree_model_get (GTK_TREE_MODEL (model), iter, 
 						COLOUR_COLUMN, &colour,
 						model_column, &text, -1);
-	g_object_set (G_OBJECT (cell), "text", text, NULL);
-	g_object_set (G_OBJECT (cell), "foreground-gdk", colour, NULL);
+	g_object_set (G_OBJECT (cell), "text", text, nullptr);
+	g_object_set (G_OBJECT (cell), "foreground-gdk", colour, nullptr);
 	g_free (text);
 }
 
@@ -94,12 +94,12 @@ notify_row_cb (GtkTreeSelection *sel, GtkTreeView *view)
 	if (gtkutil_treeview_get_selected (view, &iter, NPS_COLUMN, &servnot, -1))
 	{
 		gtk_widget_set_sensitive (notify_button_opendialog, servnot ? servnot->ison : 0);
-		gtk_widget_set_sensitive (notify_button_remove, TRUE);
+		gtk_widget_set_sensitive (notify_button_remove, true);
 		return;
 	}
 
-	gtk_widget_set_sensitive (notify_button_opendialog, FALSE);
-	gtk_widget_set_sensitive (notify_button_remove, FALSE);
+	gtk_widget_set_sensitive (notify_button_opendialog, false);
+	gtk_widget_set_sensitive (notify_button_remove, false);
 }
 
 static GtkWidget *
@@ -118,7 +118,7 @@ notify_treeview_new (GtkWidget *box)
 								G_TYPE_POINTER,	/* can't specify colour! */
 										 G_TYPE_POINTER
 							   );
-	g_return_val_if_fail (store != NULL, NULL);
+	g_return_val_if_fail (store != nullptr, nullptr);
 
 	view = gtkutil_treeview_new (box, GTK_TREE_MODEL (store),
 								 notify_treecell_property_mapper,
@@ -126,7 +126,7 @@ notify_treeview_new (GtkWidget *box)
 								 STATUS_COLUMN, _("Status"),
 								 SERVER_COLUMN, _("Network"),
 								 SEEN_COLUMN, _("Last Seen"), -1);
-	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 0), TRUE);
+	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 0), true);
 
 	for (col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
 		 col_id++)
@@ -142,7 +142,7 @@ notify_treeview_new (GtkWidget *box)
 static void
 notify_add_clicked(GtkWidget * igad)
 {
-	::hexchat::fe::notify::fe_notify_ask("", NULL);
+	::hexchat::fe::notify::fe_notify_ask("", nullptr);
 }
 
 static void
@@ -156,7 +156,7 @@ notify_opendialog_clicked(GtkWidget * igad)
 	if (gtkutil_treeview_get_selected(view, &iter, NPS_COLUMN, &servnot, -1))
 	{
 		if (servnot)
-			open_query(*servnot->server, servnot->notify->name.c_str(), TRUE);
+			open_query(*servnot->server, servnot->notify->name.c_str(), true);
 	}
 }
 
@@ -211,7 +211,7 @@ notifygui_add_cb(GtkDialog *dialog, gint response, gpointer entry)
 	{
 		networks = (char*)gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(entry), "net")));
 		if (g_ascii_strcasecmp(networks, "ALL") == 0 || networks[0] == 0)
-			notify_adduser(text, NULL);
+			notify_adduser(text, nullptr);
 		else
 			notify_adduser(text, networks);
 	}
@@ -241,15 +241,15 @@ namespace notify{
 		const char *msg = _("Enter nickname to add:");
 		char buf[256];
 
-		dialog = gtk_dialog_new_with_buttons(msg, NULL, GtkDialogFlags(),
+		dialog = gtk_dialog_new_with_buttons(msg, nullptr, GtkDialogFlags(),
 			GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 			GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-			NULL);
+			nullptr);
 		if (parent_window)
 			gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent_window));
 		gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_MOUSE);
 
-		table = gtk_table_new(2, 3, FALSE);
+		table = gtk_table_new(2, 3, false);
 		gtk_container_set_border_width(GTK_CONTAINER(table), 12);
 		gtk_table_set_row_spacings(GTK_TABLE(table), 3);
 		gtk_table_set_col_spacings(GTK_TABLE(table), 8);
@@ -277,7 +277,7 @@ namespace notify{
 		gtk_entry_set_text(GTK_ENTRY(wid), networks ? networks : "ALL");
 		gtk_table_attach_defaults(GTK_TABLE(table), wid, 1, 2, 2, 3);
 
-		label = gtk_label_new(NULL);
+		label = gtk_label_new(nullptr);
 		snprintf(buf, sizeof(buf), "<i><span size=\"smaller\">%s</span></i>", _("Comma separated list of networks is accepted."));
 		gtk_label_set_markup(GTK_LABEL(label), buf);
 		gtk_table_attach_defaults(GTK_TABLE(table), label, 1, 2, 3, 4);
@@ -353,7 +353,7 @@ notify_gui_update (void)
 			if (!valid)	/* create new tree row if required */
 				gtk_list_store_append (store, &iter);
 			gtk_list_store_set (store, &iter, 0, name, 1, status,
-								2, server.data(), 3, seen, 4, &colors[4], 5, NULL, -1);
+								2, server.data(), 3, seen, 4, &colors[4], 5, nullptr, -1);
 			if (valid)
 				valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
@@ -416,8 +416,8 @@ notify_opengui (void)
 	}
 
 	notify_window =
-		mg_create_generic_tab ("Notify", _(DISPLAY_NAME": Friends List"), FALSE, TRUE,
-							   notify_closegui, NULL, 400, 250, &vbox, 0);
+		mg_create_generic_tab ("Notify", _(DISPLAY_NAME": Friends List"), false, true,
+							   notify_closegui, nullptr, 400, 250, &vbox, 0);
 	gtkutil_destroy_on_esc (notify_window);
 
 	view = notify_treeview_new (vbox);
@@ -437,11 +437,11 @@ notify_opengui (void)
 					_("Remove"));
 
 	notify_button_opendialog =
-		gtkutil_button(bbox, NULL, 0, G_CALLBACK(notify_opendialog_clicked), 0,
+		gtkutil_button(bbox, nullptr, 0, G_CALLBACK(notify_opendialog_clicked), 0,
 					_("Open Dialog"));
 
-	gtk_widget_set_sensitive (notify_button_opendialog, FALSE);
-	gtk_widget_set_sensitive (notify_button_remove, FALSE);
+	gtk_widget_set_sensitive (notify_button_opendialog, false);
+	gtk_widget_set_sensitive (notify_button_remove, false);
 
 	notify_gui_update ();
 

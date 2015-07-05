@@ -137,7 +137,7 @@ inbound_open_dialog (server &serv, const char *from,
 {
 	session *sess;
 
-	sess = new_ircwindow(&serv, from, session::SESS_DIALOG, 0);
+	sess = new_ircwindow(&serv, from, session::SESS_DIALOG, false);
 	/* for playing sounds */
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_OPENDIALOG, sess, nullptr, nullptr, nullptr, nullptr, 0,
 								  tags_data->timestamp);
@@ -589,7 +589,7 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 			found_unused = sess != nullptr;
 			if (!sess)
 				/* last resort, open a new tab/window */
-				sess = new_ircwindow(&serv, chan, session::SESS_CHANNEL, 1);
+				sess = new_ircwindow(&serv, chan, session::SESS_CHANNEL, true);
 		}
 	}
 
@@ -951,9 +951,9 @@ inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip, int id,
 			if (!sess)
 			{
 				if (stype == session::SESS_NOTICES)
-					sess = new_ircwindow(&serv, "(notices)", session::SESS_NOTICES, 0);
+					sess = new_ircwindow(&serv, "(notices)", session::SESS_NOTICES, false);
 				else
-					sess = new_ircwindow(&serv, "(snotices)", session::SESS_SNOTICES, 0);
+					sess = new_ircwindow(&serv, "(snotices)", session::SESS_SNOTICES, false);
 				fe_set_channel (sess);
 				fe_set_title (*sess);
 				fe_set_nonchannel (sess, false);

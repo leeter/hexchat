@@ -24,7 +24,7 @@
 #include <dcc.hpp>
 #include <boost/test/unit_test.hpp>
 
-void fe_new_window(struct session *sess, int focus) {}
+void fe_new_window(struct session *, bool /*focus*/) {}
 
 void fe_print_text(session &sess, char *text, time_t stamp,
 		   gboolean no_activity)

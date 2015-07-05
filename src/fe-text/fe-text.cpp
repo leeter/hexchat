@@ -87,7 +87,7 @@ handle_line (GIOChannel *channel, GIOCondition cond, gpointer data)
 static int done_intro = 0;
 
 void
-fe_new_window (struct session *sess, int focus)
+fe_new_window (struct session *sess, bool focus)
 {
 	char buf[512];
 

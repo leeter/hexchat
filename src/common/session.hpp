@@ -109,6 +109,6 @@ struct session
 	void(*scrollback_replay_marklast) (struct session *sess);
 };
 
-session * new_ircwindow(server *serv, const char *name, session::session_type type, int focus);
+session * new_ircwindow(server *serv, const char *name, session::session_type type, bool focus);
 
 #endif // HEXCHAT_SESSION_HPP
