@@ -1,5 +1,5 @@
 /* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+* Copyright (C) 2014-2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,9 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#include <cstdio>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include <fcntl.h>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
 
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/format.hpp>
@@ -35,8 +26,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/regex.hpp>
 #include <boost/utility/string_ref.hpp>
-
-#include <glib.h>
 
 #include "fe.hpp"
 #include "cfgfiles.hpp"
@@ -53,75 +42,74 @@ class session_logger_impl
 {
 	boost::filesystem::ofstream _outfile;
 	boost::filesystem::path _log_path;
-public:
+
+	  public:
 	session_logger_impl(boost::filesystem::path log_path)
-		:_outfile(log_path, std::ios::binary | std::ios::out | std::ios::app | std::ios::ate),
-		_log_path(std::move(log_path))
+		: _outfile(log_path, std::ios::binary | std::ios::out |
+					 std::ios::app | std::ios::ate),
+		  _log_path(std::move(log_path))
 	{
 		auto currenttime = std::time(nullptr);
-		_outfile << boost::format(_("**** BEGIN LOGGING AT %s\n")) % std::ctime(&currenttime);
+		_outfile << boost::format(_("**** BEGIN LOGGING AT %s\n")) %
+				std::ctime(&currenttime);
 	}
 
 	~session_logger_impl()
 	{
 		auto currenttime = std::time(nullptr);
-		try{
-			_outfile << boost::format(_("**** ENDING LOGGING AT %s\n")) % std::ctime(&currenttime);
+		try
+		{
+			_outfile
+				<< boost::format(_("**** ENDING LOGGING AT %s\n")) %
+				   std::ctime(&currenttime);
 			_outfile.flush();
-		} catch (std::exception&){}
-		catch (boost::exception&){}
-
+		}
+		catch (std::exception &)
+		{
+		}
+		catch (boost::exception &)
+		{
+		}
 	}
 
-	bool write(const std::string & text, time_t ts)
+	bool write(const std::string &text, time_t ts)
 	{
 		if (prefs.hex_stamp_log)
 		{
-			if (!ts) ts = std::time(nullptr);
-			_outfile << get_stamp_str(prefs.hex_stamp_log_format, ts);
+			if (!ts)
+				ts = std::time(nullptr);
+			_outfile
+				<< get_stamp_str(prefs.hex_stamp_log_format, ts);
 		}
 
 		auto temp = strip_color(text, STRIP_ALL);
-		_outfile << temp;;
-
+		_outfile << temp;
+		;
 
 		/* lots of scripts/plugins print without a \n at the end */
 		if (!temp.empty() && temp.back() != '\n')
-			_outfile << '\n';	/* emulate what xtext would display */
+			_outfile << '\n'; /* emulate what xtext would display */
 		_outfile.flush();
 		return static_cast<bool>(_outfile);
 	}
 };
 
-std::string log_create_filename(const std::string & channame)
+std::string log_create_filename(const std::string &channame)
 {
-	static const std::string replace_format{ "_" };
+	static const std::string replace_format{"_"};
 #ifdef WIN32
 	/* win32 can't handle filenames with \|/><:"*? characters */
 	static boost::regex replace_regex("(/|\\\\|>|<|\\:|\"|\\*|\\?|\\|)");
 #else
 	static boost::regex replace_regex("/");
 #endif
-	return boost::replace_all_regex_copy(channame, replace_regex, replace_format);
+	return boost::replace_all_regex_copy(channame, replace_regex,
+						 replace_format);
 }
-
-//void log_close(session &sess)
-//{
-//	if (sess.logfd != -1)
-//	{
-//		std::time_t currenttime = std::time(nullptr);
-//		std::ostringstream stream;
-//		stream << boost::format(_("**** ENDING LOGGING AT %s\n")) % std::ctime(&currenttime);
-//		auto to_output = stream.str();
-//		write(sess.logfd, to_output.c_str(), to_output.length());
-//		close(sess.logfd);
-//		sess.logfd = -1;
-//	}
-//}
 
 /* like strcpy, but % turns into %% */
 
-static char * log_escape_strcpy(char *dest, const char *src, const char *end)
+static char *log_escape_strcpy(char *dest, const char *src, const char *end)
 {
 	while (*src)
 	{
@@ -146,7 +134,8 @@ static char * log_escape_strcpy(char *dest, const char *src, const char *end)
 
 /* substitutes %c %n %s into buffer */
 
-static void log_insert_vars(char *buf, size_t bufsize, const char *fmt, const char *c, const char *n, const char *s)
+static void log_insert_vars(char *buf, size_t bufsize, const char *fmt,
+				const char *c, const char *n, const char *s)
 {
 	char *end = buf + bufsize;
 
@@ -195,19 +184,25 @@ static void log_insert_vars(char *buf, size_t bufsize, const char *fmt, const ch
 
 static bool logmask_is_fullpath()
 {
-	/* Check if final path/filename is absolute or relative.
-	* If one uses log mask variables, such as "%c/...", %c will be empty upon
-	* connecting since there's no channel name yet, so we have to make sure
-	* we won't try to write to the FS root. On Windows we can be sure it's
-	* full path if the 2nd character is a colon since Windows doesn't allow
-	* colons in filenames.
-	*/
+/* Check if final path/filename is absolute or relative.
+* If one uses log mask variables, such as "%c/...", %c will be empty upon
+* connecting since there's no channel name yet, so we have to make sure
+* we won't try to write to the FS root. On Windows we can be sure it's
+* full path if the 2nd character is a colon since Windows doesn't allow
+* colons in filenames.
+*/
 #ifdef WIN32
 	/* Treat it as full path if it
-	* - starts with '\' which denotes the root directory of the current drive letter
+	* - starts with '\' which denotes the root directory of the current
+	* drive letter
 	* - starts with a drive letter and followed by ':'
 	*/
-	if (prefs.hex_irc_logmask[0] == '\\' || (((prefs.hex_irc_logmask[0] >= 'A' && prefs.hex_irc_logmask[0] <= 'Z') || (prefs.hex_irc_logmask[0] >= 'a' && prefs.hex_irc_logmask[0] <= 'z')) && prefs.hex_irc_logmask[1] == ':'))
+	if (prefs.hex_irc_logmask[0] == '\\' ||
+		(((prefs.hex_irc_logmask[0] >= 'A' &&
+		   prefs.hex_irc_logmask[0] <= 'Z') ||
+		  (prefs.hex_irc_logmask[0] >= 'a' &&
+		   prefs.hex_irc_logmask[0] <= 'z')) &&
+		 prefs.hex_irc_logmask[1] == ':'))
 #else
 	if (prefs.hex_irc_logmask[0] == '/')
 #endif
@@ -220,17 +215,23 @@ static bool logmask_is_fullpath()
 	}
 }
 
-static boost::filesystem::path log_create_pathname(const char *servname, const char *channame, const char *netname)
+static boost::filesystem::path log_create_pathname(const char *servname,
+						   const char *channame,
+						   const char *netname)
 {
 	namespace bfs = boost::filesystem;
 
-	std::string net_name = !netname ? std::string("NETWORK") : log_create_filename(netname);
+	std::string net_name =
+		!netname ? std::string("NETWORK") : log_create_filename(netname);
 
 	/* first, everything is in UTF-8 */
-	std::string chan_name = !rfc_casecmp(channame, servname) ? std::string("server") : log_create_filename(channame);
+	std::string chan_name = !rfc_casecmp(channame, servname)
+					? std::string("server")
+					: log_create_filename(channame);
 
 	char fname[384];
-	log_insert_vars(fname, sizeof(fname), prefs.hex_irc_logmask, chan_name.c_str(), net_name.c_str(), servname);
+	log_insert_vars(fname, sizeof(fname), prefs.hex_irc_logmask,
+			chan_name.c_str(), net_name.c_str(), servname);
 
 	/* insert time/date */
 	auto now = time(nullptr);
@@ -242,7 +243,7 @@ static boost::filesystem::path log_create_pathname(const char *servname, const c
 	{
 		ret = fnametime;
 	}
-	else	/* relative path */
+	else /* relative path */
 	{
 		ret = bfs::path(config::config_dir()) / "logs" / fnametime;
 	}
@@ -254,118 +255,11 @@ static boost::filesystem::path log_create_pathname(const char *servname, const c
 	return ret;
 }
 
-//static int log_open_file(const char *servname, const char *channame, const char *netname)
-//{
-//	auto file = log_create_pathname(servname, channame, netname);
-//	int fd;
-//#ifdef WIN32
-//	fd = _wopen(file.c_str(), O_CREAT | O_APPEND | O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
-//#else
-//	fd = open(file.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
-//#endif
-//
-//	if (fd == -1)
-//		return -1;
-//	auto currenttime = time(NULL);
-//	char buf[512];
-//	write(fd, buf,
-//		snprintf(buf, sizeof(buf), _("**** BEGIN LOGGING AT %s\n"),
-//		std::ctime(&currenttime)));
-//
-//	return fd;
-//}
+session_logger::session_logger(session &parent) : _parent(parent) {}
 
-//static void log_open(session &sess)
-//{
-//	static bool log_error = false;
-//
-//	log_close(sess);
-//	sess.logfd = log_open_file(sess.server->servername, sess.channel,
-//		sess.server->get_network(false).data());
-//
-//	if (!log_error && sess.logfd == -1)
-//	{
-//		auto path = log_create_pathname(sess.server->servername, sess.channel, sess.server->get_network(false).data());
-//		std::ostringstream message;
-//		message << boost::format(_("* Can't open log file(s) for writing. Check the\npermissions on %s")) % path;
-//
-//		fe_message(message.str(), FE_MSG_WAIT | FE_MSG_ERROR);
-//		log_error = true;
-//	}
-//}
+session_logger::~session_logger() = default;
 
-//void log_open_or_close(session *sess)
-//{
-//	if (sess->text_logging == SET_DEFAULT)
-//	{
-//		if (prefs.hex_irc_logging)
-//			log_open(*sess);
-//		else
-//			log_close(*sess);
-//	}
-//	else
-//	{
-//		if (sess->text_logging)
-//			log_open(*sess);
-//		else
-//			log_close(*sess);
-//	}
-//}
-
-//void log_write(session &sess, const std::string & text, time_t ts)
-//{
-//	if (sess.text_logging == SET_DEFAULT)
-//	{
-//		if (!prefs.hex_irc_logging)
-//			return;
-//	}
-//	else
-//	{
-//		if (sess.text_logging != SET_ON)
-//			return;
-//	}
-//
-//	if (sess.logfd == -1)
-//		log_open(sess);
-//
-//	/* change to a different log file? */
-//	auto file = log_create_pathname(sess.server->servername, sess.channel,
-//		sess.server->get_network(false).data());
-//	boost::system::error_code ec;
-//	if (!boost::filesystem::exists(file, ec))
-//	{
-//		close(sess.logfd);
-//		sess.logfd = log_open_file(sess.server->servername, sess.channel,
-//			sess.server->get_network(false).data());
-//	}
-//
-//	if (prefs.hex_stamp_log)
-//	{
-//		if (!ts) ts = time(0);
-//		auto stamp = get_stamp_str(prefs.hex_stamp_log_format, ts);
-//		if (!stamp.empty())
-//		{
-//			write(sess.logfd, stamp.c_str(), stamp.size());
-//		}
-//	}
-//	auto temp = strip_color(text, STRIP_ALL);
-//	write(sess.logfd, temp.c_str(), temp.size());
-//	/* lots of scripts/plugins print without a \n at the end */
-//	if (!temp.empty() && temp.back() != '\n')
-//		write(sess.logfd, "\n", 1);	/* emulate what xtext would display */
-//}
-
-session_logger::session_logger(session& parent)
-	:_parent(parent)
-{
-
-}
-
-session_logger::~session_logger()
-{
-}
-
-bool session_logger::write(const std::string & text, time_t ts)
+bool session_logger::write(const std::string &text, time_t ts)
 {
 	if (_parent.text_logging == SET_DEFAULT)
 	{
@@ -380,9 +274,10 @@ bool session_logger::write(const std::string & text, time_t ts)
 
 	if (!_impl)
 	{
-		_impl = std::make_unique<session_logger_impl>(log_create_pathname(
-		    _parent.server->servername, _parent.channel,
-		    _parent.server->get_network(false).data()));
+		_impl =
+			std::make_unique<session_logger_impl>(log_create_pathname(
+			_parent.server->servername, _parent.channel,
+			_parent.server->get_network(false).data()));
 	}
 
 	return _impl->write(text, ts);
