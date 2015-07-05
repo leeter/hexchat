@@ -26,12 +26,12 @@
 
 void fe_new_window(struct session *, bool /*focus*/) {}
 
-void fe_print_text(session &sess, char *text, time_t stamp,
-		   gboolean no_activity)
+void fe_print_text(session &, char *, time_t,
+		   gboolean)
 {
 }
 
-void fe_timeout_remove(int tag) {}
+void fe_timeout_remove(int /*tag*/) {}
 
 int fe_timeout_add(int interval, GSourceFunc callback, void *userdata)
 {
@@ -68,16 +68,9 @@ int fe_input_add(int sok, fia_flags flags, GIOFunc func, void *data)
 	return tag;
 }
 
-boost::unit_test::test_suite *init_function(int, char *[])
-{
-	// create test cases and suites and return a pointer to any enclosing
-	// suite, or 0.
-	return nullptr;
-}
-
 /* === command-line parameter parsing : requires glib 2.6 === */
 
-int fe_args(int argc, char *argv[]) {
+int fe_args(int /*argc*/, char * /*argv*/[]) {
 	return -1; 
 }
 
@@ -124,12 +117,12 @@ namespace fe
 {
 	namespace notify
 	{
-		void fe_notify_ask(char *name, char *networks) {}
+		void fe_notify_ask(char *, char *) {}
 	}
 }
 }
-void fe_text_clear(struct session *sess, int lines) {}
-void fe_progressbar_start(struct session *sess) {}
+void fe_text_clear(struct session *, int ) {}
+void fe_progressbar_start(struct session *) {}
 void fe_progressbar_end(struct server *) {}
 void fe_userlist_insert(struct session *, struct User *, int, bool) {}
 bool fe_userlist_remove(struct session *, struct User const *) { return false; }
@@ -150,19 +143,19 @@ namespace fe
 	}
 }
 }
-void fe_clear_channel(session &sess) {}
-void fe_session_callback(struct session *sess) {}
-void fe_server_callback(struct server *serv) {}
+void fe_clear_channel(session &) {}
+void fe_session_callback(struct session *) {}
+void fe_server_callback(struct server *) {}
 void fe_url_add(const std::string &) {}
 void fe_pluginlist_update(void) {}
-void fe_buttons_update(struct session *sess) {}
-void fe_dlgbuttons_update(struct session *sess) {}
-void fe_dcc_send_filereq(struct session *sess, char *nick, int maxcps,
-			 int passive)
+void fe_buttons_update(struct session *) {}
+void fe_dlgbuttons_update(struct session *) {}
+void fe_dcc_send_filereq(struct session *, char *, int ,
+			 int)
 {
 }
-void fe_set_channel(struct session *sess) {}
-void fe_set_title(session &sess) {}
+void fe_set_channel(struct session *) {}
+void fe_set_title(session &) {}
 void fe_set_nonchannel(struct session *, int) {}
 void fe_set_nick(const server &, const char *) {}
 void fe_change_nick(struct server *, char *, char *) {}
