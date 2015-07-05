@@ -24,6 +24,7 @@
 #include <string>
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
+#include <glib.h>
 #include "sessfwd.hpp"
 struct User;
 
