@@ -27,6 +27,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/utility/string_ref.hpp>
 
+extern char * xdir;
+
+struct MyConfig {
+	MyConfig()   { xdir = g_strdup("."); }
+};
+
+BOOST_GLOBAL_FIXTURE(MyConfig);
+
 BOOST_AUTO_TEST_SUITE(plugin_test)
 
 BOOST_AUTO_TEST_CASE(plugin_save_str)
