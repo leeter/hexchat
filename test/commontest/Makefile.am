@@ -3,7 +3,7 @@ AM_CFLAGS = $(COMMON_CFLAGS) $(CFLAGS) -std=c11 -Wall -Wextra -pedantic -I$(top_
 
 noinst_PROGRAMS = libhexchatcommon-test
 libhexchatcommon_test_SOURCES = fe_stub.cpp plugintest.cpp util_test.cpp
-libhexchatcommon_test_CPPFLAGS =  $(CPPFLAGS)
+libhexchatcommon_test_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_builddir)/src/common -I$(top_builddir)/src/libirc
 libhexchatcommon_test_LDADD = ../../src/libirc/libirc.a ../../src/common/libhexchatcommon.a $(COMMON_LIBS) \
   $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_REGEX_LIBS) \
   $(BOOST_SIGNALS2_LIBS) $(BOOST_CHRONO_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIBS)
