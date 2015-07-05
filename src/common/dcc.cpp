@@ -50,6 +50,10 @@
 #include "w32dcc_security.hpp"
 #else
 #include <unistd.h>
+#ifndef SOCKET
+#define SOCKET int;
+#define INVALID_SOCKET -1
+#endif
 #endif
 
 #include "dcc.hpp"
@@ -267,11 +271,11 @@ dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 static int
 dcc_connect_sok (::dcc::DCC *dcc)
 {
-	int sok;
+	SOCKET sok;
 	struct sockaddr_in addr = { 0 };
 
 	sok = socket (AF_INET, SOCK_STREAM, 0);
-	if (sok == -1)
+	if (sok == INVALID_SOCKET)
 		return -1;
 
 	addr.sin_family = AF_INET;
