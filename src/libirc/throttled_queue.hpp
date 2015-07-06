@@ -21,7 +21,9 @@
 
 #include <cstddef>
 #include <memory>
-#include <boost/optional.hpp>
+#include <boost/optional/optional_fwd.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
+#include "config.hpp"
 #include "tcpfwd.hpp"
 
 namespace io
@@ -37,12 +39,12 @@ namespace io
 			throttled_queue();
 			~throttled_queue();
 
-			void push(const std::string & inbound);
+			void push(const boost::string_ref & inbound);
 			boost::optional<std::string> front();
 			void pop();
 			void clear();
 
-			size_type queue_length() const;
+			size_type queue_length() const NOEXCEPT;
 		};
 	}
 }

@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -203,7 +204,7 @@ identd(std::string username)
 		send (read_sok, outbuf, strlen (outbuf), 0);
 	}
 
-	sleep (1);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
 	return 0;
 }
@@ -265,7 +266,7 @@ identd_ipv6(::std::string username)
 		send (read_sok, outbuf, strlen (outbuf), 0);
 	}
 
-	sleep (1);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
 	return 0;
 }

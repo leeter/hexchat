@@ -36,6 +36,7 @@
 #include <ctime>
 #include <functional>
 #include <iterator>
+#include <iomanip>
 #include <locale>
 #include <string>
 #include <sstream>
@@ -48,6 +49,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/format.hpp>
+#include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -95,7 +97,7 @@ file_part (char *file)
 	char *filepart = file;
 	if (!file)
 		return "";
-	while (1)
+	for (;;)
 	{
 		switch (*file)
 		{
@@ -126,13 +128,13 @@ path_part (char *file, char *path, int pathlen)
 char *				/* like strstr(), but nocase */
 nocasestrstr (const char *s, const char *wanted)
 {
-	register const int len = strlen (wanted);
+	const auto len = std::strlen (wanted);
 
 	if (len == 0)
 		return (char *)s;
 	while (rfc_tolower(*s) != rfc_tolower(*wanted) || g_ascii_strncasecmp (s, wanted, len))
 		if (*s++ == '\0')
-			return (char *)NULL;
+			return (char *)nullptr;
 	return (char *)s;
 }
 
@@ -187,11 +189,11 @@ errorstring (int err)
 
 				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
 				return fbuf;
-				}
+			}
 		}	/* ! if (osvi.dwMajorVersion >= 5) */
 
 		/* fallback to error number */
-		sprintf (fbuf, "%s %d", _("Error"), err);
+		snprintf (fbuf, sizeof(fbuf), "%s %d", _("Error"), err);
 		return fbuf;
 	} /* ! if (err >= WSABASEERR) */
 #endif	/* ! WIN32 */
@@ -204,7 +206,7 @@ waitline (int sok, char *buf, int bufsize, int use_recv)
 {
 	int i = 0;
 
-	while (1)
+	for (;;)
 	{
 		if (use_recv)
 		{
@@ -233,7 +235,7 @@ waitline2 (GIOChannel *source, char *buf, int bufsize)
 	gsize len;
 	GError *error = NULL;
 
-	while (1)
+	for (;;)
 	{
 		g_io_channel_set_buffered (source, FALSE);
 		g_io_channel_set_encoding (source, NULL, &error);
@@ -290,13 +292,13 @@ expand_homedir (char *file)
 	return g_strdup (file);
 }
 
-std::string strip_color(const std::string &text, strip_flags flags)
+std::string strip_color(const boost::string_ref &text, strip_flags flags)
 {
 	auto new_str = strip_color2 (text, flags);
 
 	if (flags & STRIP_ESCMARKUP)
 	{
-		glib_string esc(g_markup_escape_text (new_str.c_str(), -1));
+		glib_string esc(g_markup_escape_text (new_str.c_str(), new_str.size()));
 		return std::string(esc.get());
 	}
 
@@ -305,7 +307,7 @@ std::string strip_color(const std::string &text, strip_flags flags)
 
 
 std::string 
-strip_color2(const std::string & src, strip_flags flags)
+strip_color2(const boost::string_ref & src, strip_flags flags)
 {
 	int rcol = 0, bgcol = 0;
 	auto src_itr = src.cbegin();
@@ -470,13 +472,12 @@ static int
 get_mhz (void)
 {
 	HKEY hKey;
-	int result, data;
-
 	if (RegOpenKeyExW (HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\"
 		L"CentralProcessor\\0", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
 	{
+		int data;
 		DWORD dataSize = sizeof (data);
-		result = RegQueryValueExW (hKey, L"~MHz", 0, 0, (LPBYTE)&data, &dataSize);
+		auto result = RegQueryValueExW (hKey, L"~MHz", 0, 0, (LPBYTE)&data, &dataSize);
 		RegCloseKey (hKey);
 		if (result == ERROR_SUCCESS)
 			return data;
@@ -487,7 +488,7 @@ get_mhz (void)
 int
 get_cpu_arch (void)
 {
-	SYSTEM_INFO si;
+	SYSTEM_INFO si = { 0 };
 
 	GetSystemInfo (&si);
 
@@ -1098,35 +1099,35 @@ static const std::unordered_map<std::string, std::string> domain =
 		{"ZW", N_("Zimbabwe") },
 }};
 
-const char *
-country (const std::string &hostname)
+std::string
+country (const boost::string_ref &hostname)
 {
 	std::locale loc;
 
 	if (!hostname.empty() || std::isdigit(hostname[hostname.size() - 1], loc))
 	{
-		return nullptr;
+		return{};
 	}
 	auto dot_loc = hostname.find_last_of('.');
-	std::string host = dot_loc != std::string::npos ? hostname.substr(dot_loc + 1) : hostname;
+	std::string host = static_cast<std::string>(dot_loc != boost::string_ref::npos ? hostname.substr(dot_loc + 1) : hostname);
 
 	boost::algorithm::to_upper(host, loc);
 	auto dom = domain.find(host);
 
 	if (dom == domain.cend())
-		return nullptr;
+		return{};
 
 	return _(dom->second.c_str());
 }
 
 void
-country_search (char *pattern, session *ud, void (*print)(session *, const char [], ...))
+country_search (char *pattern, session *ud, const std::function<void(session*, const boost::format &)> & print)
 {
 	for (const auto & bucket : domain)
 	{
 		if (match (pattern, bucket.first.c_str()) || match (pattern, _(bucket.second.c_str())))
 		{
-			print(ud, "%s = %s\n", bucket.first.c_str(), _(bucket.second.c_str()));
+			print(ud, boost::format("%s = %s\n") % bucket.first % _(bucket.second.c_str()));
 		}
 	}
 }
@@ -1177,6 +1178,25 @@ rfc_casecmp (const char *s1, const char *s2)
 	return (res);
 }
 
+int rfc_casecmp(const unsigned char* low1, const unsigned char* high1, const unsigned char* low2, const unsigned char *high2)
+{
+	int res = 0;
+	while ((res = rfc_tolower(*low1) - rfc_tolower(*low2)) == 0)
+	{
+		++low1;
+		++low2;
+		bool s1_done = low1 == high1;
+		bool s2_done = low2 == high2;
+		if (s1_done && s2_done)
+			return 0;
+		else if (s1_done)
+			return -1;
+		else if (s2_done)
+			return 1;
+	}
+	return res;
+}
+
 int
 rfc_ncasecmp (const char *str1, const char *str2, size_t n)
 {
@@ -1203,7 +1223,12 @@ namespace
 		int do_compare(const char * low1, const char * high1,
 			const char * low2, const char* high2) const
 		{
-			return rfc_casecmp(low1, low2);
+			return rfc_casecmp(
+				reinterpret_cast<const unsigned char*>(low1),
+				reinterpret_cast<const unsigned char*>(high1),
+				reinterpret_cast<const unsigned char*>(low2),
+				reinterpret_cast<const unsigned char*>(high2)
+			);
 		}
 	};
 
@@ -1435,7 +1460,7 @@ token_foreach (char *str, char sep,
 {
 	char t, *start = str;
 
-	while (1)
+	for (;;)
 	{
 		if (*str == sep || *str == 0)
 		{
@@ -1497,11 +1522,9 @@ str_ihash (const unsigned char *key)
 void
 safe_strcpy (char *dest, const char *src, std::size_t bytes_left)
 {
-	int mbl;
-
-	while (1)
+	for (;;)
 	{
-		mbl = g_utf8_skip[*((unsigned char *)src)];
+		int mbl = g_utf8_skip[*((unsigned char *)src)];
 
 		if (bytes_left < (mbl + 1)) /* can't fit with NULL? */
 		{
@@ -1583,14 +1606,14 @@ char* new_strdup(const char in[])
 }
 
 #ifdef USE_OPENSSL
-static std::string str_sha256hash (const std::string & string)
+static std::string str_sha256hash (const boost::string_ref &string)
 {
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	char buf[SHA256_DIGEST_LENGTH * 2 + 1];		/* 64 digit hash + '\0' */
 	SHA256_CTX sha256;
 
 	SHA256_Init (&sha256);
-	SHA256_Update (&sha256, string.c_str(), string.size());
+	SHA256_Update (&sha256, string.data(), string.size());
 	SHA256_Final (hash, &sha256);
 
 	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
@@ -1618,33 +1641,30 @@ static std::string str_sha256hash (const std::string & string)
  * <a href="http://www.askyb.com/cpp/openssl-hmac-hasing-example-in-cpp/">example 1</a>,
  * <a href="http://stackoverflow.com/questions/242665/understanding-engine-initialization-in-openssl">example 2</a>.
  */
-std::string challengeauth_response(const std::string & username, const std::string &password, const std::string &challenge)
+std::string challengeauth_response(const boost::string_ref &username, const boost::string_ref &password, const std::string &challenge)
 {
-	std::string user(username);
-	for (auto & c : user)
-{
-		c = rfc_tolower(c);			/* convert username to lowercase as per the RFC */
+	std::string user = username.to_string();
+	for (auto &c : user)
+	{
+		/* convert username to lowercase as per the RFC */
+		c = rfc_tolower(c);
 	}
 
-	std::string pass(password);
+	std::string pass = password.to_string();
 	pass.resize(10, '\0'); /* truncate to 10 characters */
-	auto passhash = str_sha256hash (pass.c_str());
+	auto passhash = str_sha256hash(pass);
 
-	glib_string key(g_strdup_printf("%s:%s", user.c_str(), passhash.c_str()));
+	std::ostringstream key;
+	key << user << ':' << passhash;
 
-	auto keyhash = str_sha256hash (key.get());
+	auto keyhash = str_sha256hash(key.str());
 
 	std::vector<unsigned char> digest(EVP_MAX_MD_SIZE);
 
 	unsigned int digest_len = digest.size();
-	HMAC (
-		EVP_sha256 (),
-		keyhash.c_str(),
-		keyhash.size(),
-		(const unsigned char *) challenge.c_str(),
-		challenge.size(),
-		&digest[0],
-		&digest_len);
+	HMAC(EVP_sha256(), keyhash.c_str(), keyhash.size(),
+	     (const unsigned char *)challenge.c_str(), challenge.size(),
+	     &digest[0], &digest_len);
 
 	std::ostringstream buf;
 	for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
@@ -1668,68 +1688,76 @@ std::string challengeauth_response(const std::string & username, const std::stri
  *
  * This assumes format is a locale-encoded string. For utf-8 strings, use strftime_utf8
  */
-size_t
-strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time)
+size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time)
 {
 #ifndef WIN32
 	return strftime (dest, destsize, format, time);
 #else
-	char safe_format[64] = { 0 };
-	const char *p = format;
-	int i = 0;
+	//char safe_format[64] = { 0 };
+	//const char *p = format;
+	//int i = 0;
 
-	if (strlen (format) >= sizeof(safe_format))
-		return 0;
+	//if (std::strlen (format) >= sizeof(safe_format))
+	//	return 0;
 
-	while (*p)
-	{
-		if (*p == '%')
-		{
-			int has_hash = (*(p + 1) == '#');
-			char c = *(p + (has_hash ? 2 : 1));
+	//while (*p)
+	//{
+	//	if (*p == '%')
+	//	{
+	//		int has_hash = (*(p + 1) == '#');
+	//		char c = *(p + (has_hash ? 2 : 1));
 
-			if (i >= sizeof (safe_format))
-				return 0;
+	//		if (i >= sizeof (safe_format))
+	//			return 0;
 
-			switch (c)
-			{
-			case 'a': case 'A': case 'b': case 'B': case 'c': case 'd': case 'H': case 'I': case 'j': case 'm': case 'M':
-			case 'p': case 'S': case 'U': case 'w': case 'W': case 'x': case 'X': case 'y': case 'Y': case 'z': case 'Z':
-			case '%':
-				/* formatting code is fine */
-				break;
-			default:
-				/* replace bad formatting code with itself, escaped, e.g. "%V" --> "%%V" */
-				g_strlcat (safe_format, "%%", sizeof(safe_format));
-				i += 2;
-				p++;
-				break;
-			}
+	//		switch (c)
+	//		{
+	//		case 'a': case 'A': case 'b': case 'B': case 'c': case 'd': case 'H': case 'I': case 'j': case 'm': case 'M':
+	//		case 'p': case 'S': case 'U': case 'w': case 'W': case 'x': case 'X': case 'y': case 'Y': case 'z': case 'Z':
+	//		case '%':
+	//			/* formatting code is fine */
+	//			break;
+	//		default:
+	//			/* replace bad formatting code with itself, escaped, e.g. "%V" --> "%%V" */
+	//			g_strlcat (safe_format, "%%", sizeof(safe_format));
+	//			i += 2;
+	//			p++;
+	//			break;
+	//		}
 
-			/* the current loop run will append % (and maybe #) and the next one will do the actual char. */
-			if (has_hash)
-			{
-				safe_format[i] = *p;
-				p++;
-				i++;
-			}
-			if (c == '%')
-			{
-				safe_format[i] = *p;
-				p++;
-				i++;
-			}
-		}
+	//		/* the current loop run will append % (and maybe #) and the next one will do the actual char. */
+	//		if (has_hash)
+	//		{
+	//			safe_format[i] = *p;
+	//			p++;
+	//			i++;
+	//		}
+	//		if (c == '%')
+	//		{
+	//			safe_format[i] = *p;
+	//			p++;
+	//			i++;
+	//		}
+	//	}
 
-		if (*p)
-		{
-			safe_format[i] = *p;
-			p++;
-			i++;
-		}
-	}
+	//	if (*p)
+	//	{
+	//		safe_format[i] = *p;
+	//		p++;
+	//		i++;
+	//	}
+	//}
+	std::ostringstream out;
+	out << std::put_time(time, format);
+	auto time_string = out.str();
+	auto to_copy = std::min(time_string.size(), destsize);
+	std::copy_n(time_string.cbegin(), to_copy, dest);
+	if (to_copy < destsize)
+		dest[to_copy + 1] = 0;
+	else
+		dest[destsize - 1] = 0;
 
-	return strftime (dest, destsize, safe_format, time);
+	return to_copy; //std::strftime (dest, destsize, safe_format, time);
 #endif
 }
 

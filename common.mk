@@ -1,0 +1,4 @@
+AM_CPPFLAGS = -Wall -Wextra -pedantic -D_FORTIFY_SOURCE=2 $(BOOST_CPPFLAGS)
+AM_CFLAGS = -std=c11
+AM_CXXFLAGS = -std=c++14
+

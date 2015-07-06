@@ -63,7 +63,7 @@
 struct EnchantDict;
 struct EnchantBroker;
 
-typedef void (*EnchantDictDescribeFn) (const char * const lang_tag,
+using EnchantDictDescribeFn = void(*) (const char * const lang_tag,
 									   const char * const provider_name,
 									   const char * const provider_desc,
 									   const char * const provider_file,
@@ -505,23 +505,22 @@ namespace {
 	{
 		EnchantDict* _dict;
 	public:
-		suggestion_deleter(EnchantDict* dict)
+		suggestion_deleter(EnchantDict* dict) NOEXCEPT
 			:_dict(dict)
 		{}
-		suggestion_deleter(suggestion_deleter && other)
+		suggestion_deleter(suggestion_deleter && other) NOEXCEPT
 		{
 			this->operator=(std::forward<suggestion_deleter&&>(other));
 		}
-		suggestion_deleter & operator=(suggestion_deleter&& other)
+		suggestion_deleter & operator=(suggestion_deleter&& other) NOEXCEPT
 		{
 			if (this != &other)
 			{
-				this->_dict = other._dict;
-				other._dict = nullptr;
+				std::swap(this->_dict, other._dict);
 			}
 			return *this;
 		}
-		void operator()(gchar** suggestions)
+		void operator()(gchar** suggestions) NOEXCEPT
 		{
 			enchant_dict_free_suggestions(_dict, suggestions);
 		}

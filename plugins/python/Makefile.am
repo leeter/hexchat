@@ -1,6 +1,7 @@
+include $(top_srcdir)/common.mk
 libdir = $(hexchatlibdir)
 
-AM_CPPFLAGS = $(CPPFLAGS) $(PY_CFLAGS) $(GLIB_CFLAGS) -I$(top_srcdir)/src/common -std=c++0x -Wall -Wextra -pedantic -D_FORTIFY_SOURCE=2
+AM_CPPFLAGS += $(PY_CFLAGS) $(GLIB_CFLAGS) -I$(top_srcdir)/src/common
 
 lib_LTLIBRARIES = python.la
 python_la_SOURCES = python.cpp

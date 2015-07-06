@@ -96,3 +96,7 @@ po/.intltool-merge-cache
 boost*/
 gtk/
 *.diff
+*.linter-clang-flags
+*.kdev4
+test/commontest/libhexchatcommon-test
+test/libirctest/libirc-test

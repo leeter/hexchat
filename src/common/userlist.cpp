@@ -596,7 +596,15 @@ public:
 
 	void foreach_alpha(std::function<void(User&)> func)
 	{
+		if (!func)
+		{
+			return;
+		}
 
+		for (auto u : this->users_alpha_)
+		{
+			func(*u);
+		}
 	}
 };
 
@@ -604,8 +612,7 @@ userlist::userlist()
 	:impl_(new userlist::userlist_impl)
 {}
 
-userlist::~userlist()
-{}
+userlist::~userlist() = default;
 
 userlist::size_type userlist::ops() const
 {

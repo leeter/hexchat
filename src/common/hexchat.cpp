@@ -23,12 +23,13 @@
 
 #include <atomic>
 #include <random>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
-#include <new>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/utility/string_ref.hpp>
@@ -56,6 +57,7 @@
 #include "notify.hpp"
 #include "server.hpp"
 #include "session.hpp"
+#include "session_logging.hpp"
 #include "servlist.hpp"
 #include "outbound.hpp"
 #include "text.hpp"
@@ -63,6 +65,7 @@
 #include "hexchatc.hpp"
 #include "dcc.hpp"
 #include "userlist.hpp"
+#include "glist_iterators.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
 #include <glib-object.h>			/* for g_type_init() */
@@ -74,17 +77,17 @@
 
 namespace dcc = hexchat::dcc;
 
-GSList *popup_list = 0;
-GSList *button_list = 0;
-GSList *dlgbutton_list = 0;
-GSList *command_list = 0;
-GSList *ctcp_list = 0;
-GSList *replace_list = 0;
-GSList *sess_list = 0;
-GSList *dcc_list = 0;
-GSList *usermenu_list = 0;
-GSList *urlhandler_list = 0;
-GSList *tabmenu_list = 0;
+std::vector<popup> popup_list;
+std::vector<popup> button_list;
+std::vector<popup> dlgbutton_list;
+std::vector<popup> command_list;
+std::vector<popup> ctcp_list;
+std::vector<popup> replace_list;
+std::vector<popup> usermenu_list;
+std::vector<popup> urlhandler_list;
+std::vector<popup> tabmenu_list;
+GSList *sess_list = nullptr;
+GSList *dcc_list = nullptr;
 
 /*
  * This array contains 5 double linked lists, one for each priority in the
@@ -102,10 +105,11 @@ GSList *tabmenu_list = 0;
  * session with the most important/recent activity.
  */
 GList *sess_list_by_lastact[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
-
+using sess_itr = glib_helper::glist_iterator < session >;
 
 static std::atomic_bool in_hexchat_exit = { false };
 std::atomic_bool hexchat_is_quitting = { false };
+
 /* command-line args */
 int arg_dont_autoconnect = FALSE;
 int arg_skip_plugins = FALSE;
@@ -120,7 +124,7 @@ gint arg_existing = FALSE;
 #endif /* USE_DBUS */
 
 struct session *current_tab;
-struct session *current_sess = 0;
+struct session *current_sess = nullptr;
 struct hexchatprefs prefs;
 
 #ifdef USE_LIBPROXY
@@ -214,343 +218,64 @@ is_session (session * sess)
 
 session * find_dialog(const server &serv, const boost::string_ref &nick)
 {
-	GSList *list = sess_list;
-	session *sess;
-
-	while (list)
-	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == &serv && sess->type == session::SESS_DIALOG)
+	sess_itr end;
+	auto result = std::find_if(
+		sess_itr(sess_list),
+		end,
+		[&nick, &serv](const session& sess)
 		{
-			if (!serv.compare (nick, sess->channel))
-				return (sess);
-		}
-		list = list->next;
-	}
-	return nullptr;
+			return (sess.server == &serv && sess.type == session::SESS_DIALOG) && !serv.compare(nick, sess.channel);
+		});
+	return result != end ? &(*result) : nullptr;
 }
 
 session *find_channel(const server &serv, const boost::string_ref &chan)
 {
-	session *sess;
-	GSList *list = sess_list;
-	while (list)
+	sess_itr end;
+	auto result = std::find_if(
+		sess_itr(sess_list),
+		end,
+		[&chan, &serv](const session& sess)
 	{
-		sess = static_cast<session*>(list->data);
-		if ((&serv == sess->server) && sess->type == session::SESS_CHANNEL)
-		{
-			if (!serv.compare(chan, sess->channel))
-				return sess;
-		}
-		list = list->next;
-	}
-	return nullptr;
-}
-
-static void
-lagcheck_update (void)
-{
-	GSList *list = serv_list;
-	
-	if (!prefs.hex_gui_lagometer)
-		return;
-
-	while (list)
-	{
-		auto serv = static_cast<server*>(list->data);
-		if (serv->lag_sent)
-			fe_set_lag (serv, -1);
-
-		list = list->next;
-	}
+		return (sess.server == &serv && sess.type == session::SESS_CHANNEL) && !serv.compare(chan, sess.channel);
+	});
+	return result != end ? &(*result) : nullptr;
 }
 
 void
 lag_check (void)
 {
 	using namespace boost;
-	server *serv;
-	GSList *list = serv_list;
-	unsigned long tim;
 	char tbuf[128];
 	auto now = chrono::steady_clock::now();
 
-	tim = make_ping_time ();
+	auto tim = make_ping_time ();
 
-	while (list)
+	for (auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		serv = static_cast<server*>(list->data);
-		if (serv->connected && serv->end_of_motd)
+		if (serv.connected && serv.end_of_motd)
 		{
-			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv->ping_recv).count();
+			auto seconds = chrono::duration_cast<chrono::seconds>(now - serv.ping_recv).count();
 			if (prefs.hex_net_ping_timeout && seconds > prefs.hex_net_ping_timeout && seconds > 0)
 			{
-				snprintf (tbuf, sizeof(tbuf), "%d", seconds);
-				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv->server_session, tbuf, nullptr,
+				snprintf(tbuf, sizeof(tbuf), "%" PRId64, seconds);
+				EMIT_SIGNAL (XP_TE_PINGTIMEOUT, serv.server_session, tbuf, nullptr,
 								 nullptr, nullptr, 0);
 				if (prefs.hex_net_auto_reconnect)
-					serv->auto_reconnect (false, -1);
+					serv.auto_reconnect (false, -1);
 			} else
 			{
 				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
-				serv->p_ping ("", tbuf);
+				serv.p_ping({}, tbuf);
 				
-				if (!serv->lag_sent)
+				if (!serv.lag_sent)
 				{
-					serv->lag_sent = tim;
+					serv.lag_sent = tim;
 					fe_set_lag (serv, -1);
 				}
 			}
 		}
-		list = list->next;
 	}
-}
-
-static int
-away_check (void)
-{
-	session *sess;
-	GSList *list;
-	int sent, loop = 0;
-	bool full;
-	if (!prefs.hex_away_track)
-		return 1;
-
-doover:
-	/* request an update of AWAY status of 1 channel every 30 seconds */
-	full = true;
-	sent = 0;	/* number of WHOs (users) requested */
-	list = sess_list;
-	while (list)
-	{
-		sess = static_cast<session*>(list->data);
-
-		if (sess->server->connected &&
-			sess->type == session::SESS_CHANNEL &&
-			 sess->channel[0] &&
-			 (sess->total <= prefs.hex_away_size_max || !prefs.hex_away_size_max))
-		{
-			if (!sess->done_away_check)
-			{
-				full = false;
-
-				/* if we're under 31 WHOs, send another channels worth */
-				if (sent < 31 && !sess->doing_who)
-				{
-					sess->done_away_check = TRUE;
-					sess->doing_who = TRUE;
-					/* this'll send a WHO #channel */
-					sess->server->p_away_status (sess->channel);
-					sent += sess->total;
-				}
-			}
-		}
-
-		list = list->next;
-	}
-
-	/* done them all, reset done_away_check to FALSE and start over unless we have away-notify */
-	if (full)
-	{
-		list = sess_list;
-		while (list)
-		{
-			sess = static_cast<session*>(list->data);
-			if (!sess->server->have_awaynotify)
-				sess->done_away_check = FALSE;
-			list = list->next;
-		}
-		loop++;
-		if (loop < 2)
-			goto doover;
-	}
-
-	return 1;
-}
-
-static int
-hexchat_misc_checks (void)		/* this gets called every 1/2 second */
-{
-	static int count = 0;
-
-	count++;
-
-	lagcheck_update ();			/* every 500ms */
-
-	if (count % 2)
-		dcc::dcc_check_timeouts ();	/* every 1 second */
-
-	if (count >= 60)				/* every 30 seconds */
-	{
-		if (prefs.hex_gui_lagometer)
-			lag_check ();
-		count = 0;
-	}
-
-	return 1;
-}
-
-/* executed when the first irc window opens */
-
-static void
-irc_init (session *sess)
-{
-	static bool done_init = false;
-	char *buf;
-	int i;
-
-	if (done_init)
-		return;
-
-	done_init = true;
-
-	plugin_add(sess, nullptr, nullptr, timer_plugin_init, timer_plugin_deinit, nullptr, false);
-
-#ifdef USE_PLUGIN
-	if (!arg_skip_plugins)
-		plugin_auto_load (sess);	/* autoload ~/.xchat *.so */
-#endif
-
-#ifdef USE_DBUS
-	plugin_add (sess, nullptr, nullptr, dbus_plugin_init, nullptr, nullptr, false);
-#endif
-
-	if (prefs.hex_notify_timeout)
-		notify_tag = fe_timeout_add (prefs.hex_notify_timeout * 1000,
-											  (GSourceFunc)notify_checklist, 0);
-
-	fe_timeout_add(prefs.hex_away_timeout * 1000, (GSourceFunc)away_check, 0);
-	fe_timeout_add(500, (GSourceFunc)hexchat_misc_checks, 0);
-
-	if (arg_url != nullptr)
-	{
-		buf = g_strdup_printf ("server %s", arg_url);
-		g_free (arg_url);	/* from GOption */
-		handle_command (sess, buf, FALSE);
-		g_free (buf);
-	}
-	
-	if (arg_urls != nullptr)
-	{
-		for (i = 0; i < g_strv_length(arg_urls); i++)
-		{
-			buf = g_strdup_printf ("%s %s", i==0? "server" : "newserver", arg_urls[i]);
-			handle_command (sess, buf, FALSE);
-			g_free (buf);
-		}
-		g_strfreev (arg_urls);
-	}
-
-	if (arg_command != nullptr)
-	{
-		handle_command (sess, arg_command, FALSE);
-		g_free (arg_command);
-	}
-
-	/* load -e <xdir>/startup.txt */
-	load_perform_file (sess, "startup.txt");
-}
-
-session::session(struct server *serv, const char *from, ::session::session_type type)
-	:server(serv),
-	logfd(-1),
-	scrollfd(-1),
-	scrollwritten(),
-	type(type),
-	alert_beep(SET_DEFAULT),
-	alert_taskbar(SET_DEFAULT),
-	alert_tray(SET_DEFAULT),
-
-	text_hidejoinpart(SET_DEFAULT),
-	text_logging(SET_DEFAULT),
-	text_scrollback(SET_DEFAULT),
-	text_strip(SET_DEFAULT),
-
-	lastact_idx(LACT_NONE),
-	me(nullptr),
-	channel(),
-	waitchannel(),
-	willjoinchannel(),
-
-	lastlog_sess(nullptr),
-	running_exec(nullptr),
-	gui(nullptr),
-	res(nullptr),
-
-	scrollback_replay_marklast(nullptr),
-
-	ops(),
-	hops(),
-	voices(),
-	total(),
-	new_data(),
-	nick_said(),
-	msg_said(),
-	ignore_date(),
-	ignore_mode(),
-	ignore_names(),
-	end_of_names(),
-	doing_who(),
-	done_away_check(),
-	lastlog_flags()
-{
-	if (from)
-	{
-		safe_strcpy(this->channel, from, CHANLEN);
-		this->name = from;
-	}
-}
-
-static session *
-session_new (server *serv, const char *from, int type, int focus)
-{
-	session *sess = new session(serv, from, type);
-
-	sess_list = g_slist_prepend (sess_list, sess);
-
-	fe_new_window (sess, focus);
-
-	return sess;
-}
-
-session *
-new_ircwindow (server *serv, const char *name, ::session::session_type type, int focus)
-{
-	session *sess;
-
-	switch (type)
-	{
-	case session::SESS_SERVER:
-		serv = server_new ();
-		if (!serv)
-			return nullptr;
-		if (prefs.hex_gui_tab_server)
-			sess = session_new(serv, name, session::SESS_SERVER, focus);
-		else
-			sess = session_new(serv, name, session::SESS_CHANNEL, focus);
-		serv->server_session = sess;
-		serv->front_session = sess;
-		break;
-	case session::SESS_DIALOG:
-		sess = session_new (serv, name, type, focus);
-		log_open_or_close (sess);
-		break;
-	default:
-/*	case SESS_CHANNEL:
-	case SESS_NOTICES:
-	case SESS_SNOTICES:*/
-		sess = session_new (serv, name, type, focus);
-		break;
-	}
-
-	irc_init (sess);
-	chanopt_load (sess);
-	scrollback_load (*sess);
-	if (sess->scrollwritten && sess->scrollback_replay_marklast)
-		sess->scrollback_replay_marklast (sess);
-	plugin_emit_dummy_print (sess, "Open Context");
-
-	return sess;
 }
 
 nbexec::nbexec(session *sess)
@@ -561,42 +286,19 @@ nbexec::nbexec(session *sess)
 	sess(sess){}
 
 static void
-exec_notify_kill (session * sess)
-{
-#ifndef WIN32
-	struct nbexec *re;
-	if (sess->running_exec != nullptr)
-	{
-		re = sess->running_exec;
-		sess->running_exec = nullptr;
-		kill (re->childpid, SIGKILL);
-		waitpid (re->childpid, nullptr, WNOHANG);
-		fe_input_remove (re->iotag);
-		close (re->myfd);
-		delete re;
-	}
-#endif
-}
-
-static void
 send_quit_or_part (session * killsess)
 {
 	bool willquit = true;
-	GSList *list;
-	session *sess;
 	server *killserv = killsess->server;
 
 	/* check if this is the last session using this server */
-	list = sess_list;
-	while (list)
+	for(const auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = (session *) list->data;
-		if (sess->server == killserv && sess != killsess)
+		if (sess.server == killserv && (&sess) != killsess)
 		{
 			willquit = false;
-			list = 0;
-		} else
-			list = list->next;
+			break;
+		}
 	}
 
 	if (hexchat_is_quitting)
@@ -617,26 +319,16 @@ send_quit_or_part (session * killsess)
 			if (killsess->type == session::SESS_CHANNEL && killsess->channel[0] &&
 				 !killserv->sent_quit)
 			{
-				server_sendpart (*killserv, killsess->channel, nullptr);
-			}
+				server_sendpart (*killserv, killsess->channel, boost::none);
 			}
 		}
 	}
-
-session::~session()
-{
-	if (this->type == session::SESS_CHANNEL)
-		userlist_free(*this);
-
-	exec_notify_kill(this);
 }
 
 void
 session_free (session *killsess)
 {
 	server *killserv = killsess->server;
-	session *sess;
-	GSList *list;
 	int oldidx;
 
 	plugin_emit_dummy_print (killsess, "Close Context");
@@ -651,18 +343,15 @@ session_free (session *killsess)
 	{
 		/* front_session is closed, find a valid replacement */
 		killserv->front_session = nullptr;
-		list = sess_list;
-		while (list)
+		for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
 		{
-			sess = static_cast<session *>( list->data);
-			if (sess != killsess && sess->server == killserv)
+			if (&sess != killsess && sess.server == killserv)
 			{
-				killserv->front_session = sess;
+				killserv->front_session = &sess;
 				if (!killserv->server_session)
-					killserv->server_session = sess;
+					killserv->server_session = &sess;
 				break;
 			}
-			list = list->next;
 		}
 	}
 
@@ -675,7 +364,7 @@ session_free (session *killsess)
 	if (oldidx != LACT_NONE)
 		sess_list_by_lastact[oldidx] = g_list_remove(sess_list_by_lastact[oldidx], killsess);
 
-	log_close (*killsess);
+	//log_close (*killsess);
 	scrollback_close (*killsess);
 	chanopt_save (killsess);
 
@@ -695,13 +384,10 @@ session_free (session *killsess)
 	if (!sess_list && !in_hexchat_exit)
 		hexchat_exit ();						/* sess_list is empty, quit! */
 
-	list = sess_list;
-	while (list)
+	for (const auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		sess = (session *) list->data;
-		if (sess->server == killserv)
+		if (sess.server == killserv)
 			return;					  /* this server is still being used! */
-		list = list->next;
 	}
 
 	server_free (killserv);
@@ -758,7 +444,7 @@ static const char defaultconf_commands[] =
 	"NAME VER\n"			"CMD ctcp %2 VERSION\n\n"\
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
-        "NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
+		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
 	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
 
 static const char defaultconf_urlhandlers[] =
@@ -768,57 +454,74 @@ static const char defaultconf_urlhandlers[] =
 /* Close and open log files on SIGUSR1. Usefull for log rotating */
 
 static void 
-sigusr1_handler (int signal, siginfo_t *si, void *un)
+sigusr1_handler (int /*signal*/, siginfo_t * /*si*/, void *)
 {
-	GSList *list = sess_list;
-	session *sess;
+	//GSList *list = sess_list;
+	//session *sess;
 
-	while (list)
-	{
-		sess = static_cast<session*>(list->data);
-		log_open_or_close (sess);
-		list = list->next;
-	}
+	//while (list)
+	//{
+	//	sess = static_cast<session*>(list->data);
+	//	//log_open_or_close (sess);
+	//	list = list->next;
+	//}
 }
 
 /* Execute /SIGUSR2 when SIGUSR2 received */
 
 static void
-sigusr2_handler (int signal, siginfo_t *si, void *un)
+sigusr2_handler (int /*signal*/, siginfo_t *, void *)
 {
 	session *sess = current_sess;
-
 	if (sess)
-		handle_command (sess, "SIGUSR2", FALSE);
+	{
+		char cmd[] = "SIGUSR2";
+		handle_command (sess, cmd, false);
+	}
 }
 #endif
 
 static gint
-xchat_auto_connect (gpointer userdata)
+xchat_auto_connect (gpointer)
 {
 	servlist_auto_connect (nullptr);
 	return 0;
 }
+
+#ifdef WIN32
+namespace
+{
+	class winsock_raii
+	{
+		WSADATA wsadata;
+		bool success;
+
+		winsock_raii(const winsock_raii&) = delete;
+		winsock_raii& operator=(const winsock_raii&) = delete;
+	public:
+		explicit winsock_raii() NOEXCEPT
+			:wsadata({ 0 }), success(WSAStartup(MAKEWORD(2, 2), &wsadata) == 0)
+		{
+		}
+		~winsock_raii() NOEXCEPT
+		{
+			if (success)
+				WSACleanup();
+		}
+
+		explicit operator bool() const NOEXCEPT
+		{
+			return success;
+		}
+	};
+}
+#endif
 
 static void
 xchat_init (void)
 {
 	char buf[3068];
 	const char *cs = nullptr;
-
-#ifdef WIN32
-	WSADATA wsadata;
-
-#ifdef USE_IPV6
-	if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
-	{
-		MessageBoxW (nullptr, L"Cannot find winsock 2.2+", L"Error", MB_OK);
-		exit (0);
-	}
-#else
-	WSAStartup(0x0101, &wsadata);
-#endif	/* !USE_IPV6 */
-#endif	/* !WIN32 */
 
 #ifdef USE_SIGACTION
 	struct sigaction act;
@@ -908,7 +611,7 @@ xchat_init (void)
 		_("KickBan"),
 		_("KickBan"));
 
-	list_loadconf ("popup.conf", &popup_list, buf);
+	list_loadconf ("popup.conf", popup_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"				"CMD part\n\n"
@@ -922,7 +625,7 @@ xchat_init (void)
 				_("Server Links"),
 				_("Ping Server"),
 				_("Hide Version"));
-	list_loadconf ("usermenu.conf", &usermenu_list, buf);
+	list_loadconf ("usermenu.conf", usermenu_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"		"CMD op %%a\n\n"
@@ -939,7 +642,7 @@ xchat_init (void)
 				_("Enter reason to kick %s:"),
 				_("Sendfile"),
 				_("Dialog"));
-	list_loadconf ("buttons.conf", &button_list, buf);
+	list_loadconf ("buttons.conf", button_list, buf);
 
 	snprintf (buf, sizeof (buf),
 		"NAME %s\n"				"CMD whois %%s %%s\n\n"
@@ -952,13 +655,13 @@ xchat_init (void)
 				_("Chat"),
 				_("Clear"),
 				_("Ping"));
-	list_loadconf ("dlgbuttons.conf", &dlgbutton_list, buf);
+	list_loadconf ("dlgbuttons.conf", dlgbutton_list, buf);
 
-	list_loadconf ("tabmenu.conf", &tabmenu_list, nullptr);
-	list_loadconf ("ctcpreply.conf", &ctcp_list, defaultconf_ctcp);
-	list_loadconf ("commands.conf", &command_list, defaultconf_commands);
-	list_loadconf ("replace.conf", &replace_list, defaultconf_replace);
-	list_loadconf ("urlhandlers.conf", &urlhandler_list,
+	list_loadconf ("tabmenu.conf", tabmenu_list, nullptr);
+	list_loadconf ("ctcpreply.conf", ctcp_list, defaultconf_ctcp);
+	list_loadconf ("commands.conf", command_list, defaultconf_commands);
+	list_loadconf ("replace.conf", replace_list, defaultconf_replace);
+	list_loadconf ("urlhandlers.conf", urlhandler_list,
 						defaultconf_urlhandlers);
 
 	servlist_init ();							/* load server list */
@@ -976,7 +679,7 @@ xchat_init (void)
 			/* and no serverlist gui ... */
 			if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
 				/* we'll have to open one. */
-				new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+				new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 		} else
 		{
 			fe_idle_add (xchat_auto_connect, nullptr);
@@ -984,7 +687,7 @@ xchat_init (void)
 	} else
 	{
 		if (prefs.hex_gui_slist_skip || arg_url || arg_urls)
-			new_ircwindow(nullptr, nullptr, session::SESS_SERVER, 0);
+			new_ircwindow(nullptr, nullptr, session::SESS_SERVER, false);
 	}
 }
 
@@ -1024,14 +727,14 @@ set_locale (void)
 #ifdef WIN32
 	char hexchat_lang[13] = { 0 };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
 
-	strcpy (hexchat_lang, "LC_ALL=");
-
 	if (0 <= prefs.hex_gui_lang && prefs.hex_gui_lang < LANGUAGES_LENGTH)
-		strcat (hexchat_lang, languages[prefs.hex_gui_lang]);
+		std::strcat (hexchat_lang, languages[prefs.hex_gui_lang]);
 	else
-		strcat (hexchat_lang, "en");
+		std::strcat (hexchat_lang, "en");
 
-	putenv (hexchat_lang);
+	auto result = _putenv_s("LC_ALL", hexchat_lang);
+	if (result != 0)
+		std::terminate();
 
 	// Create and install global locale
 	std::locale::global(boost::locale::generator().generate(""));
@@ -1042,12 +745,9 @@ set_locale (void)
 }
 
 int
-main (int argc, char *argv[])
+hexmain (int argc, char *argv[])
 {
-	int i;
-	int ret;
-
-	srand (time (0));	/* CL: do this only once! */
+	std::srand (static_cast<unsigned>(std::time (nullptr)));	/* CL: do this only once! */
 
 	/* We must check for the config dir parameter, otherwise load_config() will behave incorrectly.
 	 * load_config() must come before fe_args() because fe_args() calls gtk_init() which needs to
@@ -1055,9 +755,9 @@ main (int argc, char *argv[])
 	 * for the most part. */
 	if (argc >= 2)
 	{
-		for (i = 1; i < argc; i++)
+		for (int i = 1; i < argc; i++)
 		{
-			if ((strcmp (argv[i], "-d") == 0 || strcmp (argv[i], "--cfgdir") == 0)
+			if ((std::strcmp (argv[i], "-d") == 0 || std::strcmp (argv[i], "--cfgdir") == 0)
 				&& i + 1 < argc)
 			{
 				xdir = new_strdup (argv[i + 1]);
@@ -1069,9 +769,10 @@ main (int argc, char *argv[])
 
 			if (xdir != NULL)
 			{
-				if (xdir[strlen (xdir) - 1] == G_DIR_SEPARATOR)
+				const auto xdir_len = std::strlen(xdir);
+				if (xdir[xdir_len - 1] == G_DIR_SEPARATOR)
 				{
-					xdir[strlen (xdir) - 1] = 0;
+					xdir[xdir_len - 1] = 0;
 				}
 				break;
 			}
@@ -1101,7 +802,7 @@ main (int argc, char *argv[])
 	SOCKSinit (argv[0]);
 #endif
 
-	ret = fe_args (argc, argv);
+	auto ret = fe_args (argc, argv);
 	if (ret != -1)
 		return ret;
 	
@@ -1132,9 +833,18 @@ main (int argc, char *argv[])
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
-			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
+				  "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
 #endif /* !WIN32 */
+#ifdef WIN32
+	winsock_raii winsock;
+
+	if (!winsock)
+	{
+		MessageBoxW(nullptr, L"Cannot find winsock 2.2+", L"Error", MB_OK);
+		std::exit (0);
+	}
+#endif
 
 	xchat_init ();
 
@@ -1144,9 +854,22 @@ main (int argc, char *argv[])
 	px_proxy_factory_free(libproxy_factory);
 #endif
 
-#ifdef WIN32
-	WSACleanup ();
-#endif
-
 	return 0;
+}
+popup::popup(std::string cmd, std::string name)
+	:cmd(std::move(cmd)), name(std::move(name))
+{
+}
+popup::popup(popup && other)
+{
+	this->operator=(std::forward<popup&&>(other));
+}
+popup& popup::operator=(popup&& other)
+{
+	if (this != &other)
+	{
+		std::swap(this->name, other.name);
+		std::swap(this->cmd, other.cmd);
+	}
+	return *this;
 }

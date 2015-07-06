@@ -1,5 +1,5 @@
-/* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+/* libirc
+* Copyright (C) 2014 - 2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
-#include "sutter.hpp"
 
 #ifdef WIN32
 #include "w32crypt_seed.hpp"
@@ -308,8 +307,8 @@ namespace io{
 
 		std::pair<boost::system::error_code, boost::asio::ip::tcp::resolver::iterator> resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port)
 		{
-			boost::asio::ip::tcp::resolver::query query(host, std::to_string(port));
-			boost::asio::ip::tcp::resolver res(io_service);
+			boost::asio::ip::tcp::resolver::query query{ host, std::to_string(port) };
+			boost::asio::ip::tcp::resolver res{ io_service };
 			boost::system::error_code ec;
 			auto result = res.resolve(query, ec);
 			return std::make_pair(ec, result);
@@ -323,9 +322,9 @@ namespace io{
 #ifdef WIN32
 				w32::crypto::seed_openssl_random();
 #endif
-				return sutter::make_unique<ssl_connection>(new ssl_context(security == connection_security::enforced ? boost::asio::ssl::verify_peer : boost::asio::ssl::verify_none));
+				return std::make_unique<ssl_connection>(new ssl_context(security == connection_security::enforced ? boost::asio::ssl::verify_peer : boost::asio::ssl::verify_none));
 			}
-			return sutter::make_unique<tcp_connection>(new context());
+			return std::make_unique<tcp_connection>(new context());
 		}
 	}
 }

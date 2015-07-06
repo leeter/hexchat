@@ -19,6 +19,8 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <boost/utility/string_ref.hpp>
+
 #include "history.hpp"
 
 history::history()
@@ -31,15 +33,15 @@ history::history()
 void
 history::clear()
 {
-	this->lines.fill("");
+	this->lines.fill(std::string{});
 	this->pos = 0;
 	this->realpos = 0;
 }
 
 void
-history::add (const std::string& text)
+history::add (const boost::string_ref& text)
 {
-	this->lines[this->realpos] = text;
+	this->lines[this->realpos] = text.to_string();
 	this->realpos++;
 	if (this->realpos == HISTORY_SIZE)
 		this->realpos = 0;
@@ -49,27 +51,26 @@ history::add (const std::string& text)
 std::pair<std::string, bool>
 history::down ()
 {
-	int next;
-
 	if (this->pos == this->realpos)	/* allow down only after up */
-		return std::make_pair("", false);
+		return std::make_pair(std::string{}, false);
 	if (this->realpos == 0)
 	{
 		if (this->pos == HISTORY_SIZE - 1)
 		{
 			this->pos = 0;
-			return std::make_pair("", true);
+			return std::make_pair(std::string{}, true);
 		}
-	} else
+	} 
+	else
 	{
 		if (this->pos == this->realpos - 1)
 		{
 			this->pos++;
-			return std::make_pair("", true);
+			return std::make_pair(std::string{}, true);
 		}
 	}
 
-	next = 0;
+	int next = 0;
 	if (this->pos < HISTORY_SIZE - 1)
 		next = this->pos + 1;
 
@@ -79,22 +80,22 @@ history::down ()
 		return std::make_pair(this->lines[this->pos], true);
 	}
 
-	return std::make_pair("", false);
+	return std::make_pair(std::string{}, false);
 }
 
 std::pair<std::string, bool>
-history::up (const std::string & current_text)
+history::up (const boost::string_ref & current_text)
 {
 	int next;
 
 	if (this->realpos == HISTORY_SIZE - 1)
 	{
 		if (this->pos == 0)
-			return std::make_pair("", false);
+			return std::make_pair(std::string{}, false);
 	} else
 	{
 		if (this->pos == this->realpos + 1)
-			return std::make_pair("", false);
+			return std::make_pair(std::string{}, false);
 	}
 
 	next = HISTORY_SIZE - 1;
@@ -105,7 +106,7 @@ history::up (const std::string & current_text)
 	{
 		if
 		(
-			current_text[0] && this->lines[next] != current_text &&
+			!current_text.empty() && this->lines[next] != current_text &&
 			(this->lines[this->pos].empty() || current_text != this->lines[this->pos]) &&
 			(this->lines[this->realpos].empty() || current_text != this->lines[this->pos])
 		)
@@ -117,5 +118,5 @@ history::up (const std::string & current_text)
 		return std::make_pair(this->lines[this->pos], true);
 	}
 
-	return std::make_pair("", false);
+	return std::make_pair(std::string{}, false);
 }

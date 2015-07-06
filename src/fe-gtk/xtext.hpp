@@ -20,6 +20,8 @@
 #ifndef HEXCHAT_XTEXT_HPP
 #define HEXCHAT_XTEXT_HPP
 
+#include <memory>
+#include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
@@ -79,15 +81,22 @@ enum marker_reset_reason {
 	MARKER_RESET_BY_CLEAR
 };
 
+struct xtext_impl;
+
 struct xtext_buffer {
+private:
+	xtext_buffer(const xtext_buffer&) = delete;
+	xtext_buffer& operator=(const xtext_buffer&) = delete;
+
+public:
+	explicit xtext_buffer(GtkXText* parent);
+	~xtext_buffer() NOEXCEPT;
+	std::unique_ptr<xtext_impl> impl;
+	
 	GtkXText *xtext;					/* attached to this widget */
 
-	gfloat old_value;					/* last known adj->value */
-	textentry *text_first;
-	textentry *text_last;
-
-	textentry *last_ent_start;	  /* this basically describes the last rendered */
-	textentry *last_ent_end;	  /* selection. */
+	gdouble old_value;					/* last known adj->value */
+	
 	int last_offset_start;
 	int last_offset_end;
 
@@ -95,13 +104,9 @@ struct xtext_buffer {
 
 	int pagetop_line;
 	int pagetop_subline;
-	textentry *pagetop_ent;			/* what's at xtext->adj->value */
 
 	int num_lines;
 	int indent;						  /* position of separator (pixels) from left */
-
-	textentry *marker_pos;
-	marker_reset_reason marker_state;
 
 	int window_width;				/* window size when last rendered. */
 	int window_height;
@@ -112,9 +117,8 @@ struct xtext_buffer {
 	bool marker_seen;
 
 	GList *search_found;		/* list of textentries where search found strings */
-	gchar *search_text;		/* desired text to search for */
-	gchar *search_nee;		/* prepared needle to look in haystack for */
-	gint search_lnee;		/* its length */
+	std::string search_text;		/* desired text to search for */
+	std::string search_nee;		/* prepared needle to look in haystack for */
 	gtk_xtext_search_flags search_flags;	/* match, bwd, highlight */
 	GList *cursearch;			/* GList whose 'data' pts to current textentry */
 	GList *curmark;			/* current item in ent->marks */
@@ -194,7 +198,7 @@ struct GtkXText
 
 	unsigned char scratch_buffer[4096];
 
-	int(*urlcheck_function) (GtkWidget * xtext, char *word);
+	int(*urlcheck_function) (GtkWidget * xtext, const char *word);
 
 	int jump_out_offset;	/* point at which to stop rendering */
 	int jump_in_offset;	/* "" start rendering */
@@ -254,7 +258,7 @@ struct GtkXTextClass
 };
 
 GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
-void gtk_xtext_append(xtext_buffer *buf, const unsigned char text[], int len, time_t stamp);
+void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
 	const unsigned char left_text[], int left_len,
 	const unsigned char right_text[], int right_len,
@@ -263,7 +267,9 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[]);
 void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
 void gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[]);
 void gtk_xtext_clear(xtext_buffer *buf, int lines);
-void gtk_xtext_save(GtkXText * xtext, int fh);
+namespace xtext{
+	void save(const GtkXText & xtext, std::ostream & outfile);
+}
 void gtk_xtext_refresh(GtkXText * xtext);
 int gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area);
 textentry *gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
@@ -272,7 +278,7 @@ int gtk_xtext_moveto_marker_pos(GtkXText *xtext);
 void gtk_xtext_check_marker_visibility(GtkXText *xtext);
 void gtk_xtext_set_marker_last(session *sess);
 
-gboolean gtk_xtext_is_empty(xtext_buffer *buf);
+bool gtk_xtext_is_empty(const xtext_buffer &buf);
 
 void gtk_xtext_set_error_function(GtkXText *xtext, void(*error_function) (int));
 void gtk_xtext_set_indent(GtkXText *xtext, gboolean indent);
@@ -282,7 +288,7 @@ void gtk_xtext_set_show_marker(GtkXText *xtext, gboolean show_marker);
 void gtk_xtext_set_show_separator(GtkXText *xtext, gboolean show_separator);
 void gtk_xtext_set_thin_separator(GtkXText *xtext, gboolean thin_separator);
 void gtk_xtext_set_time_stamp(xtext_buffer *buf, gboolean timestamp);
-void gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, char *));
+void gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, const char *));
 void gtk_xtext_set_wordwrap(GtkXText *xtext, gboolean word_wrap);
 
 xtext_buffer *gtk_xtext_buffer_new(GtkXText *xtext);

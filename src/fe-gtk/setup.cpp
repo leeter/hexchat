@@ -38,6 +38,7 @@
 #include "../common/util.hpp"
 #include "../common/hexchatc.hpp"
 #include "../common/session.hpp"
+#include "../common/session_logging.hpp"
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"
@@ -58,7 +59,7 @@ static int last_selected_row = 0; /* sound row */
 static bool color_change;
 static struct hexchatprefs setup_prefs;
 static GtkWidget *cancel_button;
-static GtkWidget *font_dialog = NULL;
+static GtkWidget *font_dialog = nullptr;
 
 enum
 {
@@ -145,7 +146,7 @@ static const char *const langsmenu[] =
 	N_("Ukrainian"),
 	N_("Vietnamese"),
 	N_("Walloon"),
-	NULL
+	nullptr
 };
 #endif
 
@@ -188,7 +189,7 @@ static const char *const tabcompmenu[] =
 {
 	N_("A-Z"),
 	N_("Last-spoke order"),
-	NULL
+	nullptr
 };
 
 static const setting inputbox_settings[] =
@@ -220,7 +221,7 @@ static const char *const lagmenutext[] =
 	N_("Graphical"),
 	N_("Text"),
 	N_("Both"),
-	NULL
+	nullptr
 };
 
 static const char *const ulmenutext[] = 
@@ -230,7 +231,7 @@ static const char *const ulmenutext[] =
 	N_("Z-A, Ops last"),
 	N_("Z-A"),
 	N_("Unsorted"),
-	NULL
+	nullptr
 };
 
 static const char *const cspos[] =
@@ -242,7 +243,7 @@ static const char *const cspos[] =
 	N_("Top"),
 	N_("Bottom"),
 	N_("Hidden"),
-	NULL
+	nullptr
 };
 
 static const char *const ulpos[] =
@@ -251,7 +252,7 @@ static const char *const ulpos[] =
 	N_("Left (Lower)"),
 	N_("Right (Upper)"),
 	N_("Right (Lower)"),
-	NULL
+	nullptr
 };
 
 static const setting userlist_settings[] =
@@ -284,7 +285,7 @@ static const char *const tabwin[] =
 {
 	N_("Windows"),
 	N_("Tabs"),
-	NULL
+	nullptr
 };
 
 static const char *const focusnewtabsmenu[] =
@@ -292,7 +293,7 @@ static const char *const focusnewtabsmenu[] =
 	N_("Never"),
 	N_("Always"),
 	N_("Only requested tabs"),
-	NULL
+	nullptr
 };
 
 static const char *const noticeposmenu[] =
@@ -300,7 +301,7 @@ static const char *const noticeposmenu[] =
 	N_("Automatic"),
 	N_("In an extra tab"),
 	N_("In the front tab"),
-	NULL
+	nullptr
 };
 
 static const char *const swtype[] =
@@ -308,7 +309,7 @@ static const char *const swtype[] =
 	N_("Tabs"),	/* 0 tabs */
 	"",			/* 1 reserved */
 	N_("Tree"),	/* 2 tree */
-	NULL
+	nullptr
 };
 
 static const setting tabs_settings[] =
@@ -350,7 +351,7 @@ static const char *const dccaccept[] =
 	N_("Ask for confirmation"),
 	N_("Ask for download folder"),
 	N_("Save without interaction"),
-	NULL
+	nullptr
 };
 
 static const setting filexfer_settings[] =
@@ -501,7 +502,7 @@ static const char *const bantypemenu[] =
 	N_("*!*@domain"),
 	N_("*!*user@*.host"),
 	N_("*!*user@domain"),
-	NULL
+	nullptr
 };
 
 static const setting advanced_settings[] =
@@ -570,7 +571,7 @@ static const char *const proxytypes[] =
 #ifdef USE_LIBPROXY
 	N_("Auto"),
 #endif
-	NULL
+	nullptr
 };
 
 static const char *const proxyuse[] =
@@ -578,7 +579,7 @@ static const char *const proxyuse[] =
 	N_("All Connections"),
 	N_("IRC Server Only"),
 	N_("DCC Get Only"),
-	NULL
+	nullptr
 };
 
 static const setting network_settings[] =
@@ -636,14 +637,14 @@ setup_headlabel (GtkWidget *tab, int row, int col, const char *text)
 	if (sp)
 		*sp = '\n';
 
-	label = gtk_label_new (NULL);
+	label = gtk_label_new (nullptr);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_table_attach(GTK_TABLE(tab), label, col, col + 1, row, row + 1, GtkAttachOptions(), GtkAttachOptions(), 4, 0);
 }
 
 static void
-setup_create_alert_header (GtkWidget *tab, int row, const setting *set)
+setup_create_alert_header (GtkWidget *tab, int row)
 {
 	setup_headlabel (tab, row, 3, _("Channel Message"));
 	setup_headlabel (tab, row, 4, _("Private Message"));
@@ -749,7 +750,7 @@ setup_create_italic_label (const char *text)
 	GtkWidget *label;
 	char buf[256];
 
-	label = gtk_label_new (NULL);
+	label = gtk_label_new (nullptr);
 	snprintf (buf, sizeof (buf), "<i><span size=\"smaller\">%s</span></i>", text);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_CENTER);
@@ -846,7 +847,7 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 #ifndef WIN32 /* Windows always supports this */
 	/* Only used for transparency currently */
 	if (!gtk_widget_is_composited (current_sess->gui->window))
-		gtk_widget_set_sensitive (wid, FALSE);
+		gtk_widget_set_sensitive (wid, false);
 #endif
 }
 
@@ -897,7 +898,7 @@ setup_create_radio (GtkWidget *table, int row, const setting *set)
 	gtk_table_attach (GTK_TABLE (table), hbox, 3, 4, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
 	i = 0;
-	group = NULL;
+	group = nullptr;
 	while (text[i])
 	{
 		if (text[i][0] != 0)
@@ -908,7 +909,7 @@ setup_create_radio (GtkWidget *table, int row, const setting *set)
 			group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (wid));
 			gtk_container_add (GTK_CONTAINER (hbox), wid);
 			if (i == setup_get_int (&setup_prefs, set))
-				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid), TRUE);
+				gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid), true);
 			g_object_set_data (G_OBJECT (wid), "n", GINT_TO_POINTER (i));
 			g_signal_connect (G_OBJECT (wid), "toggled",
 									G_CALLBACK (setup_radio_cb), (gpointer)set);
@@ -1025,27 +1026,26 @@ setup_filereq_cb (GtkWidget *entry, const char *file)
 }
 
 static void
-setup_browsefile_cb (GtkWidget *button, GtkWidget *entry)
+setup_browsefile_cb (GtkWidget * /*button*/, GtkWidget *entry)
 {
 	/* used for background image only */
-	char *filter;
 	int filter_type;
 
 #ifdef WIN32
-	filter = "*png;*.tiff;*.gif;*.jpeg;*.jpg";
+	auto filter = "*png;*.tiff;*.gif;*.jpeg;*.jpg";
 	filter_type = FRF_EXTENSIONS;
 #else
-	filter = "image/*";
+	auto filter = "image/*";
 	filter_type = FRF_MIMETYPES;
 #endif
 	gtkutil_file_req (_("Select an Image File"), (filereqcallback)setup_filereq_cb,
-					entry, NULL, filter, filter_type|FRF_RECENTLYUSED);
+					entry, nullptr, filter, filter_type|FRF_RECENTLYUSED);
 }
 
 static void
-setup_fontsel_destroy (GtkWidget *button, GtkFontSelectionDialog *dialog)
+setup_fontsel_destroy (GtkWidget * /*button*/, GtkFontSelectionDialog * /*dialog*/)
 {
-	font_dialog = NULL;
+	font_dialog = nullptr;
 }
 
 static void
@@ -1061,20 +1061,20 @@ setup_fontsel_cb (GtkWidget *button, GtkFontSelectionDialog *dialog)
 }
 
 static void
-setup_fontsel_cancel (GtkWidget *button, GtkFontSelectionDialog *dialog)
+setup_fontsel_cancel (GtkWidget * /*button*/, GtkFontSelectionDialog *dialog)
 {
 	gtk_widget_destroy (GTK_WIDGET (dialog));
 	font_dialog = nullptr;
 }
 
 static void
-setup_browsefolder_cb (GtkWidget *button, GtkEntry *entry)
+setup_browsefolder_cb (GtkWidget * /*button*/, GtkEntry *entry)
 {
-	gtkutil_file_req (_("Select Download Folder"), (filereqcallback)setup_filereq_cb, entry, (char*)gtk_entry_get_text (entry), NULL, FRF_CHOOSEFOLDER);
+	gtkutil_file_req (_("Select Download Folder"), (filereqcallback)setup_filereq_cb, entry, (char*)gtk_entry_get_text (entry), nullptr, FRF_CHOOSEFOLDER);
 }
 
 static void
-setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
+setup_browsefont_cb (GtkWidget * /*button*/, GtkWidget *entry)
 {
 	/* global var */
 	font_dialog = gtk_font_selection_dialog_new(_("Select font"));
@@ -1101,18 +1101,17 @@ setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
 static void
 setup_entry_cb (GtkEntry *entry, setting *set)
 {
-	int size;
-	int pos;
 	int len = gtk_entry_get_text_length (entry);
 	const unsigned char *p = reinterpret_cast<const unsigned char*>(gtk_entry_get_text (entry));
 
 	/* need to truncate? */
 	if (len >= set->extra)
 	{
+		int pos;
 		len = pos = 0;
-		while (1)
+		for (;;)
 		{
-			size = g_utf8_skip [*p];
+			auto size = g_utf8_skip [*p];
 			len += size;
 			p += size;
 			/* truncate to "set->extra" BYTES */
@@ -1152,7 +1151,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	wid = gtk_entry_new ();
 	g_object_set_data (G_OBJECT (wid), "lbl", label);
 	if (set->list)
-		gtk_entry_set_visibility (GTK_ENTRY (wid), FALSE);
+		gtk_entry_set_visibility (GTK_ENTRY (wid), false);
 	if (set->tooltip)
 		gtk_widget_set_tooltip_text (wid, _(set->tooltip));
 	gtk_entry_set_max_length (GTK_ENTRY (wid), set->extra - 1);
@@ -1169,7 +1168,7 @@ setup_create_entry (GtkWidget *table, int row, const setting *set)
 	if ( (set->offset == P_OFFSETNL(hex_net_proxy_pass) ||
 			set->offset == P_OFFSETNL(hex_net_proxy_user)) &&
 	     (setup_prefs.hex_net_proxy_type != 4 && setup_prefs.hex_net_proxy_type != 3 && setup_prefs.hex_net_proxy_type != 5) )
-		gtk_widget_set_sensitive (wid, FALSE);
+		gtk_widget_set_sensitive (wid, false);
 
 	if (set->type == ST_ENTRY)
 		gtk_table_attach (GTK_TABLE (table), wid, 3, 6, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
@@ -1203,7 +1202,7 @@ setup_create_header (GtkWidget *table, int row, const char *labeltext)
 	else
 		snprintf (buf, sizeof (buf), "\n<b>%s</b>", _(labeltext));
 
-	label = gtk_label_new (NULL);
+	label = gtk_label_new (nullptr);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_table_attach (GTK_TABLE (table), label, 0, 4, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
@@ -1214,7 +1213,7 @@ setup_create_button (GtkWidget *table, int row, const char *label, GCallback cal
 {
 	GtkWidget *but = gtk_button_new_with_label (label);
 	gtk_table_attach (GTK_TABLE (table), but, 2, 3, row, row + 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 5);
-	g_signal_connect (G_OBJECT (but), "clicked", callback, NULL);
+	g_signal_connect (G_OBJECT (but), "clicked", callback, nullptr);
 }
 
 static GtkWidget *
@@ -1222,7 +1221,7 @@ setup_create_frame (void)
 {
 	GtkWidget *tab;
 
-	tab = gtk_table_new (3, 2, FALSE);
+	tab = gtk_table_new (3, 2, false);
 	gtk_container_set_border_width (GTK_CONTAINER (tab), 6);
 	gtk_table_set_row_spacings (GTK_TABLE (tab), 2);
 	gtk_table_set_col_spacings (GTK_TABLE (tab), 3);
@@ -1231,7 +1230,7 @@ setup_create_frame (void)
 }
 
 static void
-open_data_cb (GtkWidget *button, gpointer data)
+open_data_cb (GtkWidget * /*button*/, gpointer)
 {
 	fe_open_url (get_xdir ());
 }
@@ -1241,7 +1240,7 @@ setup_create_page (const setting *set)
 {
 	int i, row, do_disable;
 	GtkWidget *tab;
-	GtkWidget *wid = NULL, *parentwid = NULL;
+	GtkWidget *wid = nullptr, *parentwid = nullptr;
 
 	tab = setup_create_frame ();
 	gtk_container_set_border_width (GTK_CONTAINER (tab), 6);
@@ -1288,7 +1287,7 @@ setup_create_page (const setting *set)
 			setup_create_label (tab, row, &set[i]);
 			break;
 		case ST_ALERTHEAD:
-			setup_create_alert_header (tab, row, &set[i]);
+			setup_create_alert_header (tab, row);
 		}
 
 		if (do_disable)
@@ -1299,7 +1298,7 @@ setup_create_page (const setting *set)
 				gtk_widget_set_sensitive (wid, gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (parentwid)));
 				do_disable--;
 				if (!do_disable)
-					parentwid = NULL;
+					parentwid = nullptr;
 			}
 			else
 				parentwid = wid;
@@ -1340,7 +1339,7 @@ setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 
 	gtk_color_selection_get_current_color (GTK_COLOR_SELECTION (gtk_color_selection_dialog_get_color_selection (cdialog)), col);
 
-	gdk_colormap_alloc_color (gtk_widget_get_colormap (button), col, TRUE, TRUE);
+	gdk_colormap_alloc_color (gtk_widget_get_colormap (button), col, true, true);
 
 	style = gtk_style_new ();
 	style->bg[0] = *col;
@@ -1367,7 +1366,7 @@ setup_color_cb (GtkWidget *button, gpointer userdata)
 
 	g_object_get (G_OBJECT(cdialog), "cancel-button", &cancel_button,
 									"ok-button", &ok_button,
-									"help-button", &help_button, NULL);
+									"help-button", &help_button, nullptr);
 
 	gtk_widget_hide (help_button);
 	g_signal_connect (G_OBJECT (ok_button), "clicked",
@@ -1376,7 +1375,7 @@ setup_color_cb (GtkWidget *button, gpointer userdata)
 							G_CALLBACK (gtkutil_destroy), dialog);
 	g_object_set_data (G_OBJECT (ok_button), "c", color);
 	g_object_set_data (G_OBJECT (ok_button), "b", button);
-	gtk_widget_set_sensitive (help_button, FALSE);
+	gtk_widget_set_sensitive (help_button, false);
 	gtk_color_selection_set_current_color (GTK_COLOR_SELECTION (gtk_color_selection_dialog_get_color_selection (cdialog)), color);
 	gtk_widget_show (dialog);
 
@@ -1440,10 +1439,10 @@ setup_create_color_page (void)
 {
 	GtkWidget *tab, *box, *label;
 
-	box = gtk_vbox_new (FALSE, 0);
+	box = gtk_vbox_new (false, 0);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 6);
 
-	tab = gtk_table_new (9, 2, FALSE);
+	tab = gtk_table_new (9, 2, false);
 	gtk_container_set_border_width (GTK_CONTAINER (tab), 6);
 	gtk_table_set_row_spacings (GTK_TABLE (tab), 2);
 	gtk_table_set_col_spacings (GTK_TABLE (tab), 3);
@@ -1525,8 +1524,8 @@ setup_snd_populate (GtkTreeView * treeview)
 			GtkTreePathPtr path{ gtk_tree_model_get_path(GTK_TREE_MODEL(store), &iter) };
 			if (path)
 			{
-				gtk_tree_view_scroll_to_cell (treeview, path.get(), NULL, TRUE, 0.5, 0.5);
-				gtk_tree_view_set_cursor (treeview, path.get(), NULL, FALSE);
+				gtk_tree_view_scroll_to_cell (treeview, path.get(), nullptr, true, 0.5, 0.5);
+				gtk_tree_view_set_cursor (treeview, path.get(), nullptr, false);
 			}
 		}
 	}
@@ -1546,7 +1545,7 @@ setup_snd_get_selected (GtkTreeSelection *sel, GtkTreeIter *iter)
 }
 
 static void
-setup_snd_row_cb (GtkTreeSelection *sel, gpointer user_data)
+setup_snd_row_cb (GtkTreeSelection *sel, gpointer)
 {
 	GtkTreeIter iter;
 
@@ -1570,13 +1569,13 @@ setup_snd_add_columns (GtkTreeView * treeview)
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
 																-1, _("Event"), renderer,
-																"text", 0, NULL);
+																"text", 0, nullptr);
 
 	/* file column */
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview),
 																-1, _("Sound file"), renderer,
-																"text", 1, NULL);
+																"text", 1, nullptr);
 
 	model = GTK_TREE_MODEL (gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT));
 	gtk_tree_view_set_model (GTK_TREE_VIEW (treeview), model);
@@ -1593,7 +1592,7 @@ setup_snd_filereq_cb (GtkWidget *entry, char *file)
 			/* Use just the filename if the given sound file is in the default <config>/sounds directory.
 			 * We're comparing absolute paths so this won't work in portable mode which uses a relative path.
 			 */
-			if (!strcmp (g_path_get_dirname (file), g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, NULL)))
+			if (!strcmp (g_path_get_dirname (file), g_build_filename (get_xdir (), HEXCHAT_SOUND_DIR, nullptr)))
 			{
 				gtk_entry_set_text (GTK_ENTRY (entry), g_path_get_basename (file));
 			}
@@ -1606,16 +1605,15 @@ setup_snd_filereq_cb (GtkWidget *entry, char *file)
 }
 
 static void
-setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
+setup_snd_browse_cb (GtkWidget * /*button*/, GtkEntry *entry)
 {
-	glib_string sounds_dir{ g_build_filename(get_xdir(), HEXCHAT_SOUND_DIR, NULL) };
-	char *filter = NULL;
+	glib_string sounds_dir{ g_build_filename(get_xdir(), HEXCHAT_SOUND_DIR, nullptr) };
 	int filter_type;
 #ifdef WIN32 /* win32 only supports wav, others could support anything */
-	filter = "*.wav";
+	auto filter = "*.wav";
 	filter_type = FRF_EXTENSIONS;
 #else
-	filter = "audio/*";
+	auto filter = "audio/*";
 	filter_type = FRF_MIMETYPES;
 #endif
 
@@ -1624,7 +1622,7 @@ setup_snd_browse_cb (GtkWidget *button, GtkEntry *entry)
 }
 
 static void
-setup_snd_play_cb (GtkWidget *button, GtkEntry *entry)
+setup_snd_play_cb (GtkWidget * /*button*/, GtkEntry *entry)
 {
 	sound_play (gtk_entry_get_text (entry), false);
 }
@@ -1652,7 +1650,7 @@ setup_snd_changed_cb (GtkEntry *ent, GtkTreeView *tree)
 	store = (GtkListStore *)gtk_tree_view_get_model (tree);
 	gtk_list_store_set (store, &iter, 1, sound_files[n].c_str(), -1);
 
-	gtk_widget_set_sensitive (cancel_button, FALSE);
+	gtk_widget_set_sensitive (cancel_button, false);
 }
 
 static GtkWidget *
@@ -1668,15 +1666,15 @@ setup_create_sound_page (void)
 	GtkWidget *sound_play;
 	GtkTreeSelection *sel;
 
-	vbox1 = gtk_vbox_new (FALSE, 0);
+	vbox1 = gtk_vbox_new (false, 0);
 	gtk_container_set_border_width (GTK_CONTAINER (vbox1), 6);
 	gtk_widget_show (vbox1);
 
-	vbox2 = gtk_vbox_new (FALSE, 0);
+	vbox2 = gtk_vbox_new (false, 0);
 	gtk_widget_show (vbox2);
 	gtk_container_add (GTK_CONTAINER (vbox1), vbox2);
 
-	scrolledwindow1 = gtk_scrolled_window_new (NULL, NULL);
+	scrolledwindow1 = gtk_scrolled_window_new (nullptr, nullptr);
 	gtk_widget_show (scrolledwindow1);
 	gtk_container_add (GTK_CONTAINER (vbox2), scrolledwindow1);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow1),
@@ -1690,14 +1688,14 @@ setup_create_sound_page (void)
 	setup_snd_add_columns (GTK_TREE_VIEW (sound_tree));
 	setup_snd_populate (GTK_TREE_VIEW (sound_tree));
 	g_signal_connect (G_OBJECT (sel), "changed",
-							G_CALLBACK (setup_snd_row_cb), NULL);
+							G_CALLBACK (setup_snd_row_cb), nullptr);
 	gtk_widget_show (sound_tree);
 	gtk_container_add (GTK_CONTAINER (scrolledwindow1), sound_tree);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (sound_tree), TRUE);
+	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (sound_tree), true);
 
-	table1 = gtk_table_new (2, 3, FALSE);
+	table1 = gtk_table_new (2, 3, false);
 	gtk_widget_show (table1);
-	gtk_box_pack_start (GTK_BOX (vbox2), table1, FALSE, TRUE, 8);
+	gtk_box_pack_start (GTK_BOX (vbox2), table1, false, true, 8);
 	gtk_table_set_row_spacings (GTK_TABLE (table1), 2);
 	gtk_table_set_col_spacings (GTK_TABLE (table1), 4);
 
@@ -1736,7 +1734,7 @@ setup_create_sound_page (void)
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
 
-	setup_snd_row_cb (sel, NULL);
+	setup_snd_row_cb (sel, nullptr);
 
 	return vbox1;
 }
@@ -1747,19 +1745,19 @@ setup_add_page (const char *title, GtkWidget *book, GtkWidget *tab)
 	GtkWidget *label, *vvbox;
 	char buf[128];
 
-	vvbox = gtk_vbox_new (FALSE, 0);
+	vvbox = gtk_vbox_new (false, 0);
 
 	/* label */
-	label = gtk_label_new (NULL);
+	label = gtk_label_new (nullptr);
 	snprintf (buf, sizeof (buf), "<b><big>%s</big></b>", _(title));
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 	gtk_misc_set_padding (GTK_MISC (label), 2, 1);
-	gtk_box_pack_start (GTK_BOX (vvbox), label, FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX (vvbox), label, false, false, 2);
 
 	gtk_container_add (GTK_CONTAINER (vvbox), tab);
 
-	gtk_notebook_append_page (GTK_NOTEBOOK (book), vvbox, NULL);
+	gtk_notebook_append_page (GTK_NOTEBOOK (book), vvbox, nullptr);
 }
 
 static const char *const cata[] =
@@ -1770,19 +1768,19 @@ static const char *const cata[] =
 		N_("User list"),
 		N_("Channel switcher"),
 		N_("Colors"),
-		NULL,
+		nullptr,
 	N_("Chatting"),
 		N_("General"),
 		N_("Alerts"),
 		N_("Sounds"),
 		N_("Logging"),
 		N_("Advanced"),
-		NULL,
+		nullptr,
 	N_("Network"),
 		N_("Network setup"),
 		N_("File transfers"),
-		NULL,
-	NULL
+		nullptr,
+	nullptr
 };
 
 static GtkWidget *
@@ -1816,8 +1814,8 @@ setup_create_pages (GtkWidget *box)
 	setup_add_page (cata[15], book, setup_create_page (network_settings));
 	setup_add_page (cata[16], book, setup_create_page (filexfer_settings));
 
-	gtk_notebook_set_show_tabs (GTK_NOTEBOOK (book), FALSE);
-	gtk_notebook_set_show_border (GTK_NOTEBOOK (book), FALSE);
+	gtk_notebook_set_show_tabs (GTK_NOTEBOOK (book), false);
+	gtk_notebook_set_show_border (GTK_NOTEBOOK (book), false);
 	gtk_container_add (GTK_CONTAINER (box), book);
 
 	return book;
@@ -1843,13 +1841,13 @@ setup_tree_cb (GtkTreeView *treeview, GtkWidget *book)
 }
 
 static gboolean
-setup_tree_select_filter (GtkTreeSelection *selection, GtkTreeModel *model,
-								  GtkTreePath *path, gboolean path_selected,
-								  gpointer data)
+setup_tree_select_filter (GtkTreeSelection * /*selection*/, GtkTreeModel * /*model*/,
+								  GtkTreePath *path, gboolean /*path_selected*/,
+								  gpointer)
 {
 	if (gtk_tree_path_get_depth (path) > 1)
-		return TRUE;
-	return FALSE;
+		return true;
+	return false;
 }
 
 static void
@@ -1860,7 +1858,7 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 	GtkTreeStore *model;
 	GtkTreeIter iter;
 	GtkTreeIter child_iter;
-	GtkTreeIter *sel_iter = NULL;
+	GtkTreeIter *sel_iter = nullptr;
 	GtkCellRenderer *renderer;
 	GtkTreeSelection *sel;
 	int i, page;
@@ -1871,7 +1869,7 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 	page = 0;
 	do
 	{
-		gtk_tree_store_append (model, &iter, NULL);
+		gtk_tree_store_append (model, &iter, nullptr);
 		gtk_tree_store_set (model, &iter, 0, _(cata[i]), 1, -1, -1);
 		i++;
 
@@ -1894,16 +1892,16 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 	sel = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
 	gtk_tree_selection_set_mode (sel, GTK_SELECTION_BROWSE);
 	gtk_tree_selection_set_select_function (sel, setup_tree_select_filter,
-														 NULL, NULL);
+														 nullptr, nullptr);
 	g_signal_connect (G_OBJECT (tree), "cursor_changed",
 							G_CALLBACK (setup_tree_cb), book);
 
 	renderer = gtk_cell_renderer_text_new ();
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (tree),
-							    -1, _("Categories"), renderer, "text", 0, NULL);
+							    -1, _("Categories"), renderer, "text", 0, nullptr);
 	gtk_tree_view_expand_all (GTK_TREE_VIEW (tree));
 
-	frame = gtk_frame_new (NULL);
+	frame = gtk_frame_new (nullptr);
 	gtk_container_add (GTK_CONTAINER (frame), tree);
 	gtk_box_pack_start (GTK_BOX (box), frame, 0, 0, 0);
 	gtk_box_reorder_child (GTK_BOX (box), frame, 0);
@@ -1952,7 +1950,7 @@ setup_apply_to_sess (session_gui *gui)
 		gtk_widget_hide (gui->button_box);
 
 	/* update active languages */
-	sexy_spell_entry_deactivate_language((SexySpellEntry *)gui->input_box,NULL);
+	sexy_spell_entry_deactivate_language((SexySpellEntry *)gui->input_box,nullptr);
 	sexy_spell_entry_activate_default_languages((SexySpellEntry *)gui->input_box);
 
 	sexy_spell_entry_set_checked ((SexySpellEntry *)gui->input_box, prefs.hex_gui_input_spell);
@@ -1979,7 +1977,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 {
 	GSList *list;
 	session *sess;
-	int done_main = FALSE;
+	bool done_main = false;
 
 	/* remove trailing slashes */
 	unslash (prefs.hex_dcc_dir);
@@ -2006,7 +2004,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 			/* only apply to main tabwindow once */
 			if (!done_main)
 			{
-				done_main = TRUE;
+				done_main = true;
 				setup_apply_to_sess (sess->gui);
 			}
 		} else
@@ -2014,7 +2012,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 			setup_apply_to_sess (sess->gui);
 		}
 
-		log_open_or_close (sess);
+		//log_open_or_close (sess);
 
 		if (do_ulist)
 			userlist_rehash (sess);
@@ -2142,7 +2140,7 @@ setup_apply (struct hexchatprefs &pr)
 }
 
 static void
-setup_ok_cb (GtkWidget *but, GtkWidget *win)
+setup_ok_cb (GtkWidget * /*but*/, GtkWidget *win)
 {
 	gtk_widget_destroy (win);
 	setup_apply (setup_prefs);
@@ -2157,11 +2155,11 @@ setup_window_open (void)
 
 	win = gtkutil_window_new (_(DISPLAY_NAME": Preferences"), "prefs", 0, 0, 2);
 
-	vbox = gtk_vbox_new (FALSE, 5);
+	vbox = gtk_vbox_new (false, 5);
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
 	gtk_container_add (GTK_CONTAINER (win), vbox);
 
-	hbox = gtk_hbox_new (FALSE, 4);
+	hbox = gtk_hbox_new (false, 4);
 	gtk_container_add (GTK_CONTAINER (vbox), hbox);
 
 	setup_create_tree (hbox, setup_create_pages (hbox));
@@ -2170,17 +2168,17 @@ setup_window_open (void)
 	hbbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbbox), GTK_BUTTONBOX_END);
 	gtk_box_set_spacing (GTK_BOX (hbbox), 4);
-	gtk_box_pack_end (GTK_BOX (vbox), hbbox, FALSE, FALSE, 0);
+	gtk_box_pack_end (GTK_BOX (vbox), hbbox, false, false, 0);
 
 	wid = gtk_button_new_with_mnemonic(_("_OK"));
 	g_signal_connect(G_OBJECT(wid), "clicked",
 		G_CALLBACK(setup_ok_cb), win);
-	gtk_box_pack_start(GTK_BOX(hbbox), wid, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbbox), wid, false, false, 0);
 
 	cancel_button = wid = gtk_button_new_with_mnemonic(_("_Cancel"));
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (gtkutil_destroy), win);
-	gtk_box_pack_start (GTK_BOX (hbbox), wid, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (hbbox), wid, false, false, 0);
 
 	gtk_widget_show_all (win);
 
@@ -2188,21 +2186,21 @@ setup_window_open (void)
 }
 
 static void
-setup_close_cb (GtkWidget *win, GtkWidget **swin)
+setup_close_cb (GtkWidget * /*win*/, GtkWidget **swin)
 {
-	*swin = NULL;
+	*swin = nullptr;
 
 	if (font_dialog)
 	{
 		gtk_widget_destroy (font_dialog);
-		font_dialog = NULL;
+		font_dialog = nullptr;
 	}
 }
 
 void
 setup_open (void)
 {
-	static GtkWidget *setup_window = NULL;
+	static GtkWidget *setup_window = nullptr;
 
 	if (setup_window)
 	{

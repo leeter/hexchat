@@ -25,7 +25,7 @@ namespace w32
 {
 	namespace crypto
 	{
-		void seed_openssl_random();
+		void seed_openssl_random() throw();
 	}
 }
 

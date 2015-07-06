@@ -35,9 +35,14 @@
 
 #include <locale>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
+#include <boost/format/format_fwd.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
+
+#include "sessfwd.hpp"
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
@@ -55,8 +60,8 @@ int rfc_casecmp (const char *, const char *);
 int rfc_ncasecmp (const char *, const char *, size_t);
 int buf_get_line (char *, char **, int *, int len);
 char *nocasestrstr (const char *text, const char *tofind);
-const char *country (const std::string &);
-void country_search(char *pattern, session *ud, void(*print)(session *, const char [], ...));
+std::string country (const boost::string_ref &);
+void country_search(char *pattern, session *ud, const std::function<void(session*, const boost::format &)> & print);
 const char *get_sys_str (bool with_cpu);
 void util_exec (const char *cmd);
 enum strip_flags{
@@ -67,13 +72,13 @@ enum strip_flags{
 	STRIP_ALL = 7
 };
 
-std::string strip_color(const std::string &text, strip_flags flags);
-std::string strip_color2(const std::string & src, strip_flags flags);
+std::string strip_color(const boost::string_ref &text, strip_flags flags);
+std::string strip_color2(const boost::string_ref &src, strip_flags flags);
 int strip_hidden_attribute (const std::string & src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
 #ifdef WIN32
-int waitline2 (GIOChannel *source, char *buf, int bufsize);
+//int waitline2 (GIOChannel *source, char *buf, int bufsize);
 int get_cpu_arch (void);
 #else
 #define waitline2(source,buf,size) waitline(serv->childread,buf,size,0)
@@ -81,8 +86,8 @@ int get_cpu_arch (void);
 unsigned long make_ping_time (void);
 void move_file (const std::string& src_dir, const std::string& dst_dir, const std::string& fname, int dccpermissions);
 int token_foreach (char *str, char sep, int (*callback) (char *str, void *ud), void *ud);
-guint32 str_hash (const char *key);
-guint32 str_ihash (const unsigned char *key);
+std::uint32_t str_hash (const char *key);
+std::uint32_t str_ihash(const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, std::size_t bytes_left);
 template<size_t N>
 void safe_strcpy(char(&dest)[N], const char src[])
@@ -95,7 +100,7 @@ bool unity_mode ();
 char *encode_sasl_pass_plain (const char *user, const char *pass);
 char *encode_sasl_pass_blowfish (const std::string & user, const std::string& pass, const std::string & data);
 char *encode_sasl_pass_aes (char *user, char *pass, char *data);
-std::string challengeauth_response(const std::string & username, const std::string & password, const std::string & challenge);
+std::string challengeauth_response(const boost::string_ref & username, const boost::string_ref & password, const std::string & challenge);
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
 size_t strftime_utf8 (char *dest, size_t destsize, const char *format, time_t time);
 

@@ -39,12 +39,26 @@ struct favchannel
 	boost::optional<std::string> key;
 };
 
+enum ircnet_flags_enum
+{
+	FLAG_CYCLE			=	1,
+	FLAG_USE_GLOBAL		=	2,
+	FLAG_USE_SSL		=	4,
+	FLAG_AUTO_CONNECT	=	8,
+	FLAG_USE_PROXY		=	16,
+	FLAG_ALLOW_INVALID	=	32,
+	FLAG_FAVORITE		=	64,
+	FLAG_COUNT			=	7
+};
+
 struct ircnet
 {
+	using ircnetflags = int;
 	ircnet();
+	~ircnet();
 	std::string name;
-	char *nick;
-	char *nick2;
+	boost::optional<std::string> nick;
+	boost::optional<std::string> nick2;
 	char *user;
 	char *real;
 	char *pass;
@@ -55,19 +69,10 @@ struct ircnet
 	GSList *commandlist;
 	GSList *favchanlist;
 	int selected;
-	guint32 flags;
+	ircnetflags flags;
 };
 
 extern GSList *network_list;
-
-#define FLAG_CYCLE				1
-#define FLAG_USE_GLOBAL			2
-#define FLAG_USE_SSL			4
-#define FLAG_AUTO_CONNECT		8
-#define FLAG_USE_PROXY			16
-#define FLAG_ALLOW_INVALID		32
-#define FLAG_FAVORITE			64
-#define FLAG_COUNT				7
 
 /* Login methods. Use server password by default - if we had a NickServ password, it'd be set to 2 already by servlist_load() */
 enum login_method{
@@ -94,13 +99,13 @@ enum login_method{
 const char IRC_DEFAULT_CHARSET[] = "UTF-8 (Unicode)";
 
 void servlist_init (void);
-int servlist_save (void);
+bool servlist_save (void);
 bool servlist_cycle (server *serv);
-void servlist_connect (session *sess, ircnet *net, bool join);
-int servlist_connect_by_netname (session *sess, char *network, bool join);
-int servlist_auto_connect (session *sess);
-int servlist_have_auto (void);
-int servlist_check_encoding (char *charset);
+void servlist_connect (session *sess, ircnet &net, bool join);
+bool servlist_connect_by_netname (session *sess, char *network, bool join);
+bool servlist_auto_connect (session *sess);
+bool servlist_have_auto (void);
+bool servlist_check_encoding (std::string charset);
 void servlist_cleanup (void);
 
 ircnet *servlist_net_add (const char *name, const char *comment, int prepend);

@@ -25,9 +25,6 @@
 #include "inet.hpp"				  /* make it first to avoid macro redefinitions */
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
-#ifdef WIN32
-#include "w32crypt_seed.hpp"
-#endif
 #include "../../config.h"
 #include <string>
 #include <iterator>
@@ -38,6 +35,7 @@
 #include <ctime>				  /* asctime() */
 #include <cstring>				  /* strncpy() */
 #include "ssl.hpp"				  /* struct cert_info */
+#include "util.hpp"
 
 /* globals */
 static char err_buf[256];			/* generic error buffer */
@@ -93,7 +91,7 @@ broke_oneline(char *oneline, char *parray[])
 
 	i = 0;
 	ppt = pt = oneline + 1;
-	while ((pt = strchr(pt, '/')))
+	while ((pt = std::strchr(pt, '/')))
 	{
 		*pt = 0;
 		parray[i++] = ppt;
@@ -125,10 +123,6 @@ _SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
 
 	/* used in SSL_connect(), SSL_accept() */
 	SSL_CTX_set_info_callback(ctx, info_cb_func);
-
-#ifdef WIN32
-	w32::crypto::seed_openssl_random();
-#endif
 
 	return(ctx);
 }
@@ -164,13 +158,11 @@ get_cert_info (cert_info &cert_info, const SSL * ssl)
 
 	peer_pkey = X509_get_pubkey (peer_cert);
 
-	strncpy (cert_info.algorithm,
-				(alg == NID_undef) ? "Unknown" : OBJ_nid2ln (alg),
-				sizeof (cert_info.algorithm));
+	safe_strcpy (cert_info.algorithm,
+				(alg == NID_undef) ? "Unknown" : OBJ_nid2ln (alg));
 	cert_info.algorithm_bits = EVP_PKEY_bits (peer_pkey);
-	strncpy (cert_info.sign_algorithm,
-				(sign_alg == NID_undef) ? "Unknown" : OBJ_nid2ln (sign_alg),
-				sizeof (cert_info.sign_algorithm));
+	safe_strcpy (cert_info.sign_algorithm,
+				(sign_alg == NID_undef) ? "Unknown" : OBJ_nid2ln (sign_alg));
 	/* EVP_PKEY_bits(ca_pkey)); */
 	cert_info.sign_algorithm_bits = 0;
 	std::copy(notBefore.cbegin(), notBefore.cend(), std::begin(cert_info.notbefore));

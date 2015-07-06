@@ -20,6 +20,6 @@
 #ifndef HEXCHAT_EDITLIST_HPP
 #define HEXCHAT_EDITLIST_HPP
 
-void editlist_gui_open (const char *title1, const char *title2, GSList * list, char *title, char *wmclass, char *file, char *help);
+void editlist_gui_open (const char *title1, const char *title2, std::vector<popup> &list, char *title, char *wmclass, char *file, char *help);
 
 #endif

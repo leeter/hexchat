@@ -87,7 +87,7 @@ handle_line (GIOChannel *channel, GIOCondition cond, gpointer data)
 static int done_intro = 0;
 
 void
-fe_new_window (struct session *sess, int focus)
+fe_new_window (struct session *sess, bool focus)
 {
 	char buf[512];
 
@@ -628,33 +628,33 @@ fe_cleanup (void)
 {
 }
 void
-fe_set_hilight (struct session *sess)
+fe_set_hilight (struct session *)
 {
 }
 void
-fe_set_tab_color (struct session *sess, int col)
+fe_set_tab_color (struct session *, fe_tab_color)
 {
 }
 void
-fe_update_mode_buttons (struct session *sess, char mode, char sign)
+fe_update_mode_buttons (struct session *, char, char)
 {
 }
 void
-fe_update_channel_key (struct session *sess)
+fe_update_channel_key (struct session *)
 {
 }
 void
-fe_update_channel_limit (struct session *sess)
+fe_update_channel_limit (struct session *)
 {
 }
 int
-fe_is_chanwindow (struct server *serv)
+fe_is_chanwindow (struct server *)
 {
 	return 0;
 }
 
 void
-fe_add_chan_list (struct server *serv, char *chan, char *users, char *topic)
+fe_add_chan_list (struct server *, char *, char *, char *)
 {
 }
 void
@@ -825,7 +825,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 {
 }
 void
-fe_set_lag (server * serv, long lag)
+fe_set_lag (server &, long)
 {
 }
 void
@@ -944,4 +944,9 @@ const char *
 fe_get_default_font (void)
 {
 	return NULL;
+}
+
+int main(int argc, char *argv[])
+{
+	return hexmain(argc, argv);
 }

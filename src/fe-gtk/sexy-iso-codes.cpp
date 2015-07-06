@@ -27,65 +27,61 @@
 #define ISO_639_DOMAIN	"iso_639"
 #define ISO_3166_DOMAIN	"iso_3166"
 
-static GHashTable *iso_639_table = NULL;
-static GHashTable *iso_3166_table = NULL;
+static GHashTable *iso_639_table = nullptr;
+static GHashTable *iso_3166_table = nullptr;
 
-static void
-iso_639_start_element (GMarkupParseContext *context,
-const gchar *element_name,
-const gchar **attribute_names,
-const gchar **attribute_values,
-gpointer data,
-GError **error)
+static void iso_639_start_element(GMarkupParseContext * /*context*/,
+				  const gchar *element_name,
+				  const gchar **attribute_names,
+				  const gchar **attribute_values, gpointer data,
+				  GError **)
 {
-	GHashTable *hash_table = static_cast<GHashTable *>(data);
-	const gchar *name = NULL;
-	const gchar *code = NULL;
-	int i;
-
-	if (strcmp (element_name, "iso_639_entry") != 0)
+	if (std::strcmp(element_name, "iso_639_entry") != 0)
 		return;
 
-	for (i = 0; attribute_names[i] != NULL; i++)
+	GHashTable *hash_table = static_cast<GHashTable *>(data);
+	const gchar *name = nullptr;
+	const gchar *code = nullptr;
+
+	for (int i = 0; attribute_names[i] != nullptr; ++i)
 	{
-		if (strcmp (attribute_names[i], "name") == 0)
+		if (std::strcmp(attribute_names[i], "name") == 0)
 			name = attribute_values[i];
-		else if (strcmp (attribute_names[i], "iso_639_1_code") == 0)
+		else if (std::strcmp(attribute_names[i], "iso_639_1_code") == 0)
 			code = attribute_values[i];
 	}
 
-	if (code != NULL && *code != '\0' && name != NULL && *name != '\0')
-		g_hash_table_insert (hash_table, g_strdup (code),
-		g_strdup (dgettext (ISO_639_DOMAIN, name)));
+	if (code != nullptr && *code != '\0' && name != nullptr &&
+	    *name != '\0')
+		g_hash_table_insert(hash_table, g_strdup(code),
+				    g_strdup(dgettext(ISO_639_DOMAIN, name)));
 }
 
-static void
-iso_3166_start_element (GMarkupParseContext *context,
-const gchar *element_name,
-const gchar **attribute_names,
-const gchar **attribute_values,
-gpointer data,
-GError **error)
+static void iso_3166_start_element(GMarkupParseContext * /*context*/,
+				   const gchar *element_name,
+				   const gchar **attribute_names,
+				   const gchar **attribute_values,
+				   gpointer data, GError **)
 {
-	GHashTable *hash_table = static_cast<GHashTable *>(data);
-	const gchar *name = NULL;
-	const gchar *code = NULL;
-	int i;
-
-	if (strcmp (element_name, "iso_3166_entry") != 0)
+	if (std::strcmp(element_name, "iso_3166_entry") != 0)
 		return;
 
-	for (i = 0; attribute_names[i] != NULL; i++)
+	GHashTable *hash_table = static_cast<GHashTable *>(data);
+	const gchar *name = nullptr;
+	const gchar *code = nullptr;
+
+	for (int i = 0; attribute_names[i] != nullptr; ++i)
 	{
-		if (strcmp (attribute_names[i], "name") == 0)
+		if (std::strcmp(attribute_names[i], "name") == 0)
 			name = attribute_values[i];
-		else if (strcmp (attribute_names[i], "alpha_2_code") == 0)
+		else if (std::strcmp(attribute_names[i], "alpha_2_code") == 0)
 			code = attribute_values[i];
 	}
 
-	if (code != NULL && *code != '\0' && name != NULL && *name != '\0')
-		g_hash_table_insert (hash_table, g_strdup (code),
-		g_strdup (dgettext (ISO_3166_DOMAIN, name)));
+	if (code != nullptr && *code != '\0' && name != nullptr &&
+	    *name != '\0')
+		g_hash_table_insert(hash_table, g_strdup(code),
+				    g_strdup(dgettext(ISO_3166_DOMAIN, name)));
 }
 
 static void
@@ -95,20 +91,20 @@ GHashTable *hash_table)
 {
 	GMappedFile *mapped_file;
 	gchar *filename;
-	GError *error = NULL;
+	GError *error = nullptr;
 
 	filename = g_build_filename (ISO_CODES_PREFIX, "share", "xml", "iso-codes",
-		basename, NULL);
-	mapped_file = g_mapped_file_new (filename, FALSE, &error);
+		basename, nullptr);
+	mapped_file = g_mapped_file_new (filename, false, &error);
 	g_free (filename);
 
-	if (mapped_file != NULL)
+	if (mapped_file != nullptr)
 	{
 		GMarkupParseContext *context;
 		const gchar *contents;
 		gsize length;
 
-		context = g_markup_parse_context_new (parser, GMarkupParseFlags(), hash_table, NULL);
+		context = g_markup_parse_context_new (parser, GMarkupParseFlags(), hash_table, nullptr);
 		contents = g_mapped_file_get_contents (mapped_file);
 		length = g_mapped_file_get_length (mapped_file);
 		g_markup_parse_context_parse (context, contents, length, &error);
@@ -116,7 +112,7 @@ GHashTable *hash_table)
 		g_mapped_file_unref (mapped_file);
 	}
 
-	if (error != NULL)
+	if (error != nullptr)
 	{
 		g_warning ("%s: %s", basename, error->message);
 		g_error_free (error);
@@ -132,15 +128,15 @@ void
 codetable_init (void)
 {
 	GMarkupParser iso_639_parser = {
-		iso_639_start_element, NULL, NULL, NULL, NULL
+		iso_639_start_element, nullptr, nullptr, nullptr, nullptr
 	};
 
 	GMarkupParser iso_3166_parser = {
-		iso_3166_start_element, NULL, NULL, NULL, NULL
+		iso_3166_start_element, nullptr, nullptr, nullptr, nullptr
 	};
 
-	g_return_if_fail (iso_639_table == NULL);
-	g_return_if_fail (iso_3166_table == NULL);
+	g_return_if_fail (iso_639_table == nullptr);
+	g_return_if_fail (iso_3166_table == nullptr);
 
 #ifdef ENABLE_NLS
 	bindtextdomain (ISO_639_DOMAIN, ISO_CODES_LOCALEDIR);
@@ -167,14 +163,14 @@ codetable_init (void)
 void
 codetable_free (void)
 {
-	g_return_if_fail (iso_639_table != NULL);
-	g_return_if_fail (iso_3166_table != NULL);
+	g_return_if_fail (iso_639_table != nullptr);
+	g_return_if_fail (iso_3166_table != nullptr);
 
 	g_hash_table_unref (iso_639_table);
 	g_hash_table_unref (iso_3166_table);
 
-	iso_639_table = NULL;
-	iso_3166_table = NULL;
+	iso_639_table = nullptr;
+	iso_3166_table = nullptr;
 }
 
 /**
@@ -194,16 +190,16 @@ codetable_lookup (const gchar *language_code, const gchar **language_name, const
 {
 	gchar **parts;
 
-	g_return_if_fail (iso_639_table != NULL);
-	g_return_if_fail (iso_3166_table != NULL);
+	g_return_if_fail (iso_639_table != nullptr);
+	g_return_if_fail (iso_3166_table != nullptr);
 
 	/* Split language code into parts. */
 	parts = g_strsplit (language_code, "_", 2);
 
-	g_return_if_fail (*parts != NULL);
+	g_return_if_fail (*parts != nullptr);
 
 	*language_name = static_cast<const gchar*>(g_hash_table_lookup (iso_639_table, parts[0]));
-	if (*language_name == NULL)
+	if (*language_name == nullptr)
 	{
 		g_hash_table_insert (iso_639_table, g_strdup (parts[0]),
 			g_strdup (parts[0]));
@@ -213,7 +209,7 @@ codetable_lookup (const gchar *language_code, const gchar **language_name, const
 	if (g_strv_length (parts) == 2)
 	{
 		*country_name = static_cast<const gchar*>(g_hash_table_lookup(iso_3166_table, parts[1]));
-		if (*country_name == NULL)
+		if (*country_name == nullptr)
 		{
 			g_hash_table_insert (iso_3166_table, g_strdup (parts[1]),
 				g_strdup (parts[1]));

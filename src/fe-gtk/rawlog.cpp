@@ -28,6 +28,8 @@
 #include <vector>
 #include <boost/algorithm/string/iter_find.hpp>
 #include <boost/algorithm/string/finder.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
@@ -62,19 +64,22 @@ close_rawlog (GtkWidget *wid, server *serv)
 static void
 rawlog_save (server *serv, char *file)
 {
-	int fh = -1;
-
-	if (file)
+	if (!file || !serv->gui->rawlog_window)
 	{
-		if (serv->gui->rawlog_window)
-			fh = hexchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT,
-										 0600, XOF_DOMODE | XOF_FULLPATH);
-		if (fh != -1)
-		{
-			gtk_xtext_save (GTK_XTEXT (serv->gui->rawlog_textlist), fh);
-			close (fh);
-		}
+		return;
 	}
+	namespace bfs = boost::filesystem;
+	bfs::path file_path(file);
+	bfs::ofstream outfile{ file_path, std::ios::trunc | std::ios::out | std::ios::binary };
+	if (!outfile)
+	{
+		return;
+	}
+
+	xtext::save(*GTK_XTEXT(serv->gui->rawlog_textlist), outfile);
+	outfile.flush();
+	boost::system::error_code ec;
+	bfs::permissions(file_path, bfs::owner_read | bfs::owner_write, ec);
 }
 
 static int
@@ -165,6 +170,6 @@ fe_add_rawlog(server *serv, const boost::string_ref &text, bool outbound)
 			break;
 		std::string new_text((outbound ? "\0034<<\017 " : "\0033>>\017 ") + it);
 
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, reinterpret_cast<const unsigned char*>(new_text.c_str()), new_text.size(), 0);
+		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, new_text, 0);
 	}
 }

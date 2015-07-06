@@ -27,6 +27,7 @@
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
 #include "history.hpp"
+#include "session_logging.hpp"
 
 struct session
 {
@@ -63,7 +64,7 @@ struct session
 	char session_name[CHANLEN];		 /* the name of the session, should not modified */
 	char channelkey[64];			  /* XXX correct max length? */
 	int limit;						  /* channel user limit */
-	int logfd;
+	session_logger log;
 	int scrollfd;							/* scrollback filedes */
 	int scrollwritten;					/* number of lines written */
 
@@ -108,6 +109,6 @@ struct session
 	void(*scrollback_replay_marklast) (struct session *sess);
 };
 
-session * new_ircwindow(server *serv, const char *name, session::session_type type, int focus);
+session * new_ircwindow(server *serv, const char *name, session::session_type type, bool focus);
 
 #endif // HEXCHAT_SESSION_HPP

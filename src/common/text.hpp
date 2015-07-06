@@ -49,8 +49,6 @@ void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t ti
 void PrintTextf(session * sess, const boost::format & fmt);
 void PrintTextf (session *sess, const char *format, ...) G_GNUC_PRINTF (2, 3);
 void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...) G_GNUC_PRINTF (3, 4);
-void log_close (session &sess);
-void log_open_or_close (session *sess);
 void load_text_events (void);
 void pevent_save (const char file_name[]);
 int pevt_build_string(const std::string& input, std::string & output, int &max_arg);
@@ -62,7 +60,7 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
 					   char *a, char *b, char *c, char *d);
 std::string text_validate (const boost::string_ref &);
-gsize get_stamp_str (const char fmt[], time_t tim, char **ret);
+std::string get_stamp_str (const char fmt[], time_t tim);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 const char *text_find_format_string (const char name[]);
  

@@ -24,6 +24,7 @@
 #include <string>
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
+#include <glib.h>
 #include "sessfwd.hpp"
 struct User;
 
@@ -56,7 +57,7 @@ void fe_cleanup (void);
 void fe_exit (void);
 int fe_timeout_add(int interval, GSourceFunc callback, void *userdata);
 void fe_timeout_remove (int tag);
-void fe_new_window (struct session *sess, int focus);
+void fe_new_window (struct session *sess, bool focus);
 void fe_new_server (struct server *serv);
 void fe_add_rawlog (struct server *serv, const boost::string_ref & text, bool outbound);
 enum fe_msg
@@ -81,7 +82,14 @@ void fe_input_remove (int tag);
 void fe_idle_add(GSourceFunc func, void *data);
 void fe_set_topic (session *sess, const std::string& topic, const std::string & stripped_topic);
 void fe_set_hilight (struct session *sess);
-void fe_set_tab_color (struct session *sess, int col);
+enum class fe_tab_color
+{
+	theme_default,
+	new_data,
+	new_message,
+	nick_seen
+};
+void fe_set_tab_color (struct session *sess, fe_tab_color col);
 void fe_flash_window (struct session *sess);
 void fe_update_mode_buttons (struct session *sess, char mode, char sign);
 void fe_update_channel_key (struct session *sess);
@@ -126,7 +134,7 @@ void fe_set_nick (const server &serv, const char *newnick);
 void fe_ignore_update (int level);
 void fe_beep (session *sess);
 void fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags);
-void fe_set_lag (server *serv, long lag);
+void fe_set_lag (server &serv, long lag);
 void fe_set_throttle (server *serv);
 void fe_set_away (server &serv);
 void fe_serverlist_open (session *sess);
@@ -147,7 +155,7 @@ enum fe_file_flag_types{
 void fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
 				 fe_file_flags flags);
-typedef enum {
+enum fe_gui_action{
 	FE_GUI_HIDE,
 	FE_GUI_SHOW,
 	FE_GUI_FOCUS,
@@ -157,7 +165,7 @@ typedef enum {
 	FE_GUI_MENU,
 	FE_GUI_ATTACH,
 	FE_GUI_APPLY
-} fe_gui_action;
+};
 void fe_ctrl_gui (session *sess, fe_gui_action action, int arg);
 int fe_gui_info (session *sess, int info_type);
 void *fe_gui_info_ptr (session *sess, int info_type);

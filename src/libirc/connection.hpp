@@ -2,6 +2,8 @@
 #define LIBIRC_CONNECTION_HPP
 
 #include <boost/utility/string_ref_fwd.hpp>
+#include "config.hpp"
+#include "connection_fwd.hpp"
 
 namespace irc
 {

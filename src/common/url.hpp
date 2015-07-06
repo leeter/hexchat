@@ -22,6 +22,7 @@
 
 #include <string>
 #include <set>
+#include <boost/utility/string_ref_fwd.hpp>
 
 enum word_types{
 	WORD_URL     = 1,
@@ -36,10 +37,12 @@ enum word_types{
 };
 
 void url_clear (void);
-void url_save_tree (const char *fname, const char *mode, gboolean fullpath);
+namespace url{
+	void save_tree(const char *fname);
+}
 int url_last (int *, int *);
 int url_check_word (const char *word);
-void url_check_line (const char *buf, int len);
+void url_check_line (const boost::string_ref& buf);
 std::set<std::string>& urlset();
 
 #endif

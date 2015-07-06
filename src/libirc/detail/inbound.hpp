@@ -1,5 +1,5 @@
-/* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+/* libirc
+* Copyright (C) 2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,25 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#ifndef LIBIRC_DETAIL_INBOUND_HPP
+#define LIBIRC_DETAIL_INBOUND_HPP
 
-#ifndef IRCLIB_SUTTER_HPP
-#define IRCLIB_SUTTER_HPP
+#ifdef _MSC_VER
+#pragma once
+#endif
+#include <string>
+#include "connection_detail.hpp"
 
-
-// temporary until gcc gets make_unique
-namespace sutter
+namespace irc
 {
-	template<class T, class... Types>
-	inline typename std::enable_if<!std::is_array<T>::value,
-		std::unique_ptr<T> >::type make_unique(Types&&... Args)
+	namespace detail
 	{
-		return (std::unique_ptr<T>(new T(std::forward<Types>(Args)...)));
-	}
-}
+		namespace inbound
+		{
+			void handle_inbound_message(irc::detail::connection_detail & con, const std::string & message, std::size_t length);
+		} // inbound
+	}// detail
+
+}// irc
 
 #endif

@@ -82,7 +82,6 @@
 
 #ifdef WIN32						/* for win32 */
 #define OFLAGS O_BINARY
-#define sleep(t) Sleep(t*1000)
 #include <direct.h>
 #define	F_OK	0
 #define	X_OK	1
@@ -348,13 +347,6 @@ struct hexchatprefs
 	unsigned int save_pevents:1;
 };
 
-/* Per-Channel Settings */
-enum chanopt_val{
-	SET_OFF = 0,
-	SET_ON = 1,
-	SET_DEFAULT = 2 /* use global setting */
-};
-
 /* Priorities in the "interesting sessions" priority queue
  * (see xchat.c:sess_list_by_lastact) */
 enum lact{
@@ -396,6 +388,11 @@ struct commands
 
 struct popup
 {
+	popup(std::string cmd, std::string name);
+	popup(const popup&) = default;
+	popup& operator=(const popup&) = default;
+	popup(popup &&);
+	popup& operator=(popup&&);
 	std::string cmd;
 	std::string name;
 };
@@ -412,5 +409,6 @@ typedef std::unique_ptr<gchar[], glib_deleter> glib_string;
 
 /* CL: get a random int in the range [0..n-1]. DON'T use rand() % n, it gives terrible results. */
 int RAND_INT(int n); 
+int hexmain(int argc, char *argv[]);
 
 #endif

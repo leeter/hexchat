@@ -42,7 +42,7 @@ void notc_msg (session *sess);
 void server_sendpart(server & serv, const std::string& channel, const boost::optional<const std::string&>& reason);
 void server_sendquit (session * sess);
 bool menu_streq (const char s1[], const char s2[], bool def);
-session *open_query (server &serv, const char *nick, gboolean focus_existing);
-gboolean load_perform_file (session *sess, char *file);
+session *open_query (server &serv, const char *nick, bool focus_existing);
+gboolean load_perform_file (session *sess, const char file[]);
 
 #endif

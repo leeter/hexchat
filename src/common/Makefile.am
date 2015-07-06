@@ -1,11 +1,9 @@
 ## Process this file with automake to produce Makefile.in
-
+include $(top_srcdir)/common.mk
 include $(top_srcdir)/m4/clang-analyze.am
 
 noinst_LIBRARIES = libhexchatcommon.a
 
-AM_CPPFLAGS = $(COMMON_CFLAGS) $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic $(BOOST_CPPFLAGS) -I$(top_srcdir) -I../libirc -D_FORTIFY_SOURCE=2
-AM_CFLAGS = $(COMMON_CFLAGS) $(CFLAGS) -std=c1x -Wall -Wextra -pedantic -I$(top_srcdir) -I../libirc -D_FORTIFY_SOURCE=2
 EXTRA_DIST = \
 	base64.hpp \
 	cfgfiles.hpp \
@@ -13,7 +11,8 @@ EXTRA_DIST = \
 	ctcp.hpp \
 	dcc.hpp \
 	fe.hpp \
-	filesystem.hpp
+	filesystem.hpp\
+	glist_iterators.hpp \
 	hexchat.hpp \
 	hexchatc.hpp \
 	hexchat-plugin.h \
@@ -33,6 +32,9 @@ EXTRA_DIST = \
 	sasl.hpp \
 	server.hpp \
 	servlist.hpp \
+	session.hpp \
+	sessfwd.hpp \
+	session_logging.hpp \
 	ssl.hpp \
 	ssl.cpp	\
 	text.hpp \
@@ -61,15 +63,15 @@ endif
 noinst_PROGRAMS = make-te
 
 make_te_SOURCES = make-te.cpp
-make_te_CPPFLAGS = $(CPPFLAGS) -std=c++0x -Wall -Wextra -pedantic
 
 libhexchatcommon_a_SOURCES = base64.cpp cfgfiles.cpp chanopt.cpp ctcp.cpp dcc.cpp filesystem.cpp hexchat.cpp \
 	history.cpp ignore.cpp inbound.cpp marshal.c modes.cpp network.cpp notify.cpp \
-	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp server.cpp servlist.cpp \
+	outbound.cpp plugin.cpp plugin-timer.cpp proto-irc.cpp sasl.cpp session.cpp session_logging.cpp server.cpp servlist.cpp \
 	$(ssl_c) text.cpp url.cpp userlist.cpp util.cpp
-libhexchatcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBPROXY_CFLAGS) $(CPPFLAGS)
-libhexchatcommon_a_CFLAGS = $(AM_CFLAGS) $(LIBPROXY_CFLAGS) $(CFLAGS)
-libhexchatcommon_a_LIBS = ../libirc/libirc.a $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_REGEX_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_CHRONO_LIBS)
+libhexchatcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(COMMON_CFLAGS) $(LIBPROXY_CFLAGS) \
+ -I$(top_srcdir) -I../libirc
+libhexchatcommon_a_CFLAGS = $(AM_CFLAGS) $(COMMON_CFLAGS) $(LIBPROXY_CFLAGS) -I$(top_srcdir)
+#libhexchatcommon_a_LIBADD = ../libirc/libirc.a $(BOOST_FILESYSTEM_LIBS) $(BOOST_IOSTREAMS_LIBS) $(BOOST_SYSTEM_LIBS) $(BOOST_ASIO_LIBS) $(BOOST_REGEX_LIBS) $(BOOST_SIGNALS2_LIBS) $(BOOST_CHRONO_LIBS)
 
 textenums.h: textevents.h
 

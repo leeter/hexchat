@@ -1,5 +1,5 @@
-/* HexChat
-* Copyright (C) 2014 Leetsoftwerx.
+/* libirc
+* Copyright (C) 2014 - 2015 Leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,20 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#ifndef HEXCHAT_W32_CRYPT_SEED_HPP
-#define HEXCHAT_W32_CRYPT_SEED_HPP
+#include <string>
+#include <vector>
+#include <boost/utility/string_ref.hpp>
+#include "split.hpp"
 
-#pragma once
-
-namespace w32
+namespace irc
 {
-	namespace crypto
+	std::vector<std::string> split_for_send(
+		std::size_t cmd_length,
+		const boost::string_ref & channel,
+		const boost::string_ref & userhost,
+		const boost::string_ref & message,
+		std::codecvt<char, char, std::mbstate_t> & cvt)
 	{
-		void seed_openssl_random();
+		return{};
 	}
 }
-
-#endif

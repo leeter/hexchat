@@ -28,12 +28,15 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <strstream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/utility/string_ref.hpp>
 
@@ -68,101 +71,70 @@ const char * const languages[LANGUAGES_LENGTH] = {
 void
 list_addentry(GSList ** list, std::string cmd, std::string name)
 {
-	std::unique_ptr<popup> pop(new popup);
-	pop->name = std::move(name);
-	pop->cmd = std::move(cmd);
+	std::unique_ptr<popup> pop(new popup(std::move(cmd), std::move(name)));
 
 	*list = g_slist_append (*list, pop.release());
 }
 
-/* read it in from a buffer to our linked list */
-
-static void
-list_load_from_data (GSList ** list, const std::string &ibuf)
+static void list_load_from_data(std::vector<popup> & list, std::istream & data)
 {
-	char cmd[384];
-	char name[128];
-
-	cmd[0] = 0;
-	name[0] = 0;
-
-	std::istringstream buffer(ibuf);
-
-	for (std::string buf; std::getline(buffer, buf, '\n');)
+	std::string name;
+	std::string cmd;
+	std::locale locale;
+	for (std::string buf; std::getline(data, buf, '\n');)
 	{
-		if (buf[0] != '#')
+		if (!buf.empty() && buf[0] != '#')
 		{
-			if (!g_ascii_strncasecmp (buf.c_str(), "NAME ", 5))
+			if (buf.size() > 5 && boost::istarts_with(buf, "NAME ", locale))
 			{
-				safe_strcpy (name, buf.c_str() + 5, sizeof (name));
+				name = buf.substr(5);
 			}
-			else if (!g_ascii_strncasecmp (buf.c_str(), "CMD ", 4))
+			else if (buf.size() > 4 && boost::istarts_with(buf, "CMD ", locale))
 			{
-				safe_strcpy (cmd, buf.c_str() + 4, sizeof (cmd));
-				if (*name)
+				cmd = buf.substr(4);
+				if (!name.empty())
 				{
-					list_addentry (list, cmd, name);
-					cmd[0] = 0;
-					name[0] = 0;
+					list.emplace_back(cmd, name);
+					name.clear();
+					cmd.clear();
 				}
 			}
 		}
 	}
 }
 
-void list_loadconf (const char *file, GSList ** list, const char *defaultconf)
+#ifdef _DEBUG
+#define g_open open
+#endif
+
+void list_loadconf(const std::string &file, std::vector<popup> &list,
+		   const char *defaultconf)
 {
-	auto filebuf = io::fs::make_path(config::config_dir()) / file;
-	int fd = g_open (filebuf.string().c_str(), O_RDONLY | OFLAGS, 0);
-
-	if (fd == -1)
+	list.clear();
+	boost::filesystem::ifstream infile(io::fs::make_config_path(file),
+					   std::ios::binary | std::ios::in);
+	list_load_from_data(list, infile);
+	if (list.empty() && defaultconf)
 	{
-		if (defaultconf)
-		{
-			list_load_from_data(list, defaultconf);
-		}			
-		return;
-	}
-
-	struct stat st;
-	if (fstat (fd, &st) != 0)
-	{
-		perror ("fstat");
-		abort ();
-	}
-
-	std::string ibuf(st.st_size, '\0');
-	read (fd, &ibuf[0], st.st_size);
-	close (fd);
-
-	list_load_from_data (list, ibuf);
-}
-
-void
-list_free (GSList ** list)
-{
-	while (*list)
-	{
-		std::unique_ptr<popup> data(static_cast<popup *>((*list)->data));
-		*list = g_slist_remove(*list, data.get());
+		std::istrstream dconf(defaultconf);
+		list_load_from_data(list, dconf);
 	}
 }
 
-bool list_delentry(GSList ** list, const char name[])
+bool list_delentry(std::vector<popup> & list, const char name[])
 {
-	GSList *alist = *list;
-	while (alist)
+	std::string name_str(name);
+	auto removal_loc = std::remove_if(list.begin(), list.end(), [&name_str](const popup& pop){
+		return boost::iequals(pop.name, name_str);
+	});
+
+	if (removal_loc == list.end())
 	{
-		auto pop = static_cast<popup *>(alist->data);
-		if (!g_ascii_strcasecmp (name, pop->name.c_str()))
-		{
-			std::unique_ptr<popup> pop_ptr(pop);
-			*list = g_slist_remove (*list, pop_ptr.get());
-			return true;
-		}
-		alist = alist->next;
+		return false;
 	}
-	return false;
+	
+	list.erase(removal_loc, list.end());
+	return true;
 }
 
 char *
@@ -172,7 +144,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 
 	snprintf (buffer, sizeof(buffer), "%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
-	while (1)
+	for (;;)
 	{
 		auto var_len = strlen(var);
 		if (!g_ascii_strncasecmp (buffer, cfg, var_len + 1))
@@ -974,7 +946,7 @@ bool save_config (void)
 
 	auto config = default_file ();
 	glib_string new_config(g_strconcat (config, ".new", NULL));
-	
+
 	int fh = g_open (new_config.get(), OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh == -1)
 	{
@@ -1028,12 +1000,12 @@ bool save_config (void)
 }
 
 static void
-set_showval (session *sess, const struct prefs *var, char *buf)
+set_showval(session *sess, const struct prefs & var)
 {
 	std::ostringstream buffer;
 	std::ostream_iterator<char> tbuf(buffer);
-	auto len = strlen (var->name);
-	std::copy_n(var->name, len, tbuf);
+	auto len = std::strlen (var.name);
+	std::copy_n(var.name, len, tbuf);
 	size_t dots = len > 29 ? 0 : 29 - len;
 
 	*tbuf++ = '\003';
@@ -1044,16 +1016,16 @@ set_showval (session *sess, const struct prefs *var, char *buf)
 		*tbuf++ = '.';
 	}
 
-	switch (var->type)
+	switch (var.type)
 	{
 		case TYPE_STR:
-			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var->offset);
+			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var.offset);
 			break;
 		case TYPE_INT:
-			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var->offset);
+			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var.offset);
 			break;
 		case TYPE_BOOL:
-			if (*((int *) &prefs + var->offset))
+			if (*((int *) &prefs + var.offset))
 			{
 				buffer << boost::format(_("\0033:\017 %s\n")) % _("ON");
 			}
@@ -1068,12 +1040,12 @@ set_showval (session *sess, const struct prefs *var, char *buf)
 }
 
 static void
-set_list (session * sess, char *tbuf)
+set_list (session * sess)
 {
 	int i = 0;
 	do
 	{
-		set_showval (sess, &vars[i], tbuf);
+		set_showval (sess, vars[i]);
 		i++;
 	}
 	while (vars[i].name);
@@ -1097,7 +1069,7 @@ cfg_get_bool (const char *var)
 	return -1;
 }
 
-int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+int cmd_set (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	bool wild = false;
 	bool or_token = false;
@@ -1140,7 +1112,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	if (!*var)
 	{
-		set_list (sess, tbuf);
+		set_list (sess);
 		return TRUE;
 	}
 
@@ -1188,7 +1160,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				}
 				else
 				{
-					set_showval (sess, &vars[i], tbuf);
+					set_showval (sess, vars[i]);
 				}
 				break;
 			case TYPE_INT:
@@ -1237,7 +1209,7 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				}
 				else
 				{
-					set_showval (sess, &vars[i], tbuf);
+					set_showval (sess, vars[i]);
 				}
 				break;
 			}
@@ -1260,6 +1232,9 @@ int cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
+#ifdef _DEBUG
+#define g_open open
+#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
 		if (xof_flags & io::fs::XOF_DOMODE)
@@ -1274,13 +1249,18 @@ int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 		return g_open (buf.string().c_str(), flags | OFLAGS, mode);
 	}
 	return g_open(buf.string().c_str(), flags | OFLAGS, 0);
+#undef g_open
 }
 
 FILE * hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {
+#ifdef _DEBUG
+#define g_fopen fopen
+#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 		return g_fopen (file, mode);
 
 	auto buf = io::fs::make_path(config::config_dir()) / file;
 	return g_fopen (buf.string().c_str(), mode);
+#undef g_fopen
 }

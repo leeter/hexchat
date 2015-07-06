@@ -21,8 +21,10 @@
 #define NOMINMAX
 #endif
 #include <cstring>
+#include <locale>
 #include <string>
 #include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -55,7 +57,7 @@ static void
 	auto confs = check_special_chars(conf, true);
 	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
 		sess->server->get_network(true).data(), "", "", nick, "");
-	handle_command(sess, tbuf, FALSE);
+	handle_command(sess, tbuf, false);
 }
 
 static bool
@@ -64,8 +66,6 @@ static bool
 {
 	bool ret = false;
 	char *po;
-	struct popup *pop;
-	GSList *list = ctcp_list;
 
 	po = std::strchr(ctcp, '\001');
 	if (po)
@@ -75,15 +75,14 @@ static bool
 	if (po)
 		*po = 0;
 
-	while (list)
+	std::locale locale;
+	for (const auto & pop : ctcp_list)
 	{
-		pop = (struct popup *) list->data;
-		if (!g_ascii_strcasecmp(ctcp, pop->name.c_str()))
+		if (boost::iequals(pop.name, ctcp, locale))
 		{
-			ctcp_reply(sess, nick, word, word_eol, pop->cmd);
+			ctcp_reply(sess, nick, word, word_eol, pop.cmd);
 			ret = true;
 		}
-		list = list->next;
 	}
 	return ret;
 }
@@ -169,19 +168,19 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 					chansess = sess;
 
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSNDC, chansess, word[5],
-											  nick, to, NULL, 0, tags_data->timestamp);
+											  nick, to, nullptr, 0, tags_data->timestamp);
 			} else
 			{
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSND, sess->server->front_session,
-											  word[5], nick, NULL, NULL, 0,
+											  word[5], nick, nullptr, nullptr, 0,
 											  tags_data->timestamp);
 			}
 
 			/* don't let IRCers specify path */
 #ifdef WIN32
-			if (std::strchr (word[5], '/') == NULL && std::strchr (word[5], '\\') == NULL)
+			if (std::strchr (word[5], '/') == nullptr && std::strchr (word[5], '\\') == nullptr)
 #else
-			if (std::strchr (word[5], '/') == NULL)
+			if (std::strchr (word[5], '/') == nullptr)
 #endif
 				sound_play (word[5], true);
 			return;
@@ -196,13 +195,13 @@ generic:
 	if (!sess->server->is_channel_name (to))
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGEN, sess->server->front_session, msg,
-									  nick, NULL, NULL, 0, tags_data->timestamp);
+									  nick, nullptr, nullptr, 0, tags_data->timestamp);
 	} else
 	{
 		chansess = find_channel (*(sess->server), to);
 		if (!chansess)
 			chansess = sess;
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGENC, chansess, msg, nick, to, NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGENC, chansess, msg, nick, to, nullptr, 0,
 									  tags_data->timestamp);
 	}
 }

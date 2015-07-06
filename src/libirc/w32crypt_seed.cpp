@@ -29,33 +29,46 @@
 #error this file is for windows compilation only!
 #endif
 
+#ifndef NOEXCEPT
+#if _MSC_VER >= 1900
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT throw()
+#endif
+#endif
+
 #pragma comment(lib, "bcrypt.lib")
 
 namespace{
-	auto alg_deleter = [](BCRYPT_ALG_HANDLE handle)
+	struct alg_deleter
 	{
-		BCryptCloseAlgorithmProvider(handle, 0);
+		using pointer = BCRYPT_ALG_HANDLE;
+		void operator()(pointer handle) NOEXCEPT
+		{
+			::BCryptCloseAlgorithmProvider(handle, 0);
+		}
 	};
+	using alg_ptr = std::unique_ptr < BCRYPT_ALG_HANDLE, alg_deleter > ;
 }
 
 namespace w32
 {
 	namespace crypto
 	{
-		void seed_openssl_random()
+		void seed_openssl_random() throw()
 		{
 			BCRYPT_ALG_HANDLE hdnl;
-			NTSTATUS res = BCryptOpenAlgorithmProvider(&hdnl, BCRYPT_RNG_ALGORITHM, nullptr, 0);
+			NTSTATUS res = ::BCryptOpenAlgorithmProvider(&hdnl, BCRYPT_RNG_ALGORITHM, nullptr, 0);
 			if (!BCRYPT_SUCCESS(res))
 				return; // TODO throw error?
 
-			std::unique_ptr<std::remove_pointer<BCRYPT_ALG_HANDLE>::type, decltype(alg_deleter)> alg(hdnl);
+			alg_ptr alg{ hdnl };
 
-			UCHAR buffer[256];
+			UCHAR buffer[256] = { 0 };
 			for (int i = 0; i < 256 && BCRYPT_SUCCESS(res); ++i)
 			{
-				res = BCryptGenRandom(alg.get(), buffer, sizeof(buffer), 0);
-				RAND_seed(buffer, sizeof(buffer));
+				res = ::BCryptGenRandom(alg.get(), buffer, sizeof(buffer), 0);
+				::RAND_seed(buffer, sizeof(buffer));
 			}
 		}
 	}

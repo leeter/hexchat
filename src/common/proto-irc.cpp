@@ -410,9 +410,9 @@ server::p_whois (const std::string& nicks)
 }
 
 void
-server::p_message(const std::string & channel, const std::string & text)
+server::p_message(const boost::string_ref & channel, const boost::string_ref & text)
 {
-	tcp_sendf (*this, "PRIVMSG %s :%s\r\n", channel.c_str(), text.c_str());
+	tcp_sendf (*this, "PRIVMSG %s :%s\r\n", channel.data(), text.data());
 }
 
 // TODO: handle splitting it
@@ -429,14 +429,14 @@ server::p_notice(const std::string & channel, const std::string & text)
 }
 
 void
-server::p_topic(const std::string & channel, const char *topic)
+server::p_topic(const boost::string_ref & channel, const char *topic)
 {
-	if (topic)
-		tcp_sendf(*this, "TOPIC %s :\r\n", channel.c_str());
+	if (!topic)
+		tcp_sendf(*this, "TOPIC %s :\r\n", channel.data());
 	else if (topic && topic[0])
-		tcp_sendf (*this, "TOPIC %s :%s\r\n", channel.c_str(), topic);
+		tcp_sendf (*this, "TOPIC %s :%s\r\n", channel.data(), topic);
 	else
-		tcp_sendf (*this, "TOPIC %s\r\n", channel.c_str());
+		tcp_sendf (*this, "TOPIC %s\r\n", channel.data());
 }
 
 void
@@ -1563,7 +1563,7 @@ server::p_inline (const boost::string_ref& text)
 		buf = text.to_string();
 	}
 
-	url_check_line(buf.data(), buf.size());
+	url_check_line(buf);
 
 	/* split line into words and words_to_end_of_line */
 	process_data_init (&pdibuf[0], &buf[0], word, word_eol, false, false);

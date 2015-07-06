@@ -82,7 +82,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
-      <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mincore.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <MinimumRequiredVersion>6.03</MinimumRequiredVersion>
     </Link>
     <Manifest>
@@ -91,7 +91,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -113,7 +113,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <FixedBaseAddress>false</FixedBaseAddress>
       <ModuleDefinitionFile>notifications.def</ModuleDefinitionFile>
-      <AdditionalDependencies>mincore.lib;runtimeobject.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mincore.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <MinimumRequiredVersion>6.03</MinimumRequiredVersion>
     </Link>
     <Manifest>
