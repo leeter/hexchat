@@ -61,6 +61,7 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include "xtext.hpp"
 #include "fkeys.hpp"
 #include "gtk_helpers.hpp"
+#include "gtk3bridge.hpp"
 
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
@@ -494,12 +495,14 @@ namespace
 		xtext_set_fg(GtkXText *xtext, GdkGC *gc, int index)
 	{
 		gdk_gc_set_foreground(gc, &xtext->palette[index]);
+		bridge_set_foreground(xtext->style, &xtext->palette[index]);
 	}
 
 	static void
 		xtext_set_bg(GtkXText *xtext, GdkGC *gc, int index)
 	{
 		gdk_gc_set_background(gc, &xtext->palette[index]);
+		bridge_set_background(xtext->style, &xtext->palette[index]);
 	}
 
 	static void
@@ -586,7 +589,8 @@ namespace
 	static gint
 		gtk_xtext_adjustment_timeout(GtkXText * xtext)
 	{
-		gtk_xtext_render_page(xtext);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
+		//gtk_xtext_render_page(xtext);
 		xtext->io_tag = 0;
 		return 0;
 	}
@@ -612,7 +616,8 @@ namespace
 					g_source_remove(xtext->io_tag);
 					xtext->io_tag = 0;
 				}
-				gtk_xtext_render_page(xtext);
+				gtk_widget_queue_draw(GTK_WIDGET(xtext));
+				//gtk_xtext_render_page(xtext);
 			}
 			else
 			{
@@ -635,6 +640,7 @@ GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator)
 	xtext->wordwrap = true;
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
 	xtext->orig_buffer = xtext->buffer;
+	xtext->style = gtk_style_context_new();
 
 	auto widget = GTK_WIDGET(xtext);
 	gtk_widget_set_double_buffered(widget, false);
@@ -740,6 +746,11 @@ namespace {
 		{
 			gtk_xtext_buffer_free(xtext->orig_buffer);
 			xtext->orig_buffer = nullptr;
+		}
+		if (xtext->style)
+		{
+			bridge_style_context_free(xtext->style);
+			xtext->style = nullptr;
 		}
 
 		if (GTK_OBJECT_CLASS(parent_class)->destroy)
@@ -1145,8 +1156,8 @@ namespace {
 						     nullptr, nullptr, nullptr);
 		if (!ent_start)
 		{
-			xtext_draw_bg(xtext, area->x, area->y, area->width,
-				      area->height);
+			/*xtext_draw_bg(xtext, area->x, area->y, area->width,
+				      area->height);*/
 			return;
 		}
 		auto ent_end = gtk_xtext_find_char(xtext, area->x + area->width,
@@ -1180,8 +1191,8 @@ namespace {
 			the exposure rectangle */
 			if (gdk_rectangle_intersect(area, &rect, &rect))
 			{
-				xtext_draw_bg(xtext, rect.x, rect.y, rect.width,
-					      rect.height);
+				/*xtext_draw_bg(xtext, rect.x, rect.y, rect.width,
+					      rect.height);*/
 			}
 		}
 
@@ -1191,10 +1202,47 @@ namespace {
 		xtext->clip_y = 0;
 		xtext->clip_y2 = 1000000;
 	}
+	CUSTOM_PTR(cairo_t, cairo_destroy);
+	struct cairo_stack{
+		cairo_t* _cr;
+		cairo_stack(cairo_t* cr)
+			:_cr(cr)
+		{
+			cairo_save(_cr);
+		}
+		~cairo_stack() NOEXCEPT
+		{
+			cairo_restore(_cr);
+		}
+	};
+
+	static gboolean gtk_xtext_draw(GtkWidget *widget, cairo_t *cr)
+	{
+		GtkXText *xtext = GTK_XTEXT(widget);
+		cairo_stack cr_stack{cr};
+		GtkAllocation allocation;
+		gtk_widget_get_allocation(widget, &allocation);
+		gtk_render_background(xtext->style, cr, allocation.x,
+				      allocation.y, allocation.width,
+				      allocation.height);
+		return false;
+	}
 
 	static gboolean
 		gtk_xtext_expose(GtkWidget * widget, GdkEventExpose * event)
 	{
+		g_return_val_if_fail(GTK_IS_WIDGET(widget), true);
+		g_return_val_if_fail(gtk_widget_get_realized(widget), true);
+		g_return_val_if_fail(event != NULL, true);
+		g_return_val_if_fail(event->type == GDK_EXPOSE, true);
+
+		{
+			cairo_tPtr cr{ gdk_cairo_create(event->window) };
+			gdk_cairo_region(cr.get(), event->region);
+			cairo_clip(cr.get());
+			gtk_xtext_draw(widget, cr.get());
+		}
+
 		gtk_xtext_paint(widget, &event->area);
 		return false;
 	}
@@ -1216,8 +1264,9 @@ namespace {
 			xtext->jump_in_offset = xtext->buffer->last_offset_start;
 		else
 			xtext->jump_in_offset = start_offset;
-		gtk_xtext_render_ents(xtext, start, nullptr);
+		//gtk_xtext_render_ents(xtext, start, nullptr);
 		xtext->jump_in_offset = 0;
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 	}
 
 	/* render a selection that has extended or contracted downward */
@@ -1237,8 +1286,9 @@ namespace {
 			xtext->jump_out_offset = xtext->buffer->last_offset_end;
 		else
 			xtext->jump_out_offset = end_offset;
-		gtk_xtext_render_ents(xtext, end, nullptr);
+		//gtk_xtext_render_ents(xtext, end, nullptr);
 		xtext->jump_out_offset = 0;
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 	}
 
 	static void
@@ -1406,7 +1456,7 @@ namespace {
 
 		if ((!ent_start || !ent_end) && !xtext->buffer->impl->text_last && xtext->adj->value != xtext->buffer->old_value)
 		{
-			gtk_xtext_render_page(xtext);
+			gtk_widget_queue_draw(GTK_WIDGET(xtext));
 			return;
 		}
 
@@ -1849,6 +1899,7 @@ namespace {
 					xtext->buffer->impl->last_ent_end);
 				xtext->force_stamp = false;
 			}
+			gtk_widget_queue_draw(widget);
 			return false;
 		}
 
@@ -1960,7 +2011,6 @@ namespace {
 		xtext.jump_in_offset = 0;
 		xtext.jump_out_offset = 0;
 		gtk_xtext_render_ents(&xtext, buf->impl->last_ent_start, buf->impl->last_ent_end);
-
 		xtext.skip_border_fills = false;
 		xtext.skip_stamp = false;
 
@@ -1984,10 +2034,9 @@ namespace {
 			{
 				gtk_xtext_recalc_widths(xtext->buffer, false);
 				gtk_xtext_adjustment_set(xtext->buffer, true);
-				gtk_xtext_render_page(xtext);
 			}
-			else
-				gtk_xtext_draw_sep(xtext, -1);
+			
+			gtk_widget_queue_draw(widget);
 			return false;
 		}
 
@@ -2122,7 +2171,7 @@ namespace {
 		xtext->select_start_x = x;
 		xtext->select_start_y = y;
 		xtext->select_start_adj = xtext->adj->value;
-
+		gtk_widget_queue_draw(widget);
 		return false;
 	}
 
@@ -3838,8 +3887,6 @@ namespace{
 	/* render a whole page/window, starting from 'startline' */
 	void gtk_xtext_render_page(GtkXText * xtext)
 	{
-		int startline = xtext->adj->value;
-
 		if (!gtk_widget_get_realized(GTK_WIDGET(xtext)))
 			return;
 
@@ -3848,12 +3895,13 @@ namespace{
 
 		int width;
 		int height;
-		gdk_drawable_get_size(GTK_WIDGET(xtext)->window, &width, &height);
+		gdk_drawable_get_size(gtk_widget_get_window(GTK_WIDGET(xtext)), &width, &height);
 
 		if (width < 34 || height < xtext->fontsize || width < xtext->buffer->indent + 32)
 			return;
-
-		xtext->pixel_offset = (xtext->adj->value - startline) * xtext->fontsize;
+		const auto adj_value = gtk_adjustment_get_value(xtext->adj);
+		int startline = static_cast<int>(adj_value);
+		xtext->pixel_offset = (adj_value - startline) * xtext->fontsize;
 
 		int subline = 0;
 		int line = 0;
@@ -3866,10 +3914,10 @@ namespace{
 		xtext->buffer->pagetop_subline = subline;
 		xtext->buffer->pagetop_line = startline;
 
-		if (xtext->buffer->num_lines <= xtext->adj->page_size)
+		if (xtext->buffer->num_lines <= gtk_adjustment_get_page_size(xtext->adj))
 			dontscroll(xtext->buffer);
 
-		int pos = xtext->adj->value * xtext->fontsize;
+		int pos = adj_value * xtext->fontsize;
 		auto overlap = xtext->buffer->last_pixel_pos - pos;
 		xtext->buffer->last_pixel_pos = pos;
 
@@ -3902,7 +3950,7 @@ namespace{
 			{
 				area.x = 0;
 				area.width = width;
-				gtk_xtext_paint(GTK_WIDGET(xtext), &area);
+				//gtk_xtext_paint(GTK_WIDGET(xtext), &area);
 			}
 
 			return;
@@ -3939,7 +3987,7 @@ gtk_xtext_refresh(GtkXText * xtext)
 {
 	if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
 	{
-		gtk_xtext_render_page(xtext);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 	}
 }
 
@@ -4572,7 +4620,8 @@ namespace {
 		{
 			xtext->buffer->old_value = 0.0;
 			adj->value = 0.0;
-			gtk_xtext_render_page(xtext);
+		
+			//gtk_xtext_render_page(xtext);
 		}
 		else if (xtext->buffer->scrollbar_down)
 		{
@@ -4581,7 +4630,7 @@ namespace {
 			gtk_adjustment_set_value(adj, adj->upper - adj->page_size);
 			g_signal_handler_unblock(xtext->adj, xtext->vc_signal_tag);
 			xtext->buffer->old_value = adj->value;
-			gtk_xtext_render_page(xtext);
+			//gtk_xtext_render_page(xtext);
 		}
 		else
 		{
@@ -4589,10 +4638,10 @@ namespace {
 			if (xtext->force_render)
 			{
 				xtext->force_render = false;
-				gtk_xtext_render_page(xtext);
+				//gtk_xtext_render_page(xtext);
 			}
 		}
-
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		return 0;
 	}
 
@@ -4859,7 +4908,8 @@ gtk_xtext_reset_marker_pos(GtkXText *xtext)
 	{
 		xtext->buffer->impl->marker_pos = nullptr;
 		dontscroll(xtext->buffer); /* force scrolling off */
-		gtk_xtext_render_page(xtext);
+		//gtk_xtext_render_page(xtext);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->buffer->impl->marker_state = MARKER_RESET_MANUALLY;
 	}
 }
@@ -4884,15 +4934,19 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 		}
 
 		gdouble value = static_cast<gdouble>(ivalue);
-		if (value >= adj->value && value < adj->value + adj->page_size)
+		const auto adj_value = gtk_adjustment_get_value(adj);
+		const auto adj_page_size = gtk_adjustment_get_page_size(adj);
+		if (value >= adj_value && value < adj_value + adj_page_size)
 			return MARKER_IS_SET;
-		value -= adj->page_size / 2.0;
+		value -= adj_page_size / 2.0;
 		if (value < 0.0)
 			value = 0.0;
-		if (value > adj->upper - adj->page_size)
-			value = adj->upper - adj->page_size;
+		const auto diff_to_upper = gtk_adjustment_get_upper(adj) - adj_page_size;
+		if (value > diff_to_upper)
+			value = diff_to_upper;
 		gtk_adjustment_set_value(adj, value);
-		gtk_xtext_render_page(xtext);
+		//gtk_xtext_render_page(xtext);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 	}
 
 	/* If we previously lost marker position to scrollback limit -- */
@@ -4976,7 +5030,8 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 			gtk_xtext_adjustment_set(buf, false);
 		}
 
-		gtk_xtext_render_page(xtext);
+		//gtk_xtext_render_page(xtext);
+		gtk_widget_queue_draw(widget);
 		gtk_adjustment_changed(xtext->adj);
 	}
 }

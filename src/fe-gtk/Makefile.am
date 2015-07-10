@@ -14,7 +14,7 @@ hexchat_LDADD = ../common/libhexchatcommon.a ../libirc/libirc.a $(GUI_LIBS) \
 
 EXTRA_DIST = \
 	ascii.hpp banlist.hpp chanlist.hpp chanview.hpp \
-	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtkutil.hpp joind.hpp \
+	custom-list.hpp editlist.hpp fe-gtk.hpp fkeys.hpp gtk3bridge.hpp gtkutil.hpp joind.hpp \
 	maingui.hpp menu.hpp notifygui.hpp palette.hpp pixmaps.hpp \
 	plugin-tray.hpp plugingui.cpp plugingui.hpp rawlog.hpp sexy-iso-codes.hpp \
 	sexy-spell-entry.hpp textgui.hpp urlgrab.hpp userlistgui.hpp xtext.hpp \
@@ -33,7 +33,7 @@ iso_codes_c = sexy-iso-codes.cpp
 endif
 
 hexchat_SOURCES = ascii.cpp banlist.cpp chanlist.cpp chanview.cpp custom-list.cpp \
-	dccgui.cpp editlist.cpp fe-gtk.cpp fkeys.cpp gtkutil.cpp ignoregui.cpp joind.cpp menu.cpp \
+	dccgui.cpp editlist.cpp fe-gtk.cpp fkeys.cpp gtk3bridge.cpp gtkutil.cpp ignoregui.cpp joind.cpp menu.cpp \
 	main.cpp maingui.cpp notifygui.cpp palette.cpp pixmaps.cpp plugin-tray.cpp $(plugingui_c) \
 	rawlog.cpp resources.c servlistgui.cpp setup.cpp $(iso_codes_c) \
 	sexy-spell-entry.cpp textgui.cpp urlgrab.cpp userlistgui.cpp xtext.cpp

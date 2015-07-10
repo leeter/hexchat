@@ -234,6 +234,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="editlist.hpp" />
     <ClInclude Include="fe-gtk.hpp" />
     <ClInclude Include="fkeys.hpp" />
+    <ClInclude Include="gtk3bridge.hpp" />
     <ClInclude Include="gtkutil.hpp" />
     <ClInclude Include="gtk_helpers.hpp" />
     <ClInclude Include="joind.hpp" />
@@ -264,6 +265,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClCompile Include="editlist.cpp" />
     <ClCompile Include="fe-gtk.cpp" />
     <ClCompile Include="fkeys.cpp" />
+    <ClCompile Include="gtk3bridge.cpp" />
     <ClCompile Include="gtkutil.cpp" />
     <ClCompile Include="ignoregui.cpp" />
     <ClCompile Include="joind.cpp" />

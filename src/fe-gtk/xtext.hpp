@@ -127,6 +127,7 @@ public:
 	textentry *hintsearch;	/* textentry found for last search */
 };
 
+struct BridgeStyleContext;
 struct GtkXText
 {
 	GtkWidget widget;
@@ -148,6 +149,7 @@ struct GtkXText
 	int last_win_h;
 	int last_win_w;
 
+	BridgeStyleContext * style;
 	GdkGC *bgc;						  /* backing pixmap */
 	GdkGC *fgc;						  /* text foreground color */
 	GdkGC *light_gc;				  /* sep bar */
