@@ -58,7 +58,7 @@ enum text_attr{
 struct GtkXText;
 struct GtkXTextClass;
 struct textentry;
-
+using ustring_ref = boost::basic_string_ref<unsigned char>;
 /*
 * offsets_t is used for retaining search information.
 * It is stored in the 'data' member of a GList,
@@ -260,9 +260,7 @@ struct GtkXTextClass
 GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
 void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
-	const unsigned char left_text[], int left_len,
-	const unsigned char right_text[], int right_len,
-	time_t stamp);
+	ustring_ref left_text, ustring_ref right_text, time_t stamp);
 bool gtk_xtext_set_font(GtkXText *xtext, const char name[]);
 void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
 void gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[]);

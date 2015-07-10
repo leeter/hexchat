@@ -79,7 +79,7 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 		if (prefs.hex_stamp_text)
 		{
 			if (timet == 0)
-				timet = time (0);
+				timet = std::time (nullptr);
 
 			std::ostringstream out;
 			out << get_stamp_str(prefs.hex_stamp_text_format, timet);
@@ -95,10 +95,12 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 	if (tab && tab < (text + len))
 	{
 		auto leftlen = tab - text;
-		gtk_xtext_append_indent (xtbuf,
-										 text, leftlen, tab + 1, len - (leftlen + 1), timet);
-	} else
-		gtk_xtext_append_indent (xtbuf, 0, 0, text, len, timet);
+		gtk_xtext_append_indent(xtbuf, ustring_ref(text, leftlen), ustring_ref(tab + 1, len - (leftlen + 1)), timet);
+	}
+	else
+	{
+		gtk_xtext_append_indent(xtbuf, ustring_ref(reinterpret_cast<const guchar*>(""), 0), ustring_ref(text, len), timet);
+	}
 }
 
 void

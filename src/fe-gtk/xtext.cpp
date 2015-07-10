@@ -4679,34 +4679,26 @@ namespace {
 
 /* the main two public functions */
 
-void gtk_xtext_append_indent(xtext_buffer *buf, const unsigned char left_text[],
-			     int left_len, const unsigned char right_text[],
-			     int right_len, time_t stamp)
+void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_ref right_text, time_t stamp)
 {
-	if (left_len == -1)
-		left_len = std::char_traits<unsigned char>::length(left_text);
+	if (right_text.size() >= sizeof(buf->xtext->scratch_buffer))
+		right_text = right_text.substr(0, sizeof(buf->xtext->scratch_buffer) - 1);
 
-	if (right_len == -1)
-		right_len = std::char_traits<unsigned char>::length(right_text);
-
-	if (right_len >= sizeof(buf->xtext->scratch_buffer))
-		right_len = sizeof(buf->xtext->scratch_buffer) - 1;
-
-	if (right_text[right_len - 1] == '\n')
-		right_len--;
+	if (right_text.back() == '\n')
+		right_text.remove_suffix(1);
 
 	textentry ent;
-	ent.str.resize(left_len + right_len + 1, '\0');
+	ent.str.reserve(left_text.length() + right_text.length() + 2);
+	ent.str.resize(left_text.length() + right_text.length() + 1, '\0');
 	auto str = ent.str.begin();
-	if (left_text)
-		std::copy_n(left_text, left_len, str);
-	str[left_len] = ' ';
-	std::copy_n(right_text, right_len, str + left_len + 1);
+	str = std::copy(left_text.cbegin(), left_text.cend(), str);
+	*str++ = ' ';
+	std::copy(right_text.cbegin(), right_text.cend(), str);
 
 	auto left_width =
-	    gtk_xtext_text_width(buf->xtext, ustring_ref(left_text, left_len));
+	    gtk_xtext_text_width(buf->xtext, left_text);
 
-	ent.left_len = left_len;
+	ent.left_len = left_text.length();
 	ent.indent = (buf->indent - left_width) - buf->xtext->space_width;
 
 	auto space = buf->time_stamp ? buf->xtext->stamp_width : 0;
@@ -4774,9 +4766,9 @@ int gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area)
 		if (search_area->xtext->auto_indent)
 		{
 			gtk_xtext_append_indent(
-			    out, ent.str.c_str(), ent.left_len,
-			    ent.str.c_str() + ent.left_len + 1,
-			    ent.str.size() - ent.left_len - 1, 0);
+			    out, ustring_ref(ent.str.c_str(), ent.left_len),
+			    ustring_ref(ent.str.c_str() + ent.left_len + 1,
+			    ent.str.size() - ent.left_len - 1), 0);
 		}
 		else
 		{
