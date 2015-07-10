@@ -2105,7 +2105,7 @@ namespace {
 
 		if (event->button == 3 || event->button == 2) /* right/middle click */
 		{
-			auto word = gtk_xtext_get_word(xtext, x, y, 0, 0, 0, 0);
+			auto word = gtk_xtext_get_word(xtext, x, y, nullptr, nullptr, nullptr, nullptr);
 			if (word)
 			{
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0,
@@ -2311,22 +2311,33 @@ namespace {
 
 	static gboolean gtk_xtext_scroll(GtkWidget *widget, GdkEventScroll *event)
 	{
-		GtkXText *xtext = GTK_XTEXT(widget);
-		if (event->direction == GDK_SCROLL_UP)		/* mouse wheel pageUp */
+		g_return_val_if_fail(widget, true);
+		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
+		GtkAdjustment *adj = GTK_XTEXT(widget)->adj;
+		auto adj_value = gtk_adjustment_get_value(adj);
+		const auto page_increment_dec = gtk_adjustment_get_page_increment(adj) / 10.0;
+		if (event->direction == GDK_SCROLL_UP) /* mouse wheel pageUp */
 		{
-			auto new_value = xtext->adj->value - (xtext->adj->page_increment / 10.0);
-			if (new_value < xtext->adj->lower)
-				new_value = xtext->adj->lower;
-			gtk_adjustment_set_value(xtext->adj, new_value);
+			adj_value -= page_increment_dec;
+			const auto adj_lower = gtk_adjustment_get_lower(adj);
+			if (adj_value < adj_lower)
+				adj_value = adj_lower;
 		}
-		else if (event->direction == GDK_SCROLL_DOWN)	/* mouse wheel pageDn */
+		else if (event->direction ==
+			 GDK_SCROLL_DOWN) /* mouse wheel pageDn */
 		{
-			auto new_value = xtext->adj->value + (xtext->adj->page_increment / 10.0);
-			if (new_value >(xtext->adj->upper - xtext->adj->page_size))
-				new_value = xtext->adj->upper - xtext->adj->page_size;
-			gtk_adjustment_set_value(xtext->adj, new_value);
+			adj_value += page_increment_dec;
+			const auto diff_to_upper =
+			    gtk_adjustment_get_upper(adj) -
+			    gtk_adjustment_get_page_size(adj);
+			if (adj_value > diff_to_upper)
+				adj_value = diff_to_upper;
 		}
 
+		if (adj_value != gtk_adjustment_get_value(adj))
+		{
+			gtk_adjustment_set_value(adj, adj_value);
+		}
 		return false;
 	}
 
