@@ -28,6 +28,8 @@ gtk_style_context_new(void);
 void bridge_style_context_free(BridgeStyleContext*);
 void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col);
 void bridge_set_background(BridgeStyleContext* context, GdkColor * col);
+const GdkColor* bridge_get_foreground(const BridgeStyleContext* context);
+const GdkColor* bridge_get_background(const BridgeStyleContext* context);
 
 void
 gtk_render_layout(BridgeStyleContext *context,

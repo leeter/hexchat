@@ -100,6 +100,16 @@ void bridge_set_background(BridgeStyleContext* context, GdkColor * col)
 	context->bg_color = col;
 }
 
+const GdkColor* bridge_get_foreground(const BridgeStyleContext* context)
+{
+	return context->fg_color;
+}
+
+const GdkColor* bridge_get_background(const BridgeStyleContext* context)
+{
+	return context->bg_color;
+}
+
 void
 gtk_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
