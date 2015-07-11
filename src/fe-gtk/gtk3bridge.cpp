@@ -140,6 +140,7 @@ gdouble          height)
 		cairo_save(cr);
 		cairo_translate(cr, x, y);
 		gdk_cairo_set_source_color(cr, context->bg_color);
+		cairo_rectangle(cr, 0.0, 0.0, width, height);
 		cairo_fill(cr);
 		cairo_restore(cr);
 	}
