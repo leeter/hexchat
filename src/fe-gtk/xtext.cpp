@@ -1074,6 +1074,9 @@ namespace {
 	{
 		if (!xtext->separator || !xtext->buffer->indent)
 			return;
+		auto x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
+		if (x < 1)
+			return;
 
 		cairo_stack cr_stack{cr};
 		if (xtext->moving_separator)
@@ -1100,10 +1103,6 @@ namespace {
 		}
 
 		/* draw the separator line */
-		auto x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
-		if (x < 1)
-			return;
-
 		cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
 		if (xtext->thinline)
 		{
