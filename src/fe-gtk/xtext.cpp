@@ -1177,200 +1177,17 @@ namespace {
 		return false;
 	}
 
-	/* render a selection that has extended or contracted upward */
-
-	static void
-		gtk_xtext_selection_up(GtkXText *xtext, textentry *start, textentry *end,
-		int start_offset)
-	{
-		/* render all the complete lines */
-		if (start->next == end)
-			gtk_xtext_render_ents(xtext, end, nullptr);
-		else
-			gtk_xtext_render_ents(xtext, start->next, end);
-
-		/* now the incomplete upper line */
-		if (start == xtext->buffer->impl->last_ent_start)
-			xtext->jump_in_offset = xtext->buffer->last_offset_start;
-		else
-			xtext->jump_in_offset = start_offset;
-		//gtk_xtext_render_ents(xtext, start, nullptr);
-		xtext->jump_in_offset = 0;
-		gtk_widget_queue_draw(GTK_WIDGET(xtext));
-	}
-
-	/* render a selection that has extended or contracted downward */
-
-	static void
-		gtk_xtext_selection_down(GtkXText *xtext, textentry *start, textentry *end,
-		int end_offset)
-	{
-		/* render all the complete lines */
-		if (end->prev == start)
-			gtk_xtext_render_ents(xtext, start, nullptr);
-		else
-			gtk_xtext_render_ents(xtext, start, end->prev);
-
-		/* now the incomplete bottom line */
-		if (end == xtext->buffer->impl->last_ent_end)
-			xtext->jump_out_offset = xtext->buffer->last_offset_end;
-		else
-			xtext->jump_out_offset = end_offset;
-		//gtk_xtext_render_ents(xtext, end, nullptr);
-		xtext->jump_out_offset = 0;
-		gtk_widget_queue_draw(GTK_WIDGET(xtext));
-	}
-
 	static void
 		gtk_xtext_selection_render(GtkXText *xtext, textentry *start_ent, textentry *end_ent)
 	{
-		textentry *ent;
-		int start_offset = start_ent->mark_start;
-		int end_offset = end_ent->mark_end;
-		int start, end;
-
-		xtext->skip_border_fills = true;
-		xtext->skip_stamp = true;
-
-		/* force an optimized render if there was no previous selection */
-		if (xtext->buffer->impl->last_ent_start == nullptr && start_ent == end_ent)
-		{
-			xtext->buffer->last_offset_start = start_offset;
-			xtext->buffer->last_offset_end = end_offset;
-			goto lamejump;
-		}
-
-		/* mark changed within 1 ent only? */
-		if (xtext->buffer->impl->last_ent_start == start_ent &&
-			xtext->buffer->impl->last_ent_end == end_ent)
-		{
-			/* when only 1 end of the selection is changed, we can really
-			save on rendering */
-			if (xtext->buffer->last_offset_start == start_offset ||
-				xtext->buffer->last_offset_end == end_offset)
-			{
-			lamejump:
-				ent = end_ent;
-				/* figure out where to start and end the rendering */
-				if (end_offset > xtext->buffer->last_offset_end)
-				{
-					end = end_offset;
-					start = xtext->buffer->last_offset_end;
-				}
-				else if (end_offset < xtext->buffer->last_offset_end)
-				{
-					end = xtext->buffer->last_offset_end;
-					start = end_offset;
-				}
-				else if (start_offset < xtext->buffer->last_offset_start)
-				{
-					end = xtext->buffer->last_offset_start;
-					start = start_offset;
-					ent = start_ent;
-				}
-				else if (start_offset > xtext->buffer->last_offset_start)
-				{
-					end = start_offset;
-					start = xtext->buffer->last_offset_start;
-					ent = start_ent;
-				}
-				else
-				{	/* WORD selects end up here */
-					end = end_offset;
-					start = start_offset;
-				}
-			}
-			else
-			{
-				/* LINE selects end up here */
-				/* so which ent actually changed? */
-				ent = start_ent;
-				if (xtext->buffer->last_offset_start == start_offset)
-					ent = end_ent;
-
-				end = std::max(xtext->buffer->last_offset_end, end_offset);
-				start = std::min(xtext->buffer->last_offset_start, start_offset);
-			}
-
-			xtext->jump_out_offset = end;
-			xtext->jump_in_offset = start;
-			gtk_xtext_render_ents(xtext, ent, nullptr);
-			xtext->jump_out_offset = 0;
-			xtext->jump_in_offset = 0;
-		}
-		/* marking downward? */
-		else if (xtext->buffer->impl->last_ent_start == start_ent &&
-			xtext->buffer->last_offset_start == start_offset)
-		{
-			/* find the range that covers both old and new selection */
-			ent = start_ent;
-			while (ent)
-			{
-				if (ent == xtext->buffer->impl->last_ent_end)
-				{
-					gtk_xtext_selection_down(xtext, ent, end_ent, end_offset);
-					/*gtk_xtext_render_ents (xtext, ent, end_ent);*/
-					break;
-				}
-				if (ent == end_ent)
-				{
-					gtk_xtext_selection_down(xtext, ent, xtext->buffer->impl->last_ent_end, end_offset);
-					/*gtk_xtext_render_ents (xtext, ent, xtext->buffer->last_ent_end);*/
-					break;
-				}
-				ent = ent->next;
-			}
-		}
-		/* marking upward? */
-		else if (xtext->buffer->impl->last_ent_end == end_ent &&
-			xtext->buffer->last_offset_end == end_offset)
-		{
-			ent = end_ent;
-			while (ent)
-			{
-				if (ent == start_ent)
-				{
-					gtk_xtext_selection_up(xtext, xtext->buffer->impl->last_ent_start, ent, start_offset);
-					/*gtk_xtext_render_ents (xtext, xtext->buffer->last_ent_start, ent);*/
-					break;
-				}
-				if (ent == xtext->buffer->impl->last_ent_start)
-				{
-					gtk_xtext_selection_up(xtext, start_ent, ent, start_offset);
-					/*gtk_xtext_render_ents (xtext, start_ent, ent);*/
-					break;
-				}
-				ent = ent->prev;
-			}
-		}
-		else	/* cross-over mark (stretched or shrunk at both ends) */
-		{
-			/* unrender the old mark */
-			gtk_xtext_render_ents(xtext, xtext->buffer->impl->last_ent_start, xtext->buffer->impl->last_ent_end);
-			/* now render the new mark, but skip overlaps */
-			if (start_ent == xtext->buffer->impl->last_ent_start)
-			{
-				/* if the new mark is a sub-set of the old, do nothing */
-				if (start_ent != end_ent)
-					gtk_xtext_render_ents(xtext, start_ent->next, end_ent);
-			}
-			else if (end_ent == xtext->buffer->impl->last_ent_end)
-			{
-				/* if the new mark is a sub-set of the old, do nothing */
-				if (start_ent != end_ent)
-					gtk_xtext_render_ents(xtext, start_ent, end_ent->prev);
-			}
-			else
-				gtk_xtext_render_ents(xtext, start_ent, end_ent);
-		}
-
 		xtext->buffer->impl->last_ent_start = start_ent;
 		xtext->buffer->impl->last_ent_end = end_ent;
-		xtext->buffer->last_offset_start = start_offset;
-		xtext->buffer->last_offset_end = end_offset;
+		xtext->buffer->last_offset_start = start_ent->mark_start;
+		xtext->buffer->last_offset_end = end_ent->mark_end;
 
 		xtext->skip_border_fills = false;
 		xtext->skip_stamp = false;
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 	}
 
 	static void gtk_xtext_selection_draw(GtkXText * xtext, GdkEventMotion *, bool render)
@@ -2094,8 +1911,6 @@ namespace {
 			if (line_x == x || line_x == x + 1 || line_x == x - 1)
 			{
 				xtext->moving_separator = true;
-				/* draw the separator line */
-				//gtk_xtext_draw_sep(xtext, -1);
 				gtk_widget_queue_draw(widget);
 				return false;
 			}
