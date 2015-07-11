@@ -2372,8 +2372,9 @@ namespace{
 
 	void gtk_xtext_draw_underline(GtkXText *xtext, int dest_x, int dest_y,
 				      int x, int y, int str_width,
-				      bool drawable, GdkGC *gc)
+				      bool drawable, cairo_t *cr)
 	{
+		cairo_stack cr_stack{ cr };
 		// used to check if the pixmap existed, why does this matter?
 		if (drawable)
 			y = dest_y + xtext->font->ascent + 1;
@@ -2384,8 +2385,12 @@ namespace{
 		}
 		/* draw directly to window, it's out of the range of our
 		* DB */
-		gdk_draw_line(xtext->draw_buf, gc, dest_x, y,
-			      dest_x + str_width - 1, y);
+		gdk_cairo_set_source_color(cr, bridge_get_foreground(xtext->style));
+		const auto mid_pixel_y = y + 0.5;
+		cairo_move_to(cr, dest_x, mid_pixel_y);
+		cairo_line_to(cr, dest_x + str_width - 1, mid_pixel_y);
+		cairo_set_line_width(cr, 1.0);
+		cairo_stroke(cr);
 	}
 
 	/* actually draw text to screen (one run with the same color/attribs) */
@@ -2418,7 +2423,7 @@ namespace{
 			if (!xtext->un_hilight) /* doing a hilight? no need to
 						   draw the text */
 			{
-				gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, gc);
+				gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, cr);
 				return str_width;
 			}
 		}
@@ -2484,7 +2489,7 @@ namespace{
 
 		if (xtext->underline)
 		{
-			//gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, pix != nullptr, gc);
+			gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, cr);
 		}
 
 		return str_width;
