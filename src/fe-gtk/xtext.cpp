@@ -236,7 +236,6 @@ namespace
 		GtkXText * xtext);
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
 		GtkAdjustment *vadj);
-	static int gtk_xtext_render_ents(GtkXText * xtext, textentry *, textentry *);
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf, bool);
 	static void gtk_xtext_fix_indent(xtext_buffer *buf);
 	static int gtk_xtext_find_subline(const textentry &ent, int line);
@@ -1313,7 +1312,7 @@ namespace {
 		xtext_buffer *buf = xtext->buffer;
 		GtkAdjustment *adj = xtext->adj;
 
-		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
+		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
 		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
 		if (buf->impl->last_ent_end == nullptr ||	/* If context has changed OR */
@@ -1330,7 +1329,7 @@ namespace {
 		adj->value++;
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
-		gtk_xtext_render_ents(xtext, buf->impl->pagetop_ent->next, buf->impl->last_ent_end);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y - win_height),
 			(GSourceFunc)
 			gtk_xtext_scrolldown_timeout,
@@ -1370,7 +1369,7 @@ namespace {
 		xtext->select_start_adj = static_cast<int>(adj->value);
 		gtk_adjustment_value_changed(adj);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
-		gtk_xtext_render_ents(xtext, buf->impl->pagetop_ent->prev, buf->impl->last_ent_end);
+		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y),
 			(GSourceFunc)
 			gtk_xtext_scrollup_timeout,
@@ -1480,22 +1479,6 @@ namespace {
 		return reinterpret_cast<const char*>(word);
 	}
 
-	static void
-		gtk_xtext_unrender_hilight(GtkXText *xtext)
-	{
-		xtext->render_hilights_only = true;
-		xtext->skip_border_fills = true;
-		xtext->skip_stamp = true;
-		xtext->un_hilight = true;
-
-		gtk_xtext_render_ents(xtext, xtext->hilight_ent, nullptr);
-
-		xtext->render_hilights_only = false;
-		xtext->skip_border_fills = false;
-		xtext->skip_stamp = false;
-		xtext->un_hilight = false;
-	}
-
 	static gboolean
 		gtk_xtext_leave_notify(GtkWidget * widget, GdkEventCrossing *)
 	{
@@ -1503,7 +1486,6 @@ namespace {
 
 		if (xtext->cursor_hand)
 		{
-			gtk_xtext_unrender_hilight(xtext);
 			xtext->hilight_start = -1;
 			xtext->hilight_end = -1;
 			xtext->cursor_hand = false;
@@ -1513,7 +1495,7 @@ namespace {
 
 		if (xtext->cursor_resize)
 		{
-			gtk_xtext_unrender_hilight(xtext);
+			//gtk_xtext_unrender_hilight(xtext);
 			xtext->hilight_start = -1;
 			xtext->hilight_end = -1;
 			xtext->cursor_resize = false;
@@ -1521,6 +1503,7 @@ namespace {
 			xtext->hilight_ent = nullptr;
 		}
 
+		gtk_widget_queue_draw(widget);
 		return false;
 	}
 
@@ -1638,14 +1621,6 @@ namespace {
 			gtk_xtext_selection_update(xtext, event, y, !redraw);
 			xtext->hilighting = true;
 
-			/* user has pressed or released SHIFT, must redraw entire selection */
-			if (redraw)
-			{
-				xtext->force_stamp = true;
-				gtk_xtext_render_ents(xtext, xtext->buffer->impl->last_ent_start,
-					xtext->buffer->impl->last_ent_end);
-				xtext->force_stamp = false;
-			}
 			gtk_widget_queue_draw(widget);
 			return false;
 		}
@@ -1657,7 +1632,7 @@ namespace {
 			{
 				if (!xtext->cursor_resize)
 				{
-					gdk_window_set_cursor(GTK_WIDGET(xtext)->window,
+					gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(xtext)),
 						xtext->resize_cursor);
 					xtext->cursor_hand = false;
 					xtext->cursor_resize = true;
@@ -1686,29 +1661,19 @@ namespace {
 					xtext->cursor_resize = false;
 				}
 
-				/* un-render the old hilight */
-				if (xtext->hilight_ent)
-					gtk_xtext_unrender_hilight(xtext);
-
 				xtext->hilight_ent = word_ent;
 				xtext->hilight_start = offset;
 				xtext->hilight_end = offset + len;
 
-				xtext->skip_border_fills = true;
-				xtext->render_hilights_only = true;
-				xtext->skip_stamp = true;
-
-				gtk_xtext_render_ents(xtext, word_ent, nullptr);
-
 				xtext->skip_border_fills = false;
 				xtext->render_hilights_only = false;
 				xtext->skip_stamp = false;
+				gtk_widget_queue_draw(widget);
 			}
 			return false;
 		}
 
 		gtk_xtext_leave_notify(widget, nullptr);
-
 		return false;
 	}
 
@@ -1743,7 +1708,8 @@ namespace {
 
 		xtext.skip_border_fills = true;
 		xtext.skip_stamp = true;
-
+		if (!buf->impl->last_ent_start)
+			return;
 		xtext.jump_in_offset = buf->impl->last_ent_start->mark_start;
 		/* just a single ent was marked? */
 		if (buf->impl->last_ent_start == buf->impl->last_ent_end)
@@ -1757,12 +1723,12 @@ namespace {
 		/* FIXME: use jump_out on multi-line selects too! */
 		xtext.jump_in_offset = 0;
 		xtext.jump_out_offset = 0;
-		gtk_xtext_render_ents(&xtext, buf->impl->last_ent_start, buf->impl->last_ent_end);
 		xtext.skip_border_fills = false;
 		xtext.skip_stamp = false;
 
 		xtext.buffer->impl->last_ent_start = nullptr;
 		xtext.buffer->impl->last_ent_end = nullptr;
+		gtk_widget_queue_draw(GTK_WIDGET(&xtext));
 	}
 
 	static gboolean
@@ -1815,6 +1781,7 @@ namespace {
 			{
 				xtext->word_select = false;
 				xtext->line_select = false;
+				gtk_widget_queue_draw(widget);
 				return false;
 			}
 
@@ -1870,20 +1837,21 @@ namespace {
 
 		if (event->type == GDK_2BUTTON_PRESS)	/* WORD select */
 		{
+			gtk_xtext_selection_clear(xtext->buffer);
 			textentry *ent;
 			gtk_xtext_check_mark_stamp(xtext, mask);
 			if (gtk_xtext_get_word(xtext, x, y, &ent, &offset, &len, 0))
 			{
 				if (len == 0)
 					return false;
-				gtk_xtext_selection_clear(xtext->buffer);
+				
 				ent->mark_start = offset;
 				ent->mark_end = offset + len;
-				//gtk_xtext_selection_render(xtext, ent, ent);
+				xtext->buffer->impl->last_ent_start = ent;
+				xtext->buffer->impl->last_ent_end = ent;
 				xtext->word_select = true;
-				gtk_widget_queue_draw(widget);
 			}
-
+			gtk_widget_queue_draw(widget);
 			return false;
 		}
 
@@ -1898,9 +1866,8 @@ namespace {
 				ent->mark_end = ent->str.size();
 				//gtk_xtext_selection_render(xtext, ent, ent);
 				xtext->line_select = true;
-				gtk_widget_queue_draw(widget);
 			}
-
+			gtk_widget_queue_draw(widget);
 			return false;
 		}
 
@@ -3563,83 +3530,6 @@ namespace{
 			ent = ent->next;
 		}
 		return nullptr;
-	}
-
-	/* render enta (or an inclusive range enta->entb) */
-	int gtk_xtext_render_ents(GtkXText * xtext, textentry * enta, textentry * entb)
-	{
-		if (xtext->buffer->indent < MARGIN)
-			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
-
-		auto window = gtk_widget_get_window(GTK_WIDGET(xtext));
-		int height = gdk_window_get_height(window);
-		int width = gdk_window_get_width(window) - MARGIN;
-
-		if (width < 32 || height < xtext->fontsize || width < xtext->buffer->indent + 30)
-			return 0;
-
-		int lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
-		int line = 0;
-		auto orig_ent = xtext->buffer->impl->pagetop_ent;
-		int subline = xtext->buffer->pagetop_subline;
-
-		/* used before a complete page is in buffer */
-		if (!orig_ent)
-			orig_ent = xtext->buffer->impl->text_first;
-
-		/* check if enta is before the start of this page */
-		bool drawing = false;
-		if (entb)
-		{
-			auto tmp_ent = orig_ent;
-			while (tmp_ent)
-			{
-				if (tmp_ent == enta)
-					break;
-				if (tmp_ent == entb)
-				{
-					drawing = true;
-					break;
-				}
-				tmp_ent = tmp_ent->next;
-			}
-		}
-
-		auto ent = orig_ent;
-		while (ent)
-		{
-			if (entb && ent == enta)
-				drawing = true;
-
-			if (drawing || ent == entb || ent == enta)
-			{
-				gtk_xtext_reset(xtext, false, true);
-				line += gtk_xtext_render_line(xtext, ent, line, lines_max,
-					subline, width);
-				subline = 0;
-				xtext->jump_in_offset = 0;	/* jump_in_offset only for the 1st */
-			}
-			else
-			{
-				if (ent == orig_ent)
-				{
-					line -= subline;
-					subline = 0;
-				}
-				line += ent->sublines.size();
-			}
-
-			if (ent == entb)
-				break;
-
-			if (line >= lines_max)
-				break;
-
-			ent = ent->next;
-		}
-
-		/* space below last line */
-		return (xtext->fontsize * line) - xtext->pixel_offset;
 	}
 
 	/* render a whole page/window, starting from 'startline' */
