@@ -171,6 +171,21 @@ struct xtext_impl
 namespace
 {
 
+	CUSTOM_PTR(cairo_t, cairo_destroy)
+	CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
+	struct cairo_stack{
+		cairo_t* _cr;
+		cairo_stack(cairo_t* cr)
+			:_cr(cr)
+		{
+			cairo_save(_cr);
+		}
+		~cairo_stack() NOEXCEPT
+		{
+			cairo_restore(_cr);
+		}
+	};
+
 	struct scope_exit {
 		scope_exit(std::function<void(void)> f) : f_(f) {}
 		~scope_exit(void) { f_(); }
@@ -1055,53 +1070,53 @@ namespace {
 		return ent;
 	}
 
-	static void
-		gtk_xtext_draw_sep(GtkXText * xtext, int y)
+	static void gtk_xtext_draw_sep(GtkXText *xtext, cairo_t *cr, int height)
 	{
-		int x, height;
-		GdkGC *light, *dark;
+		if (!xtext->separator || !xtext->buffer->indent)
+			return;
 
-		if (y == -1)
+		cairo_stack cr_stack{cr};
+		if (xtext->moving_separator)
 		{
-			y = 0;
-			height = GTK_WIDGET(xtext)->allocation.height;
+			// light
+			// col.red = 0xffff; col.green = 0xffff; col.blue =
+			// 0xffff;
+			cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+		}
+		else if (xtext->thinline)
+		{
+			// thin
+			// col.red = 0x8e38; col.green = 0x8e38; col.blue =
+			// 0x9f38;
+			cairo_set_source_rgb(cr, 0x8e38 / 65535.0,
+					     0x8e38 / 65535.0,
+					     0x9f38 / 65535.0);
 		}
 		else
 		{
-			height = xtext->fontsize;
+			const auto channel_val = 0x1111 / 65535.0;
+			cairo_set_source_rgb(cr, channel_val, channel_val,
+					     channel_val);
 		}
 
 		/* draw the separator line */
-		if (xtext->separator && xtext->buffer->indent)
+		auto x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
+		if (x < 1)
+			return;
+
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
+		if (xtext->thinline)
 		{
-			light = xtext->light_gc;
-			dark = xtext->dark_gc;
-
-			x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
-			if (x < 1)
-				return;
-
-			if (xtext->thinline)
-			{
-				if (xtext->moving_separator)
-					gdk_draw_line(xtext->draw_buf, light, x, y, x, y + height);
-				else
-					gdk_draw_line(xtext->draw_buf, xtext->thin_gc, x, y, x, y + height);
-			}
-			else
-			{
-				if (xtext->moving_separator)
-				{
-					gdk_draw_line(xtext->draw_buf, light, x - 1, y, x - 1, y + height);
-					gdk_draw_line(xtext->draw_buf, dark, x, y, x, y + height);
-				}
-				else
-				{
-					gdk_draw_line(xtext->draw_buf, dark, x - 1, y, x - 1, y + height);
-					gdk_draw_line(xtext->draw_buf, light, x, y, x, y + height);
-				}
-			}
+			cairo_move_to(cr, x + 0.5, 0.0);
+			cairo_line_to(cr, x + 0.5, height);
 		}
+		else
+		{
+			cairo_move_to(cr, x, 0.0);
+			cairo_line_to(cr, x, height);
+		}
+		cairo_set_line_width(cr, 1);
+		cairo_stroke(cr);
 	}
 
 	static void
@@ -1131,92 +1146,6 @@ namespace {
 		}
 	}
 
-	static void gtk_xtext_paint(GtkWidget *widget, GdkRectangle *area)
-	{
-		GtkXText *xtext = GTK_XTEXT(widget);
-
-		if (area->x == 0 && area->y == 0 &&
-		    area->height == widget->allocation.height &&
-		    area->width == widget->allocation.width)
-		{
-			//dontscroll(xtext->buffer); /* force scrolling off */
-			//gtk_xtext_render_page(xtext);
-			return;
-		}
-
-		scope_exit on_exit([xtext, area](void)
-		{
-			auto x = xtext->buffer->indent -
-				((xtext->space_width + 1) / 2);
-			if (area->x <= x)
-				gtk_xtext_draw_sep(xtext, -1);
-		});
-
-		auto ent_start = gtk_xtext_find_char(xtext, area->x, area->y,
-						     nullptr, nullptr, nullptr);
-		if (!ent_start)
-		{
-			/*xtext_draw_bg(xtext, area->x, area->y, area->width,
-				      area->height);*/
-			return;
-		}
-		auto ent_end = gtk_xtext_find_char(xtext, area->x + area->width,
-						   area->y + area->height,
-						   nullptr, nullptr, nullptr);
-		if (!ent_end)
-			ent_end = xtext->buffer->impl->text_last;
-
-		/* can't set a clip here, because fgc/bgc are used to draw the
-		 * DB too */
-		/*	backend_set_clip (xtext, area);*/
-		xtext->clip_x = area->x;
-		xtext->clip_x2 = area->x + area->width;
-		xtext->clip_y = area->y;
-		xtext->clip_y2 = area->y + area->height;
-
-		/* y is the last pixel y location it rendered text at */
-		auto y = gtk_xtext_render_ents(xtext, ent_start, ent_end);
-
-		if (y && y < widget->allocation.height && !ent_end->next)
-		{
-			GdkRectangle rect;
-
-			rect.x = 0;
-			rect.y = y;
-			rect.width = widget->allocation.width;
-			rect.height = widget->allocation.height - y;
-
-			/* fill any space below the last line that also
-			intersects with
-			the exposure rectangle */
-			if (gdk_rectangle_intersect(area, &rect, &rect))
-			{
-				/*xtext_draw_bg(xtext, rect.x, rect.y, rect.width,
-					      rect.height);*/
-			}
-		}
-
-		/*backend_clear_clip (xtext);*/
-		xtext->clip_x = 0;
-		xtext->clip_x2 = 1000000;
-		xtext->clip_y = 0;
-		xtext->clip_y2 = 1000000;
-	}
-	CUSTOM_PTR(cairo_t, cairo_destroy)
-	CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
-	struct cairo_stack{
-		cairo_t* _cr;
-		cairo_stack(cairo_t* cr)
-			:_cr(cr)
-		{
-			cairo_save(_cr);
-		}
-		~cairo_stack() NOEXCEPT
-		{
-			cairo_restore(_cr);
-		}
-	};
-
 	static gboolean gtk_xtext_draw(GtkWidget *widget, cairo_t *cr)
 	{
 		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
@@ -1241,14 +1170,11 @@ namespace {
 		g_return_val_if_fail(event != NULL, true);
 		g_return_val_if_fail(event->type == GDK_EXPOSE, true);
 
-		{
-			cairo_tPtr cr{ gdk_cairo_create(event->window) };
-			gdk_cairo_region(cr.get(), event->region);
-			cairo_clip(cr.get());
-			gtk_xtext_draw(widget, cr.get());
-		}
+		cairo_tPtr cr{gdk_cairo_create(event->window)};
+		gdk_cairo_region(cr.get(), event->region);
+		cairo_clip(cr.get());
+		gtk_xtext_draw(widget, cr.get());
 
-		//gtk_xtext_paint(widget, &event->area);
 		return false;
 	}
 
@@ -2082,6 +2008,7 @@ namespace {
 			{
 				gtk_xtext_unselect(*xtext);
 				xtext->mark_stamp = false;
+				gtk_widget_queue_draw(widget);
 				return false;
 			}
 
@@ -2136,8 +2063,9 @@ namespace {
 				gtk_xtext_selection_clear(xtext->buffer);
 				ent->mark_start = offset;
 				ent->mark_end = offset + len;
-				gtk_xtext_selection_render(xtext, ent, ent);
+				//gtk_xtext_selection_render(xtext, ent, ent);
 				xtext->word_select = true;
+				gtk_widget_queue_draw(widget);
 			}
 
 			return false;
@@ -2152,8 +2080,9 @@ namespace {
 				gtk_xtext_selection_clear(xtext->buffer);
 				ent->mark_start = 0;
 				ent->mark_end = ent->str.size();
-				gtk_xtext_selection_render(xtext, ent, ent);
+				//gtk_xtext_selection_render(xtext, ent, ent);
 				xtext->line_select = true;
+				gtk_widget_queue_draw(widget);
 			}
 
 			return false;
@@ -2167,7 +2096,8 @@ namespace {
 			{
 				xtext->moving_separator = true;
 				/* draw the separator line */
-				gtk_xtext_draw_sep(xtext, -1);
+				//gtk_xtext_draw_sep(xtext, -1);
+				gtk_widget_queue_draw(widget);
 				return false;
 			}
 		}
@@ -2781,7 +2711,7 @@ namespace{
 
 			gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x,
 					     xtext->ts_y);
-			xtext->draw_buf = GTK_WIDGET(xtext)->window;
+			xtext->draw_buf = gtk_widget_get_window(GTK_WIDGET(xtext));
 			clip.x = xtext->clip_x;
 			clip.y = xtext->clip_y;
 			clip.width = xtext->clip_x2 - xtext->clip_x;
@@ -3265,21 +3195,21 @@ namespace{
 		}
 
 		/* draw background to the right of the text */
-		if (!left_only && !xtext->dont_render)
-		{
-			/* draw separator now so it doesn't appear to flicker */
-			gtk_xtext_draw_sep(xtext, y - xtext->font->ascent);
-			if (!xtext->skip_border_fills && xtext->clip_x2 >= x)
-			{
-				int xx = std::max(x, xtext->clip_x);
+		//if (!left_only && !xtext->dont_render)
+		//{
+		//	/* draw separator now so it doesn't appear to flicker */
+		//	//gtk_xtext_draw_sep(xtext, y - xtext->font->ascent);
+		//	if (!xtext->skip_border_fills && xtext->clip_x2 >= x)
+		//	{
+		//		int xx = std::max(x, xtext->clip_x);
 
-				xtext_draw_bg(xtext,
-					xx,	/* x */
-					y - xtext->font->ascent, /* y */
-					std::min(xtext->clip_x2 - xx, (win_width + MARGIN) - xx), /* width */
-					xtext->fontsize);		/* height */
-			}
-		}
+		//		xtext_draw_bg(xtext,
+		//			xx,	/* x */
+		//			y - xtext->font->ascent, /* y */
+		//			std::min(xtext->clip_x2 - xx, (win_width + MARGIN) - xx), /* width */
+		//			xtext->fontsize);		/* height */
+		//	}
+		//}
 
 		xtext->dont_render2 = false;
 
@@ -3484,16 +3414,16 @@ namespace{
 
 		/* with a non-fixed-width font, sometimes we don't draw enough
 		background i.e. when this stamp is shorter than xtext->stamp_width */
-		xsize += MARGIN;
-		if (xsize < xtext->stamp_width)
-		{
-			y -= xtext->font->ascent;
-			xtext_draw_bg(xtext,
-				xsize,	/* x */
-				y,			/* y */
-				xtext->stamp_width - xsize,	/* width */
-				xtext->fontsize					/* height */);
-		}
+		//xsize += MARGIN;
+		//if (xsize < xtext->stamp_width)
+		//{
+		//	y -= xtext->font->ascent;
+		//	//xtext_draw_bg(xtext,
+		//	//	xsize,	/* x */
+		//	//	y,			/* y */
+		//	//	xtext->stamp_width - xsize,	/* width */
+		//	//	xtext->fontsize					/* height */);
+		//}
 	}
 
 	/* render a single line, which may wrap to more lines */
@@ -3975,7 +3905,6 @@ namespace{
 			{
 				area.x = 0;
 				area.width = allocation.width;
-				//gtk_xtext_paint(GTK_WIDGET(xtext), &area);
 			}
 
 			return;
@@ -4005,7 +3934,7 @@ namespace{
 		//xtext_draw_bg(xtext, 0, line, width + MARGIN, height - line);
 
 		/* draw the separator line */
-		gtk_xtext_draw_sep(xtext, -1);
+		gtk_xtext_draw_sep(xtext, cr, allocation.height);
 	}
 } // end anonymous namespace
 
