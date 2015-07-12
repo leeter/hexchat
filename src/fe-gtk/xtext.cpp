@@ -1570,7 +1570,9 @@ namespace {
 
 		if (xtext->moving_separator)
 		{
-			if (x < (3 * widget->allocation.width) / 5 && x > 15)
+			GtkAllocation allocation;
+			gtk_widget_get_allocation(widget, &allocation);
+			if (x < (3 * allocation.width) / 5 && x > 15)
 			{
 				tmp = xtext->buffer->indent;
 				xtext->buffer->indent = x;
@@ -1579,8 +1581,8 @@ namespace {
 				{
 					gtk_xtext_recalc_widths(xtext->buffer, false);
 					if (xtext->buffer->scrollbar_down)
-						gtk_adjustment_set_value(xtext->adj, xtext->adj->upper -
-						xtext->adj->page_size);
+						gtk_adjustment_set_value(xtext->adj, gtk_adjustment_get_upper(xtext->adj) -
+						gtk_adjustment_get_page_size(xtext->adj));
 					if (!xtext->io_tag)
 						xtext->io_tag = g_timeout_add(REFRESH_TIMEOUT,
 						(GSourceFunc)
@@ -1722,7 +1724,9 @@ namespace {
 		{
 			xtext->moving_separator = false;
 			auto old = xtext->buffer->indent;
-			if (event->x < (4 * widget->allocation.width) / 5 && event->x > 15)
+			GtkAllocation allocation;
+			gtk_widget_get_allocation(widget, &allocation);
+			if (event->x < (4 * allocation.width) / 5 && event->x > 15)
 				xtext->buffer->indent = event->x;
 			gtk_xtext_fix_indent(xtext->buffer);
 			if (xtext->buffer->indent != old)
@@ -1868,7 +1872,7 @@ namespace {
 		xtext->button_down = true;
 		xtext->select_start_x = x;
 		xtext->select_start_y = y;
-		xtext->select_start_adj = xtext->adj->value;
+		xtext->select_start_adj = gtk_adjustment_get_value(xtext->adj);
 		gtk_widget_queue_draw(widget);
 		return false;
 	}
@@ -4230,13 +4234,15 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		{
 			value += ent->sublines.size();
 		}
-		if (value > adj->upper - adj->page_size)
+		const auto page_size = gtk_adjustment_get_page_size(adj);
+		const auto diff_to_page_top = gtk_adjustment_get_upper(adj) - page_size;
+		if (value > diff_to_page_top)
 		{
-			value = adj->upper - adj->page_size;
+			value = diff_to_page_top;
 		}
 		else if ((flags & backward) && ent)
 		{
-			value -= adj->page_size - ent->sublines.size();
+			value -= page_size - ent->sublines.size();
 			if (value < 0.0)
 			{
 				value = 0.0;
