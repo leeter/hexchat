@@ -277,7 +277,7 @@ namespace
 	}
 #endif
 
-#define xtext_draw_bg(xt,x,y,w,h) gdk_draw_rectangle(xt->draw_buf, xt->bgc, 1, x, y, w, h);
+//#define xtext_draw_bg(xt,x,y,w,h) gdk_draw_rectangle(xt->draw_buf, xt->bgc, 1, x, y, w, h);
 
 	/* ======================================= */
 	/* ============ PANGO BACKEND ============ */

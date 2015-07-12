@@ -3734,7 +3734,7 @@ mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint
 
 namespace
 {
-	CUSTOM_PTR(GdkGC, g_object_unref)
+	CUSTOM_PTR(cairo_t, cairo_destroy)
 }
 /* draw highlight rectangle in the destination */
 
@@ -3764,51 +3764,34 @@ gboolean mg_drag_motion_cb(GtkWidget *widget, GdkDragContext *context, int x,
 		height = gdk_window_get_height(window);
 	}
 
-	GdkGCValues val = {};
-	val.subwindow_mode = GDK_INCLUDE_INFERIORS;
-	val.graphics_exposures = 0;
-	val.function = GDK_XOR;
-
-	GdkGCPtr gc{gdk_gc_new_with_values(window, &val, GDK_GC_EXPOSURES |
-							     GDK_GC_SUBWINDOW |
-							     GDK_GC_FUNCTION)};
+	cairo_tPtr cr{ gdk_cairo_create(window) };
+	cairo_clip(cr.get());
 	GdkColor col = {};
 	col.red = RAND_INT(RAND_MAX) % 0xffff;
 	col.green = RAND_INT(RAND_MAX) % 0xffff;
 	col.blue = RAND_INT(RAND_MAX) % 0xffff;
-	gdk_colormap_alloc_color(gtk_widget_get_colormap(widget), &col, false,
-				 true);
-	gdk_gc_set_foreground(gc.get(), &col);
-
+	gdk_cairo_set_source_color(cr.get(), &col);
 	int half = height / 2;
-
-#if 0
-	/* are both tree/userlist on the same side? */
-	paned = (GtkPaned *)widget->parent->parent;
-	if (paned->child1 != nullptr && paned->child2 != nullptr)
-	{
-		gdk_draw_rectangle (draw, gc, 0, 1, 2, width - 3, height - 4);
-		gdk_draw_rectangle (draw, gc, 0, 0, 1, width - 1, height - 2);
-		g_object_unref (gc);
-		return true;
-	}
-#endif
 
 	if (y < half)
 	{
-		gdk_draw_rectangle(window, gc.get(), false, 1 + ox, 2 + oy,
-				   width - 3, half - 4);
-		gdk_draw_rectangle(window, gc.get(), false, 0 + ox, 1 + oy,
-				   width - 1, half - 2);
+		cairo_rectangle(cr.get(), 1 + ox, 2 + oy,
+			width - 3, half - 4);
+		cairo_stroke(cr.get());
+		cairo_rectangle(cr.get(), 0 + ox, 1 + oy,
+			width - 1, half - 2);
+		cairo_stroke(cr.get());
 		gtk_widget_queue_draw_area(widget, ox, half + oy, width,
 					   height - half);
 	}
 	else
 	{
-		gdk_draw_rectangle(window, gc.get(), false, 0 + ox, half + 1 + oy,
-				   width - 1, half - 2);
-		gdk_draw_rectangle(window, gc.get(), false, 1 + ox, half + 2 + oy,
-				   width - 3, half - 4);
+		cairo_rectangle(cr.get(), 0 + ox, half + 1 + oy,
+			width - 1, half - 2);
+		cairo_stroke(cr.get());
+		cairo_rectangle(cr.get(), 1 + ox, half + 2 + oy,
+			width - 3, half - 4);
+		cairo_stroke(cr.get());
 		gtk_widget_queue_draw_area(widget, ox, oy, width, half);
 	}
 	return true;
