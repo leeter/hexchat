@@ -21,7 +21,7 @@
 * By Peter Zelezny <zed@xchat.org>.
 *
 */
-//#define GSEAL_ENABLE
+#define GSEAL_ENABLE
 #define GDK_MULTIHEAD_SAFE
 enum{ MARGIN = 2 };					/* dont touch. */
 #define REFRESH_TIMEOUT 20
@@ -3701,9 +3701,13 @@ namespace{
 			buffer->impl->text_last = nullptr;
 
 		buffer->old_value -= ent->sublines.size();
-		if (buffer->xtext->buffer == buffer)	/* is it the current buffer? */
+		if (buffer->xtext->buffer ==
+		    buffer) /* is it the current buffer? */
 		{
-			buffer->xtext->adj->value -= ent->sublines.size();
+			gtk_adjustment_set_value(
+			    buffer->xtext->adj,
+			    gtk_adjustment_get_value(buffer->xtext->adj) -
+				ent->sublines.size());
 			buffer->xtext->select_start_adj -= ent->sublines.size();
 		}
 
