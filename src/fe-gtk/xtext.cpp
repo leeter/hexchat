@@ -1985,7 +1985,7 @@ namespace {
 		case TARGET_COMPOUND_TEXT:
 #ifdef GDK_WINDOWING_X11
 		{
-			GdkDisplay *display = gdk_window_get_display(widget->window);
+			GdkDisplay *display = gdk_window_get_display(gtk_widget_get_window(widget));
 			GdkAtom encoding;
 			gint format;
 			gint new_length;
