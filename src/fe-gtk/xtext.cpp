@@ -1328,28 +1328,28 @@ namespace {
 		int delta_y;
 
 		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
-
+		auto adj_value = gtk_adjustment_get_value(adj);
 		if (buf->impl->last_ent_start == nullptr ||	/* If context has changed OR */
 			buf->impl->pagetop_ent == nullptr ||		/* pagetop_ent is reset OR */
 			p_y >= 0 ||							/* not above top margin OR */
-			adj->value == 0.0)						/* we're scrolled to the top */
+			adj_value == 0.0)						/* we're scrolled to the top */
 		{
 			xtext->scroll_tag = 0;
 			return false;
 		}
 
-		if (adj->value < 0.0)
+		if (adj_value < 0.0)
 		{
-			delta_y = adj->value * xtext->fontsize;
-			adj->value = 0.0;
+			delta_y = adj_value * xtext->fontsize;
+			adj_value = 0.0;
 		}
 		else {
 			delta_y = xtext->fontsize;
-			adj->value--;
+			adj_value--;
 		}
 		xtext->select_start_y += delta_y;
-		xtext->select_start_adj = static_cast<int>(adj->value);
-		gtk_adjustment_value_changed(adj);
+		xtext->select_start_adj = static_cast<int>(adj_value);
+		gtk_adjustment_set_value(adj, adj_value);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y),
@@ -1369,24 +1369,24 @@ namespace {
 		}
 
 		int win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
-
+		const auto adj_value = gtk_adjustment_get_value(xtext->adj);
 		/* selecting past top of window, scroll up! */
-		if (p_y < 0 && xtext->adj->value >= 0)
+		if (p_y < 0 && adj_value >= 0)
 		{
 			gtk_xtext_scrollup_timeout(xtext);
 		}
 
 		/* selecting past bottom of window, scroll down! */
 		else if (p_y > win_height &&
-			xtext->adj->value < (xtext->adj->upper - xtext->adj->page_size))
+			adj_value < (gtk_adjustment_get_upper(xtext->adj) - gtk_adjustment_get_page_size(xtext->adj)))
 		{
 			gtk_xtext_scrolldown_timeout(xtext);
 		}
 		else
 		{
-			int moved = (int)xtext->adj->value - xtext->select_start_adj;
+			int moved = static_cast<int>(adj_value) - xtext->select_start_adj;
 			xtext->select_start_y -= (moved * xtext->fontsize);
-			xtext->select_start_adj = xtext->adj->value;
+			xtext->select_start_adj = adj_value;
 			gtk_xtext_selection_draw(xtext, event, render);
 		}
 	}
@@ -1471,7 +1471,7 @@ namespace {
 			xtext->hilight_start = -1;
 			xtext->hilight_end = -1;
 			xtext->cursor_hand = false;
-			gdk_window_set_cursor(widget->window, 0);
+			gdk_window_set_cursor(gtk_widget_get_window(widget), nullptr);
 			xtext->hilight_ent = nullptr;
 		}
 
@@ -1481,7 +1481,7 @@ namespace {
 			xtext->hilight_start = -1;
 			xtext->hilight_end = -1;
 			xtext->cursor_resize = false;
-			gdk_window_set_cursor(widget->window, 0);
+			gdk_window_set_cursor(gtk_widget_get_window(widget), nullptr);
 			xtext->hilight_ent = nullptr;
 		}
 
@@ -1566,7 +1566,7 @@ namespace {
 		int redraw, tmp, x, y, offset, len, line_x;
 		int word_type;
 
-		gdk_window_get_pointer(widget->window, &x, &y, &mask);
+		gdk_window_get_pointer(gtk_widget_get_window(widget), &x, &y, &mask);
 
 		if (xtext->moving_separator)
 		{
@@ -1637,7 +1637,7 @@ namespace {
 			{
 				if (!xtext->cursor_hand)
 				{
-					gdk_window_set_cursor(GTK_WIDGET(xtext)->window,
+					gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(xtext)),
 						xtext->hand_cursor);
 					xtext->cursor_hand = true;
 					xtext->cursor_resize = false;
@@ -1798,7 +1798,7 @@ namespace {
 		GdkModifierType mask;
 		int line_x, x, y, offset, len;
 
-		gdk_window_get_pointer(widget->window, &x, &y, &mask);
+		gdk_window_get_pointer(gtk_widget_get_window(widget), &x, &y, &mask);
 
 		if (event->button == 3 || event->button == 2) /* right/middle click */
 		{
@@ -3392,7 +3392,7 @@ gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap)
 		g_object_unref(xtext->bgc);
 		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 		val.graphics_exposures = 0;
-		xtext->bgc = gdk_gc_new_with_values(GTK_WIDGET(xtext)->window,
+		xtext->bgc = gdk_gc_new_with_values(gtk_widget_get_window(GTK_WIDGET(xtext)),
 			&val, GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
 		xtext_set_fg(xtext, xtext->bgc, XTEXT_BG);
 	}
