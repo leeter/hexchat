@@ -21,7 +21,7 @@
 * By Peter Zelezny <zed@xchat.org>.
 *
 */
-
+//#define GSEAL_ENABLE
 #define GDK_MULTIHEAD_SAFE
 enum{ MARGIN = 2 };					/* dont touch. */
 #define REFRESH_TIMEOUT 20
@@ -545,28 +545,34 @@ namespace
 			return;
 		}
 
-		adj->lower = 0.0;
-		adj->upper = static_cast<gdouble>(buf->num_lines);
+		auto lower = 0.0;
+		auto upper = static_cast<gdouble>(buf->num_lines);
 
-		if (adj->upper == 0.0)
-			adj->upper = 1.0;
+		if (upper == 0.0)
+			upper = 1.0;
 
-		adj->page_size = static_cast<gdouble>(
-		    GTK_WIDGET(buf->xtext)->allocation.height /
+		GtkAllocation allocation;
+		gtk_widget_get_allocation(GTK_WIDGET(buf->xtext), &allocation);
+		auto page_size = static_cast<gdouble>(
+		    allocation.height /
 		    buf->xtext->fontsize);
-		adj->page_increment = adj->page_size;
+		auto page_increment = page_size;
 
 		// TODO: need a better name for this
-		auto adjustment = adj->upper - adj->page_size;
-		if (adj->value > adjustment)
+		auto adjustment = upper - page_size;
+		auto adj_value = gtk_adjustment_get_value(adj);
+		if (adj_value > adjustment)
 		{
 			buf->scrollbar_down = true;
-			adj->value = adjustment;
+			adj_value = adjustment;
 		}
 
-		if (adj->value < 0.0)
-			adj->value = 0.0;
+		if (adj_value < 0.0)
+			adj_value = 0.0;
 
+		g_signal_handler_block(buf->xtext->adj, buf->xtext->vc_signal_tag);
+		gtk_adjustment_configure(adj, adj_value, lower, upper, gtk_adjustment_get_step_increment(adj), page_increment, page_size);
+		g_signal_handler_unblock(buf->xtext->adj, buf->xtext->vc_signal_tag);
 		if (fire_signal)
 			gtk_adjustment_changed(adj);
 	}
@@ -585,15 +591,16 @@ namespace
 		if (!gtk_widget_get_realized(GTK_WIDGET(xtext)))
 			return;
 
-		if (xtext->buffer->old_value != xtext->adj->value)
+		const auto adj_value = gtk_adjustment_get_value(xtext->adj);
+		if (xtext->buffer->old_value != adj_value)
 		{
-			if (xtext->adj->value >= xtext->adj->upper - xtext->adj->page_size)
+			if (adj_value >= gtk_adjustment_get_upper(xtext->adj) - gtk_adjustment_get_page_size(xtext->adj))
 				xtext->buffer->scrollbar_down = true;
 			else
 				xtext->buffer->scrollbar_down = false;
 
-			if (xtext->adj->value + 1.0 == xtext->buffer->old_value ||
-				xtext->adj->value - 1.0 == xtext->buffer->old_value)	/* clicked an arrow? */
+			if (adj_value + 1.0 == xtext->buffer->old_value ||
+				adj_value - 1.0 == xtext->buffer->old_value)	/* clicked an arrow? */
 			{
 				if (xtext->io_tag)
 				{
@@ -611,7 +618,7 @@ namespace
 					xtext);
 			}
 		}
-		xtext->buffer->old_value = adj->value;
+		xtext->buffer->old_value = adj_value;
 	}
 } // end anonymous namespace
 
@@ -746,7 +753,7 @@ namespace {
 		backend_deinit(GTK_XTEXT(widget));
 
 		/* if there are still events in the queue, this'll avoid segfault */
-		gdk_window_set_user_data(widget->window, nullptr);
+		gdk_window_set_user_data(gtk_widget_get_window(widget), nullptr);
 
 		if (parent_class->unrealize)
 			(*GTK_WIDGET_CLASS(parent_class)->unrealize) (widget);
@@ -763,10 +770,12 @@ namespace {
 		gtk_widget_set_realized(widget, true);
 		auto xtext = GTK_XTEXT(widget);
 
-		attributes.x = widget->allocation.x;
-		attributes.y = widget->allocation.y;
-		attributes.width = widget->allocation.width;
-		attributes.height = widget->allocation.height;
+		GtkAllocation allocation;
+		gtk_widget_get_allocation(widget, &allocation);
+		attributes.x = allocation.x;
+		attributes.y = allocation.y;
+		attributes.width = allocation.width;
+		attributes.height = allocation.height;
 		attributes.wclass = GDK_INPUT_OUTPUT;
 		attributes.window_type = GDK_WINDOW_CHILD;
 		attributes.event_mask = gtk_widget_get_events(widget) |
@@ -777,28 +786,29 @@ namespace {
 		attributes.colormap = cmap;
 		attributes.visual = gtk_widget_get_visual(widget);
 
-		widget->window = gdk_window_new(widget->parent->window, &attributes,
+		auto window = gdk_window_new(gtk_widget_get_parent_window(widget), &attributes,
 			GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL |
 			GDK_WA_COLORMAP);
+		gtk_widget_set_window(widget, window);
 
-		gdk_window_set_user_data(widget->window, widget);
+		gdk_window_set_user_data(window, widget);
 
-		xtext->depth = gdk_window_get_visual(widget->window)->depth;
+		xtext->depth = gdk_visual_get_depth(gdk_window_get_visual(window));
 
 		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 		val.graphics_exposures = 0;
 
-		xtext->bgc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->bgc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->fgc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->fgc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->light_gc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->light_gc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->dark_gc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->dark_gc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->thin_gc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->thin_gc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->marker_gc = gdk_gc_new_with_values(widget->window, &val,
+		xtext->marker_gc = gdk_gc_new_with_values(window, &val,
 			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
 
 		/* for the separator bar (light) */
@@ -824,7 +834,7 @@ namespace {
 		xtext_set_fg(xtext, xtext->bgc, XTEXT_BG);
 
 		/* draw directly to window */
-		xtext->draw_buf = widget->window;
+		xtext->draw_buf = window;
 
 		if (xtext->pixmap)
 		{
@@ -834,11 +844,11 @@ namespace {
 			gdk_gc_set_fill(xtext->bgc, GDK_TILED);
 		}
 
-		xtext->hand_cursor = gdk_cursor_new_for_display(gdk_window_get_display(widget->window), GDK_HAND1);
-		xtext->resize_cursor = gdk_cursor_new_for_display(gdk_window_get_display(widget->window), GDK_LEFT_SIDE);
+		xtext->hand_cursor = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_HAND1);
+		xtext->resize_cursor = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_LEFT_SIDE);
 
-		gdk_window_set_back_pixmap(widget->window, nullptr, false);
-		widget->style = gtk_style_attach(widget->style, widget->window);
+		gdk_window_set_back_pixmap(window, nullptr, false);
+		gtk_widget_set_style(widget, gtk_style_attach(gtk_widget_get_style(widget), window));
 
 		backend_init(xtext);
 	}
@@ -859,7 +869,7 @@ namespace {
 		if (allocation->width == xtext->buffer->window_width)
 			height_only = true;
 
-		widget->allocation = *allocation;
+		gtk_widget_set_allocation(widget, allocation);
 		if (!gtk_widget_get_realized(GTK_WIDGET(widget)))
 		{
 			return;
@@ -868,7 +878,7 @@ namespace {
 		xtext->buffer->window_width = allocation->width;
 		xtext->buffer->window_height = allocation->height;
 
-		gdk_window_move_resize(widget->window, allocation->x,
+		gdk_window_move_resize(gtk_widget_get_window(widget), allocation->x,
 				       allocation->y, allocation->width,
 				       allocation->height);
 		dontscroll(xtext->buffer); /* force scrolling off */
@@ -881,8 +891,8 @@ namespace {
 		}
 		if (xtext->buffer->scrollbar_down)
 			gtk_adjustment_set_value(xtext->adj,
-						 xtext->adj->upper -
-						     xtext->adj->page_size);
+						gtk_adjustment_get_upper(xtext->adj) -
+						     gtk_adjustment_get_page_size(xtext->adj));
 	}
 
 	static int
@@ -993,7 +1003,7 @@ namespace {
 		else
 			indent = xtext->buffer->indent;
 
-		if (line > xtext->adj->page_size || line < 0)
+		if (line > gtk_adjustment_get_page_size(xtext->adj) || line < 0)
 		{
 			*out_of_bounds = true;
 			return 0;
@@ -1025,7 +1035,7 @@ namespace {
 
 		int subline;
 		int line = (y + xtext->pixel_offset) / xtext->fontsize;
-		auto ent = gtk_xtext_nth(xtext, line + (int)xtext->adj->value, subline);
+		auto ent = gtk_xtext_nth(xtext, line + (int)gtk_adjustment_get_value(xtext->adj), subline);
 		if (!ent)
 			return nullptr;
 
@@ -1103,7 +1113,9 @@ namespace {
 		else return;
 
 		int x = 0;
-		int width = GTK_WIDGET(xtext)->allocation.width;
+		GtkAllocation allocation;
+		gtk_widget_get_allocation(GTK_WIDGET(xtext), &allocation);
+		int width = -allocation.width;
 
 		gdk_draw_line(xtext->draw_buf, xtext->marker_gc, x, render_y, x + width, render_y);
 
@@ -1169,7 +1181,7 @@ namespace {
 		auto ent_start = gtk_xtext_find_char(xtext, xtext->select_start_x, xtext->select_start_y, &offset_start, &oob, &subline_start);
 		auto ent_end = gtk_xtext_find_char(xtext, xtext->select_end_x, xtext->select_end_y, &offset_end, &oob, &subline_end);
 
-		if ((!ent_start || !ent_end) && !xtext->buffer->impl->text_last && xtext->adj->value != xtext->buffer->old_value)
+		if ((!ent_start || !ent_end) && !xtext->buffer->impl->text_last && gtk_adjustment_get_value(xtext->adj) != xtext->buffer->old_value)
 		{
 			gtk_widget_queue_draw(GTK_WIDGET(xtext));
 			return;
@@ -1284,10 +1296,11 @@ namespace {
 		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
 		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
+		auto adj_value = gtk_adjustment_get_value(adj);
 		if (buf->impl->last_ent_end == nullptr ||	/* If context has changed OR */
 			buf->impl->pagetop_ent == nullptr ||	/* pagetop_ent is reset OR */
 			p_y <= win_height ||			/* pointer not below bottom margin OR */
-			adj->value >= adj->upper - adj->page_size) 	/* we're scrolled to bottom */
+			adj_value >= gtk_adjustment_get_upper(adj) - gtk_adjustment_get_page_size(adj)) 	/* we're scrolled to bottom */
 		{
 			xtext->scroll_tag = 0;
 			return false;
@@ -1295,8 +1308,8 @@ namespace {
 
 		xtext->select_start_y -= xtext->fontsize;
 		xtext->select_start_adj++;
-		adj->value++;
-		gtk_adjustment_value_changed(adj);
+		adj_value++;
+		gtk_adjustment_set_value(adj, adj_value);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y - win_height),
@@ -1314,7 +1327,7 @@ namespace {
 		GtkAdjustment *adj = xtext->adj;
 		int delta_y;
 
-		gdk_window_get_pointer(GTK_WIDGET(xtext)->window, nullptr, &p_y, nullptr);
+		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
 
 		if (buf->impl->last_ent_start == nullptr ||	/* If context has changed OR */
 			buf->impl->pagetop_ent == nullptr ||		/* pagetop_ent is reset OR */
