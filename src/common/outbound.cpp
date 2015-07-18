@@ -93,7 +93,7 @@ namespace dcc = hexchat::dcc;
 namespace fe_notify = hexchat::fe::notify;
 static const size_t TBUFSIZE = 4096;
 
-static void help (session *sess, char *tbuf, const char *helpcmd, bool quiet);
+static void help (session *sess, const char *helpcmd, bool quiet);
 static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
 static void handle_say (session *sess, char *text, int check_spch);
 namespace
@@ -546,12 +546,12 @@ cmd_unban (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_chanopt (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_chanopt (struct session *sess, char *, char *word[], char *[])
 {
 	int ret;
 	
 	/* chanopt.c */
-	ret = chanopt_command (sess, tbuf, word, word_eol);
+	ret = chanopt_command (sess, word);
 	chanopt_save_all ();
 	
 	return ret;
@@ -1105,7 +1105,7 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 }
 
 static int
-cmd_menu (struct session *, char *tbuf, char *word[], char *[])
+cmd_menu (struct session *, char *, char *word[], char *[])
 {
 	if (!word[2][0] || !word[3][0])
 		return false;
@@ -1173,12 +1173,14 @@ cmd_menu (struct session *, char *tbuf, char *word[], char *[])
 
 	if (word[idx+1][0] == 0)
 		return false;
-
+	
+	char path[2048];
 	/* the path */
-	path_part (word[idx+1], tbuf, 512);
-	auto len = strlen (tbuf);
+	path_part (word[idx+1], path, 512);
+	path[2047] = 0;
+	auto len = strlen(path);
 	if (len)
-		tbuf[len - 1] = 0;
+		path[len - 1] = 0;
 
 	/* the name of the item */
 	auto label = file_part (word[idx + 1]);
@@ -1197,20 +1199,20 @@ cmd_menu (struct session *, char *tbuf, char *word[], char *[])
 	{
 		if (toggle)
 		{
-			menu_add (tbuf, label, word[idx + 2], word[idx + 3], pos, state, markup, enable, mod, key, nullptr, nullptr);
+			menu_add (path, label, word[idx + 2], word[idx + 3], pos, state, markup, enable, mod, key, nullptr, nullptr);
 		} else
 		{
 			if (word[idx + 2][0])
-				menu_add (tbuf, label, word[idx + 2], nullptr, pos, state, markup, enable, mod, key, group, icon);
+				menu_add (path, label, word[idx + 2], nullptr, pos, state, markup, enable, mod, key, group, icon);
 			else
-				menu_add (tbuf, label, nullptr, nullptr, pos, state, markup, enable, mod, key, group, icon);
+				menu_add (path, label, nullptr, nullptr, pos, state, markup, enable, mod, key, group, icon);
 		}
 		return true;
 	}
 
 	if (!g_ascii_strcasecmp (word[idx], "DEL"))
 	{
-		menu_del (tbuf, label);
+		menu_del (path, label);
 		return true;
 	}
 
@@ -1314,7 +1316,7 @@ exec_check_process (struct session *sess)
 
 #ifndef __EMX__
 static int
-cmd_execs (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_execs (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	exec_check_process (sess);
 	if (sess->running_exec == nullptr)
@@ -1330,7 +1332,7 @@ cmd_execs (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-cmd_execc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_execc (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	int r;
 
@@ -1348,7 +1350,7 @@ cmd_execc (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static int
-cmd_execk (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_execk (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	int r;
 
@@ -1371,7 +1373,7 @@ cmd_execk (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 /* OS/2 Can't have the /EXECW command because it uses pipe(2) not socketpair
    and thus it is simplex --AGL */
 static int
-cmd_execw (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_execw (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	exec_check_process (sess);
 	if (sess->running_exec == nullptr)
@@ -1585,7 +1587,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 }
 
 static int
-cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_exec (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	int tochannel = false;
 	char *cmd = word_eol[2];
@@ -1702,28 +1704,6 @@ cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return false;
 }
 
-#endif
-
-#if 0
-/* export config stub */
-static int
-cmd_exportconf (struct session *sess, char *tbuf, char *word[], char *word_eol[])
-{
-	/* this is pretty much the same as in hexchat_exit() */
-	save_config ();
-	if (prefs.save_pevents)
-	{
-		pevent_save (nullptr);
-	}
-	sound_save ();
-	notify_save ();
-	ignore_save ();
-	free_sessions ();
-	chanopt_save_all ();
-
-	return true;		/* success */
-	return false;		/* fail */
-}
 #endif
 
 static int
@@ -2009,14 +1989,15 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
 	int i = 0, longfmt = 0;
 	const char *helpcmd = "";
 
-	if (tbuf)
-		helpcmd = word[2];
+	char buffer[TBUFSIZE];
+	
+	helpcmd = word[2];
 	if (*helpcmd && strcmp (helpcmd, "-l") == 0)
 		longfmt = 1;
 
 	if (*helpcmd && !longfmt)
 	{
-		help (sess, tbuf, helpcmd, false);
+		help (sess, helpcmd, false);
 	} else
 	{
 		std::string buf(4096, '\0');
@@ -2079,7 +2060,7 @@ cmd_id (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_ignore (struct session *sess, char *tbuf, char *word[], char *[])
+cmd_ignore (struct session *sess, char *, char *word[], char *[])
 {
 	int type = 0;
 	int quiet = 0;
@@ -2092,7 +2073,7 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *[])
 	}
 	if (!*word[3])
 		word[3] = "ALL";
-
+	char buffer[TBUFSIZE] = { 0 };
 	for (int i = 3;;++i)
 	{
 		if (!*word[i])
@@ -2104,8 +2085,8 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *[])
 			if (strchr (mask, '?') == nullptr &&
 				strchr (mask, '*') == nullptr)
 			{
-				mask = tbuf;
-				snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
+				mask = buffer;
+				snprintf (buffer, TBUFSIZE, "%s!*@*", word[2]);
 			}
 
 			i = ignore_add (mask, type, true);
@@ -2143,8 +2124,8 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *[])
 			type |= ignore::IG_DCC;
 		else
 		{
-			sprintf (tbuf, _("Unknown arg '%s' ignored."), word[i]);
-			PrintText (sess, tbuf);
+			snprintf (buffer, sizeof(buffer), _("Unknown arg '%s' ignored."), word[i]);
+			PrintText (sess, buffer);
 		}
 	}
 }
@@ -2343,7 +2324,7 @@ load_perform_file (session *sess, const char file[])
 }
 
 static int
-cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_load (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	namespace bfs = boost::filesystem;
 
@@ -2377,9 +2358,9 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 		return true;
 	}
-
-	sprintf (tbuf, "Unknown file type %s. Maybe you need to install the Perl or Python plugin?\n", word[2]);
-	PrintText (sess, tbuf);
+	char buffer[TBUFSIZE];
+	snprintf (buffer, sizeof(TBUFSIZE),  "Unknown file type %s. Maybe you need to install the Perl or Python plugin?\n", word[2]);
+	PrintText (sess, buffer);
 #endif
 
 	return false;
@@ -2442,7 +2423,7 @@ split_up_text(struct session *sess, char *text, int cmd_length, char *split_text
 }
 
 static int
-cmd_me (struct session *sess, char *tbuf, char *[], char *word_eol[])
+cmd_me (struct session *sess, char *, char *[], char *word_eol[])
 {
 	char *act = word_eol[2];
 	char *split_text = nullptr;
@@ -2458,10 +2439,10 @@ cmd_me (struct session *sess, char *tbuf, char *[], char *word_eol[])
 		notj_msg (sess);
 		return true;
 	}
-	
-	snprintf (tbuf, TBUFSIZE, "\001ACTION %s\001\r", act);
+	char buffer[TBUFSIZE];
+	snprintf (buffer, sizeof(buffer), "\001ACTION %s\001\r", act);
 	/* first try through DCC CHAT */
-	if (dcc::dcc_write_chat (sess->channel, tbuf))
+	if (dcc::dcc_write_chat (sess->channel, buffer))
 	{
 		/* print it to screen */
 		inbound_action (sess, sess->channel, sess->server->nick, "", act, true, false,
@@ -2642,7 +2623,7 @@ cmd_nctcp (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_newserver (struct session *sess, char *tbuf, char *word[],
+cmd_newserver (struct session *sess, char *, char *word[],
 					char *word_eol[])
 {
 	if (strcmp (word[2], "-noconnect") == 0)
@@ -2652,7 +2633,7 @@ cmd_newserver (struct session *sess, char *tbuf, char *word[],
 	}
 	
 	sess = new_ircwindow(nullptr, nullptr, session::SESS_SERVER, true);
-	cmd_server (sess, tbuf, word, word_eol);
+	cmd_server (sess, nullptr, word, word_eol);
 	return true;
 }
 
@@ -2995,7 +2976,7 @@ cmd_say (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_send (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_send (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	if (!word[2][0])
 		return false;
@@ -3011,15 +2992,15 @@ cmd_send (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		addr = SAddr.sin_addr.s_addr;
 	}
 	addr = ntohl (addr);
-
+	char buffer[TBUFSIZE];
 	if ((addr & 0xffff0000) == 0xc0a80000 ||	/* 192.168.x.x */
 		 (addr & 0xff000000) == 0x0a000000)		/* 10.x.x.x */
 		/* we got a private net address, let's PSEND or it'll fail */
-		snprintf (tbuf, 512, "DCC PSEND %s", word_eol[2]);
+		snprintf (buffer, 512, "DCC PSEND %s", word_eol[2]);
 	else
-		snprintf (tbuf, 512, "DCC SEND %s", word_eol[2]);
+		snprintf (buffer, 512, "DCC SEND %s", word_eol[2]);
 
-	handle_command (sess, tbuf, false);
+	handle_command (sess, buffer, false);
 
 	return true;
 }
@@ -3237,7 +3218,7 @@ cmd_server (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_servchan (struct session *sess, char *tbuf, char *word[],
+cmd_servchan (struct session *sess, char *, char *word[],
 				  char *word_eol[])
 {
 	int offset = 0;
@@ -3250,7 +3231,7 @@ cmd_servchan (struct session *sess, char *tbuf, char *word[],
 	if (*word[4 + offset])
 	{
 		safe_strcpy (sess->willjoinchannel, word[4 + offset], CHANLEN);
-		return cmd_server (sess, tbuf, word, word_eol);
+		return cmd_server (sess, nullptr, word, word_eol);
 	}
 
 	return false;
@@ -3308,17 +3289,18 @@ cmd_tray (struct session *, char *, char *word[], char *[])
 }
 
 static int
-cmd_unignore (struct session *sess, char *tbuf, char *word[],
+cmd_unignore (struct session *sess, char *, char *word[],
 				  char *[])
 {
 	char *mask = word[2];
 	char *arg = word[3];
+	char buffer[TBUFSIZE];
 	if (*mask)
 	{
 		if (strchr (mask, '?') == nullptr && strchr (mask, '*') == nullptr)
 		{
-			mask = tbuf;
-			snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
+			mask = buffer;
+			snprintf (buffer, TBUFSIZE, "%s!*@*", word[2]);
 		}
 		
 		if (ignore_del (mask))
@@ -3422,7 +3404,7 @@ url_join_only (server *serv, char *, const char channel[], const char key[])
 }
 
 static int
-cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
+cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
 {
 	if (!word[2][0])
 	{
@@ -3437,7 +3419,9 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	bool use_ssl = false;
 	void *net;
 	server *serv;
-
+	// what is this actually being used for?
+	// the buffer isn't used in the called command
+	char buffer[TBUFSIZE];
 	if (parse_irc_url(url.get(), &server_name, &port, &channel, &key, use_ssl))
 	{
 		/* maybe we're already connected to this net */
@@ -3454,7 +3438,7 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			serv = find_server_from_net(net);
 			if (serv)
 			{
-				url_join_only(serv, tbuf, channel, key);
+				url_join_only(serv, buffer, channel, key);
 				return true;
 			}
 		}
@@ -3464,13 +3448,13 @@ cmd_url (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			serv = find_server_from_hostname(server_name);
 			if (serv)
 			{
-				url_join_only(serv, tbuf, channel, key);
+				url_join_only(serv, buffer, channel, key);
 				return true;
 			}
 		}
 
 		/* not connected to this net, open new window */
-		cmd_newserver(sess, tbuf, word, word_eol);
+		cmd_newserver(sess, buffer, word, word_eol);
 
 	}
 	else
@@ -3857,7 +3841,7 @@ usercommand_show_help (session *sess, const char *name)
 }
 
 static void
-help (session *sess, char *tbuf, const char *helpcmd, bool quiet)
+help (session *sess, const char *helpcmd, bool quiet)
 {
 	if (plugin_show_help (sess, helpcmd))
 		return;
@@ -3870,8 +3854,9 @@ help (session *sess, char *tbuf, const char *helpcmd, bool quiet)
 	{
 		if (cmd->help)
 		{
-			snprintf (tbuf, TBUFSIZE, _("Usage: %s\n"), _(cmd->help));
-			PrintText (sess, tbuf);
+			std::ostringstream outbuf;
+			outbuf << boost::format(_("Usage: %s\n")) % _(cmd->help);
+			PrintText (sess, outbuf.str());
 		} else
 		{
 			if (!quiet)
@@ -4142,10 +4127,11 @@ std::string check_special_chars(const boost::string_ref & cmd, bool do_ascii) /*
 	return cmd.to_string();
 }
 
-static void
-perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
+static std::string
+perform_nick_completion (struct session *sess, const char *cmd)
 {
-	char *space = strchr (cmd, ' ');
+	std::ostringstream tbuf;
+	const char *space = std::strchr (cmd, ' ');
 	if (space && space != cmd)
 	{
 		if (space[-1] == prefs.hex_completion_suffix[0] && space - 1 != cmd)
@@ -4169,7 +4155,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 						lenu = user->nick.size();
 						if (lenu == len)
 						{
-							snprintf(tbuf, TBUFSIZE, "%s%s", user->nick.c_str(), space - 1);
+							tbuf << user->nick << space - 1;
 							len = -1;
 							break;
 						}
@@ -4182,18 +4168,18 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 				}
 
 				if (len == -1)
-					return;
+					return tbuf.str();
 
 				if (best)
 				{
-					snprintf (tbuf, TBUFSIZE, "%s%s", best->nick.c_str(), space - 1);
-					return;
+					tbuf << best->nick << space - 1;
+					return tbuf.str();
 				}
 			}
 		}
 	}
 
-	strcpy (tbuf, cmd);
+	return cmd;
 }
 
 static void
@@ -4259,7 +4245,9 @@ handle_say (session *sess, char *text, int check_spch)
 	}
 
 	if (prefs.hex_completion_auto)
-		perform_nick_completion (sess, text, &newcmd[0]);
+	{
+		newcmd = perform_nick_completion(sess, text);
+	}
 	else
 		safe_strcpy (&newcmd[0], text, newcmd.size());
 
@@ -4482,7 +4470,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 			switch (int_cmd->callback (sess, &tbuf[0], word, word_eol))
 			{
 				case false:
-					help(sess, &tbuf[0], int_cmd->name, true);
+					help(sess, int_cmd->name, true);
 					break;
 				case 2:
 					return false;

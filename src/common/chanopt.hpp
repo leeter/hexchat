@@ -30,7 +30,7 @@ enum chanopt_val{
 	SET_DEFAULT = 2 /* use global setting */
 };
 
-int chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[]);
+int chanopt_command (session *sess, char *word[]);
 bool chanopt_is_set (unsigned int global, std::uint8_t per_chan_setting);
 void chanopt_save_all (void);
 void chanopt_save (session *sess);

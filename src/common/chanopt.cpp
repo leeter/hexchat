@@ -93,7 +93,7 @@ static const char * chanopt_value (std::uint8_t val)
 }
 /* handle the /CHANOPT command */
 
-int chanopt_command (session *sess, char *, char *word[], char *[])
+int chanopt_command (session *sess, char *word[])
 {
 	int offset = 2;
 	bool quiet = false;
