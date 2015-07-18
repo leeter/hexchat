@@ -94,7 +94,7 @@ namespace fe_notify = hexchat::fe::notify;
 static const size_t TBUFSIZE = 4096;
 
 static void help (session *sess, const char *helpcmd, bool quiet);
-static int cmd_server (session *sess, char *tbuf, char *word[], char *word_eol[]);
+static int cmd_server (session *sess, char *word[], char *word_eol[]);
 static void handle_say (session *sess, char *text, int check_spch);
 namespace
 {
@@ -228,7 +228,7 @@ def:
 }
 
 static int
-cmd_addbutton (struct session *sess, char *, char *word[],
+cmd_addbutton (struct session *sess, char *word[],
 					char *word_eol[])
 {
 	if (*word[2] && *word_eol[3])
@@ -249,7 +249,7 @@ cmd_addbutton (struct session *sess, char *, char *word[],
 
 /* ADDSERVER <networkname> <serveraddress>, add a new network and server to the network list */
 static int
-cmd_addserver (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_addserver (struct session *sess, char *word[], char *word_eol[])
 {
 	ircnet *network;
 
@@ -283,7 +283,7 @@ cmd_addserver (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_allchannels (session *sess, char *, char *[], char *word_eol[])
+cmd_allchannels (session *sess, char *[], char *word_eol[])
 {
 	GSList *list = sess_list;
 
@@ -304,7 +304,7 @@ cmd_allchannels (session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_allchannelslocal (session *sess, char *, char *[], char *word_eol[])
+cmd_allchannelslocal (session *sess, char *[], char *word_eol[])
 {
 	GSList *list = sess_list;
 	server *serv = sess->server;
@@ -327,7 +327,7 @@ cmd_allchannelslocal (session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_allservers (struct session *, char *, char *[],
+cmd_allservers (struct session *, char *[],
 					 char *word_eol[])
 {
 	GSList *list;
@@ -349,7 +349,7 @@ cmd_allservers (struct session *, char *, char *[],
 }
 
 static int
-cmd_away (struct session *sess, char *, char *[], char *word_eol[])
+cmd_away (struct session *sess, char *[], char *word_eol[])
 {
 	std::string reason = word_eol[2];
 
@@ -378,7 +378,7 @@ cmd_away (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_back (struct session *sess, char *, char *[], char *[])
+cmd_back (struct session *sess, char *[], char *[])
 {
 	if (sess->server->is_away)
 	{
@@ -513,7 +513,7 @@ ban(session * sess, std::string mask, const std::string & bantypestr, bool deop)
 }
 
 static int
-cmd_ban (struct session *sess, char *, char *word[], char *[])
+cmd_ban (struct session *sess, char *word[], char *[])
 {
 	char *mask = word[2];
 
@@ -529,7 +529,7 @@ cmd_ban (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_unban (struct session *sess, char *, char *word[], char *[])
+cmd_unban (struct session *sess, char *word[], char *[])
 {
 	/* Allow more than one mask in /unban -- tvk */
 	auto words = to_vector_strings(word, PDIWORDS + 1);
@@ -546,7 +546,7 @@ cmd_unban (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_chanopt (struct session *sess, char *, char *word[], char *[])
+cmd_chanopt (struct session *sess, char *word[], char *[])
 {
 	int ret;
 	
@@ -558,7 +558,7 @@ cmd_chanopt (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_charset (struct session *sess, char *, char *word[], char *[])
+cmd_charset (struct session *sess, char *word[], char *[])
 {
 	server *serv = sess->server;
 	const char *locale = nullptr;
@@ -589,7 +589,7 @@ cmd_charset (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_clear (struct session *sess, char *, char *[], char *word_eol[])
+cmd_clear (struct session *sess, char *[], char *word_eol[])
 {
 	GSList *list = sess_list;
 	char *reason = word_eol[2];
@@ -620,7 +620,7 @@ cmd_clear (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_close (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_close (struct session *sess, char *word[], char *word_eol[])
 {
 	GSList *list;
 
@@ -645,7 +645,7 @@ cmd_close (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_ctcp (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_ctcp (struct session *sess, char *word[], char *word_eol[])
 {
 	int mbl;
 	char *to = word[2];
@@ -678,7 +678,7 @@ cmd_ctcp (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_country (struct session *sess, char *, char *word[], char *[])
+cmd_country (struct session *sess, char *word[], char *[])
 {
 	char *code = word[2];
 	if (!code || !*code)
@@ -705,7 +705,7 @@ cmd_country (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_cycle (struct session *sess, char *, char *word[], char *[])
+cmd_cycle (struct session *sess, char *word[], char *[])
 {
 	char *chan = word[2];
 
@@ -728,7 +728,7 @@ cmd_cycle (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_dcc (struct session *sess, char *, char *word[], char *[])
+cmd_dcc (struct session *sess, char *word[], char *[])
 {
 	int goodtype;
 	dcc::DCC *dcc = 0;
@@ -853,7 +853,7 @@ cmd_dcc (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_debug (struct session *sess, char*, char *[], char *[])
+cmd_debug (struct session *sess, char *[], char *[])
 {
 	PrintText (sess, _("Session   T Channel    WaitChan  WillChan  Server\n"));
 	for (sess_itr s{ sess_list }, end; s != end; ++s)
@@ -883,7 +883,7 @@ cmd_debug (struct session *sess, char*, char *[], char *[])
 }
 
 static int
-cmd_delbutton (struct session *sess, char *, char *word[],
+cmd_delbutton (struct session *sess, char *word[],
 					char *[])
 {
 	if (*word[2])
@@ -903,7 +903,7 @@ cmd_delbutton (struct session *sess, char *, char *word[],
 }
 
 static int
-cmd_dehop (struct session *sess, char *, char *word[], char *[])
+cmd_dehop (struct session *sess, char *word[], char *[])
 {
 	auto words = to_vector_strings(word, PDIWORDS + 1);
 	for (int i = 2;; ++i)
@@ -919,7 +919,7 @@ cmd_dehop (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_deop (struct session *sess, char *, char *word[], char *[])
+cmd_deop (struct session *sess, char *word[], char *[])
 {
 	auto  words = to_vector_strings(word, PDIWORDS + 1);
 	for (int i = 2;; ++i)
@@ -935,7 +935,7 @@ cmd_deop (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_mdehop (struct session *sess, char *, char *[], char *[])
+cmd_mdehop (struct session *sess, char *[], char *[])
 {
 	std::vector<std::string> nicks;
 	for (const auto & user : sess->usertree)
@@ -951,7 +951,7 @@ cmd_mdehop (struct session *sess, char *, char *[], char *[])
 }
 
 static int
-cmd_mdeop (struct session *sess, char *, char *[], char *[])
+cmd_mdeop (struct session *sess, char *[], char *[])
 {
 	std::vector<std::string> nicks;
 	for (const auto & user : sess->usertree)
@@ -1105,7 +1105,7 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 }
 
 static int
-cmd_menu (struct session *, char *, char *word[], char *[])
+cmd_menu (struct session *, char *word[], char *[])
 {
 	if (!word[2][0] || !word[3][0])
 		return false;
@@ -1220,7 +1220,7 @@ cmd_menu (struct session *, char *, char *word[], char *[])
 }
 
 static int
-cmd_mkick (struct session *sess, char *, char *[], char *word_eol[])
+cmd_mkick (struct session *sess, char *[], char *word_eol[])
 {
 	const std::string reason = word_eol[2] ? word_eol[2] : std::string();
 	for (auto & user : sess->usertree)
@@ -1241,7 +1241,7 @@ cmd_mkick (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_devoice (struct session *sess, char *, char *word[], char *[])
+cmd_devoice (struct session *sess, char *word[], char *[])
 {
 	auto words = to_vector_strings(word, PDIWORDS + 1);
 	for (int i = 2;; ++i)
@@ -1257,14 +1257,14 @@ cmd_devoice (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_discon (struct session *sess, char *, char *[], char *[])
+cmd_discon (struct session *sess, char *[], char *[])
 {
 	sess->server->disconnect (sess, true, -1);
 	return true;
 }
 
 static int
-cmd_dns (struct session *sess, char *, char *word[], char *[])
+cmd_dns (struct session *sess, char *word[], char *[])
 {
 	const char *nick = word[2];
 	if (*nick)
@@ -1291,7 +1291,7 @@ cmd_dns (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_echo (struct session *sess, char *, char *[], char *word_eol[])
+cmd_echo (struct session *sess, char *[], char *word_eol[])
 {
 	PrintText (sess, word_eol[2]);
 	return true;
@@ -1316,7 +1316,7 @@ exec_check_process (struct session *sess)
 
 #ifndef __EMX__
 static int
-cmd_execs (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_execs (struct session *sess, char *word[], char *word_eol[])
 {
 	exec_check_process (sess);
 	if (sess->running_exec == nullptr)
@@ -1332,7 +1332,7 @@ cmd_execs (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_execc (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_execc (struct session *sess, char *word[], char *word_eol[])
 {
 	int r;
 
@@ -1350,7 +1350,7 @@ cmd_execc (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_execk (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_execk (struct session *sess, char *word[], char *word_eol[])
 {
 	int r;
 
@@ -1373,7 +1373,7 @@ cmd_execk (struct session *sess, char *, char *word[], char *word_eol[])
 /* OS/2 Can't have the /EXECW command because it uses pipe(2) not socketpair
    and thus it is simplex --AGL */
 static int
-cmd_execw (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_execw (struct session *sess, char *word[], char *word_eol[])
 {
 	exec_check_process (sess);
 	if (sess->running_exec == nullptr)
@@ -1587,7 +1587,7 @@ exec_data (GIOChannel *source, GIOCondition condition, struct nbexec *s)
 }
 
 static int
-cmd_exec (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_exec (struct session *sess, char *word[], char *word_eol[])
 {
 	int tochannel = false;
 	char *cmd = word_eol[2];
@@ -1707,7 +1707,7 @@ cmd_exec (struct session *sess, char *, char *word[], char *word_eol[])
 #endif
 
 static int
-cmd_flushq (struct session *sess, char *, char *[], char *[])
+cmd_flushq (struct session *sess, char *[], char *[])
 {
 	PrintTextf(sess, boost::format(_("Flushing server send queue, %d bytes.\n")) % sess->server->sendq_len);
 	sess->server->flush_queue ();
@@ -1715,7 +1715,7 @@ cmd_flushq (struct session *sess, char *, char *[], char *[])
 }
 
 static int
-cmd_quit (struct session *sess, char *, char *[], char *word_eol[])
+cmd_quit (struct session *sess, char *[], char *word_eol[])
 {
 	if (word_eol[2] && *word_eol[2])
 		sess->quitreason = word_eol[2];
@@ -1725,7 +1725,7 @@ cmd_quit (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_gate (struct session *sess, char *, char *word[], char *[])
+cmd_gate (struct session *sess, char *word[], char *[])
 {
 	char *server_name = word[2];
 	if (*server_name)
@@ -1763,7 +1763,7 @@ get_bool_cb (int val, getvalinfo *info)
 }
 
 static int
-cmd_getbool (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_getbool (struct session *sess, char *word[], char *word_eol[])
 {
 	if (!word[4][0])
 		return false;
@@ -1791,7 +1791,7 @@ get_int_cb (int cancel, int val, getvalinfo *info)
 }
 
 static int
-cmd_getint (struct session *sess, char *, char *word[], char *[])
+cmd_getint (struct session *sess, char *word[], char *[])
 {
 	if (!word[4][0])
 		return false;
@@ -1824,7 +1824,7 @@ get_file_cb (char *cmd, char *file)
 }
 
 static int
-cmd_getfile (struct session *, char *, char *word[], char *[])
+cmd_getfile (struct session *, char *word[], char *[])
 {
 	if (!word[3][0])
 		return false;
@@ -1869,22 +1869,22 @@ get_str_cb (int cancel, const char val[], getvalinfo *info)
 }
 
 static int
-cmd_getstr (struct session *sess, char *, char *word[], char *[])
+cmd_getstr (struct session *sess, char *word[], char *[])
 {
 	if (!word[4][0])
 		return false;
 
-	getvalinfo* info = new getvalinfo;
+	auto info = std::make_unique<getvalinfo>();
 	info->cmd = word[3];
 	info->sess = sess;
 
-	fe_get_str(word[4], word[2], (GSourceFunc)get_str_cb, info);
+	fe_get_str(word[4], word[2], (GSourceFunc)get_str_cb, info.release());
 
 	return true;
 }
 
 static int
-cmd_ghost (struct session *sess, char *, char *word[], char *[])
+cmd_ghost (struct session *sess, char *word[], char *[])
 {
 	if (!word[2][0])
 		return false;
@@ -1894,7 +1894,7 @@ cmd_ghost (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_gui (struct session *sess, char *, char *word[], char *[])
+cmd_gui (struct session *sess, char *word[], char *[])
 {
 	switch (str_ihash ((const unsigned char*)word[2]))
 	{
@@ -1984,12 +1984,10 @@ show_help_line (session *sess, help_list *hl, const char *name, const char *usag
 }
 
 static int
-cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
+cmd_help (struct session *sess, char *word[], char *[])
 {
 	int i = 0, longfmt = 0;
 	const char *helpcmd = "";
-
-	char buffer[TBUFSIZE];
 	
 	helpcmd = word[2];
 	if (*helpcmd && strcmp (helpcmd, "-l") == 0)
@@ -2048,7 +2046,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *[])
 }
 
 static int
-cmd_id (struct session *sess, char *, char *word[], char *[])
+cmd_id (struct session *sess, char *word[], char *[])
 {
 	if (word[2][0])
 	{
@@ -2060,7 +2058,7 @@ cmd_id (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_ignore (struct session *sess, char *, char *word[], char *[])
+cmd_ignore (struct session *sess, char *word[], char *[])
 {
 	int type = 0;
 	int quiet = 0;
@@ -2131,7 +2129,7 @@ cmd_ignore (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_invite (struct session *sess, char *, char *word[], char *[])
+cmd_invite (struct session *sess, char *word[], char *[])
 {
 	if (!*word[2])
 		return false;
@@ -2143,7 +2141,7 @@ cmd_invite (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_join (struct session *sess, char *, char *word[], char *[])
+cmd_join (struct session *sess, char *word[], char *[])
 {
 	char *chan = word[2];
 	session *sess_find;
@@ -2172,7 +2170,7 @@ cmd_join (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_kick (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_kick (struct session *sess, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
 	char *reason = word_eol[3];
@@ -2185,7 +2183,7 @@ cmd_kick (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_kickban (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_kickban (struct session *sess, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
 	char *reason = word_eol[3];
@@ -2212,14 +2210,14 @@ cmd_kickban (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_killall (struct session *, char *, char *[], char *[])
+cmd_killall (struct session *, char *[], char *[])
 {
 	hexchat_exit();
 	return 2;
 }
 
 static int
-cmd_lagcheck (struct session *, char *, char *[], char *[])
+cmd_lagcheck (struct session *, char *[], char *[])
 {
 	lag_check ();
 	return true;
@@ -2247,7 +2245,7 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 }
 
 static int
-cmd_lastlog (struct session *sess, char *, char *[], char *word_eol[])
+cmd_lastlog (struct session *sess, char *[], char *word_eol[])
 {
 	int j = 2;
 	gtk_xtext_search_flags flags = static_cast<gtk_xtext_search_flags>(0);
@@ -2287,7 +2285,7 @@ cmd_lastlog (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_list (struct session *sess, char *, char *[], char *word_eol[])
+cmd_list (struct session *sess, char *[], char *word_eol[])
 {
 	fe_open_chan_list (sess->server, word_eol[2] ? word_eol[2] : "", true);
 
@@ -2324,7 +2322,7 @@ load_perform_file (session *sess, const char file[])
 }
 
 static int
-cmd_load (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_load (struct session *sess, char *word[], char *word_eol[])
 {
 	namespace bfs = boost::filesystem;
 
@@ -2358,16 +2356,16 @@ cmd_load (struct session *sess, char *, char *word[], char *word_eol[])
 
 		return true;
 	}
-	char buffer[TBUFSIZE];
-	snprintf (buffer, sizeof(TBUFSIZE),  "Unknown file type %s. Maybe you need to install the Perl or Python plugin?\n", word[2]);
-	PrintText (sess, buffer);
+	std::ostringstream buffer;
+	buffer << boost::format(_("Unknown file type %s. Maybe you need to install the Perl or Python plugin?\n")) % word[2];
+	PrintText (sess, buffer.str());
 #endif
 
 	return false;
 }
 
 char *
-split_up_text(struct session *sess, char *text, int cmd_length, char *split_text)
+split_up_text(struct session *sess, char*text, int cmd_length, char *split_text)
 {
 	size_t space_offset;
 	char *space;
@@ -2423,7 +2421,7 @@ split_up_text(struct session *sess, char *text, int cmd_length, char *split_text
 }
 
 static int
-cmd_me (struct session *sess, char *, char *[], char *word_eol[])
+cmd_me (struct session *sess, char *[], char *word_eol[])
 {
 	char *act = word_eol[2];
 	char *split_text = nullptr;
@@ -2480,7 +2478,7 @@ cmd_me (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_mode (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_mode (struct session *sess, char *word[], char *word_eol[])
 {
 	/* +channel channels are dying, let those servers whine about modes.
 	 * return info about current channel if available and no info is given */
@@ -2497,7 +2495,7 @@ cmd_mode (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_mop (struct session *sess, char *, char *[], char *[])
+cmd_mop (struct session *sess, char *[], char *[])
 {
 	std::vector<std::string> nicks;
 	for (auto & user : sess->usertree)
@@ -2514,7 +2512,7 @@ cmd_mop (struct session *sess, char *, char *[], char *[])
 }
 
 static int
-cmd_msg (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_msg (struct session *sess, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
 	char *msg = word_eol[3];
@@ -2602,7 +2600,7 @@ cmd_msg (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_names (struct session *sess, char *, char *word[], char *[])
+cmd_names (struct session *sess, char *word[], char *[])
 {
 	if (*word[2])
 		sess->server->p_names (word[2]);
@@ -2612,7 +2610,7 @@ cmd_names (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_nctcp (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_nctcp (struct session *sess, char *word[], char *word_eol[])
 {
 	if (*word_eol[3])
 	{
@@ -2623,7 +2621,7 @@ cmd_nctcp (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_newserver (struct session *sess, char *, char *word[],
+cmd_newserver (struct session *sess, char *word[],
 					char *word_eol[])
 {
 	if (strcmp (word[2], "-noconnect") == 0)
@@ -2633,12 +2631,12 @@ cmd_newserver (struct session *sess, char *, char *word[],
 	}
 	
 	sess = new_ircwindow(nullptr, nullptr, session::SESS_SERVER, true);
-	cmd_server (sess, nullptr, word, word_eol);
+	cmd_server (sess, word, word_eol);
 	return true;
 }
 
 static int
-cmd_nick (struct session *sess, char *, char *word[], char *[])
+cmd_nick (struct session *sess, char *word[], char *[])
 {
 	char *nick = word[2];
 	if (*nick)
@@ -2657,7 +2655,7 @@ cmd_nick (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_notice (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_notice (struct session *sess, char *word[], char *word_eol[])
 {
 	char *text = word_eol[3];
 	char *split_text = nullptr;
@@ -2686,7 +2684,7 @@ cmd_notice (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_notify (struct session *sess, char *, char *word[], char *[])
+cmd_notify (struct session *sess, char *word[], char *[])
 {
 	int i = 1;
 	char *net = nullptr;
@@ -2727,7 +2725,7 @@ cmd_notify (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_op (struct session *sess, char *, char *word[], char *[])
+cmd_op (struct session *sess, char *word[], char *[])
 {
 	int i = 2;
 	auto  words = to_vector_strings(word, PDIWORDS + 1);
@@ -2745,7 +2743,7 @@ cmd_op (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_part (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_part (struct session *sess, char *word[], char *word_eol[])
 {
 	char *chan = word[2];
 	char *reason = word_eol[3];
@@ -2762,7 +2760,7 @@ cmd_part (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_ping (struct session *sess, char *, char *word[], char *[])
+cmd_ping (struct session *sess, char *word[], char *[])
 {
 	char timestring[64];
 	unsigned long tim;
@@ -2791,7 +2789,7 @@ open_query (server &serv, const char nick[], bool focus_existing)
 }
 
 static int
-cmd_query (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_query (struct session *sess, char *word[], char *word_eol[])
 {
 	char *nick = word[2];
 	char *msg = word_eol[3];
@@ -2847,7 +2845,7 @@ cmd_query (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_quiet (struct session *sess, char *, char *word[], char *[])
+cmd_quiet (struct session *sess, char *word[], char *[])
 {
 	server *serv = sess->server;
 
@@ -2871,7 +2869,7 @@ cmd_quiet (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_unquiet (struct session *sess, char *, char *word[], char *[])
+cmd_unquiet (struct session *sess, char *word[], char *[])
 {
 	/* Allow more than one mask in /unban -- tvk */
 	
@@ -2894,7 +2892,7 @@ cmd_unquiet (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_quote (struct session *sess, char *, char *[], char *word_eol[])
+cmd_quote (struct session *sess, char *[], char *word_eol[])
 {
 	char *raw = word_eol[2];
 
@@ -2902,7 +2900,7 @@ cmd_quote (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_reconnect (struct session *sess, char *, char *word[], char *[])
+cmd_reconnect (struct session *sess, char *word[], char *[])
 {
 	int tmp = prefs.hex_net_reconnect_delay;
 	server *serv = sess->server;
@@ -2952,7 +2950,7 @@ cmd_reconnect (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_recv (struct session *sess, char *, char *[], char *word_eol[])
+cmd_recv (struct session *sess, char *[], char *word_eol[])
 {
 	if (*word_eol[2])
 	{
@@ -2964,7 +2962,7 @@ cmd_recv (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_say (struct session *sess, char *, char *[], char *word_eol[])
+cmd_say (struct session *sess, char *[], char *word_eol[])
 {
 	char *speech = word_eol[2];
 	if (*speech)
@@ -2976,7 +2974,7 @@ cmd_say (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_send (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_send (struct session *sess, char *word[], char *word_eol[])
 {
 	if (!word[2][0])
 		return false;
@@ -3006,7 +3004,7 @@ cmd_send (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_setcursor (struct session *sess, char *, char *word[], char *[])
+cmd_setcursor (struct session *sess, char *word[], char *[])
 {
 	int delta = false;
 
@@ -3022,7 +3020,7 @@ cmd_setcursor (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_settab (struct session *sess, char *, char *[], char *word_eol[])
+cmd_settab (struct session *sess, char *[], char *word_eol[])
 {
 	if (*word_eol[2])
 	{
@@ -3037,14 +3035,14 @@ cmd_settab (struct session *sess, char *, char *[], char *word_eol[])
 }
 
 static int
-cmd_settext (struct session *sess, char *, char *[], char *word_eol[])
+cmd_settext (struct session *sess, char *[], char *word_eol[])
 {
 	fe_set_inputbox_contents (sess, word_eol[2]);
 	return true;
 }
 
 static int
-cmd_splay (struct session *, char *, char *word[], char *[])
+cmd_splay (struct session *, char *word[], char *[])
 {
 	if (*word[2])
 	{
@@ -3109,7 +3107,7 @@ urlserv:
 }
 
 static int
-cmd_server (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_server (struct session *sess, char *word[], char *word_eol[])
 {
 	int offset = 0;
 	char *server_name = nullptr;
@@ -3218,7 +3216,7 @@ cmd_server (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_servchan (struct session *sess, char *, char *word[],
+cmd_servchan (struct session *sess, char *word[],
 				  char *word_eol[])
 {
 	int offset = 0;
@@ -3231,14 +3229,14 @@ cmd_servchan (struct session *sess, char *, char *word[],
 	if (*word[4 + offset])
 	{
 		safe_strcpy (sess->willjoinchannel, word[4 + offset], CHANLEN);
-		return cmd_server (sess, nullptr, word, word_eol);
+		return cmd_server (sess, word, word_eol);
 	}
 
 	return false;
 }
 
 static int
-cmd_topic (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_topic (struct session *sess, char *word[], char *word_eol[])
 {
 	if (word[2][0] && sess->server->is_channel_name(word[2]))
 		sess->server->p_topic (word[2], word_eol[3]);
@@ -3248,7 +3246,7 @@ cmd_topic (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_tray (struct session *, char *, char *word[], char *[])
+cmd_tray (struct session *, char *word[], char *[])
 {
 	if (std::strcmp (word[2], "-b") == 0)
 	{
@@ -3289,7 +3287,7 @@ cmd_tray (struct session *, char *, char *word[], char *[])
 }
 
 static int
-cmd_unignore (struct session *sess, char *, char *word[],
+cmd_unignore (struct session *sess, char *word[],
 				  char *[])
 {
 	char *mask = word[2];
@@ -3314,7 +3312,7 @@ cmd_unignore (struct session *sess, char *, char *word[],
 }
 
 static int
-cmd_unload (struct session *sess, char *, char *word[], char *[])
+cmd_unload (struct session *sess, char *word[], char *[])
 {
 #ifdef USE_PLUGIN
 	bool by_file = false;
@@ -3339,7 +3337,7 @@ cmd_unload (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_reload (struct session *sess, char *, char *word[], char *[])
+cmd_reload (struct session *sess, char *word[], char *[])
 {
 #ifdef USE_PLUGIN
 	bool by_file = false;
@@ -3389,7 +3387,7 @@ find_server_from_net (void *net)
 }
 
 static void
-url_join_only (server *serv, char *, const char channel[], const char key[])
+url_join_only (server *serv, const char channel[], const char key[])
 {
 	/* already connected, JOIN only. */
 	if (!channel)
@@ -3404,7 +3402,7 @@ url_join_only (server *serv, char *, const char channel[], const char key[])
 }
 
 static int
-cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
+cmd_url (struct session *sess, char *word[], char *word_eol[])
 {
 	if (!word[2][0])
 	{
@@ -3419,9 +3417,7 @@ cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
 	bool use_ssl = false;
 	void *net;
 	server *serv;
-	// what is this actually being used for?
-	// the buffer isn't used in the called command
-	char buffer[TBUFSIZE];
+
 	if (parse_irc_url(url.get(), &server_name, &port, &channel, &key, use_ssl))
 	{
 		/* maybe we're already connected to this net */
@@ -3438,7 +3434,7 @@ cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
 			serv = find_server_from_net(net);
 			if (serv)
 			{
-				url_join_only(serv, buffer, channel, key);
+				url_join_only(serv, channel, key);
 				return true;
 			}
 		}
@@ -3448,13 +3444,13 @@ cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
 			serv = find_server_from_hostname(server_name);
 			if (serv)
 			{
-				url_join_only(serv, buffer, channel, key);
+				url_join_only(serv, channel, key);
 				return true;
 			}
 		}
 
 		/* not connected to this net, open new window */
-		cmd_newserver(sess, buffer, word, word_eol);
+		cmd_newserver(sess, word, word_eol);
 
 	}
 	else
@@ -3463,7 +3459,7 @@ cmd_url (struct session *sess, char *, char *word[], char *word_eol[])
 }
 
 static int
-cmd_uselect (struct session *sess, char *, char *word[], char *[])
+cmd_uselect (struct session *sess, char *word[], char *[])
 {
 	int idx = 2;
 	int clear = true;
@@ -3485,7 +3481,7 @@ cmd_uselect (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_userlist (struct session *sess, char *, char *[],
+cmd_userlist (struct session *sess, char *[],
 				  char *[])
 {
 	for (auto & user : sess->usertree)
@@ -3504,7 +3500,7 @@ cmd_userlist (struct session *sess, char *, char *[],
 }
 
 static int
-cmd_wallchop (struct session *sess, char *, char *[],
+cmd_wallchop (struct session *sess, char *[],
 				  char *word_eol[])
 {
 	if (!(*word_eol[2]))
@@ -3543,7 +3539,7 @@ cmd_wallchop (struct session *sess, char *, char *[],
 }
 
 static int
-cmd_wallchan (struct session *sess, char *, char *[],
+cmd_wallchan (struct session *sess, char *[],
 				  char *word_eol[])
 {
 	GSList *list;
@@ -3571,7 +3567,7 @@ cmd_wallchan (struct session *sess, char *, char *[],
 }
 
 static int
-cmd_hop (struct session *sess, char *, char *word[], char *[])
+cmd_hop (struct session *sess, char *word[], char *[])
 {
 	auto  words = to_vector_strings(word, PDIWORDS + 1);
 	for (int i = 2;; ++i)
@@ -3587,7 +3583,7 @@ cmd_hop (struct session *sess, char *, char *word[], char *[])
 }
 
 static int
-cmd_voice (struct session *sess, char *, char *word[], char *[])
+cmd_voice (struct session *sess, char *word[], char *[])
 {
 	auto words = to_vector_strings(word, PDIWORDS + 1);
 	for (int i = 2;; ++i)
@@ -4183,7 +4179,7 @@ perform_nick_completion (struct session *sess, const char *cmd)
 }
 
 static void
-user_command (session * sess, char *, const std::string & cmd, char *word[],
+user_command (session * sess, const std::string & cmd, char *word[],
 				  char *word_eol[])
 {
 	char buf[2048] = { 0 };
@@ -4402,8 +4398,6 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	// TODO .. figure out another way to do this... ideally we should let commands do their own buffers
 	auto pdilen = std::max<size_t>(len + 1, TBUFSIZE);
 	std::string pdibuf(pdilen, '\0');
-	auto tbuflen = std::max<size_t>((len * 2) + 1, TBUFSIZE);
-	std::string tbuf(tbuflen, '\0');
 
 	/* split the text into words and word_eol */
 	process_data_init (&pdibuf[0], cmd, word, word_eol, true, true);
@@ -4442,7 +4436,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	{
 		if (boost::iequals(pop.name, word[1], locale))
 		{
-			user_command (sess, &tbuf[0], pop.cmd, word, word_eol);
+			user_command (sess, pop.cmd, word, word_eol);
 			user_cmd = true;
 		}
 	}
@@ -4467,7 +4461,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 		}
 		else
 		{
-			switch (int_cmd->callback (sess, &tbuf[0], word, word_eol))
+			switch (int_cmd->callback (sess, word, word_eol))
 			{
 				case false:
 					help(sess, int_cmd->name, true);

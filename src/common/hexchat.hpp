@@ -370,7 +370,7 @@ enum sasl_mech
 struct ircnet;
 struct favchannel;
 
-typedef int (*cmd_callback) (struct session * sess, char *tbuf, char *word[],
+using cmd_callback = int(*)(struct session * sess, char *word[],
 									  char *word_eol[]);
 
 struct commands

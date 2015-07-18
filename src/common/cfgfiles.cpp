@@ -1069,7 +1069,7 @@ cfg_get_bool (const char *var)
 	return -1;
 }
 
-int cmd_set (struct session *sess, char *, char *word[], char *word_eol[])
+int cmd_set (struct session *sess, char *word[], char *word_eol[])
 {
 	bool wild = false;
 	bool or_token = false;
