@@ -794,34 +794,34 @@ fe_set_nick (const server &serv, const char *newnick)
 {
 }
 void
-fe_change_nick (struct server *serv, char *nick, char *newnick)
+fe_change_nick (struct server *, char *, char *)
 {
 }
 void
-fe_ignore_update (int level)
+fe_ignore_update (int )
 {
 }
 int
-fe_dcc_open_recv_win (int passive)
+fe_dcc_open_recv_win (int )
 {
 	return FALSE;
 }
 int
-fe_dcc_open_send_win (int passive)
+fe_dcc_open_send_win (int )
 {
 	return FALSE;
 }
 int
-fe_dcc_open_chat_win (int passive)
+fe_dcc_open_chat_win (int )
 {
 	return FALSE;
 }
 void
-fe_userlist_hide (session * sess)
+fe_userlist_hide (session * )
 {
 }
 void
-fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags)
+fe_lastlog (session *, session *, const char *, gtk_xtext_search_flags )
 {
 }
 void
@@ -829,11 +829,11 @@ fe_set_lag (server &, long)
 {
 }
 void
-fe_set_throttle (server * serv)
+fe_set_throttle (server * )
 {
 }
 void
-fe_set_away (server &serv)
+fe_set_away (server &)
 {
 }
 void

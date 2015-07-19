@@ -164,7 +164,7 @@ int fe_dcc_open_recv_win(int) { return FALSE; }
 int fe_dcc_open_send_win(int) { return FALSE; }
 int fe_dcc_open_chat_win(int) { return FALSE; }
 void fe_userlist_hide(session *) {}
-void fe_lastlog(session *, session *, char *,
+void fe_lastlog(session *, session *, const char *,
 		gtk_xtext_search_flags)
 {
 }
