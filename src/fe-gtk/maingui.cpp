@@ -19,6 +19,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
+#define GSEAL_ENABLE
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
