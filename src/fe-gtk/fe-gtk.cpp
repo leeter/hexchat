@@ -680,7 +680,7 @@ fe_beep (session *sess)
 }
 
 void
-fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags)
+fe_lastlog (session *sess, session *lastlog_sess, const char *sstr, gtk_xtext_search_flags flags)
 {
 	auto buf = static_cast<xtext_buffer*>(sess->res->buffer);
 

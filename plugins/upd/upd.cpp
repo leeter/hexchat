@@ -23,9 +23,10 @@
 #define NOMINMAX
 #include <windows.h>
 #include <wininet.h>
+#include <atomic>
 #include <cstdlib>
+#include <memory>
 #include <string>
-#include <glib.h>
 
 #include "hexchat-plugin.h"
 
@@ -39,112 +40,187 @@ namespace{
 	static const char desc[] = "Check for HexChat updates automatically";
 	static const char version[] = "4.0";
 	static const char upd_help[] = "Update Checker Usage:\n  /UPDCHK, check for HexChat updates\n  /UPDCHK SET delay|freq, set startup delay or check frequency\n";
-
-	struct inet_handle{
-		HINTERNET handle;
-		inet_handle(HINTERNET handle)
-			:handle(handle){}
-		~inet_handle()
+	struct inet_handle_deleter{
+		using pointer = HINTERNET;
+		void operator ()(HINTERNET handle) _NOEXCEPT
 		{
 			InternetCloseHandle(handle);
 		}
-		operator HINTERNET()
-		{
-			return handle;
-		}
 	};
+	using inet_handle = std::unique_ptr<HINTERNET, inet_handle_deleter>;
+	enum class send_status
+	{
+		inet_hndl_created,
+		req_hndl_created,
+		resource_handle_created,
+		send_called,
+		data_recieved
+	};
+	struct inet_request{
+		send_status status;
+		inet_handle internet;
+		inet_handle request;
+		inet_handle resource;
+		char buffer[2048];
+	};
+
+	std::unique_ptr<inet_request> g_request;
+	std::string version_str;
+	std::atomic_flag request_in_progress = ATOMIC_FLAG_INIT;
+	std::atomic_bool request_complete{ false };
+
+	void CALLBACK InternetStatusCallback(
+		_In_ HINTERNET hInternet,
+		_In_ DWORD_PTR dwContext,
+		_In_ DWORD     dwInternetStatus,
+		_In_ LPVOID    lpvStatusInformation,
+		_In_ DWORD     dwStatusInformationLength
+		)
+	{
+		inet_request* inet_ptr = reinterpret_cast<inet_request*>(dwContext);
+		switch (dwInternetStatus)
+		{
+		case INTERNET_STATUS_REQUEST_COMPLETE:
+		{
+			DWORD dwRead = 0;
+			BOOL result = InternetReadFile(inet_ptr->resource.get(), inet_ptr->buffer, sizeof(inet_ptr->buffer), &dwRead);
+			if (!result)
+			{
+				return;
+			}
+			inet_ptr->buffer[dwRead] = 0;
+			wchar_t infobuffer[32] = {};
+			DWORD infolen = sizeof(infobuffer);
+			HttpQueryInfoW(inet_ptr->resource.get(),
+				HTTP_QUERY_STATUS_CODE,
+				&infobuffer,
+				&infolen,
+				nullptr);
+			::std::wstring status_code_string(infobuffer, 32);
+			int statuscode = std::stoi(status_code_string);
+			if (statuscode == 200)
+				version_str = inet_ptr->buffer;
+			else
+				version_str = "Unknown";
+			request_complete = true;
+		}
+		break;
+
+		default:
+			break;
+		}
+
+	}
+
 	static std::string
 		check_version()
 	{
-		inet_handle hOpen = InternetOpenW(L"Update Checker",
+		if (request_in_progress.test_and_set())
+			return "Unknown";
+		version_str = "Unknown";
+		g_request = std::make_unique<inet_request>();
+		g_request->internet.reset(InternetOpenW(L"Update Checker",
 			INTERNET_OPEN_TYPE_PRECONFIG,
 			nullptr,
 			nullptr,
-			0);
-		if (!hOpen)
+			INTERNET_FLAG_ASYNC));
+		if (!g_request->internet)
 		{
-			return "Unknown";
+			g_request.reset();
+			request_in_progress.clear();
+			return{};
+		}
+		g_request->status = send_status::inet_hndl_created;
+
+		INTERNET_STATUS_CALLBACK old_callback = 
+			::InternetSetStatusCallbackW(g_request->internet.get(), &InternetStatusCallback);
+
+		if (old_callback == INTERNET_INVALID_STATUS_CALLBACK)
+		{
+			g_request.reset();
+			return{};
 		}
 
-		inet_handle hConnect = InternetConnectW(hOpen,
+		g_request->request.reset(InternetConnectW(g_request->internet.get(),
 			L"raw.github.com",
 			INTERNET_DEFAULT_HTTPS_PORT,
 			nullptr,
 			nullptr,
 			INTERNET_SERVICE_HTTP,
 			0,
-			0);
-		if (!hConnect)
+			reinterpret_cast<DWORD_PTR>(g_request.get())));
+		if (!g_request->request)
 		{
-			return "Unknown";
+			g_request.reset();
+			request_in_progress.clear();
+			return{};
 		}
 
-		inet_handle hResource = HttpOpenRequestW(hConnect,
+		g_request->resource.reset(HttpOpenRequestW(g_request->request.get(),
 			L"GET",
 			L"/hexchat/hexchat/master/win32/version.txt",
 			nullptr, // use system setting to determine HTTP version
 			nullptr,
 			nullptr,
 			INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_AUTH,
-			0);
-		if (!hResource)
+			reinterpret_cast<DWORD_PTR>(g_request.get())));
+
+		if (!g_request->resource)
 		{
-			return "Unknown";
+			g_request.reset();
+			request_in_progress.clear();
+			return{};
 		}
 		else
 		{
-			static char buffer[1024];
-			wchar_t infobuffer[32];
-			int statuscode;
-
-			DWORD dwRead;
-			DWORD infolen = sizeof(infobuffer);
-
-			HttpAddRequestHeadersW(hResource, L"Connection: close\r\n", -1L, HTTP_ADDREQ_FLAG_ADD);	/* workaround for GC bug */
-			HttpSendRequestW(hResource, nullptr, 0, nullptr, 0);
-
-			while (InternetReadFile(hResource, buffer, 1023, &dwRead))
-			{
-				if (dwRead == 0)
-				{
-					break;
-				}
-				buffer[dwRead] = 0;
-			}
-
-			HttpQueryInfoW(hResource,
-				HTTP_QUERY_STATUS_CODE,
-				&infobuffer,
-				&infolen,
-				nullptr);
-			::std::wstring status_code_string(infobuffer, 32);
-			statuscode = std::stoi(status_code_string);
-			if (statuscode == 200)
-				return buffer;
-			else
-				return "Unknown";
+			version_str.clear();
+			HttpAddRequestHeadersW(g_request->resource.get(), L"Connection: close\r\n", -1L, HTTP_ADDREQ_FLAG_ADD);	/* workaround for GC bug */
+			HttpSendRequestW(g_request->resource.get(), nullptr, 0, nullptr, 0);
+			return "Unknown";
 		}
 	}
 
+	static int async_timer(void *)
+	{
+		if (!g_request || version_str.empty())
+		{
+			return 1;
+		}
+		if (version_str == hexchat_get_info(ph, "version"))
+		{
+			hexchat_printf(ph, "%s\tYou have the latest version of HexChat installed!\n", name);
+		}
+		else
+		{
+#ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for some reason */
+			hexchat_printf(ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version_str.c_str());
+#else
+			hexchat_printf(ph, "%s:\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version_str.c_str());
+#endif
+		}
+		g_request.reset();
+		return 0;
+	}
+
 	static int
-		print_version(const char * const word[], const char * const word_eol[], void *userdata)
+		print_version(_In_reads_(32) const char * const word[], _In_reads_(32) const char * const word_eol[], _In_ void *userdata)
 	{
 		int prevbuf;
 		int convbuf;
 
-		if (!g_ascii_strcasecmp("HELP", word[2]))
+		if (!_stricmp("HELP", word[2]))
 		{
 			hexchat_print(ph, upd_help);
 			return HEXCHAT_EAT_HEXCHAT;
 		}
-		else if (!g_ascii_strcasecmp("SET", word[2]))
+		else if (!_stricmp("SET", word[2]))
 		{
-			if (!g_ascii_strcasecmp("", word_eol[4]))
+			if (!_stricmp("", word_eol[4]))
 			{
 				hexchat_printf(ph, "%s\tEnter a value!\n", name);
 				return HEXCHAT_EAT_HEXCHAT;
 			}
-			if (!g_ascii_strcasecmp("delay", word[3]))
+			if (!_stricmp("delay", word[3]))
 			{
 				convbuf = atoi(word[4]);	/* don't use word_eol, numbers must not contain spaces */
 
@@ -159,7 +235,7 @@ namespace{
 					hexchat_printf(ph, "%s\tInvalid input!\n", name);
 				}
 			}
-			else if (!g_ascii_strcasecmp("freq", word[3]))
+			else if (!_stricmp("freq", word[3]))
 			{
 				convbuf = atoi(word[4]);	/* don't use word_eol, numbers must not contain spaces */
 
@@ -182,7 +258,7 @@ namespace{
 
 			return HEXCHAT_EAT_HEXCHAT;
 		}
-		else if (!g_ascii_strcasecmp("", word[2]))
+		else if (!_stricmp("", word[2]))
 		{
 			auto version = check_version();
 
@@ -190,9 +266,10 @@ namespace{
 			{
 				hexchat_printf(ph, "%s\tYou have the latest version of HexChat installed!\n", name);
 			}
-			else if (version == "Unknown")
+			else if (g_request && version == "Unknown")
 			{
-				hexchat_printf(ph, "%s\tUnable to check for HexChat updates!\n", name);
+				hexchat_hook_timer(ph, 3000, async_timer, nullptr);
+				//hexchat_printf(ph, "%s\tUnable to check for HexChat updates!\n", name);
 			}
 			else
 			{
@@ -212,17 +289,20 @@ namespace{
 	}
 
 	static int
-		print_version_quiet(void *userdata)
+		print_version_quiet(_In_ void *)
 	{
-		auto version = check_version();
+		check_version();
 
 		/* if it's not the current version AND not network error */
-		if (version != hexchat_get_info(ph, "version") && version != "Unknown")
+		if (request_complete && !version_str.empty() && version_str != hexchat_get_info(ph, "version") && version_str != "Unknown")
 		{
+			request_complete = false;
+			g_request.reset();
+			request_in_progress.clear();
 #ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for plugins for some reason */
-			hexchat_printf(ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version.c_str());
+			hexchat_printf(ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version_str.c_str());
 #else
-			hexchat_printf (ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version.c_str());
+			hexchat_printf (ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x86.exe\n", name, DOWNLOAD_URL, version_str.c_str());
 #endif
 			/* print update url once, then stop the timer */
 			return 0;
@@ -232,15 +312,14 @@ namespace{
 	}
 
 	static int
-		delayed_check(void *userdata)
+		delayed_check(void *)
 	{
 		int freq = hexchat_pluginpref_get_int(ph, "freq");
 
 		/* only start the timer if there's no update available during startup */
 		if (print_version_quiet(nullptr))
 		{
-			/* check for updates, every 6 hours by default */
-			hexchat_hook_timer(ph, freq * 1000 * 60, print_version_quiet, nullptr);
+			hexchat_hook_timer(ph, 3000, print_version_quiet, nullptr);
 		}
 
 		return 0;	/* run delayed_check() only once */
@@ -248,7 +327,7 @@ namespace{
 }
 
 int
-hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
+hexchat_plugin_init(_In_ hexchat_plugin *plugin_handle, _Outptr_result_z_ char **plugin_name, _Outptr_result_z_ char **plugin_desc, _Outptr_result_z_ char **plugin_version, char *arg)
 {
 	int delay;
 	ph = plugin_handle;
