@@ -145,13 +145,15 @@ static GtkEntryClass *parent_class = NULL;
 static int codetable_ref = 0;
 #endif
 
-//G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init))
+//G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init)G_ADD_PRIVATE(SexySpellEntry))
 
 G_DEFINE_TYPE_WITH_CODE(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY,
-G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init)
-G_ADD_PRIVATE(SexySpellEntry))
+	G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init)
+	G_ADD_PRIVATE(SexySpellEntry))
+
 #define SEXY_SPELL_ENTRY_GET_PRIVATE(obj) \
 		(G_TYPE_INSTANCE_GET_PRIVATE ((obj), SEXY_TYPE_SPELL_ENTRY, SexySpellEntryPriv))
+
 
 static void
 free_words(SexySpellEntryPrivate *priv)
@@ -1176,21 +1178,25 @@ sexy_spell_entry_recheck_all(SexySpellEntry *entry)
 	}
 }
 
+static void sexy_spell_entry_draw_real(GtkWidget *widget)
+{
+	g_return_if_fail(SEXY_IS_SPELL_ENTRY(widget));
+	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
+	auto priv = static_cast<SexySpellEntryPrivate*>(
+		sexy_spell_entry_get_instance_private(entry));
+
+	if (priv->checked)
+	{
+		auto layout = gtk_entry_get_layout(GTK_ENTRY(widget));
+		pango_layout_set_attributes(layout, priv->attr_list);
+	}
+}
+
 #if GTK_CHECK_VERSION(3, 0, 0)
 static gint
 sexy_spell_entry_draw(GtkWidget *widget, cairo_t *cr)
 {
-	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
-	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
-	GtkEntry *gtk_entry = GTK_ENTRY(widget);
-	PangoLayout *layout;
-
-	if (priv->checked)
-	{
-		layout = gtk_entry_get_layout(gtk_entry);
-		pango_layout_set_attributes(layout, priv->attr_list);
-	}
-
+	sexy_spell_entry_draw_real(widget);
 	return GTK_WIDGET_CLASS(sexy_spell_entry_parent_class)->draw(widget, cr);
 }
 
@@ -1198,13 +1204,7 @@ sexy_spell_entry_draw(GtkWidget *widget, cairo_t *cr)
 static gint
 sexy_spell_entry_expose(GtkWidget *widget, GdkEventExpose *event)
 {
-	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
-	GtkEntry *gtk_entry = GTK_ENTRY(widget);
-	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
-	
-	auto layout = gtk_entry_get_layout(gtk_entry);
-	pango_layout_set_attributes(layout, priv->attr_list);
-
+	sexy_spell_entry_draw_real(widget);
 	return GTK_WIDGET_CLASS(parent_class)->expose_event (widget, event);
 }
 #endif
@@ -1215,7 +1215,8 @@ sexy_spell_entry_button_press(GtkWidget *widget, GdkEventButton *event)
 	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
 	GtkEntry *gtk_entry = GTK_ENTRY(widget);
 	auto pos = sexy_spell_entry_find_position(entry, event->x);
-	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
+	auto priv = static_cast<SexySpellEntryPrivate*>(
+		sexy_spell_entry_get_instance_private(entry));
 	priv->mark_character = pos;
 
 	return GTK_WIDGET_CLASS(parent_class)->button_press_event (widget, event);
