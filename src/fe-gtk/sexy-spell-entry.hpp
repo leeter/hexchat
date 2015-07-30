@@ -31,16 +31,14 @@ struct SexySpellEntryClass;
 
 #define SEXY_SPELL_ERROR                 (sexy_spell_error_quark())
 
+
 enum SexySpellError{
 	SEXY_SPELL_ERROR_BACKEND,
 };
 
-struct SexySpellEntryPriv;
 struct SexySpellEntry
 {
 	GtkEntry parent_object;
-
-	SexySpellEntryPriv *priv;
 
 	void (*gtk_reserved1)(void);
 	void (*gtk_reserved2)(void);
@@ -72,6 +70,7 @@ gboolean   sexy_spell_entry_activate_language(SexySpellEntry *entry, const gchar
 void       sexy_spell_entry_deactivate_language(SexySpellEntry *entry, const gchar *lang);
 gboolean   sexy_spell_entry_set_active_languages(SexySpellEntry *entry, GSList *langs, GError **error);
 GSList    *sexy_spell_entry_get_active_languages(SexySpellEntry *entry);
+gboolean sexy_spell_entry_get_checked(SexySpellEntry *entry);
 gboolean   sexy_spell_entry_is_checked(SexySpellEntry *entry);
 void       sexy_spell_entry_set_checked(SexySpellEntry *entry, gboolean checked);
 void       sexy_spell_entry_set_parse_attributes (SexySpellEntry *entry, gboolean parse);

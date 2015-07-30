@@ -1095,11 +1095,11 @@ namespace {
 	}
 
 	static void
-		gtk_xtext_draw_marker(GtkXText * xtext, textentry * ent, int y)
+		gtk_xtext_draw_marker(GtkXText * xtext, cairo_t* cr, textentry * ent, int y)
 	{
 		if (!xtext->marker) return;
 
-		int render_y;
+		double render_y;
 		if (xtext->buffer->impl->marker_pos == ent)
 		{
 			render_y = y + xtext->font->descent;
@@ -1114,8 +1114,14 @@ namespace {
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(GTK_WIDGET(xtext), &allocation);
 		int width = -allocation.width;
-
-		gdk_draw_line(xtext->draw_buf, xtext->marker_gc, x, render_y, x + width, render_y);
+		cairo_stack stack{ cr };
+		gdk_cairo_set_source_color(cr, &xtext->palette[XTEXT_MARKER]);
+		render_y += 0.5;
+		cairo_move_to(cr, x, render_y);
+		cairo_line_to(cr, x + width, render_y);
+		cairo_set_line_width(cr, 1);
+		cairo_stroke(cr);
+		//gdk_draw_line(xtext->draw_buf, xtext->marker_gc, x, render_y, x + width, render_y);
 
 		if (gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(xtext)))))
 		{
@@ -3182,7 +3188,7 @@ namespace{
 					indent, line, false, nullptr, &emphasis))
 				{
 					/* small optimization */
-					gtk_xtext_draw_marker(xtext, ent, y - xtext->fontsize * (taken + start_subline + 1));
+					gtk_xtext_draw_marker(xtext, cr, ent, y - xtext->fontsize * (taken + start_subline + 1));
 					return ent->sublines.size() - subline;
 				}
 			}
@@ -3207,7 +3213,7 @@ namespace{
 
 		} while (str < ent->str.c_str() + ent->str.size());
 
-		gtk_xtext_draw_marker(xtext, ent, y - xtext->fontsize * (taken + start_subline));
+		gtk_xtext_draw_marker(xtext, cr, ent, y - xtext->fontsize * (taken + start_subline));
 
 		return taken;
 	}

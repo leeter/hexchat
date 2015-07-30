@@ -24,10 +24,14 @@
 #include "gtk_helpers.hpp"
 
 struct BridgeStyleContext{
+#if GTK_CHECK_VERSION(3, 0, 0)
+	int foo;
+#else
 	GdkColor*fg_color;
 	GdkColor*bg_color;
+#endif
 };
-
+#if !GTK_CHECK_VERSION(3, 0, 0)
 /// half this code is blatantly taken from GTK3 and is only being used as a bridge
 /// until we can upgrade properly, hence the layout of parameters is preserved
 
@@ -157,3 +161,4 @@ gdouble          height)
 
 	cairo_restore(cr);
 }
+#endif

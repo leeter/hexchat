@@ -16,7 +16,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#ifndef HEXCHAT_GTK_3_BRIDGE_HPP
+#if !defined(HEXCHAT_GTK_3_BRIDGE_HPP) || !GTK_CHECK_VERSION(3, 0, 0)
 #define HEXCHAT_GTK_3_BRIDGE_HPP
 
 #include <gtk/gtk.h>
