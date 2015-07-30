@@ -149,7 +149,7 @@ static int codetable_ref = 0;
 #define G_ADD_PRIVATE(TypeName) { \
   TypeName##_private_offset = \
     g_type_class_add_private (g_define_type_id, sizeof (TypeName##Private)); \
-} \
+}
 
 static inline gpointer \
 sexy_spell_entry_get_instance_private(SexySpellEntry *self) \
@@ -314,7 +314,7 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 	*
 	* Since: 1.0
 	*/
-	g_object_class_install_property(object_class, PROP_CHECKED,
+	g_object_class_install_property(object_class,static_cast<int>(PROP_CHECKED),
 		g_param_spec_boolean("checked", "Checked",
 		"If checking spelling is enabled",
 		TRUE, G_PARAM_READWRITE));
