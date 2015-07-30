@@ -316,7 +316,7 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 	g_object_class_install_property(object_class,static_cast<int>(PROP_CHECKED),
 		g_param_spec_boolean("checked", "Checked",
 		"If checking spelling is enabled",
-		TRUE, G_PARAM_READWRITE));
+		TRUE, static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
 #if GTK_MAJOR_VERSION >= 3
 	/**
