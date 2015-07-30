@@ -147,6 +147,8 @@ static int codetable_ref = 0;
 
 #ifndef G_ADD_PRIVATE
 
+#define G_ADD_PRIVATE {}
+
 static inline gpointer \
 sexy_spell_entry_get_instance_private(SexySpellEntry *self) \
 { \
