@@ -148,7 +148,7 @@ static int codetable_ref = 0;
 #ifndef G_ADD_PRIVATE
 #define G_ADD_PRIVATE(TypeName) { \
   TypeName##_private_offset = \
-    g_type_add_instance_private (g_define_type_id, sizeof (TypeName##Private)); \
+    g_type_class_add_private (g_define_type_id, sizeof (TypeName##Private)); \
 }
 #endif
 //G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init)G_ADD_PRIVATE(SexySpellEntry))
