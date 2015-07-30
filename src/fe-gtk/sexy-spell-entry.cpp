@@ -146,10 +146,6 @@ static int codetable_ref = 0;
 #endif
 
 #ifndef G_ADD_PRIVATE
-#define G_ADD_PRIVATE(TypeName) { \
-  TypeName##_private_offset = \
-    g_type_class_add_private (g_define_type_id, sizeof (TypeName##Private)); \
-}
 
 static inline gpointer \
 sexy_spell_entry_get_instance_private(SexySpellEntry *self) \
@@ -264,6 +260,9 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 {
 	initialize_enchant();
 
+#ifndef G_ADD_PRIVATE
+	g_type_class_add_private(klass, sizeof(SexySpellEntryPrivate));
+#endif
 	parent_class = static_cast<GtkEntryClass*>(g_type_class_peek_parent(klass));
 
 	auto gobject_class = G_OBJECT_CLASS(klass);
