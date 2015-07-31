@@ -610,11 +610,11 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	g_object_unref (menu);
 	g_signal_connect (G_OBJECT (menu), "selection-done",
 							G_CALLBACK (chanlist_menu_destroy), NULL);
-	mg_create_icon_item (_("_Join Channel"), GTK_STOCK_JUMP_TO, menu,
+	mg_create_icon_item (_("_Join Channel"), "go-jump", menu,
 		G_CALLBACK(chanlist_join), serv);
-	mg_create_icon_item (_("_Copy Channel Name"), GTK_STOCK_COPY, menu,
+	mg_create_icon_item (_("_Copy Channel Name"), "edit-copy", menu,
 		G_CALLBACK(chanlist_copychannel), serv);
-	mg_create_icon_item (_("Copy _Topic Text"), GTK_STOCK_COPY, menu,
+	mg_create_icon_item (_("Copy _Topic Text"), "edit-copy", menu,
 		G_CALLBACK(chanlist_copytopic), serv);
 
 	glib_string chan (chanlist_get_selected (serv, false));
@@ -719,7 +719,7 @@ chanlist_opengui (server *serv, bool do_refresh)
 
 	if (!serv->gui->chanlist_minusers)
 	{
-		if (prefs.hex_gui_chanlist_minusers < 1 || prefs.hex_gui_chanlist_minusers > 999999)
+		if (prefs.hex_gui_chanlist_minusers < 1 || prefs.hex_gui_chanlist_minusers)
 		{
 			prefs.hex_gui_chanlist_minusers = 5;
 			save_config();
@@ -773,40 +773,69 @@ chanlist_opengui (server *serv, bool do_refresh)
 	/* this is a speed up, but no horizontal scrollbar :( */
 	/*gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), TRUE);*/
 	gtk_widget_show (view);
-
+	
 	/* ============================================================= */
-
+#if GTK_CHECK_VERSION(3, 0, 0)
+	table = gtk_grid_new();
+	auto grid = GTK_GRID(table);
+	for(int i = 0; i < 4; ++i)
+	{
+		gtk_grid_insert_row(grid, 0);
+		gtk_grid_insert_column(grid, 0);
+	}
+#else
 	table = gtk_table_new (4, 4, FALSE);
 	gtk_table_set_col_spacings (GTK_TABLE (table), 12);
 	gtk_table_set_row_spacings (GTK_TABLE (table), 3);
+#endif
 	gtk_box_pack_start (GTK_BOX (vbox), table, 0, 1, 0);
 	gtk_widget_show (table);
 
-	wid = gtkutil_button(NULL, GTK_STOCK_FIND, 0, G_CALLBACK(chanlist_search_pressed), serv,
+	wid = gtkutil_button(NULL, "edit-find", 0, G_CALLBACK(chanlist_search_pressed), serv,
 								 _("_Search"));
 	serv->gui->chanlist_search = wid;
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 3, 4, 3, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 3, 4, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 
-	wid = gtkutil_button(NULL, GTK_STOCK_REFRESH, 0, G_CALLBACK(chanlist_refresh), serv,
+	wid = gtkutil_button(NULL, "view-refresh", 0, G_CALLBACK(chanlist_refresh), serv,
 								 _("_Download List"));
 	serv->gui->chanlist_refresh = wid;
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 3, 4, 2, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 2, 3, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 
-	wid = gtkutil_button(NULL, GTK_STOCK_SAVE_AS, 0, G_CALLBACK(chanlist_save), serv,
+	wid = gtkutil_button(NULL, "document-save-as", 0, G_CALLBACK(chanlist_save), serv,
 								 _("Save _List..."));
 	serv->gui->chanlist_savelist = wid;
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 3, 4, 1, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 1, 2, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 
-	wid = gtkutil_button(NULL, GTK_STOCK_JUMP_TO, 0, G_CALLBACK(chanlist_join), serv,
+	wid = gtkutil_button(NULL, "go-jump", 0, G_CALLBACK(chanlist_join), serv,
 						 _("_Join Channel"));
 	serv->gui->chanlist_join = wid;
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 3, 4, 0, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 0, 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 
 	/* ============================================================= */
 
 	wid = gtk_label_new (_("Show only:"));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 0, 1, 3, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 3, 4, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (wid);
 
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -815,8 +844,12 @@ chanlist_opengui (server *serv, bool do_refresh)
 	hbox = gtk_hbox_new(0, 0);
 #endif
 	gtk_box_set_spacing (GTK_BOX (hbox), 9);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 1, 2, 3, 4);
+#else
 	gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 3, 4,
 							GTK_FILL, GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (hbox);
 
 	wid = gtk_label_new (_("channels with"));
@@ -852,13 +885,25 @@ chanlist_opengui (server *serv, bool do_refresh)
 
 	wid = gtk_label_new (_("Look in:"));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 0, 1, 2, 3);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 2, 3, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (wid);
 
+#if GTK_CHECK_VERSION(3, 0, 0)
+	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#else
 	hbox = gtk_hbox_new (0, 0);
+#endif
 	gtk_box_set_spacing (GTK_BOX (hbox), 12);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 1, 2, 2, 3);
+#else
 	gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 2, 3,
 							GTK_FILL, GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (hbox);
 
 	wid = gtk_check_button_new_with_label (_("Channel name"));
@@ -883,7 +928,11 @@ chanlist_opengui (server *serv, bool do_refresh)
 
 	wid = gtk_label_new (_("Search type:"));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 0, 1, 1, 2);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 1, 2, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (wid);
 
 	wid = gtk_combo_box_text_new ();
@@ -891,7 +940,11 @@ chanlist_opengui (server *serv, bool do_refresh)
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Pattern Match (Wildcards)"));
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Regular Expression"));
 	gtk_combo_box_set_active (GTK_COMBO_BOX (wid), serv->gui->chanlist_search_type);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 1, 2, 1, 2);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 1, 2, 1, 2, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	g_signal_connect (G_OBJECT (wid), "changed",
 							G_CALLBACK (chanlist_combo_cb), serv);
 	gtk_widget_show (wid);
@@ -900,7 +953,11 @@ chanlist_opengui (server *serv, bool do_refresh)
 
 	wid = gtk_label_new (_("Find:"));
 	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 0, 1, 0, 1);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 0, 1, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (wid);
 
 	wid = gtk_entry_new ();
@@ -910,7 +967,11 @@ chanlist_opengui (server *serv, bool do_refresh)
 	g_signal_connect (G_OBJECT (wid), "activate",
 							  G_CALLBACK (chanlist_search_pressed),
 							  (gpointer) serv);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	gtk_grid_attach(grid, wid, 1, 2, 0, 1);
+#else
 	gtk_table_attach (GTK_TABLE (table), wid, 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, GtkAttachOptions(), 0, 0);
+#endif
 	gtk_widget_show (wid);
 	serv->gui->chanlist_wild = wid;
 
@@ -918,8 +979,14 @@ chanlist_opengui (server *serv, bool do_refresh)
 
 	/* ============================================================= */
 
+	
+#if GTK_CHECK_VERSION(3, 0, 0)
+	wid = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+	gtk_grid_attach(grid, wid, 2, 3, 0, 5);
+#else
 	wid = gtk_vseparator_new ();
 	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, 0, 5, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+#endif
 	gtk_widget_show (wid);
 
 	g_signal_connect (G_OBJECT (serv->gui->chanlist_window), "destroy",

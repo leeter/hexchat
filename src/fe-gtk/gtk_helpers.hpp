@@ -37,15 +37,19 @@
 #endif
 #endif
 
+#if !GTK_CHECK_VERSION(3, 0, 0)
 CONSTEXPR inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
 {
 	return static_cast<GtkAttachOptions>(static_cast<int >(a) | static_cast<int>(b));
 }
+#endif
 
+#if !GTK_CHECK_VERSION(3, 0, 0)
 CONSTEXPR inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
 {
 	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
 }
+#endif
 
 CONSTEXPR inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
 {
