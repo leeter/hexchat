@@ -146,7 +146,7 @@ static int codetable_ref = 0;
 #endif
 
 #ifndef G_ADD_PRIVATE
-
+static gint sexy_spell_entry_private_offset;
 #define G_ADD_PRIVATE(TypeName) { \
   /*TypeName##_private_offset = \
     g_type_add_instance_private (g_define_type_id, sizeof (TypeName##Private));*/ \
@@ -155,7 +155,7 @@ static int codetable_ref = 0;
 static inline gpointer \
 sexy_spell_entry_get_instance_private(SexySpellEntry *self) \
 { \
-return (G_STRUCT_MEMBER_P (self, sexy_spell_entry_private_offset)); \
+return G_TYPE_INSTANCE_GET_PRIVATE (self, SEXY_TYPE_SPELL_ENTRY, SexySpellEntryPrivate);\
 } 
 #endif
 //G_DEFINE_TYPE_EXTENDED(SexySpellEntry, sexy_spell_entry, GTK_TYPE_ENTRY, 0, G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE, sexy_spell_entry_editable_init)G_ADD_PRIVATE(SexySpellEntry))
