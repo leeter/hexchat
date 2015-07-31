@@ -1090,7 +1090,7 @@ namespace {
 		cairo_clip(cr.get());
 		gtk_xtext_draw(widget, cr.get());
 
-		return parent_class->expose_event(widget, event);;
+		return false;
 	}
 
 	static void
