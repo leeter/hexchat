@@ -21,7 +21,7 @@
 * By Peter Zelezny <zed@xchat.org>.
 *
 */
-#define GSEAL_ENABLE
+
 #define GDK_MULTIHEAD_SAFE
 enum{ MARGIN = 2 };					/* dont touch. */
 #define REFRESH_TIMEOUT 20
@@ -682,42 +682,6 @@ namespace {
 			xtext->adj = nullptr;
 		}
 
-		if (xtext->bgc)
-		{
-			g_object_unref(xtext->bgc);
-			xtext->bgc = nullptr;
-		}
-
-		if (xtext->fgc)
-		{
-			g_object_unref(xtext->fgc);
-			xtext->fgc = nullptr;
-		}
-
-		if (xtext->light_gc)
-		{
-			g_object_unref(xtext->light_gc);
-			xtext->light_gc = nullptr;
-		}
-
-		if (xtext->dark_gc)
-		{
-			g_object_unref(xtext->dark_gc);
-			xtext->dark_gc = nullptr;
-		}
-
-		if (xtext->thin_gc)
-		{
-			g_object_unref(xtext->thin_gc);
-			xtext->thin_gc = nullptr;
-		}
-
-		if (xtext->marker_gc)
-		{
-			g_object_unref(xtext->marker_gc);
-			xtext->marker_gc = nullptr;
-		}
-
 		if (xtext->hand_cursor)
 		{
 			gdk_cursor_unref(xtext->hand_cursor);
@@ -796,51 +760,12 @@ namespace {
 		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 		val.graphics_exposures = 0;
 
-		xtext->bgc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->fgc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->light_gc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->dark_gc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->thin_gc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext->marker_gc = gdk_gc_new_with_values(window, &val,
-			GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-
-		/* for the separator bar (light) */
-		col.red = 0xffff; col.green = 0xffff; col.blue = 0xffff;
-		gdk_colormap_alloc_color(cmap, &col, false, true);
-		gdk_gc_set_foreground(xtext->light_gc, &col);
-
-		/* for the separator bar (dark) */
-		col.red = 0x1111; col.green = 0x1111; col.blue = 0x1111;
-		gdk_colormap_alloc_color(cmap, &col, false, true);
-		gdk_gc_set_foreground(xtext->dark_gc, &col);
-
-		/* for the separator bar (thinline) */
-		col.red = 0x8e38; col.green = 0x8e38; col.blue = 0x9f38;
-		gdk_colormap_alloc_color(cmap, &col, false, true);
-		gdk_gc_set_foreground(xtext->thin_gc, &col);
-
-		/* for the marker bar (marker) */
-		gdk_gc_set_foreground(xtext->marker_gc, &xtext->palette[XTEXT_MARKER]);
-
 		xtext_set_fg(xtext, XTEXT_FG);
 		xtext_set_bg(xtext, XTEXT_BG);
 		xtext_set_fg(xtext, XTEXT_BG);
 
 		/* draw directly to window */
 		xtext->draw_buf = window;
-
-		if (xtext->pixmap)
-		{
-			gdk_gc_set_tile(xtext->bgc, xtext->pixmap);
-			gdk_gc_set_ts_origin(xtext->bgc, 0, 0);
-			xtext->ts_x = xtext->ts_y = 0;
-			gdk_gc_set_fill(xtext->bgc, GDK_TILED);
-		}
 
 		xtext->hand_cursor = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_HAND1);
 		xtext->resize_cursor = gdk_cursor_new_for_display(gdk_window_get_display(window), GDK_LEFT_SIDE);
@@ -2469,34 +2394,6 @@ namespace{
 				       str, str_width,
 				       *emphasis);
 
-		//if (pix)
-		//{
-		//	GdkRectangle clip;
-		//	GdkRectangle dest;
-
-		//	gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x,
-		//			     xtext->ts_y);
-		//	xtext->draw_buf = gtk_widget_get_window(GTK_WIDGET(xtext));
-		//	clip.x = xtext->clip_x;
-		//	clip.y = xtext->clip_y;
-		//	clip.width = xtext->clip_x2 - xtext->clip_x;
-		//	clip.height = xtext->clip_y2 - xtext->clip_y;
-
-		//	dest.x = dest_x;
-		//	dest.y = dest_y;
-		//	dest.width = str_width;
-		//	dest.height = xtext->fontsize;
-
-		//	if (gdk_rectangle_intersect(&clip, &dest, &dest))
-		//		/* dump the DB to window, but only within the
-		//		 * clip_x/x2/y/y2 */
-		//		gdk_draw_drawable(
-		//		    xtext->draw_buf, xtext->bgc, pix,
-		//		    dest.x - dest_x, dest.y - dest_y, dest.x,
-		//		    dest.y, dest.width, dest.height);
-		//	g_object_unref(pix);
-		//}
-
 		if (xtext->underline)
 		{
 			gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, cr);
@@ -3232,8 +3129,6 @@ gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[])
 		xtext_set_fg(xtext, XTEXT_FG);
 		xtext_set_bg(xtext, XTEXT_BG);
 		xtext_set_fg(xtext, XTEXT_BG);
-
-		gdk_gc_set_foreground(xtext->marker_gc, &xtext->palette[XTEXT_MARKER]);
 	}
 	xtext->col_fore = XTEXT_FG;
 	xtext->col_back = XTEXT_BG;
@@ -3314,42 +3209,6 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 		gtk_xtext_recalc_widths(xtext->buffer, true);
 
 	return true;
-}
-
-void
-gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap)
-{
-	GdkGCValues val;
-
-	if (xtext->pixmap)
-	{
-		g_object_unref(xtext->pixmap);
-		xtext->pixmap = nullptr;
-	}
-
-	dontscroll(xtext->buffer);
-	xtext->pixmap = pixmap;
-
-	if (pixmap)
-	{
-		g_object_ref(pixmap);
-		if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
-		{
-			gdk_gc_set_tile(xtext->bgc, pixmap);
-			gdk_gc_set_ts_origin(xtext->bgc, 0, 0);
-			xtext->ts_x = xtext->ts_y = 0;
-			gdk_gc_set_fill(xtext->bgc, GDK_TILED);
-		}
-	}
-	else if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
-	{
-		g_object_unref(xtext->bgc);
-		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
-		val.graphics_exposures = 0;
-		xtext->bgc = gdk_gc_new_with_values(gtk_widget_get_window(GTK_WIDGET(xtext)),
-			&val, GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW);
-		xtext_set_fg(xtext, XTEXT_BG);
-	}
 }
 
 namespace xtext{

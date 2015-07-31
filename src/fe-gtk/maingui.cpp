@@ -19,7 +19,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
-#define GSEAL_ENABLE
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -2238,7 +2238,6 @@ mg_update_xtext (GtkWidget *wid)
 
 	gtk_xtext_set_palette (xtext, colors);
 	gtk_xtext_set_max_lines (xtext, prefs.hex_text_max_lines);
-	gtk_xtext_set_background (xtext, channelwin_pix);
 	gtk_xtext_set_wordwrap (xtext, prefs.hex_text_wordwrap);
 	gtk_xtext_set_show_marker (xtext, prefs.hex_text_show_marker);
 	gtk_xtext_set_show_separator (xtext, prefs.hex_text_indent ? prefs.hex_text_show_sep : false);
