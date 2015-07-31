@@ -148,8 +148,8 @@ static int codetable_ref = 0;
 #ifndef G_ADD_PRIVATE
 
 #define G_ADD_PRIVATE(TypeName) { \
-  //TypeName##_private_offset = \
-    g_type_add_instance_private (g_define_type_id, sizeof (TypeName##Private)); \
+  /*TypeName##_private_offset = \
+    g_type_add_instance_private (g_define_type_id, sizeof (TypeName##Private));*/ \
 }
 
 static inline gpointer \
