@@ -809,7 +809,11 @@ chanlist_opengui (server *serv, bool do_refresh)
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 3, 4, GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);
 
-	hbox = gtk_hbox_new (0, 0);
+#if GTK_CHECK_VERSION(3, 0, 0)
+	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#else
+	hbox = gtk_hbox_new(0, 0);
+#endif
 	gtk_box_set_spacing (GTK_BOX (hbox), 9);
 	gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 3, 4,
 							GTK_FILL, GTK_FILL, 0, 0);

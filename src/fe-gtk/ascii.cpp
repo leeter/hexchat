@@ -143,7 +143,11 @@ ascii_open (void)
 		if (table_pos[0] == '\n' || i == 0)
 		{
 			table_pos++;
+#if GTK_CHECK_VERSION(3, 0, 0)
+			hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#else
 			hbox = gtk_hbox_new (0, 0);
+#endif
 			gtk_container_add (GTK_CONTAINER (vbox), hbox);
 			gtk_widget_show (hbox);
 			i++;
