@@ -1986,12 +1986,12 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 	g_mkdir (prefs.hex_dcc_dir, 0700);
 	g_mkdir (prefs.hex_dcc_completed_dir, 0700);
 
-	if (new_pix)
+	/*if (new_pix)
 	{
 		if (channelwin_pix)
 			g_object_unref (channelwin_pix);
 		channelwin_pix = pixmap_load_from_file (prefs.hex_text_background);
-	}
+	}*/
 
 	input_style = create_input_style (input_style);
 

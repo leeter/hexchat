@@ -75,7 +75,7 @@
 #endif
 namespace fe = hexchat::fe;
 namespace dcc = hexchat::dcc;
-GdkPixmap *channelwin_pix;
+//GdkPixmap *channelwin_pix;
 
 #ifdef USE_LIBCANBERRA
 static ca_context *ca_con;
@@ -309,7 +309,7 @@ fe_init (void)
 #ifdef HAVE_GTK_MAC
 	gtkosx_application_set_dock_icon_pixbuf (osx_app, pix_hexchat);
 #endif
-	channelwin_pix = pixmap_load_from_file (prefs.hex_text_background);
+	//channelwin_pix = pixmap_load_from_file (prefs.hex_text_background);
 	input_style = create_input_style (gtk_style_new ());
 }
 
