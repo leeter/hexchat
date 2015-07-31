@@ -628,7 +628,9 @@ GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator)
 	xtext->wordwrap = true;
 	xtext->buffer = gtk_xtext_buffer_new(xtext);
 	xtext->orig_buffer = xtext->buffer;
+#if !GTK_CHECK_VERSION(3, 0, 0)
 	xtext->style = gtk_style_context_new();
+#endif
 
 	auto widget = GTK_WIDGET(xtext);
 	/*gtk_widget_set_double_buffered(widget, false);*/
@@ -699,11 +701,13 @@ namespace {
 			gtk_xtext_buffer_free(xtext->orig_buffer);
 			xtext->orig_buffer = nullptr;
 		}
+#if !GTK_CHECK_VERSION(3, 0, 0)
 		if (xtext->style)
 		{
 			bridge_style_context_free(xtext->style);
 			xtext->style = nullptr;
 		}
+#endif
 
 		if (GTK_OBJECT_CLASS(parent_class)->destroy)
 			(*GTK_OBJECT_CLASS(parent_class)->destroy) (object);
@@ -1054,6 +1058,9 @@ namespace {
 		}
 	}
 
+#if !GTK_CHECK_VERSION(3, 0, 0)
+#define gtk_widget_get_style_context(w) GTK_XTEXT(w)->style
+#endif
 	static gboolean gtk_xtext_draw(GtkWidget *widget, cairo_t *cr)
 	{
 		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
@@ -1062,7 +1069,7 @@ namespace {
 		cairo_stack cr_stack{cr};
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(widget, &allocation);
-		gtk_render_background(xtext->style, cr, allocation.x,
+		gtk_render_background(gtk_widget_get_style_context(widget), cr, allocation.x,
 				      allocation.y, allocation.width,
 				      allocation.height);
 		dontscroll(xtext->buffer); /* force scrolling off */
@@ -1083,7 +1090,7 @@ namespace {
 		cairo_clip(cr.get());
 		gtk_xtext_draw(widget, cr.get());
 
-		return false;
+		return parent_class->expose_event(widget, event);;
 	}
 
 	static void
@@ -2045,7 +2052,11 @@ namespace {
 		widget_class->motion_notify_event = gtk_xtext_motion_notify;
 		widget_class->selection_clear_event = (gboolean(*)(GtkWidget*, GdkEventSelection*))gtk_xtext_selection_kill;
 		widget_class->selection_get = gtk_xtext_selection_get;
+#if GTK_CHECK_VERSION(3, 0, 0)
+		widget_class->draw = gtk_xtext_draw;
+#else
 		widget_class->expose_event = gtk_xtext_expose;
+#endif
 		widget_class->scroll_event = gtk_xtext_scroll;
 		widget_class->leave_notify_event = gtk_xtext_leave_notify;
 		widget_class->set_scroll_adjustments_signal = xtext_signals[SET_SCROLL_ADJUSTMENTS];

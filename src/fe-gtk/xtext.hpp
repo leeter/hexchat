@@ -126,8 +126,9 @@ public:
 	GRegex *search_re;		/* Compiled regular expression */
 	textentry *hintsearch;	/* textentry found for last search */
 };
-
+#if !GTK_CHECK_VERSION(3, 0, 0)
 struct BridgeStyleContext;
+#endif
 struct GtkXText
 {
 	GtkWidget widget;
@@ -149,7 +150,9 @@ struct GtkXText
 	int last_win_h;
 	int last_win_w;
 
+#if !GTK_CHECK_VERSION(3, 0, 0)
 	BridgeStyleContext * style;
+#endif
 	GdkColor palette[XTEXT_COLS];
 
 	gint io_tag;					  /* for delayed refresh events */
