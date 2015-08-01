@@ -66,7 +66,7 @@ struct enable_bitmask_operators{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E>::type
 operator|(E lhs, E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     return static_cast<E>(
         static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
 }
@@ -74,7 +74,7 @@ operator|(E lhs, E rhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E>::type
 operator&(E lhs, E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     return static_cast<E>(
         static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
 }
@@ -82,7 +82,7 @@ operator&(E lhs, E rhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E>::type
 operator^(E lhs, E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     return static_cast<E>(
         static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
 }
@@ -90,7 +90,7 @@ operator^(E lhs, E rhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E>::type
 operator~(E lhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     return static_cast<E>(
         ~static_cast<underlying>(lhs));
 }
@@ -98,7 +98,7 @@ operator~(E lhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E&>::type
 operator|=(E& lhs, E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     lhs=static_cast<E>(
         static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
     return lhs;
@@ -107,7 +107,7 @@ operator|=(E& lhs, E rhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E&>::type
 operator&=(E& lhs, E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     lhs=static_cast<E>(
         static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
     return lhs;
@@ -116,7 +116,7 @@ operator&=(E& lhs, E rhs) NOEXCEPT{
 template<typename E>
 CONSTEXPR typename std::enable_if<enable_bitmask_operators<E>::enable,E&>::type
 operator^=(E& lhs,E rhs) NOEXCEPT{
-    typedef typename std::underlying_type<E>::type underlying;
+	using underlying = typename std::underlying_type<E>::type;
     lhs=static_cast<E>(
         static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
     return lhs;
