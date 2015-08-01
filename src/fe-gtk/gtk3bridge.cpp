@@ -39,7 +39,7 @@ static void
 prepare_context_for_layout(cairo_t *cr,
 gdouble x,
 gdouble y,
-PangoLayout *layout)
+PangoLayout *layout) NOEXCEPT
 {
 	const PangoMatrix *matrix;
 
@@ -65,7 +65,7 @@ do_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
 gdouble          x,
 gdouble          y,
-PangoLayout     *layout)
+PangoLayout     *layout) NOEXCEPT
 {
 	const GdkColor *fg_color;
 
@@ -89,27 +89,27 @@ gtk_style_context_new(void)
 	return new BridgeStyleContext();
 }
 
-void bridge_style_context_free(BridgeStyleContext* context)
+void bridge_style_context_free(BridgeStyleContext* context) NOEXCEPT
 {
 	delete context;
 }
 
-void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col)
+void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col) NOEXCEPT
 {
 	context->fg_color = col;
 }
 
-void bridge_set_background(BridgeStyleContext* context, GdkColor * col)
+void bridge_set_background(BridgeStyleContext* context, GdkColor * col) NOEXCEPT
 {
 	context->bg_color = col;
 }
 
-const GdkColor* bridge_get_foreground(const BridgeStyleContext* context)
+const GdkColor* bridge_get_foreground(const BridgeStyleContext* context) NOEXCEPT
 {
 	return context->fg_color;
 }
 
-const GdkColor* bridge_get_background(const BridgeStyleContext* context)
+const GdkColor* bridge_get_background(const BridgeStyleContext* context) NOEXCEPT
 {
 	return context->bg_color;
 }
@@ -119,7 +119,7 @@ gtk_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
 gdouble          x,
 gdouble          y,
-PangoLayout     *layout)
+PangoLayout     *layout) NOEXCEPT
 {
 	g_return_if_fail(PANGO_IS_LAYOUT(layout));
 	g_return_if_fail(cr != NULL);

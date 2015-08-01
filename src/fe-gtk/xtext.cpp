@@ -4112,9 +4112,9 @@ namespace {
 	}
 
 	/* append a textentry to our linked list */
-	static void gtk_xtext_append_entry(xtext_buffer *buf, const textentry && ent, time_t stamp) = delete;
+	//static void gtk_xtext_append_entry(xtext_buffer *buf, const textentry && ent, time_t stamp) = delete;
 
-	static void gtk_xtext_append_entry(xtext_buffer *buf, textentry && ent, time_t stamp)
+	static void gtk_xtext_append_entry(xtext_buffer *buf, textentry ent, time_t stamp)
 	{
 		/* we don't like tabs */
 		std::replace(ent.str.begin(), ent.str.end(), '\t', ' ');
