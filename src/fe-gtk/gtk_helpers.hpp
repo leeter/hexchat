@@ -19,6 +19,8 @@
 #ifndef HEXCHAT_GTK_HELPERS_HPP
 #define HEXCHAT_GTK_HELPERS_HPP
 #include <memory>
+#include <type_traits>
+#include "../common/bitmask_operators.hpp"
 #include <gtk/gtk.h>
 
 #ifndef NOEXCEPT
@@ -37,24 +39,27 @@
 #endif
 #endif
 
-#if !GTK_CHECK_VERSION(3, 0, 0)
-CONSTEXPR inline GtkAttachOptions operator|(GtkAttachOptions a, GtkAttachOptions b) NOEXCEPT
-{
-	return static_cast<GtkAttachOptions>(static_cast<int >(a) | static_cast<int>(b));
-}
+#ifndef CONSTEXPR_OR_CONST
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define CONSTEXPR_OR_CONST const
+#else
+#define CONSTEXPR_OR_CONST constexpr
+#endif
 #endif
 
-#if !GTK_CHECK_VERSION(3, 0, 0)
-CONSTEXPR inline GdkGCValuesMask operator|(GdkGCValuesMask a, GdkGCValuesMask b) NOEXCEPT
-{
-	return static_cast<GdkGCValuesMask>(static_cast<int>(a) | static_cast<int>(b));
-}
-#endif
 
-CONSTEXPR inline GSignalFlags operator|(GSignalFlags a, GSignalFlags b) NOEXCEPT
-{
-	return static_cast<GSignalFlags>(static_cast<int>(a) | static_cast<int>(b));
-}
+
+#if !GTK_CHECK_VERSION(3, 0, 0)
+template<> struct enable_bitmask_operators<GtkAttachOptions>{
+	static CONSTEXPR_OR_CONST bool enable = true;
+};
+template<> struct enable_bitmask_operators<GdkGCValuesMask>{
+	static CONSTEXPR_OR_CONST bool enable = true;
+};
+#endif
+template<> struct enable_bitmask_operators<GSignalFlags>{
+	static CONSTEXPR_OR_CONST bool enable = true;
+};
 
 #define CUSTOM_PTR_DELETER(type, del) \
 	struct type##deleter \

@@ -20,23 +20,24 @@
 #define HEXCHAT_GTK_3_BRIDGE_HPP
 
 #include <gtk/gtk.h>
+#include "gtk_helpers.hpp"
 struct BridgeStyleContext;
 
 BridgeStyleContext *
 gtk_style_context_new(void);
 
-void bridge_style_context_free(BridgeStyleContext*);
-void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col);
-void bridge_set_background(BridgeStyleContext* context, GdkColor * col);
-const GdkColor* bridge_get_foreground(const BridgeStyleContext* context);
-const GdkColor* bridge_get_background(const BridgeStyleContext* context);
+void bridge_style_context_free(BridgeStyleContext*) NOEXCEPT;
+void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col) NOEXCEPT;
+void bridge_set_background(BridgeStyleContext* context, GdkColor * col) NOEXCEPT;
+const GdkColor* bridge_get_foreground(const BridgeStyleContext* context) NOEXCEPT;
+const GdkColor* bridge_get_background(const BridgeStyleContext* context) NOEXCEPT;
 
 void
 gtk_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
 gdouble          x,
 gdouble          y,
-PangoLayout     *layout);
+PangoLayout     *layout) NOEXCEPT;
 
 void
 gtk_render_background(BridgeStyleContext *context,
@@ -44,7 +45,7 @@ cairo_t         *cr,
 gdouble          x,
 gdouble          y,
 gdouble          width,
-gdouble          height);
+gdouble          height) NOEXCEPT;
 
 
 #endif // HEXCHAT_GTK_3_BRIDGE_HPP

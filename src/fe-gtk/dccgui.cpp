@@ -37,6 +37,7 @@
 #include "../common/server.hpp"
 #include "../common/network.hpp"
 #include "gtkutil.hpp"
+#include "gtk_helpers.hpp"
 #include "palette.hpp"
 #include "maingui.hpp"
 

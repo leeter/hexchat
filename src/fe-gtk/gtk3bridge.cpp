@@ -140,7 +140,7 @@ cairo_t         *cr,
 gdouble          x,
 gdouble          y,
 gdouble          width,
-gdouble          height)
+gdouble          height) NOEXCEPT
 {
 	g_return_if_fail(cr != NULL);
 

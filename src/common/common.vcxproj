@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base64.hpp" />
+    <ClInclude Include="bitmask_operators.hpp" />
     <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.hpp" />
     <ClInclude Include="charset_helpers.hpp" />

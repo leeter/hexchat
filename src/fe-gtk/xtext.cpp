@@ -1066,7 +1066,6 @@ namespace {
 		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
 
 		GtkXText *xtext = GTK_XTEXT(widget);
-		cairo_stack cr_stack{cr};
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(widget, &allocation);
 		gtk_render_background(gtk_widget_get_style_context(widget), cr, allocation.x,
@@ -1088,6 +1087,7 @@ namespace {
 		cairo_tPtr cr{gdk_cairo_create(event->window)};
 		gdk_cairo_region(cr.get(), event->region);
 		cairo_clip(cr.get());
+		cairo_stack cr_stack{ cr.get() };
 		gtk_xtext_draw(widget, cr.get());
 
 		return false;
