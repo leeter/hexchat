@@ -292,11 +292,13 @@ namespace{
 		print_version_quiet(_In_ void *)
 	{
 		check_version();
-
+		bool expected = true;
 		/* if it's not the current version AND not network error */
-		if (request_complete && !version_str.empty() && version_str != hexchat_get_info(ph, "version") && version_str != "Unknown")
+		if (request_complete.compare_exchange_weak(expected, false, std::memory_order_relaxed) 
+			&& !version_str.empty() 
+			&& version_str != hexchat_get_info(ph, "version") 
+			&& version_str != "Unknown")
 		{
-			request_complete = false;
 			g_request.reset();
 			request_in_progress.clear();
 #ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for plugins for some reason */
