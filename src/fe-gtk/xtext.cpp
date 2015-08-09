@@ -4204,11 +4204,10 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 
 	textentry ent;
 	ent.str.reserve(left_text.length() + right_text.length() + 2);
-	ent.str.resize(left_text.length() + right_text.length() + 1, '\0');
+	ent.str.append(left_text.cbegin(), left_text.cend());
+	ent.str.push_back(' ');
+	ent.str.append(right_text.cbegin(), right_text.cend());
 	auto str = ent.str.begin();
-	str = std::copy(left_text.cbegin(), left_text.cend(), str);
-	*str++ = ' ';
-	std::copy(right_text.cbegin(), right_text.cend(), str);
 
 	auto left_width =
 	    gtk_xtext_text_width(buf->xtext, left_text);
