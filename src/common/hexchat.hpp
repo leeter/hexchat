@@ -53,7 +53,7 @@
 #endif
 
 #ifndef HAVE_SNPRINTF
-#define snprintf g_snprintf
+//#define snprintf g_snprintf
 #endif
 
 #ifndef HAVE_VSNPRINTF
@@ -389,10 +389,6 @@ struct commands
 struct popup
 {
 	popup(std::string cmd, std::string name);
-	popup(const popup&) = default;
-	popup& operator=(const popup&) = default;
-	popup(popup &&);
-	popup& operator=(popup&&);
 	std::string cmd;
 	std::string name;
 };

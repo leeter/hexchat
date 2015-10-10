@@ -100,7 +100,9 @@ struct key_binding
 		mod(),
 		action()
 	{}
-	key_binding(key_binding && other) NOEXCEPT
+	key_binding(key_binding&&) noexcept = default;
+	key_binding& operator=(key_binding&&) noexcept = default;
+	/*key_binding(key_binding && other) NOEXCEPT
 		:keyval(),
 		mod(),
 		action()
@@ -119,7 +121,7 @@ struct key_binding
 			std::swap(this->action, other.action);
 		}
 		return *this;
-	}
+	}*/
 private:
 	key_binding(const key_binding &) = delete;
 	key_binding& operator=(const key_binding&) = delete;

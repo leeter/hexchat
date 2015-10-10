@@ -7,17 +7,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hexchat-x64.skel.iss">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="hexchat-x86.skel.iss">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="wizardimage.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="wizardsmallimage.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="hexchat.iss" />
   </ItemGroup>
 </Project>

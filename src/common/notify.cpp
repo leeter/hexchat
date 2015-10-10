@@ -206,12 +206,12 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	session *sess = serv.front_session;
 	
 	servnot.ison = true;
-	servnot.laston = time (0);
+	servnot.laston = std::time (nullptr);
 	std::string mutable_nick = nick;
 	mutable_nick.push_back(0);
 	auto mutable_net = serv.get_network(true).to_string();
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
-					 &mutable_net[0], NULL, 0,
+					 &mutable_net[0], nullptr, 0,
 					 tags_data->timestamp);
 	fe_notify_update (&mutable_nick);
 	fe_notify_update (nullptr);

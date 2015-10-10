@@ -62,7 +62,6 @@ class session_logger_impl
 			_outfile
 				<< boost::format(_("**** ENDING LOGGING AT %s\n")) %
 				   std::ctime(&currenttime);
-			_outfile.flush();
 		}
 		catch (std::exception &)
 		{

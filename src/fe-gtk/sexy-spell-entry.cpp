@@ -677,7 +677,9 @@ namespace {
 		suggestion_deleter(EnchantDict* dict) NOEXCEPT
 			:_dict(dict)
 		{}
-		suggestion_deleter(suggestion_deleter && other) NOEXCEPT
+		suggestion_deleter(suggestion_deleter &&) noexcept = default;
+		suggestion_deleter & operator=(suggestion_deleter&& other) noexcept = default;
+		/*suggestion_deleter(suggestion_deleter && other) NOEXCEPT
 		{
 			this->operator=(std::forward<suggestion_deleter&&>(other));
 		}
@@ -688,7 +690,7 @@ namespace {
 				std::swap(this->_dict, other._dict);
 			}
 			return *this;
-		}
+		}*/
 		void operator()(gchar** suggestions) NOEXCEPT
 		{
 			enchant_dict_free_suggestions(_dict, suggestions);

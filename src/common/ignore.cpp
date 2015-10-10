@@ -26,6 +26,8 @@
 #include <fcntl.h>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/utility/string_ref.hpp>
 
 #ifdef WIN32
@@ -280,23 +282,25 @@ ignore_load ()
 void
 ignore_save ()
 {
-	char buf[1024];
-	int fh;
-
-	fh = hexchat_open_file ("ignore.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh != -1)
+	namespace bfs = boost::filesystem;
+	const auto outpath = bfs::path(config::config_dir()) / "ignore.conf";
+	bfs::ofstream outfile{ outpath, std::ios::trunc | std::ios::out };
+	if (!outfile)
 	{
-		for(const auto & ig : ignores)
-		{
-			if (!(ig.type & ignore::IG_NOSAVE))
-			{
-				snprintf (buf, sizeof (buf), "mask = %s\ntype = %u\n\n",
-							 ig.mask.c_str(), ig.type);
-				write (fh, buf, strlen (buf));
-			}
-		}
-		close (fh);
+		return;
 	}
+
+	for (const auto & ig : ignores)
+	{
+		if (ig.type & ignore::IG_NOSAVE)
+		{
+			continue;
+		}
+		outfile << boost::format("mask = %s\ntype = %u\n\n") % ig.mask % ig.type;
+	}
+
+	boost::system::error_code ec;
+	bfs::permissions(outpath, bfs::owner_read | bfs::owner_write, ec);
 }
 
 static gboolean

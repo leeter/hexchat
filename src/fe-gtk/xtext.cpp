@@ -101,32 +101,6 @@ struct textentry
 		next(),
 		prev(),
 		marks(){}
-	textentry(const textentry & other) = default;
-	textentry& operator=(const textentry& other) = default;
-	textentry& operator=(textentry&& other) NOEXCEPT
-	{
-		if (&other != this)
-		{
-			std::swap(this->tag, other.tag);
-			std::swap(this->str_width, other.str_width);
-			std::swap(this->mark_start, other.mark_start);
-			std::swap(this->mark_end, other.mark_end);
-			std::swap(this->indent, other.indent);
-			std::swap(this->left_len, other.left_len);
-			std::swap(this->stamp, other.stamp);
-			std::swap(this->next, other.next);
-			std::swap(this->prev, other.prev);
-			std::swap(this->marks, other.marks);
-			std::swap(this->slp, other.slp);
-			std::swap(this->sublines, other.sublines);
-			std::swap(this->str, other.str);
-		}
-		return *this;
-	}
-	textentry(textentry&& other) NOEXCEPT
-	{
-		this->operator=(std::forward<textentry&&>(other));
-	}
 
 	guchar tag;
 	gint16 str_width;

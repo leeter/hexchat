@@ -265,8 +265,10 @@ lag_check (void)
 					serv.auto_reconnect (false, -1);
 			} else
 			{
-				snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
-				serv.p_ping({}, tbuf);
+				std::ostringstream buf{ "LAG", std::ios::ate };
+				buf << tim;
+				auto lag_str = buf.str();
+				serv.p_ping({}, lag_str);
 				
 				if (!serv.lag_sent)
 				{
@@ -860,16 +862,16 @@ popup::popup(std::string cmd, std::string name)
 	:cmd(std::move(cmd)), name(std::move(name))
 {
 }
-popup::popup(popup && other)
-{
-	this->operator=(std::forward<popup&&>(other));
-}
-popup& popup::operator=(popup&& other)
-{
-	if (this != &other)
-	{
-		std::swap(this->name, other.name);
-		std::swap(this->cmd, other.cmd);
-	}
-	return *this;
-}
+//popup::popup(popup && other)
+//{
+//	this->operator=(std::forward<popup&&>(other));
+//}
+//popup& popup::operator=(popup&& other)
+//{
+//	if (this != &other)
+//	{
+//		std::swap(this->name, other.name);
+//		std::swap(this->cmd, other.cmd);
+//	}
+//	return *this;
+//}
