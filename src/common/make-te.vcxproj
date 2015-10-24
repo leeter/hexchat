@@ -17,6 +17,7 @@
     <ProjectGuid>{A7D7CE59-2A31-48AE-BED2-A9828E241832}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>makete</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

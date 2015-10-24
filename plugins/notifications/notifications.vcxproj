@@ -14,6 +14,7 @@
     <ProjectGuid>{C53145CC-D021-40C9-B97C-0249AB9A43C9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>notifications</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
