@@ -36,7 +36,7 @@ before_script:
 #    - sudo apt-get install -qq libnotify-dev libproxy-dev libpci-dev libcanberra-dev monodevelop gnome-common libboost1.55-all-dev pkg-config
 script:
     - ./autogen.sh
-    - ./configure --enable-textfe --with-theme-manager CPPFLAGS="-fdiagnostics-color=always"
+    - ./configure CPPFLAGS="-fdiagnostics-color=always" --enable-textfe # --with-theme-manager
     - make
     - test/libirctest/libirc-test
     - test/commontest/libhexchatcommon-test
