@@ -4181,7 +4181,6 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 	ent.str.append(left_text.cbegin(), left_text.cend());
 	ent.str.push_back(' ');
 	ent.str.append(right_text.cbegin(), right_text.cend());
-	auto str = ent.str.begin();
 
 	auto left_width =
 	    gtk_xtext_text_width(buf->xtext, left_text);
@@ -4361,7 +4360,6 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 
 	if (gtk_xtext_check_ent_visibility(xtext, buf->impl->marker_pos, 1) == false)
 	{
-		textentry *ent = buf->impl->text_first;
 		GtkAdjustment *adj = xtext->adj;
 		std::size_t ivalue = 0;
 		for(const auto & ent : buf->impl->entries)
