@@ -203,14 +203,15 @@ static void scrollback_save (session &sess, const std::string & text)
 	if (sess.type == session::SESS_SERVER && prefs.hex_gui_tab_server == 1)
 		return;
 
-	if (sess.text_scrollback == SET_DEFAULT)
+	const chanopt_val text_scrollback = sess.chanopts["text_scrollback"];
+	if (text_scrollback == SET_DEFAULT)
 	{
 		if (!prefs.hex_text_replay)
 			return;
 	}
 	else
 	{
-		if (sess.text_scrollback != SET_ON)
+		if (text_scrollback != SET_ON)
 			return;
 	}
 
@@ -243,12 +244,13 @@ static void scrollback_save (session &sess, const std::string & text)
 
 void scrollback_load (session &sess)
 {
-	if (sess.text_scrollback == SET_DEFAULT)
+	chanopt_val text_scrollback = sess.chanopts["text_scrollback"];
+	if (text_scrollback == SET_DEFAULT)
 	{
 		if (!prefs.hex_text_replay)
 			return;
 	}
-	else if (sess.text_scrollback != SET_ON)
+	else if (text_scrollback != SET_ON)
 	{
 		return;
 	}
@@ -1617,7 +1619,7 @@ int text_color_of(const boost::string_ref &name)
 void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 			  time_t timestamp)
 {
-	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->text_strip) ? 0xFFFFFFFF : 0);
+	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->chanopts["text_strip"]) ? 0xFFFFFFFF : 0);
 	char tbuf[NICKLEN + 4];
 
 	if (prefs.hex_text_color_nicks && (index == XP_TE_CHANACTION || index == XP_TE_CHANMSG))
@@ -1652,7 +1654,7 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	case XP_TE_PARTREASON:
 	case XP_TE_QUIT:
 		/* implement ConfMode / Hide Join and Part Messages */
-		if (chanopt_is_set (prefs.hex_irc_conf_mode, sess->text_hidejoinpart))
+		if (chanopt_is_set (prefs.hex_irc_conf_mode, sess->chanopts["text_hidejoinpart"]))
 			return;
 		break;
 
@@ -1661,34 +1663,34 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	case XP_TE_DPRIVMSG:
 	case XP_TE_PRIVACTION:
 	case XP_TE_DPRIVACTION:
-		if (chanopt_is_set (prefs.hex_input_beep_priv, sess->alert_beep) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_priv, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound_beep (sess);
-		if (chanopt_is_set (prefs.hex_input_flash_priv, sess->alert_taskbar) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_priv, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		/* why is this one different? because of plugin-tray.c's hooks! ugly */
-		if (sess->alert_tray == SET_ON)
+		if (sess->chanopts["alert_tray"] == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);
 		break;
 
 	/* ===Highlighted message=== */
 	case XP_TE_HCHANACTION:
 	case XP_TE_HCHANMSG:
-		if (chanopt_is_set (prefs.hex_input_beep_hilight, sess->alert_beep) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_hilight, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound_beep (sess);
-		if (chanopt_is_set (prefs.hex_input_flash_hilight, sess->alert_taskbar) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_hilight, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
-		if (sess->alert_tray == SET_ON)
+		if (sess->chanopts["alert_tray"] == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);
 		break;
 
 	/* ===Channel message=== */
 	case XP_TE_CHANACTION:
 	case XP_TE_CHANMSG:
-		if (chanopt_is_set (prefs.hex_input_beep_chans, sess->alert_beep) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_chans, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound_beep (sess);
-		if (chanopt_is_set (prefs.hex_input_flash_chans, sess->alert_taskbar) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_chans, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
-		if (sess->alert_tray == SET_ON)
+		if (sess->chanopts["alert_tray"] == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);
 		break;
 

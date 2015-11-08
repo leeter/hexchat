@@ -56,24 +56,20 @@ static bool chanopt_changed = false;
 
 struct channel_options
 {
-	const char *name;
+	const std::string name;
 	const char *alias;	/* old names from 2.8.4 */
-	int offset;
 };
-
-#define STRUCT_OFFSET_STR(name, field) offsetof(name, field)
-#define S_F(xx) STRUCT_OFFSET_STR(struct session,xx)
 
 static const std::array<channel_options, 7> chanopt =
 { {
-	{ "alert_beep",  "BEEP",  S_F(alert_beep)},
-	{ "alert_taskbar", nullptr, S_F(alert_taskbar) },
-	{ "alert_tray", "TRAY",  S_F(alert_tray) },
+	{ "alert_beep",  "BEEP"},
+	{ "alert_taskbar", nullptr},
+	{ "alert_tray", "TRAY"},
 
-	{ "text_hidejoinpart", "CONFMODE", S_F(text_hidejoinpart) },
-	{ "text_logging", nullptr, S_F(text_logging) },
-	{ "text_scrollback", nullptr, S_F(text_scrollback) },
-	{ "text_strip", nullptr, S_F(text_strip) },
+	{ "text_hidejoinpart", "CONFMODE" },
+	{ "text_logging", nullptr },
+	{ "text_scrollback", nullptr},
+	{ "text_strip", nullptr },
 }};
 
 #undef S_F
@@ -109,13 +105,13 @@ int chanopt_command (session *sess, char *word[])
 	if (word[offset][0])
 	{
 		if (!g_ascii_strcasecmp (word[offset], "ON"))
-			newval = 1;
+			newval = SET_ON;
 		else if (!g_ascii_strcasecmp (word[offset], "OFF"))
-			newval = 0;
+			newval = SET_OFF;
 		else if (word[offset][0] == 'u')
 			newval = SET_DEFAULT;
 		else
-			newval = atoi (word[offset]);
+			newval = static_cast<chanopt_val>(std::atoi (word[offset]));
 	}
 
 	if (!quiet)
@@ -125,11 +121,11 @@ int chanopt_command (session *sess, char *word[])
 
 	for(const auto & op : chanopt)
 	{
-		if (find[0] == 0 || match(find, op.name) || (op.alias && match(find, op.alias)))
+		if (find[0] == 0 || match_with_wildcards(find, op.name, /*caseSensitive*/ false) || (op.alias && match(find, op.alias)))
 		{
 			if (newval != -1)	/* set new value */
 			{
-				*(std::uint8_t*)G_STRUCT_MEMBER_P(sess, op.offset) = newval;
+				sess->chanopts[op.name] = static_cast<chanopt_val>(newval);
 				chanopt_changed = true;
 			}
 
@@ -141,18 +137,18 @@ int chanopt_command (session *sess, char *word[])
 				buf.write(&t, 1);
 				buf << '2';
 
-				auto dots = 20 - std::strlen(op.name);
+				auto dots = 20 - op.name.length();
 				std::ostream_iterator<char> itr(buf);
-				for (size_t j = 0; j < dots; j++)
+				for (size_t j = 0; j < dots; ++j)
 					*itr++ = '.';
-
-				auto val = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
+				
+				auto val = sess->chanopts[op.name];
 				PrintTextf(sess, boost::format("%s\0033:\017 %s") % buf.str() % chanopt_value(val));
 			}
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 /* is a per-channel setting set? Or is it UNSET and
@@ -173,36 +169,26 @@ namespace {
 struct chanopt_in_memory
 {
 	/* Per-Channel Alerts */
-	/* use a byte, because we need a pointer to each element */
-	std::uint8_t alert_beep;
-	std::uint8_t alert_taskbar;
-	std::uint8_t alert_tray;
-
-	/* Per-Channel Settings */
-	std::uint8_t text_hidejoinpart;
-	std::uint8_t text_logging;
-	std::uint8_t text_scrollback;
-	std::uint8_t text_strip;
-
+	std::unordered_map < std::string, chanopt_val> chanopts;
 	std::string network;
 	std::string channel;
 
 	chanopt_in_memory()
-		:alert_beep(SET_DEFAULT),
-		alert_taskbar(SET_DEFAULT),
-		alert_tray(SET_DEFAULT),
-		text_hidejoinpart(SET_DEFAULT),
-		text_logging(SET_DEFAULT),
-		text_scrollback(SET_DEFAULT),
-		text_strip(SET_DEFAULT){}
+		:chanopts({ { "alert_beep", SET_DEFAULT },
+		{ "alert_taskbar", SET_DEFAULT },
+		{ "alert_tray", SET_DEFAULT },
+		{ "text_hidejoinpart", SET_DEFAULT },
+		{ "text_logging", SET_DEFAULT },
+		{ "text_scrollback", SET_DEFAULT },
+		{ "text_strip", SET_DEFAULT } }){}
 	chanopt_in_memory(std::string network, const std::string & channel)
-		:alert_beep(SET_DEFAULT),
-		alert_taskbar(SET_DEFAULT),
-		alert_tray(SET_DEFAULT),
-		text_hidejoinpart(SET_DEFAULT),
-		text_logging(SET_DEFAULT),
-		text_scrollback(SET_DEFAULT),
-		text_strip(SET_DEFAULT),
+		:chanopts({ { "alert_beep", SET_DEFAULT },
+		{ "alert_taskbar", SET_DEFAULT },
+		{ "alert_tray", SET_DEFAULT },
+		{ "text_hidejoinpart", SET_DEFAULT },
+		{ "text_logging", SET_DEFAULT },
+		{ "text_scrollback", SET_DEFAULT },
+		{ "text_strip", SET_DEFAULT } }),
 		network(network),
 		channel(channel)
 	{
@@ -241,14 +227,13 @@ std::istream &operator>>(std::istream &i, chanopt_in_memory &chanop)
 			chanop.channel = second_part;
 		else
 		{
-			int value = std::stoi(second_part);
+			chanopt_val value = static_cast<chanopt_val>(std::stoi(second_part));
 			for (const auto &op : chanopt)
 			{
 				if (first_part == op.name ||
 				    (op.alias && first_part == op.alias))
 				{
-					*(std::uint8_t *)G_STRUCT_MEMBER_P(
-					    &chanop, op.offset) = value;
+					chanop.chanopts[op.name] = value;
 					break;
 				}
 			}
@@ -276,13 +261,14 @@ std::ostream &operator<<(std::ostream &o, const chanopt_in_memory &chanop)
 	std::ostringstream buffer;
 	buffer << "network = " << chanop.network << "\n";
 	buffer << "channel = " << chanop.channel << "\n";
-	for (const auto &op : chanopt)
+	for (const auto &op : chanop.chanopts)
 	{
-		std::uint8_t val =
-		    G_STRUCT_MEMBER(std::uint8_t, &chanop, op.offset);
+		chanopt_val val;
+		std::string name;
+		std::tie(name, val) = op;
 		if (val != SET_DEFAULT)
 		{
-			buffer << op.name << " = " << std::to_string(val)
+			buffer << name << " = " << std::to_string(val)
 			       << "\n";
 			something_saved = true;
 		}
@@ -341,11 +327,7 @@ chanopt_load (session *sess)
 		return;
 
 	/* fill in all the sess->xxxxx fields */
-	for (const auto & op : chanopt)
-	{
-		auto val = G_STRUCT_MEMBER(std::uint8_t, &(*itr), op.offset);
-		*(std::uint8_t *)G_STRUCT_MEMBER_P(sess, op.offset) = val;
-	}
+	sess->chanopts = itr->chanopts;
 }
 
 void
@@ -364,12 +346,12 @@ chanopt_save (session *sess)
 
 	for (const auto& op : chanopt)
 	{
-		auto vals = G_STRUCT_MEMBER(std::uint8_t, sess, op.offset);
-		auto valm = G_STRUCT_MEMBER(std::uint8_t, &co, op.offset);
+		auto vals = sess->chanopts[op.name];
+		auto valm = co.chanopts[op.name];
 
 		if (vals != valm)
 		{
-			*(std::uint8_t *)G_STRUCT_MEMBER_P(&co, op.offset) = vals;
+			co.chanopts[op.name] = vals;
 			chanopt_changed = true;
 		}
 	}

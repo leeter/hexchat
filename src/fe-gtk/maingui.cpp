@@ -1468,10 +1468,10 @@ mg_create_color_menu (GtkWidget *menu, session *sess)
 }
 
 static void
-mg_set_guint8 (GtkCheckMenuItem *item, guint8 *setting)
+mg_set_guint8 (GtkCheckMenuItem *item, chanopt_val *setting)
 {
 	session *sess = current_sess;
-	guint8 logging = sess->text_logging;
+	chanopt_val logging = sess->chanopts["text_logging"];
 
 	*setting = SET_OFF;
 	if (gtk_check_menu_item_get_active (item))
@@ -1486,9 +1486,9 @@ mg_set_guint8 (GtkCheckMenuItem *item, guint8 *setting)
 }
 
 static void
-mg_perchan_menu_item (char *label, GtkWidget *menu, guint8 *setting, guint global)
+mg_perchan_menu_item (char *label, GtkWidget *menu, chanopt_val *setting, chanopt_val global)
 {
-	guint8 initial_value = *setting;
+	chanopt_val initial_value = *setting;
 
 	/* if it's using global value, use that as initial state */
 	if (initial_value == SET_DEFAULT)
@@ -1502,12 +1502,12 @@ mg_create_perchannelmenu (session *sess, GtkWidget *menu)
 {
 	GtkWidget *submenu = menu_quick_sub (_("_Settings"), menu, nullptr, XCMENU_MNEMONIC, -1);
 
-	mg_perchan_menu_item (_("_Log to Disk"), submenu, &sess->text_logging, prefs.hex_irc_logging);
-	mg_perchan_menu_item (_("_Reload Scrollback"), submenu, &sess->text_scrollback, prefs.hex_text_replay);
+	mg_perchan_menu_item (_("_Log to Disk"), submenu, &sess->chanopts["text_logging"], static_cast<chanopt_val>(prefs.hex_irc_logging));
+	mg_perchan_menu_item (_("_Reload Scrollback"), submenu, &sess->chanopts["text_scrollback"], static_cast<chanopt_val>(prefs.hex_text_replay));
 	if (sess->type == session::SESS_CHANNEL)
 	{
-		mg_perchan_menu_item (_("Strip _Colors"), submenu, &sess->text_strip, prefs.hex_text_stripcolor_msg);
-		mg_perchan_menu_item (_("_Hide Join/Part Messages"), submenu, &sess->text_hidejoinpart, prefs.hex_irc_conf_mode);
+		mg_perchan_menu_item (_("Strip _Colors"), submenu, &sess->chanopts["text_strip"], static_cast<chanopt_val>(prefs.hex_text_stripcolor_msg));
+		mg_perchan_menu_item (_("_Hide Join/Part Messages"), submenu, &sess->chanopts["text_hidejoinpart"], static_cast<chanopt_val>(prefs.hex_irc_conf_mode));
 	}
 }
 
@@ -1516,11 +1516,11 @@ mg_create_alertmenu (session *sess, GtkWidget *menu)
 {
 	GtkWidget *submenu = menu_quick_sub (_("_Extra Alerts"), menu, nullptr, XCMENU_MNEMONIC, -1);
 
-	mg_perchan_menu_item (_("Beep on _Message"), submenu, &sess->alert_beep, prefs.hex_input_beep_chans);
+	mg_perchan_menu_item (_("Beep on _Message"), submenu, &sess->chanopts["alert_beep"], static_cast<chanopt_val>(prefs.hex_input_beep_chans));
 
-	mg_perchan_menu_item (_("Blink Tray _Icon"), submenu, &sess->alert_tray, prefs.hex_input_tray_chans);
+	mg_perchan_menu_item (_("Blink Tray _Icon"), submenu, &sess->chanopts["alert_tray"], static_cast<chanopt_val>(prefs.hex_input_tray_chans));
 
-	mg_perchan_menu_item (_("Blink Task _Bar"), submenu, &sess->alert_taskbar, prefs.hex_input_flash_chans);
+	mg_perchan_menu_item (_("Blink Task _Bar"), submenu, &sess->chanopts["alert_taskbar"], static_cast<chanopt_val>(prefs.hex_input_flash_chans));
 }
 
 static void

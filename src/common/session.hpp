@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
 #include "history.hpp"
@@ -43,17 +44,7 @@ struct session
 	session(struct server *serv, const char *from, session_type type);
 	~session();
 	/* Per-Channel Alerts */
-	/* use a byte, because we need a pointer to each element */
-	std::uint8_t alert_beep;
-	std::uint8_t alert_taskbar;
-	std::uint8_t alert_tray;
-
-	/* Per-Channel Settings */
-	std::uint8_t text_hidejoinpart;
-	std::uint8_t text_logging;
-	std::uint8_t text_scrollback;
-	std::uint8_t text_strip;
-
+	std::unordered_map<std::string, chanopt_val> chanopts;
 	struct server *server;
 	std::vector<struct User*> usertree_alpha;			/* pure alphabetical tree */
 	std::vector<std::unique_ptr<struct User>> usertree;		/* ordered with Ops first */

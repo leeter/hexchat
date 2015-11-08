@@ -260,14 +260,14 @@ session_logger::~session_logger() = default;
 
 bool session_logger::write(const std::string &text, time_t ts)
 {
-	if (_parent.text_logging == SET_DEFAULT)
+	if (_parent.chanopts["text_logging"] == SET_DEFAULT)
 	{
 		if (!prefs.hex_irc_logging)
 			return false;
 	}
 	else
 	{
-		if (_parent.text_logging != SET_ON)
+		if (_parent.chanopts["text_logging"] != SET_ON)
 			return false;
 	}
 

@@ -1576,25 +1576,25 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x5cfee87:	/* flags */
 			/* used if text_strip is unset */                    /* 16 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_strip;          /* 15 */
+			tmp |= ((struct session *)data)->chanopts["text_strip"];          /* 15 */
 			tmp <<= 1;
 			/* used if text_scrollback is unset */               /* 14 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_scrollback;    /* 13 */
+			tmp |= ((struct session *)data)->chanopts["text_scrollback"];    /* 13 */
 			tmp <<= 1;
 			/* used if text_logging is unset */                  /* 12 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_logging;       /* 11 */
+			tmp |= ((struct session *)data)->chanopts["text_logging"];       /* 11 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_taskbar;      /* 10 */
+			tmp |= ((struct session *)data)->chanopts["alert_taskbar"];      /* 10 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_tray;         /* 9 */
+			tmp |= ((struct session *)data)->chanopts["alert_tray"];         /* 9 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_beep;         /* 8 */
+			tmp |= ((struct session *)data)->chanopts["alert_beep"];         /* 8 */
 			tmp <<= 1;
 			/* used if text_hidejoinpart is unset */              /* 7 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_hidejoinpart;   /* 6 */
+			tmp |= ((struct session *)data)->chanopts["text_hidejoinpart"];   /* 6 */
 			tmp <<= 1;
 			tmp |= ((struct session *)data)->server->have_idmsg ? 1 : 0; /* 5 */
 			tmp <<= 1;

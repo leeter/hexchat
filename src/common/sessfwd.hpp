@@ -34,6 +34,13 @@ enum gtk_xtext_search_flags {
 	regexp = 16
 };
 
+/* Per-Channel Settings */
+enum chanopt_val {
+	SET_OFF = 0,
+	SET_ON = 1,
+	SET_DEFAULT = 2 /* use global setting */
+};
+
 inline gtk_xtext_search_flags operator |=(gtk_xtext_search_flags a, gtk_xtext_search_flags b)
 {
 	return static_cast<gtk_xtext_search_flags>(static_cast<int>(a) | static_cast<int>(b));
