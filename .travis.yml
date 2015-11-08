@@ -1,4 +1,5 @@
 language: cpp
+sudo: false
 compiler:
     - gcc
 addons:
@@ -17,20 +18,25 @@ addons:
     - gnome-common
     - libboost1.55-all-dev
     - pkg-config
+    - libdbus-1-dev
+    - libenchant-dev
+    - libsexy-dev
+    - libdbus-glib-1-dev
+    - libperl-dev
 before_install:
 #    - sudo add-apt-repository ppa:boost-latest/ppa  -y
 #    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
 #    - sudo apt-get update -qq
 #    - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
-    - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
+#    - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
 before_script:
 #    - sudo apt-get update
-    - sudo apt-get build-dep -qq xchat
-    - sudo apt-get install -qq libnotify-dev libproxy-dev libpci-dev libcanberra-dev monodevelop gnome-common libboost1.55-all-dev pkg-config
+#    - sudo apt-get build-dep -qq xchat
+#    - sudo apt-get install -qq libnotify-dev libproxy-dev libpci-dev libcanberra-dev monodevelop gnome-common libboost1.55-all-dev pkg-config
 script:
     - ./autogen.sh
-    - ./configure --enable-textfe --with-theme-manager
+    - ./configure --enable-textfe --with-theme-manager CPPFLAGS="-fdiagnostics-color=always"
     - make
     - test/libirctest/libirc-test
     - test/commontest/libhexchatcommon-test
