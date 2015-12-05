@@ -71,7 +71,7 @@ const char * const languages[LANGUAGES_LENGTH] = {
 void
 list_addentry(GSList ** list, std::string cmd, std::string name)
 {
-	std::unique_ptr<popup> pop(new popup(std::move(cmd), std::move(name)));
+	auto pop = std::make_unique<popup>(std::move(cmd), std::move(name));
 
 	*list = g_slist_append (*list, pop.release());
 }
@@ -103,9 +103,9 @@ static void list_load_from_data(std::vector<popup> & list, std::istream & data)
 	}
 }
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 #define g_open open
-#endif
+//#endif
 
 void list_loadconf(const std::string &file, std::vector<popup> &list,
 		   const char *defaultconf)
@@ -180,33 +180,24 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 
 static bool cfg_put_str (int fh, const char *var, const char *value)
 {
-	char buf[512];
-
-	snprintf (buf, sizeof buf, "%s = %s\n", var, value);
-	auto len = strlen (buf);
-	return (write (fh, buf, len) == len);
+	auto buf = (boost::format("%s = %s\n") % var % value).str();
+	return (write (fh, buf.c_str(), buf.size()) == buf.size());
 }
 
 bool cfg_put_color (int fh, int r, int g, int b, const char var[])
 {
-	char buf[400];
-	snprintf (buf, sizeof buf, "%s = %04x %04x %04x\n", var, r, g, b);
-	auto len = strlen (buf);
-	return (write (fh, buf, len) == len);
+	auto buf = (boost::format("%s = %04x %04x %04x\n") % var % r % g % b).str();
+	return (write (fh, buf.c_str(), buf.size()) == buf.size());
 }
 
 int
 cfg_put_int (int fh, int value, const char *var)
 {
-	char buf[400];
-	int len;
-
 	if (value == -1)
 		value = 1;
 
-	snprintf (buf, sizeof buf, "%s = %d\n", var, value);
-	len = strlen (buf);
-	return (write (fh, buf, len) == len);
+	auto buf = (boost::format("%s = %d\n") % var % value).str();
+	return (write (fh, buf.c_str(), buf.size()) == buf.size());
 }
 
 bool cfg_get_color(char *cfg, const char var[], int &r, int &g, int &b)
@@ -231,7 +222,7 @@ int cfg_get_int_with_result (char *cfg, const char *var, bool &result)
 	}
 
 	result = true;
-	return atoi (str);
+	return std::atoi (str);
 }
 
 int
@@ -242,11 +233,11 @@ cfg_get_int (char *cfg, char *var)
 	if (!cfg_get_str (cfg, var, str, sizeof (str)))
 		return 0;
 
-	return atoi (str);
+	return std::atoi (str);
 }
 
 
-char *xdir = NULL;	/* utf-8 encoding */
+char *xdir = nullptr;	/* utf-8 encoding */
 
 #ifdef WIN32
 #include <Windows.h>
@@ -259,12 +250,12 @@ get_xdir (void)
 	if (!xdir)
 	{
 #ifndef WIN32
-		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, NULL);
+		xdir = g_build_filename (g_get_user_config_dir (), HEXCHAT_DIR, nullptr);
 #else
 		namespace fs = boost::filesystem;
 		wchar_t* roaming_path_wide = nullptr;
 
-		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
+		if (portable_mode () || SHGetKnownFolderPath (FOLDERID_RoamingAppData, 0, nullptr, &roaming_path_wide) != S_OK)
 		{
 			std::wstring exe_path(2048, L'\0');
 			DWORD size = GetModuleFileNameW(nullptr, &exe_path[0], exe_path.size());
@@ -311,11 +302,11 @@ check_config_dir (void)
 
 static const char * default_file (void)
 {
-	static char *dfile = NULL;
+	static char *dfile = nullptr;
 
 	if (!dfile)
 	{
-		dfile = g_build_filename (get_xdir (), "hexchat.conf", NULL);
+		dfile = g_build_filename (get_xdir (), "hexchat.conf", nullptr);
 	}
 	return dfile;
 }
@@ -1232,9 +1223,9 @@ int cmd_set (struct session *sess, char *word[], char *word_eol[])
 
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
-#ifdef _DEBUG
+//#ifdef _DEBUG
 #define g_open open
-#endif
+//#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
 		if (xof_flags & io::fs::XOF_DOMODE)
@@ -1254,9 +1245,9 @@ int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 
 FILE * hexchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {
-#ifdef _DEBUG
+//#ifdef _DEBUG
 #define g_fopen fopen
-#endif
+//#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 		return g_fopen (file, mode);
 

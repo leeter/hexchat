@@ -324,14 +324,14 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 	char buf[512];
 	char real_ip[132];
 	int i;
-	time_t current_time;
-	current_time = time (NULL);
+	std::time_t current_time;
+	current_time = std::time (nullptr);
 
 	if (what == flood_check_type::CTCP)
 	{
 		if (serv.ctcp_last_time == 0)	/*first ctcp in this server */
 		{
-			serv.ctcp_last_time = time (NULL);
+			serv.ctcp_last_time = std::time (nullptr);
 			serv.ctcp_counter++;
 		} else
 		{
@@ -353,7 +353,7 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 					PrintText (sess, buf);
 
 					/* ignore CTCP */
-					ignore_add(real_ip, ignore::IG_CTCP, FALSE);
+					ignore_add(real_ip, ignore::IG_CTCP, false);
 					return false;
 				}
 			}
@@ -362,7 +362,7 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 	{
 		if (serv.msg_last_time == 0)
 		{
-			serv.msg_last_time = time (NULL);
+			serv.msg_last_time = std::time (nullptr);
 			serv.ctcp_counter++;
 		} else
 		{
@@ -372,10 +372,8 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 				serv.msg_counter++;
 				if (serv.msg_counter == prefs.hex_flood_msg_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
-					snprintf (buf, sizeof (buf),
-					 _("You are being MSG flooded from %s, setting gui_autoopen_dialog OFF.\n"),
-								 ip);
-					PrintText (sess, buf);
+					auto errmsg = boost::format(_("You are being MSG flooded from %s, setting gui_autoopen_dialog OFF.\n")) % ip;
+					PrintText (sess, errmsg.str());
 					serv.msg_last_time = current_time;	/*we got the flood, restore all the vars for next one */
 					serv.msg_counter = 0;
 
@@ -383,7 +381,7 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 					{
 						prefs.hex_gui_autoopen_dialog = 0;
 						/* turn it back on in 30 secs */
-						fe_timeout_add (30000, flood_autodialog_timeout, NULL);
+						fe_timeout_add (30000, flood_autodialog_timeout, nullptr);
 					}
 					return false;
 				}

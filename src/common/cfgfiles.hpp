@@ -61,12 +61,11 @@ enum xof {
 	XOF_DOMODE = 1,
 	XOF_FULLPATH = 2
 };
-
 #define STRUCT_OFFSET_STR(type,field) \
-( (unsigned int) (((char *) (&(((type *) NULL)->field)))- ((char *) NULL)) )
+( (unsigned int) (((char *) offsetof(type, field))- ((char *) NULL)) )
 
 #define STRUCT_OFFSET_INT(type,field) \
-( (unsigned int) (((int *) (&(((type *) NULL)->field)))- ((int *) NULL)) )
+( (unsigned int) (((int *) offsetof(type, field))- ((int *) NULL)) )
 
 #define P_OFFSET(field) STRUCT_OFFSET_STR(struct hexchatprefs, field),sizeof(prefs.field)
 #define P_OFFSETNL(field) STRUCT_OFFSET_STR(struct hexchatprefs, field)

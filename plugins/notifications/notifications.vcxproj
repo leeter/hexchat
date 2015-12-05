@@ -37,6 +37,7 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\win32\hexchat.props" />
+    <Import Project="..\..\..\..\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.Cpp.Platform.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -71,7 +72,7 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeaderFile />
-      <AdditionalUsingDirectories>$(VCInstallDir)vcpackages;$(FrameworkSdkDir)References\CommonConfiguration\Neutral;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(TargetPlatformWinMDLocation);$(VCInstallDir)vcpackages;$(FrameworkSdkDir)References\CommonConfiguration\Neutral;$(FrameworkSdkDir)UnionMetadata;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>..\..\src\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
@@ -102,7 +103,7 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeaderFile />
-      <AdditionalUsingDirectories>$(VCInstallDir)vcpackages;$(FrameworkSdkDir)References\CommonConfiguration\Neutral;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(TargetPlatformWinMDLocation);$(VCInstallDir)vcpackages;$(FrameworkSdkDir)References\CommonConfiguration\Neutral;$(FrameworkSdkDir)UnionMetadata;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>..\..\src\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
