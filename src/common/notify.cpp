@@ -219,9 +219,7 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	if (prefs.hex_notify_whois_online)
 	{
 		/* Let's do whois with idle time (like in /quote WHOIS %s %s) */
-		std::ostringstream buf;
-		buf << boost::format("%s %s") % nick % nick;
-		serv.p_whois (buf.str());
+		serv.p_whois ((boost::format("%s %s") % nick % nick).str());
 	}
 }
 

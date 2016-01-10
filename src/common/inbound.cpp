@@ -193,9 +193,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 			if (prefs.hex_irc_logging &&
 				(sess->topic.empty() || sess->topic != ip))
 			{
-				std::ostringstream buf;
-				buf << boost::format("[%s has address %s]\n") % from % ip;
-				sess->log.write(buf.str(), 0);
+				sess->log.write((boost::format("[%s has address %s]\n") % from % ip).str(), 0);
 				/*char tbuf[1024];
 				snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", from, ip);
 				write (sess->logfd, tbuf, strlen (tbuf));*/
