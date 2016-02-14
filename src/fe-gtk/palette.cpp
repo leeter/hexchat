@@ -19,6 +19,9 @@
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/utility/string_ref.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -36,6 +39,7 @@
 #include "../common/util.hpp"
 #include "../common/cfgfiles.hpp"
 #include "../common/typedef.h"
+#include "../common/filesystem.hpp"
 
 
 GdkColor colors[] = {
@@ -142,8 +146,9 @@ void palette_load (void)
 
 void palette_save (void)
 {
-	int fh = hexchat_open_file ("colors.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh == -1)
+	namespace bfs = boost::filesystem;
+	bfs::ofstream file{ io::fs::make_config_path("colors.conf"), std::ios::trunc | std::ios::ate | std::ios::binary };
+	if (!file)
 	{
 		return;
 	}
@@ -152,15 +157,13 @@ void palette_save (void)
 	for (int i = 0; i < 32; i++)
 	{
 		snprintf(prefname, sizeof prefname, "color_%d", i);
-		cfg_put_color(fh, colors[i].red, colors[i].green, colors[i].blue, prefname);
+		cfg_put_color(file, colors[i].red, colors[i].green, colors[i].blue, prefname);
 	}
 
 	/* our special colors are mapped at 256+ */
 	for (int i = 256, j = 32; j < MAX_COL + 1; i++, j++)
 	{
 		snprintf(prefname, sizeof prefname, "color_%d", i);
-		cfg_put_color(fh, colors[j].red, colors[j].green, colors[j].blue, prefname);
+		cfg_put_color(file, colors[j].red, colors[j].green, colors[j].blue, prefname);
 	}
-
-	close(fh);
 }

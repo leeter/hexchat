@@ -143,56 +143,54 @@ void scrollback_close (session &sess)
 
 static void scrollback_shrink (session &sess)
 {
+#ifdef _DEBUG
+#define g_open open
+#endif
+	namespace bfs = boost::filesystem;
 	scrollback_close (sess);
 	sess.scrollwritten = 0;
-	int lines = 0;
 	auto file = scrollback_get_filename(sess);
 	if (!file)
 	{
 		return;
 	}
 
-	char *buf;
-	gsize len;
-	if (!g_file_get_contents (file->string().c_str(), &buf, &len, NULL))
-	{
+	bfs::ifstream infile{ file.get(), std::ios::binary };
+	std::stringstream buffer;
+	if (!(buffer << infile.rdbuf())) {
 		return;
 	}
-	glib_string buf_ptr(buf);
+	buffer.seekg(0);
+	infile.close();
 	/* count all lines */
-	auto p = buf;
-	while (p != buf + len)
-	{
-		if (*p == '\n')
-			lines++;
-		p++;
-	}
-
-	int fh = g_open(file->string().c_str(), O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
-	if (fh == -1)
+	auto line_count = std::count(std::istreambuf_iterator<char>(buffer), std::istreambuf_iterator<char>(), '\n');
+	buffer.seekg(0);
+	
+	bfs::ofstream outfile{ file.get(), std::ios::binary | std::ios::trunc | std::ios::app };
+	if (!outfile)
 	{
 		return;
 	}
 
-	int line = 0;
-	p = buf;
-	while (p != buf + len)
+	decltype(line_count) line = 0, linesToWrite = line_count - prefs.hex_text_max_lines;
+	for (std::string linebuf; std::getline(buffer, linebuf, '\n');)
+	{
+		++line;
+		if (line >= linesToWrite)
+		{
+			outfile << linebuf << '\n';
+		}
+	}
+	/*while (p != buf + len)
 	{
 		if (*p == '\n')
 		{
-			line++;
-			if (line >= lines - prefs.hex_text_max_lines &&
-				 p + 1 != buf + len)
-			{
-				p++;
-				write (fh, p, len - (p - buf));
-				break;
-			}
+			
 		}
 		p++;
 	}
 
-	close (fh);
+	close (fh);*/
 }
 
 static void scrollback_save (session &sess, const std::string & text)
@@ -226,7 +224,7 @@ static void scrollback_save (session &sess, const std::string & text)
 			return;
 	}
 
-	auto stamp = time (0);
+	auto stamp = std::time (nullptr);
 	glib_string buf(g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp));
 	write (sess.scrollfd, buf.get(), strlen (buf.get()));
 

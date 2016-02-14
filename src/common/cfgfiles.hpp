@@ -25,6 +25,8 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <iosfwd>
+#include <boost/utility/string_ref_fwd.hpp>
 
 #include "sessfwd.hpp"
 #include "hexchat.hpp"
@@ -41,9 +43,9 @@ char *cfg_get_str (char *cfg, const char *var, char *dest, int dest_len);
 int cfg_get_bool (const char *var);
 int cfg_get_int_with_result (char *cfg, const char *var, bool &result);
 int cfg_get_int (char *cfg, char *var);
-int cfg_put_int (int fh, int value, const char *var);
+int cfg_put_int (std::ostream & out, int value, boost::string_ref var);
 bool cfg_get_color (char *cfg, const char var[], int &r, int &g, int &b);
-bool cfg_put_color (int fh, int r, int g, int b, const char var[]);
+bool cfg_put_color (std::ostream & out, int r, int g, int b, boost::string_ref var);
 char *get_xdir (void);
 int check_config_dir (void);
 void load_default_config (void);
@@ -51,7 +53,7 @@ bool make_config_dirs (void);
 int make_dcc_dirs (void);
 int load_config (void);
 bool save_config (void);
-void list_loadconf(const std::string & file, std::vector<popup> & list, const char* defaultconf);
+void list_loadconf(const std::string & file, std::vector<popup> & list, boost::string_ref defaultconf);
 bool list_delentry(std::vector<popup> & list, const char name[]);
 int cmd_set (session *sess, char *word[], char *word_eol[]);
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags);

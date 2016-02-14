@@ -77,13 +77,13 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 	gtk_widget_destroy (editlist_win);
 	if (editlist_list == &replace_list)
 	{
-		list_loadconf (file, replace_list, nullptr);
+		list_loadconf(file, replace_list, {});
 	} else if (editlist_list == &popup_list)
 	{
-		list_loadconf (file, popup_list, nullptr);
+		list_loadconf(file, popup_list, {});
 	} else if (editlist_list == &button_list)
 	{
-		list_loadconf (file, button_list, nullptr);
+		list_loadconf(file, button_list, {});
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);;
@@ -91,7 +91,7 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 		}
 	} else if (editlist_list == &dlgbutton_list)
 	{
-		list_loadconf (file, dlgbutton_list, nullptr);
+		list_loadconf(file, dlgbutton_list, {});
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);
@@ -99,17 +99,17 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 		}
 	} else if (editlist_list == &ctcp_list)
 	{
-		list_loadconf (file, ctcp_list, nullptr);
+		list_loadconf(file, ctcp_list, {});
 	} else if (editlist_list == &command_list)
 	{
-		list_loadconf (file, command_list, nullptr);
+		list_loadconf(file, command_list, {});
 	} else if (editlist_list == &usermenu_list)
 	{
-		list_loadconf (file, usermenu_list, nullptr);
+		list_loadconf(file, usermenu_list, {});
 		usermenu_update ();
 	} else
 	{
-		list_loadconf (file, urlhandler_list, nullptr);
+		list_loadconf(file, urlhandler_list, {});
 	}
 }
 

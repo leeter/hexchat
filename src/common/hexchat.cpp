@@ -659,7 +659,7 @@ xchat_init (void)
 				_("Ping"));
 	list_loadconf ("dlgbuttons.conf", dlgbutton_list, buf);
 
-	list_loadconf ("tabmenu.conf", tabmenu_list, nullptr);
+	list_loadconf("tabmenu.conf", tabmenu_list, {});
 	list_loadconf ("ctcpreply.conf", ctcp_list, defaultconf_ctcp);
 	list_loadconf ("commands.conf", command_list, defaultconf_commands);
 	list_loadconf ("replace.conf", replace_list, defaultconf_replace);

@@ -95,7 +95,7 @@ static const size_t TBUFSIZE = 4096;
 
 static void help (session *sess, const char *helpcmd, bool quiet);
 static int cmd_server (session *sess, char *word[], char *word_eol[]);
-static void handle_say (session *sess, char *text, int check_spch);
+static void handle_say (session *sess, char *text, bool check_spch);
 namespace
 {
 	using sess_itr = glib_helper::glist_iterator < session > ;
@@ -4198,7 +4198,7 @@ user_command (session * sess, const std::string & cmd, char *word[],
 /* handle text entered without a hex_input_command_char prefix */
 
 static void
-handle_say (session *sess, char *text, int check_spch)
+handle_say (session *sess, char *text, bool check_spch)
 {
 	dcc::DCC *dcc;
 	char *word[PDIWORDS+1];
@@ -4245,7 +4245,7 @@ handle_say (session *sess, char *text, int check_spch)
 		newcmd = perform_nick_completion(sess, text);
 	}
 	else
-		safe_strcpy (&newcmd[0], text, newcmd.size());
+		newcmd = text; //safe_strcpy (&newcmd[0], text, newcmd.size());
 
 
 	if (sess->type == session::SESS_DIALOG)

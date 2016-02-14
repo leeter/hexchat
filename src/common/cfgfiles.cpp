@@ -34,7 +34,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
@@ -108,15 +108,17 @@ static void list_load_from_data(std::vector<popup> & list, std::istream & data)
 //#endif
 
 void list_loadconf(const std::string &file, std::vector<popup> &list,
-		   const char *defaultconf)
+		   boost::string_ref defaultconf)
 {
+	namespace bio = boost::iostreams;
 	list.clear();
 	boost::filesystem::ifstream infile(io::fs::make_config_path(file),
 					   std::ios::binary | std::ios::in);
 	list_load_from_data(list, infile);
-	if (list.empty() && defaultconf)
+	if (list.empty() && !defaultconf.empty())
 	{
-		std::istrstream dconf(defaultconf);
+		bio::array_source src(defaultconf.cbegin(), defaultconf.cend());
+		bio::stream<bio::array_source> dconf{src};
 		list_load_from_data(list, dconf);
 	}
 }
@@ -178,26 +180,22 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 	}
 }
 
-static bool cfg_put_str (int fh, const char *var, const char *value)
+static bool cfg_put_str (std::ostream & out, const char *var, const char *value)
 {
-	auto buf = (boost::format("%s = %s\n") % var % value).str();
-	return (write (fh, buf.c_str(), buf.size()) == buf.size());
+	return (out << boost::format("%s = %s\n") % var % value).good();
 }
 
-bool cfg_put_color (int fh, int r, int g, int b, const char var[])
+bool cfg_put_color (std::ostream & out, int r, int g, int b, boost::string_ref var)
 {
-	auto buf = (boost::format("%s = %04x %04x %04x\n") % var % r % g % b).str();
-	return (write (fh, buf.c_str(), buf.size()) == buf.size());
+	return (out << boost::format("%s = %04x %04x %04x\n") % var % r % g % b).good();
 }
 
 int
-cfg_put_int (int fh, int value, const char *var)
+cfg_put_int (std::ostream & out, int value, boost::string_ref var)
 {
 	if (value == -1)
 		value = 1;
-
-	auto buf = (boost::format("%s = %d\n") % var % value).str();
-	return (write (fh, buf.c_str(), buf.size()) == buf.size());
+	return (out << boost::format("%s = %d\n") % var % value).good();
 }
 
 bool cfg_get_color(char *cfg, const char var[], int &r, int &g, int &b)
@@ -932,21 +930,22 @@ int load_config (void)
 
 bool save_config (void)
 {
+	namespace bfs = boost::filesystem;
 	if (check_config_dir () != 0)
 		make_config_dirs ();
 
 	auto config = default_file ();
 	glib_string new_config(g_strconcat (config, ".new", NULL));
 
-	int fh = g_open (new_config.get(), OFLAGS | O_TRUNC | O_WRONLY | O_CREAT, 0600);
-	if (fh == -1)
+	bfs::ofstream file{ new_config.get(), std::ios::binary | std::ios::trunc | std::ios::ate };
+	
+	if (!file)
 	{
 		return false;
 	}
 
-	if (!cfg_put_str (fh, "version", PACKAGE_VERSION))
+	if (!cfg_put_str (file, "version", PACKAGE_VERSION))
 	{
-		close (fh);
 		return false;
 	}
 		
@@ -956,17 +955,15 @@ bool save_config (void)
 		switch (vars[i].type)
 		{
 		case TYPE_STR:
-			if (!cfg_put_str (fh, vars[i].name, (char *) &prefs + vars[i].offset))
+			if (!cfg_put_str (file, vars[i].name, (char *) &prefs + vars[i].offset))
 			{
-				close (fh);
 				return false;
 			}
 			break;
 		case TYPE_INT:
 		case TYPE_BOOL:
-			if (!cfg_put_int (fh, *((int *) &prefs + vars[i].offset), vars[i].name))
+			if (!cfg_put_int (file, *((int *) &prefs + vars[i].offset), vars[i].name))
 			{
-				close (fh);
 				return false;
 			}
 		}
@@ -974,7 +971,8 @@ bool save_config (void)
 	}
 	while (vars[i].name);
 
-	if (close (fh) == -1)
+	file.close();
+	if (!file)
 	{
 		return false;
 	}
@@ -1223,9 +1221,9 @@ int cmd_set (struct session *sess, char *word[], char *word_eol[])
 
 int hexchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
-//#ifdef _DEBUG
+#ifdef _MSC_VER
 #define g_open open
-//#endif
+#endif
 	if (xof_flags & io::fs::XOF_FULLPATH)
 	{
 		if (xof_flags & io::fs::XOF_DOMODE)
