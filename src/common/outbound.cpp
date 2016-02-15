@@ -2061,7 +2061,7 @@ static int
 cmd_ignore (struct session *sess, char *word[], char *[])
 {
 	int type = 0;
-	int quiet = 0;
+	bool quiet = false;
 	char *mask;
 
 	if (!*word[2])
@@ -2087,15 +2087,15 @@ cmd_ignore (struct session *sess, char *word[], char *[])
 				snprintf (buffer, TBUFSIZE, "%s!*@*", word[2]);
 			}
 
-			i = ignore_add (mask, type, true);
+			auto result = ignore_add (mask, type, true);
 			if (quiet)
 				return true;
-			switch (i)
+			switch (result)
 			{
-			case 1:
+			case ignore_add_result::success:
 				EMIT_SIGNAL (XP_TE_IGNOREADD, sess, mask, nullptr, nullptr, nullptr, 0);
 				break;
-			case 2:	/* old ignore changed */
+			case ignore_add_result::updated:	/* old ignore changed */
 				EMIT_SIGNAL (XP_TE_IGNORECHANGE, sess, mask, nullptr, nullptr, nullptr, 0);
 			}
 			return true;
@@ -2115,15 +2115,15 @@ cmd_ignore (struct session *sess, char *word[], char *[])
 		else if (!g_ascii_strcasecmp (word[i], "INVI"))
 			type |= ignore::IG_INVI;
 		else if (!g_ascii_strcasecmp (word[i], "QUIET"))
-			quiet = 1;
+			quiet = true;
 		else if (!g_ascii_strcasecmp (word[i], "NOSAVE"))
 			type |= ignore::IG_NOSAVE;
 		else if (!g_ascii_strcasecmp (word[i], "DCC"))
 			type |= ignore::IG_DCC;
 		else
 		{
-			snprintf (buffer, sizeof(buffer), _("Unknown arg '%s' ignored."), word[i]);
-			PrintText (sess, buffer);
+			auto buf = (boost::format(_("Unknown arg '%s' ignored.")) % word[i]).str();
+			PrintText (sess, buf);
 		}
 	}
 }

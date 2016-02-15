@@ -60,10 +60,15 @@ enum class flood_check_type
 	CTCP,
 	PRIV
 };
-
+enum class ignore_add_result
+{
+	fail,
+	success,
+	updated
+};
 const std::vector<ignore>& get_ignore_list();
 boost::optional<ignore &> ignore_exists (const boost::string_ref& mask);
-int ignore_add(const std::string& mask, int type, bool overwrite);
+ignore_add_result ignore_add(const std::string& mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
 bool ignore_del(const std::string& mask);
 bool ignore_check(const boost::string_ref& mask, ignore::ignore_type type);

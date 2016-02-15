@@ -18,12 +18,6 @@
 
 #include <sstream>
 #include <vector>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
@@ -31,11 +25,6 @@
 #include <boost/utility/string_ref.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 #include "hexchat.hpp"
 #include "ignore.hpp"
 #include "cfgfiles.hpp"
@@ -80,7 +69,7 @@ ignore_exists (const boost::string_ref& mask)
  *            2 success (old ignore has been changed)
  */
 
-int
+ignore_add_result
 ignore_add(const std::string& mask, int type, bool overwrite)
 {
 	bool change_only = false;
@@ -95,7 +84,7 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 		ig = new_ig;
 
 	if (!ig)
-		return 0;
+		return ignore_add_result::fail;
 
 	ig->mask = mask;
 
@@ -109,9 +98,9 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 	fe_ignore_update (1);
 
 	if (change_only)
-		return 2;
+		return ignore_add_result::updated;
 
-	return 1;
+	return ignore_add_result::success;
 }
 
 void
