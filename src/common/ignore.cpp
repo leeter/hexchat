@@ -29,6 +29,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -44,6 +45,7 @@
 #include "hexchatc.hpp"
 #include "server.hpp"
 #include "typedef.h"
+#include "filesystem.hpp"
 
 ignore::ignore()
 	:type()
@@ -59,7 +61,7 @@ static std::vector<ignore> ignores;
 static int ignored_total = 0;
 /* ignore_exists ():
  * returns: struct ig, if this mask is in the ignore list already
- *          NULL, otherwise
+ *          nullptr, otherwise
  */
 boost::optional<ignore &>
 ignore_exists (const boost::string_ref& mask)
@@ -115,8 +117,6 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 void
 ignore_showlist (session *sess)
 {
-	//char tbuf[256];
-
 	EMIT_SIGNAL (XP_TE_IGNOREHEADER, sess, 0, 0, 0, 0, 0);
 
 	const std::string yes_str(_("YES  "));
@@ -168,7 +168,7 @@ ignore_showlist (session *sess)
 
 /* ignore_del()
 
- * one of the args must be NULL, use mask OR *ig, not both
+ * one of the args must be nullptr, use mask OR *ig, not both
  *
  */
 
@@ -227,55 +227,67 @@ bool ignore_check(const boost::string_ref& mask, ignore::ignore_type type)
 	return false;
 }
 
-static char *
-ignore_read_next_entry (char *my_cfg, ignore &ig)
+static std::istream &operator >> (std::istream & in, ignore & ig)
 {
-	char tbuf[1024];
-
-	/* Casting to char * done below just to satisfy compiler */
-
-	if (my_cfg)
+	std::istream::sentry sentry{ in };
+	if (!sentry)
+		return in;
+	std::string line;
+	if (!std::getline(in, line, '\n'))
 	{
-		my_cfg = cfg_get_str (my_cfg, "mask", tbuf, sizeof (tbuf));
-		if (!my_cfg)
-			return NULL;
-		ig.mask = tbuf;
+		return in;
 	}
-	if (my_cfg)
+	ignore tmp;
+	std::locale locale;
+	do {
+		if (line.empty())
+		{
+			break;
+		}
+		boost::trim(line, locale);
+		auto loc_eq = line.find_first_of('=');
+		if (loc_eq == std::string::npos) // data corruption
+		{
+			in.setstate(std::ios::failbit);
+			return in;
+		}
+
+		std::string first_part, second_part = line.substr(loc_eq + 2);
+		if (loc_eq && line[loc_eq - 1] == ' ')
+			first_part = line.substr(0, loc_eq - 1);
+
+		if (first_part == "mask")
+			tmp.mask = second_part;
+		else if (first_part == "type")
+			tmp.type = std::stoi(second_part, nullptr, 10);
+		// if the next character is m it's an ignore and we shouldn't
+		// continue
+	} while (in.peek() != 'm' && std::getline(in, line, '\n'));
+
+	ig = std::move(tmp);
+	/* we should always leave the stream in a good state if we got this far
+	* otherwise the reader will assume we've failed even though we haven't
+	*/
+	if (!in)
 	{
-		my_cfg = cfg_get_str (my_cfg, "type", tbuf, sizeof (tbuf));
-		ig.type = atoi (tbuf);
+		in.clear();
 	}
-	return my_cfg;
+	return in;
 }
 
 void
 ignore_load ()
 {
-	struct stat st;
-	char *my_cfg;
-	int fh, i;
-
-	fh = hexchat_open_file ("ignore.conf", O_RDONLY, 0, 0);
-	if (fh != -1)
+	namespace bfs = boost::filesystem;
+	auto path = io::fs::make_config_path("ignore.conf");
+	bfs::ifstream in_file{ path, std::ios::binary };
+	if (!in_file)
 	{
-		fstat (fh, &st);
-		if (st.st_size)
-		{
-			std::string cfg(st.st_size + 1, '\0');
-			cfg[0] = '\0';
-			i = read (fh, &cfg[0], st.st_size);
-			if (i >= 0)
-				cfg[i] = '\0';
-			my_cfg = &cfg[0];
-			while (my_cfg)
-			{
-				ignore ig;
-				if ((my_cfg = ignore_read_next_entry(my_cfg, ig)))
-					ignores.emplace_back(std::move(ig));
-			}
-		}
-		close (fh);
+		return;
+	}
+	for (ignore ig; in_file >> ig;)
+	{
+		ignores.emplace_back(std::move(ig));
 	}
 }
 
@@ -283,8 +295,8 @@ void
 ignore_save ()
 {
 	namespace bfs = boost::filesystem;
-	const auto outpath = bfs::path(config::config_dir()) / "ignore.conf";
-	bfs::ofstream outfile{ outpath, std::ios::trunc | std::ios::out };
+	const auto outpath = io::fs::make_config_path("ignore.conf");
+	bfs::ofstream outfile{ outpath, std::ios::trunc | std::ios::out | std::ios::binary };
 	if (!outfile)
 	{
 		return;
@@ -296,7 +308,7 @@ ignore_save ()
 		{
 			continue;
 		}
-		outfile << boost::format("mask = %s\ntype = %u\n\n") % ig.mask % ig.type;
+		outfile << boost::format("mask = %s\ntype = %u\n") % ig.mask % ig.type;
 	}
 
 	boost::system::error_code ec;
@@ -307,7 +319,7 @@ static gboolean
 flood_autodialog_timeout (gpointer)
 {
 	prefs.hex_gui_autoopen_dialog = 1;
-	return FALSE;
+	return false;
 }
 
 bool
