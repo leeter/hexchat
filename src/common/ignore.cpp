@@ -179,7 +179,7 @@ ignore_del(const std::string& mask)
 	auto res = ignores.erase(
 		std::remove_if(ignores.begin(), ignores.end(), [&mask](const ignore & ig){
 			return !rfc_casecmp(ig.mask.c_str(), mask.c_str());
-		}));
+		}), ignores.end());
 	fe_ignore_update(1);
 	return ignores.size() != old_size;
 }
