@@ -67,6 +67,7 @@
 #include "typedef.h"
 #include "session.hpp"
 #include "session_logging.hpp"
+#include "filesystem.hpp"
 
 #ifdef USE_LIBCANBERRA
 #include <canberra.h>
@@ -295,7 +296,7 @@ void scrollback_load (session &sess)
 		*/
 		if (buf[0] == 'T')
 		{
-			stamp = strtoull(buf.get() + 2, NULL, 10); /* in case time_t is 64 bits */
+			stamp = strtoull(buf.get() + 2, nullptr, 10); /* in case time_t is 64 bits */
 			text = strchr(buf.get() + 3, ' ');
 			if (text && text[1])
 			{
@@ -331,7 +332,7 @@ void scrollback_load (session &sess)
 		text[24] = 0;	/* get rid of the \n */
 		glib_string buf(g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text));
 		fe_print_text (sess, buf.get(), 0, TRUE);
-		/*EMIT_SIGNAL (XP_TE_GENMSG, sess, "*", buf, NULL, NULL, NULL, 0);*/
+		/*EMIT_SIGNAL (XP_TE_GENMSG, sess, "*", buf, nullptr, nullptr, nullptr, 0);*/
 	}
 }
 
@@ -478,7 +479,7 @@ std::string text_validate(const boost::string_ref & text)
 
 	gsize utf_len;
 	/* fallback to locale */
-	glib_string utf{ g_locale_to_utf8(text.data(), text.size(), 0, &utf_len, NULL) };
+	glib_string utf{ g_locale_to_utf8(text.data(), text.size(), 0, &utf_len, nullptr) };
 	if (!utf)
 		return iso_8859_1_to_utf8(text);
 
@@ -1207,24 +1208,19 @@ void pevent_make_pntevts ()
 
 /* Better hope you pass good args.. --AGL */
 
-static void pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
+static void pevent_trigger_load (int &i_penum, std::string i_text)
 {
-	int penum = *i_penum;
-	char *text = *i_text, *snd = *i_snd;
+	int penum = i_penum;
 
-	if (penum != -1 && text != NULL)
+	if (penum != -1 && !i_text.empty())
 	{
-		pntevts_text[penum] = text;
+		pntevts_text[penum] = std::move(i_text);
 	}
 
-	delete[] text;
-	delete[] snd;
-	*i_text = NULL;
-	*i_snd = NULL;
-	*i_penum = 0;
+	i_penum = 0;
 }
 
-static int pevent_find (const char name[], int &i_i)
+static int pevent_find (boost::string_ref name, int &i_i)
 {
 	int i = i_i, j;
 
@@ -1233,7 +1229,7 @@ static int pevent_find (const char name[], int &i_i)
 	{
 		if (j == NUM_XP)
 			j = 0;
-		if (strcmp (te[j].name, name) == 0)
+		if (name == te[j].name)
 		{
 			i_i = j;
 			return j;
@@ -1244,34 +1240,24 @@ static int pevent_find (const char name[], int &i_i)
 	}
 }
 
-int pevent_load (const char *filename)
+int pevent_load(boost::string_ref filename)
 {
-	/* AGL, I've changed this file and pevent_save, could you please take a look at
-	 *      the changes and possibly modify them to suit you
-	 *      //David H
-	 */
-	int fd, i = 0;
-	struct stat st;
-	char *text = NULL, *snd = NULL;
+	namespace bfs = boost::filesystem;
+	int i = 0;
+	std::string text;
 	int penum = 0;
+	auto path = filename.empty() ? 
+		io::fs::make_config_path("pevents.conf") :
+		bfs::path{ filename.cbegin(), filename.cend() };
 
-	if (filename == NULL)
-		fd = hexchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
-	else
-		fd = hexchat_open_file (filename, O_RDONLY, 0, io::fs::XOF_FULLPATH);
+	bfs::ifstream in_file{ path, std::ios::binary };
 
-	if (fd == -1)
-		return 1;
-	if (fstat (fd, &st) != 0)
+	if (!in_file)
 	{
-		close (fd);
 		return 1;
 	}
-	std::string ibufr(st.st_size, '\0');
-	read(fd, &ibufr[0], st.st_size);
-	close (fd);
-	std::istringstream buffer(ibufr);
-	for (std::string line; std::getline(buffer, line, '\n');)
+
+	for (std::string line; std::getline(in_file, line, '\n');)
 	{
 		if (line.empty())
 			continue;
@@ -1287,13 +1273,12 @@ int pevent_load (const char *filename)
 		if (first_part == "event_name")
 		{
 			if (penum >= 0)
-				pevent_trigger_load (&penum, &text, &snd);
-			penum = pevent_find (&second_part[0], i);
+				pevent_trigger_load (penum, std::move(text));
+			penum = pevent_find (second_part, i);
 			continue;
 		}
 		else if (first_part == "event_text")
 		{
-			delete[] text;
 
 #if 0
 			/* This allows updating of old strings. We don't use new defaults
@@ -1322,22 +1307,16 @@ int pevent_load (const char *filename)
 				text = strdup (ofs);
 			}
 #else
-			text = new_strdup (second_part.c_str());
+			text = std::move(second_part);
 #endif
 
 			continue;
-		}/* else if (strcmp (buf, "event_sound") == 0)
-		{
-			if (snd)
-				free (snd);
-			snd = strdup (ofs);
-			continue;
-		}*/
+		}
 
 		continue;
 	}
 
-	pevent_trigger_load (&penum, &text, &snd);
+	pevent_trigger_load (penum, std::move(text));
 	return 0;
 }
 
@@ -1361,7 +1340,7 @@ static void pevent_check_all_loaded ()
 
 void load_text_events ()
 {
-	if (pevent_load (nullptr))
+	if (pevent_load({}))
 		pevent_load_defaults ();
 	pevent_check_all_loaded ();
 	pevent_make_pntevts ();
@@ -1419,9 +1398,9 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 				break;
 			}
 			const char* current_argument = args[(int)arg_idx + 1];
-			if (current_argument == NULL)
+			if (current_argument == nullptr)
 			{
-				PrintTextf(sess, "arg[%d] is NULL in print event\n", arg_idx + 1);
+				PrintTextf(sess, "arg[%d] is nullptr in print event\n", arg_idx + 1);
 			}
 			else
 			{
@@ -1806,16 +1785,16 @@ void sound_play(const boost::string_ref & file, bool quiet)
 		PlaySoundW (wavfile.c_str(), nullptr, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
 #else
 #ifdef USE_LIBCANBERRA
-		if (ca_con == NULL)
+		if (ca_con == nullptr)
 		{
 			ca_context_create (&ca_con);
 			ca_context_change_props (ca_con,
 											CA_PROP_APPLICATION_ID, "hexchat",
 											CA_PROP_APPLICATION_NAME, "HexChat",
-											CA_PROP_APPLICATION_ICON_NAME, "hexchat", NULL);
+											CA_PROP_APPLICATION_ICON_NAME, "hexchat", nullptr);
 		}
 
-		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile.c_str(), NULL) != 0)
+		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile.c_str(), nullptr) != 0)
 #endif
 		{
 			glib_string cmd (g_find_program_in_path ("play"));

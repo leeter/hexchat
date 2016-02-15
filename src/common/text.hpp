@@ -52,7 +52,7 @@ void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, .
 void load_text_events (void);
 void pevent_save (const char file_name[]);
 int pevt_build_string(const std::string& input, std::string & output, int &max_arg);
-int pevent_load (const char *filename);
+int pevent_load (boost::string_ref filename);
 void pevent_make_pntevts (void);
 int text_color_of(const boost::string_ref & name);
 void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
