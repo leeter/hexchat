@@ -148,13 +148,14 @@ namespace
 	CUSTOM_PTR(cairo_t, cairo_destroy)
 	CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
 	struct cairo_stack{
-		cairo_t* _cr;
-		cairo_stack(cairo_t* cr) NOEXCEPT
+		cairo_t* const _cr;
+		cairo_stack(cairo_stack&) = delete;
+		cairo_stack(cairo_t* cr) noexcept
 			:_cr(cr)
 		{
 			cairo_save(_cr);
 		}
-		~cairo_stack() NOEXCEPT
+		~cairo_stack() noexcept
 		{
 			cairo_restore(_cr);
 		}
@@ -566,7 +567,8 @@ namespace
 		const auto adj_value = gtk_adjustment_get_value(xtext->adj);
 		if (xtext->buffer->old_value != adj_value)
 		{
-			if (adj_value >= gtk_adjustment_get_upper(xtext->adj) - gtk_adjustment_get_page_size(xtext->adj))
+			const auto page_diff = gtk_adjustment_get_upper(xtext->adj) - gtk_adjustment_get_page_size(xtext->adj);
+			if (adj_value >= page_diff)
 				xtext->buffer->scrollbar_down = true;
 			else
 				xtext->buffer->scrollbar_down = false;
