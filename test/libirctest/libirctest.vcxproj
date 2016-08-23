@@ -14,7 +14,7 @@
     <ProjectGuid>{6771DFC1-F942-4113-9B68-9C22F297F780}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libirctest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

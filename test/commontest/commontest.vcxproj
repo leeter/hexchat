@@ -22,7 +22,7 @@
     <ProjectGuid>{C3DEDC0F-A084-4EE8-A47A-06E80DBEC0FB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>commontest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

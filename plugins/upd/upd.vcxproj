@@ -17,7 +17,7 @@
     <ProjectGuid>{461DC24A-A410-4171-8C02-CCDBF3702C2A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>upd</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

@@ -50,7 +50,7 @@
     <ProjectGuid>{A8117BC0-5BAA-4750-A261-BBE6D5DC9C29}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libirc</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
