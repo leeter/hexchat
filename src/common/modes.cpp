@@ -55,7 +55,7 @@ struct mode_run
 };
 
 static int is_prefix_char (const server * serv, char c);
-static void record_chan_mode (session *sess, char sign, char mode, char *arg);
+static void record_chan_mode (session &sess, char sign, char mode, char *arg);
 static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 										  char *chan, char *arg, bool quiet, bool is_324,
 										  const message_tags_data *tags_data);
@@ -231,16 +231,16 @@ mode_access (const server * serv, char mode, char *prefix)
 }
 
 static void
-record_chan_mode (session *sess, char sign, char mode, char *arg)
+record_chan_mode (session &sess, char sign, char mode, char *arg)
 {
 	/* Somebody needed to acutally update sess->current_modes, needed to
 		play nice with bouncers, and less mode calls. Also keeps modes up
 		to date for scripts */
-	if (!sess->server)
+	if (!sess.server)
 		throw std::runtime_error("Invalid Server Reference");
-	server &serv = *sess->server;
+	server &serv = *sess.server;
 	// deliberate copy for exception safety
-	std::string current(sess->current_modes);
+	std::string current(sess.current_modes);
 	gint mode_pos = -1;
 	auto current_char = current.begin();
 	std::string::size_type modes_length;
@@ -328,7 +328,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 				current.erase(argument_offset + 1, argument_length - 1);
 				current.insert(argument_offset + 1, arg);
 
-				sess->current_modes = std::move(current);
+				sess.current_modes = std::move(current);
 			}
 		}
 		/* mode wasn't there before */
@@ -344,7 +344,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 				current.append(arg);
 			}
 
-			sess->current_modes = std::move(current);
+			sess.current_modes = std::move(current);
 		}
 	}
 	else if (sign == '-' && mode_pos != -1)
@@ -356,7 +356,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 		/* remove the mode character */
 		current.erase(mode_pos, 1);
 
-		sess->current_modes = std::move(current);
+		sess.current_modes = std::move(current);
 	}
 }
 
@@ -406,7 +406,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	} else
 	{
 		if (!is_324 && !sess->ignore_mode && mode_chanmode_type(serv, mode) >= 1)
-			record_chan_mode (sess, sign, mode, arg);
+			record_chan_mode (*sess, sign, mode, arg);
 	}
 
 	/* Is q a chanmode on this server? */
