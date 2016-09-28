@@ -88,7 +88,7 @@
 #endif
 
 #ifndef HAVE_SNPRINTF
-#define snprintf g_snprintf
+//#define snprintf g_snprintf
 #endif
 
 char *
@@ -166,31 +166,28 @@ errorstring (int err)
 	/* can't use strerror() on Winsock errors! */
 	if (err >= WSABASEERR)
 	{
-		static char fbuf[384];
+		static char fbuf[384] = {};
 		std::wstring tbuf(384, '\0');
 
 		/* FormatMessage works on WSA*** errors starting from Win2000 */
-		if (IsWindowsXPOrGreater())
+		if (FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
+									FORMAT_MESSAGE_IGNORE_INSERTS |
+									FORMAT_MESSAGE_MAX_WIDTH_MASK,
+									nullptr, err,
+									MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+									&tbuf[0], tbuf.size(), nullptr))
 		{
-			if (FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
-									  FORMAT_MESSAGE_IGNORE_INSERTS |
-									  FORMAT_MESSAGE_MAX_WIDTH_MASK,
-									  NULL, err,
-									  MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-									  &tbuf[0], tbuf.size(), NULL))
-			{
-				/* now convert to utf8 */
-				auto utf8 = charset::narrow(tbuf);
-				/* remove the cr-lf if present */ 
-				auto crlf = utf8.find_first_of("\r\n");
+			/* now convert to utf8 */
+			auto utf8 = charset::narrow(tbuf);
+			/* remove the cr-lf if present */ 
+			auto crlf = utf8.find_first_of("\r\n");
 
-				if (crlf != std::string::npos)
-					utf8.erase(crlf);
+			if (crlf != std::string::npos)
+				utf8.erase(crlf);
 
-				std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
-				return fbuf;
-			}
-		}	/* ! if (osvi.dwMajorVersion >= 5) */
+			std::copy(utf8.cbegin(), utf8.cend(), std::begin(fbuf));
+			return fbuf;
+		}
 
 		/* fallback to error number */
 		snprintf (fbuf, sizeof(fbuf), "%s %d", _("Error"), err);
@@ -233,12 +230,12 @@ waitline2 (GIOChannel *source, char *buf, int bufsize)
 {
 	int i = 0;
 	gsize len;
-	GError *error = NULL;
+	GError *error = nullptr;
 
 	for (;;)
 	{
 		g_io_channel_set_buffered (source, FALSE);
-		g_io_channel_set_encoding (source, NULL, &error);
+		g_io_channel_set_encoding (source, nullptr, &error);
 
 		if (g_io_channel_read_chars (source, &buf[i], 1, &len, &error) != G_IO_STATUS_NORMAL)
 		{
@@ -488,11 +485,11 @@ get_mhz (void)
 int
 get_cpu_arch (void)
 {
-	SYSTEM_INFO si = { 0 };
+	SYSTEM_INFO si = { };
 
-	GetSystemInfo (&si);
+	GetNativeSystemInfo(&si);
 
-	if (si.wProcessorArchitecture == 9)
+	if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
 	{
 		return 64;
 	}
@@ -508,8 +505,17 @@ const char * get_sys_str (bool with_cpu)
 	if (!sys_str.empty())
 		return sys_str.c_str();
 	std::ostringstream buffer("Windows ", std::ios::ate);
-
-	if (IsWindows8Point1OrGreater ())
+	if (IsWindows10OrGreater()) {
+		if (IsWindowsServer())
+		{
+			buffer << "Server 2016";
+		}
+		else
+		{
+			buffer << "10";
+		}
+	}
+	else if (IsWindows8Point1OrGreater ())
 	{
 		if (IsWindowsServer ())
 		{

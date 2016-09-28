@@ -131,3 +131,6 @@ test/libirctest/libirc-test
 /win32/hexchat.VC.VC.opendb
 /win32/hexchat.VC.db
 /src/libenchant_win8
+/src/common/gsl
+/src/common/command.hpp
+/src/common/command.cpp

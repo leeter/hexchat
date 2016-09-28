@@ -824,7 +824,7 @@ hexmain (int argc, char *argv[])
 	{
 		char buf[2048];
 
-		g_snprintf (buf, sizeof(buf),
+		snprintf (buf, sizeof(buf),
 			_("You do not have write access to %s. Nothing from this session can be saved."),
 			get_xdir ());
 		fe_message (buf, FE_MSG_ERROR);

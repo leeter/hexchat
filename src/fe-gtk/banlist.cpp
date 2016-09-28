@@ -451,7 +451,7 @@ banlist_do_refresh (banlist_info *banl)
 				if (banl->pending & 1<<i)
 				{
 					char tbuf[256];
-					g_snprintf (tbuf, sizeof tbuf, "quote mode %s +%c", sess->channel, modes[i].letter);
+					snprintf (tbuf, sizeof tbuf, "quote mode %s +%c", sess->channel, modes[i].letter);
 					handle_command (sess, tbuf, false);
 				}
 		}
@@ -812,7 +812,7 @@ banlist_opengui (struct session *sess)
 	/* Force on the checkmark in the "Bans" box */
 	banl->checked = 1<<MODE_BAN;
 
-	g_snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME ": Ban List (%s)"),
+	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME ": Ban List (%s)"),
 					sess->server->servername);
 
 	banl->window = mg_create_generic_tab ("BanList", tbuf, false,

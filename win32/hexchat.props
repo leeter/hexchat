@@ -9,26 +9,26 @@
 		<YourDepsPath>c:\mozilla-build\hexchat\gtk</YourDepsPath>
 		<YourGendefPath>c:\mozilla-build\gendef</YourGendefPath>
 		<YourMsgfmtPath>c:\mozilla-build\msgfmt</YourMsgfmtPath>
-		<YourBoostPath>c:\mozilla-build\hexchat\boost_1_56_0</YourBoostPath>
-		<YourPerlPath>c:\mozilla-build\perl-5.20</YourPerlPath>
-		<YourPython2Path>c:\mozilla-build\python-2.7</YourPython2Path>
-		<YourPython3Path>c:\mozilla-build\python-3.4</YourPython3Path>
+		<YourBoostPath>C:\mozilla-build\hexchat\boost_1_59_0</YourBoostPath>
+		<YourPerlPath>C:\Strawberry\perl</YourPerlPath>
+		<YourPython2Path>C:\Python27</YourPython2Path>
+		<YourPython3Path>C:\Python34</YourPython3Path>
 
 		<!-- YOU SHOULDN'T TOUCH ANYTHING BELOW -->
 
 		<!-- G_DISABLE_DEPRECATED is unfeasible due to g_completion_* -->
 		<!-- must be buildable with GSEAL_ENABLE in the future, xtext, setup, and chanview-tabs stand in the way --> 
-		<OwnFlags>GTK_DISABLE_DEPRECATED;GDK_PIXBUF_DISABLE_DEPRECATED;G_DISABLE_SINGLE_INCLUDES;GDK_PIXBUF_DISABLE_SINGLE_INCLUDES;GTK_DISABLE_SINGLE_INCLUDES;HAVE_STRTOULL;strtoull=_strtoui64;strcasecmp=stricmp;strncasecmp=strnicmp;__inline__=__inline</OwnFlags>
+		<OwnFlags>GTK_DISABLE_DEPRECATED;GSEAL_ENABLE;GDK_DISABLE_DEPRECATED;GDK_PIXBUF_DISABLE_DEPRECATED;G_DISABLE_SINGLE_INCLUDES;GDK_PIXBUF_DISABLE_SINGLE_INCLUDES;GTK_DISABLE_SINGLE_INCLUDES;HAVE_STRTOULL;strtoull=_strtoui64;strcasecmp=stricmp;strncasecmp=strnicmp;__inline__=__inline</OwnFlags>
 		<DepsRoot>$(YourDepsPath)\$(PlatformName)</DepsRoot>
 		<GendefPath>$(YourGendefPath)</GendefPath>
 		<MsgfmtPath>$(YourMsgfmtPath)</MsgfmtPath>
-		<PerlPath>$(YourPerlPath)\$(PlatformName)</PerlPath>
+		<PerlPath>$(YourPerlPath)</PerlPath>
 		<PerlLib>perl520</PerlLib>
 		<PerlOutput>hcperl</PerlOutput>
-		<Python2Path>$(YourPython2Path)\$(PlatformName)</Python2Path>
+		<Python2Path>$(YourPython2Path)</Python2Path>
 		<Python2Lib>python27</Python2Lib>
 		<Python2Output>hcpython2</Python2Output>
-		<Python3Path>$(YourPython3Path)\$(PlatformName)</Python3Path>
+		<Python3Path>$(YourPython3Path)</Python3Path>
 		<Python3Lib>python34</Python3Lib>
 		<Python3Output>hcpython3</Python3Output>
 		<Glib>$(DepsRoot)\include\glib-2.0;$(DepsRoot)\lib\glib-2.0\include;$(DepsRoot)\include\libxml2</Glib>
@@ -94,6 +94,7 @@ copy "$(HexChatBin)hcpython3.dll" "$(HexChatRel)\plugins"
 copy "$(HexChatBin)hcupd.dll" "$(HexChatRel)\plugins"
 copy "$(HexChatBin)hcwinamp.dll" "$(HexChatRel)\plugins"
 copy "$(HexChatBin)hcsysinfo.dll" "$(HexChatRel)\plugins"
+copy "$(HexChatBin)hcnotifications.dll" "$(HexChatRel)\plugins"
 xcopy /q /s /i "$(HexChatBin)locale" "$(HexChatRel)\share\locale"
 xcopy /q /s /i "$(DepsRoot)\share\locale" "$(HexChatRel)\share\locale"
 		</HexChatCopy>
