@@ -297,7 +297,7 @@ static bool parse_set(const char val[])
 		 !std::atoi(val));
 }
 
-static const char *get_bool_str(bool val) { return val ? "ON" : "OFF"; }
+static constexpr char *get_bool_str(bool val) { return val ? "ON" : "OFF"; }
 
 int notifications_cmd_cb(const char *const word[], const char *const[],
 			 void *) noexcept
