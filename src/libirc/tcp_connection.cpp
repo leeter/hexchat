@@ -16,6 +16,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 #define OPENSSL_NO_SSL2
+#define OPENSSL_NO_SSL3
 #include <atomic>
 #include <algorithm>
 #include <istream>
@@ -43,7 +44,7 @@ namespace{
 
 	struct ssl_context : public context{
 		ssl_context(boost::asio::ssl::context::verify_mode mode)
-			:ssl_ctx(io_service, boost::asio::ssl::context::tlsv1)
+			:ssl_ctx(io_service, boost::asio::ssl::context::tlsv12)
 		{
 			ssl_ctx.set_options(
 				boost::asio::ssl::context::no_sslv2 |
@@ -79,8 +80,9 @@ namespace{
 			boost::asio::ip::tcp::resolver::iterator current_iterator = endpoint_iterator;
 			boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
 			socket_.lowest_layer().async_connect(endpoint,
-				boost::bind(&basic_connection::do_connect, this,
-				boost::asio::placeholders::error, ++endpoint_iterator, current_iterator));
+				[this, endpoint_iterator, current_iterator](const auto & error) mutable {
+				this->do_connect(error, ++endpoint_iterator, current_iterator);
+			});
 		}
 		void enqueue_message(const std::string & message);
 		/* Gets around the thorny issue of calling or referencing a
@@ -95,8 +97,9 @@ namespace{
 				boost::asio::ip::tcp::resolver::iterator current_iterator = endpoint_iterator;
 				boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
 				socket_.lowest_layer().async_connect(endpoint,
-					boost::bind(&basic_connection::do_connect, this,
-					boost::asio::placeholders::error, ++endpoint_iterator, current_iterator));
+					[this, endpoint_iterator, current_iterator](const auto & error) mutable {
+					this->do_connect(error, ++endpoint_iterator, current_iterator);
+				});
 			}
 			else if (error)
 			{
@@ -149,9 +152,9 @@ namespace{
 		{
 			if (!error)
 			{
-				socket_.async_handshake(boost::asio::ssl::stream_base::client,
-					boost::bind(&ssl_connection::handle_handshake, this,
-					boost::asio::placeholders::error));
+				socket_.async_handshake(boost::asio::ssl::stream_base::client, [this](const auto& error) {
+					this->handle_handshake(error);
+				});
 			}
 			else
 			{
@@ -166,9 +169,9 @@ namespace{
 			{
 				// start the read loop
 				boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
-					boost::bind(&basic_connection::handle_read, this,
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred));
+					[this](const auto & error, auto transferred ) {
+					this->handle_read(error, transferred);
+				});
 
 				// callback to allow for printing of cipher info
 				this->on_ssl_handshakecomplete(socket_.impl()->ssl);
@@ -198,9 +201,9 @@ namespace{
 			}
 			// start the read loop
 			boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
-				boost::bind(&basic_connection::handle_read, this,
-				boost::asio::placeholders::error,
-				boost::asio::placeholders::bytes_transferred));
+				[this](const auto & error, auto transferred) {
+				this->handle_read(error, transferred);
+			});
 			this->on_connect(error);
 		}
 	};
@@ -223,16 +226,18 @@ namespace{
 		const std::string& message = this->outbound_queue_.front();
 		boost::asio::async_write(socket_,
 			boost::asio::buffer(message),
-			boost::bind(&basic_connection::handle_write, this,
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
+			[this](const auto & error, auto transferred) {
+			this->handle_write(error, transferred);
+		});
 	}
 
 	template<class SocketType_>
 	void
 	basic_connection<SocketType_>::enqueue_message(const std::string & message)
 	{
-		this->strand_.post(std::bind(std::mem_fn(&basic_connection::write_impl), this, message));
+		this->strand_.post([this, message] {
+			this->write_impl(message);
+		});
 	}
 
 	template<class SocketType_>
@@ -266,9 +271,9 @@ namespace{
 			this->on_message(message_, to_read);
 			
 			boost::asio::async_read_until(socket_, this->input_buffer_, "\r\n",
-				boost::bind(&basic_connection::handle_read, this,
-				boost::asio::placeholders::error,
-				boost::asio::placeholders::bytes_transferred));
+				[this](const auto & error, auto transferred) {
+				this->handle_read(error, transferred);
+			});
 		}
 		else
 		{
