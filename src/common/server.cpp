@@ -273,19 +273,19 @@ tcp_sendf (server &serv, const char *fmt, ...)
 	tcp_send_len(serv, boost::string_ref(send_buf, len));
 }
 
-static int
-close_socket_cb (gpointer sok)
-{
-	closesocket (GPOINTER_TO_INT (sok));
-	return 0;
-}
-
-static void
-close_socket (int sok)
-{
-	/* close the socket in 5 seconds so the QUIT message is not lost */
-	fe_timeout_add (5000, close_socket_cb, GINT_TO_POINTER (sok));
-}
+//static int
+//close_socket_cb (gpointer sok)
+//{
+//	closesocket (GPOINTER_TO_INT (sok));
+//	return 0;
+//}
+//
+//static void
+//close_socket (int sok)
+//{
+//	/* close the socket in 5 seconds so the QUIT message is not lost */
+//	fe_timeout_add (5000, close_socket_cb, GINT_TO_POINTER (sok));
+//}
 
 /* handle 1 line of text received from the server */
 
@@ -756,160 +756,160 @@ ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
 	return (TRUE);					  /* always ok */
 }
 
-static int
-ssl_do_connect (server * serv)
-{
-	char buf[128];
-
-	g_sess = serv->server_session;
-	if (SSL_connect (serv->ssl) <= 0)
-	{
-		char err_buf[128];
-		int err;
-
-		g_sess = nullptr;
-		if ((err = ERR_get_error ()) > 0)
-		{
-			ERR_error_string (err, err_buf);
-			snprintf (buf, sizeof (buf), "(%d) %s", err, err_buf);
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
-							 nullptr, nullptr, 0);
-
-			if (ERR_GET_REASON (err) == SSL_R_WRONG_VERSION_NUMBER)
-				PrintText (serv->server_session, _("Are you sure this is a SSL capable server and port?\n"));
-
-			serv->cleanup();
-
-			if (prefs.hex_net_auto_reconnectonfail)
-				serv->auto_reconnect (false, -1);
-
-			return (0);				  /* remove it (0) */
-		}
-	}
-	g_sess = nullptr;
-
-	if (SSL_is_init_finished (serv->ssl))
-	{
-		io::ssl::cert_info cert_info = { 0 };
-		int verify_error;
-
-		if (!io::ssl::get_cert_info (cert_info, serv->ssl))
-		{
-			snprintf (buf, sizeof (buf), "* Certification info:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-			snprintf (buf, sizeof (buf), "  Subject:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-			for (int i = 0; cert_info.subject_word[i]; i++)
-			{
-				snprintf (buf, sizeof (buf), "    %s", cert_info.subject_word[i]);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-								 nullptr, 0);
-			}
-			snprintf (buf, sizeof (buf), "  Issuer:");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-			for (int i = 0; cert_info.issuer_word[i]; i++)
-			{
-				snprintf (buf, sizeof (buf), "    %s", cert_info.issuer_word[i]);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-								 nullptr, 0);
-			}
-			snprintf (buf, sizeof (buf), "  Public key algorithm: %s (%d bits)",
-						 cert_info.algorithm, cert_info.algorithm_bits);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-			/*if (cert_info.rsa_tmp_bits)
-			{
-				snprintf (buf, sizeof (buf),
-							 "  Public key algorithm uses ephemeral key with %d bits",
-							 cert_info.rsa_tmp_bits);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-								 NULL, 0);
-			}*/
-			snprintf (buf, sizeof (buf), "  Sign algorithm %s",
-						 cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-			snprintf (buf, sizeof (buf), "  Valid since %s to %s",
-						 cert_info.notbefore, cert_info.notafter);
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-		} else
-		{
-			snprintf (buf, sizeof (buf), " * No Certificate");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-		}
-
-		auto info = io::ssl::get_cipher_info (serv->ssl);	/* static buffer */
-		snprintf (buf, sizeof (buf), "* Cipher info:");
-		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
-						 0);
-		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
-					 info.version.c_str(), info.cipher.c_str(),
-					 info.cipher_bits);
-		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
-						 0);
-
-		verify_error = SSL_get_verify_result (serv->ssl);
-		switch (verify_error)
-		{
-		case X509_V_OK:
-			/* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
-			/* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
-			break;
-		case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
-		case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
-		case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
-		case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
-		case X509_V_ERR_CERT_HAS_EXPIRED:
-			if (serv->accept_invalid_cert)
-			{
-				snprintf (buf, sizeof (buf), "* Verify E: %s.? (%d) -- Ignored",
-							 X509_verify_cert_error_string (verify_error),
-							 verify_error);
-				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
-								 nullptr, 0);
-				break;
-			}
-		default:
-			snprintf (buf, sizeof (buf), "%s.? (%d)",
-						 X509_verify_cert_error_string (verify_error),
-						 verify_error);
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
-							 nullptr, 0);
-
-			serv->cleanup ();
-
-			return (0);
-		}
-
-		server_stopconnecting (serv);
-
-		/* activate gtk poll */
-		server_connected (serv);
-
-		return (0);					  /* remove it (0) */
-	} else
-	{
-		if (serv->ssl->session && serv->ssl->session->time + SSLTMOUT < time (nullptr))
-		{
-			snprintf (buf, sizeof (buf), "SSL handshake timed out");
-			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
-							 nullptr, nullptr, 0);
-			serv->cleanup (); /* ->connecting = FALSE */
-
-			if (prefs.hex_net_auto_reconnectonfail)
-				serv->auto_reconnect (false, -1);
-
-			return (0);				  /* remove it (0) */
-		}
-
-		return (1);					  /* call it more (1) */
-	}
-}
+//static int
+//ssl_do_connect (server * serv)
+//{
+//	char buf[128];
+//
+//	g_sess = serv->server_session;
+//	if (SSL_connect (serv->ssl) <= 0)
+//	{
+//		char err_buf[128];
+//		int err;
+//
+//		g_sess = nullptr;
+//		if ((err = ERR_get_error ()) > 0)
+//		{
+//			ERR_error_string (err, err_buf);
+//			snprintf (buf, sizeof (buf), "(%d) %s", err, err_buf);
+//			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
+//							 nullptr, nullptr, 0);
+//
+//			if (ERR_GET_REASON (err) == SSL_R_WRONG_VERSION_NUMBER)
+//				PrintText (serv->server_session, _("Are you sure this is a SSL capable server and port?\n"));
+//
+//			serv->cleanup();
+//
+//			if (prefs.hex_net_auto_reconnectonfail)
+//				serv->auto_reconnect (false, -1);
+//
+//			return (0);				  /* remove it (0) */
+//		}
+//	}
+//	g_sess = nullptr;
+//
+//	if (SSL_is_init_finished (serv->ssl))
+//	{
+//		io::ssl::cert_info cert_info = { 0 };
+//		int verify_error;
+//
+//		if (!io::ssl::get_cert_info (cert_info, serv->ssl))
+//		{
+//			snprintf (buf, sizeof (buf), "* Certification info:");
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//			snprintf (buf, sizeof (buf), "  Subject:");
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//			for (int i = 0; cert_info.subject_word[i]; i++)
+//			{
+//				snprintf (buf, sizeof (buf), "    %s", cert_info.subject_word[i]);
+//				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//								 nullptr, 0);
+//			}
+//			snprintf (buf, sizeof (buf), "  Issuer:");
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//			for (int i = 0; cert_info.issuer_word[i]; i++)
+//			{
+//				snprintf (buf, sizeof (buf), "    %s", cert_info.issuer_word[i]);
+//				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//								 nullptr, 0);
+//			}
+//			snprintf (buf, sizeof (buf), "  Public key algorithm: %s (%d bits)",
+//						 cert_info.algorithm, cert_info.algorithm_bits);
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//			/*if (cert_info.rsa_tmp_bits)
+//			{
+//				snprintf (buf, sizeof (buf),
+//							 "  Public key algorithm uses ephemeral key with %d bits",
+//							 cert_info.rsa_tmp_bits);
+//				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
+//								 NULL, 0);
+//			}*/
+//			snprintf (buf, sizeof (buf), "  Sign algorithm %s",
+//						 cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//			snprintf (buf, sizeof (buf), "  Valid since %s to %s",
+//						 cert_info.notbefore, cert_info.notafter);
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//		} else
+//		{
+//			snprintf (buf, sizeof (buf), " * No Certificate");
+//			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//		}
+//
+//		auto info = io::ssl::get_cipher_info (serv->ssl);	/* static buffer */
+//		snprintf (buf, sizeof (buf), "* Cipher info:");
+//		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+//						 0);
+//		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
+//					 info.version.c_str(), info.cipher.c_str(),
+//					 info.cipher_bits);
+//		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr, nullptr,
+//						 0);
+//
+//		verify_error = SSL_get_verify_result (serv->ssl);
+//		switch (verify_error)
+//		{
+//		case X509_V_OK:
+//			/* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
+//			/* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
+//			break;
+//		case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
+//		case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
+//		case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+//		case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
+//		case X509_V_ERR_CERT_HAS_EXPIRED:
+//			if (serv->accept_invalid_cert)
+//			{
+//				snprintf (buf, sizeof (buf), "* Verify E: %s.? (%d) -- Ignored",
+//							 X509_verify_cert_error_string (verify_error),
+//							 verify_error);
+//				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, nullptr, nullptr,
+//								 nullptr, 0);
+//				break;
+//			}
+//		default:
+//			snprintf (buf, sizeof (buf), "%s.? (%d)",
+//						 X509_verify_cert_error_string (verify_error),
+//						 verify_error);
+//			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr, nullptr,
+//							 nullptr, 0);
+//
+//			serv->cleanup ();
+//
+//			return (0);
+//		}
+//
+//		server_stopconnecting (serv);
+//
+//		/* activate gtk poll */
+//		server_connected (serv);
+//
+//		return (0);					  /* remove it (0) */
+//	} else
+//	{
+//		if (serv->ssl->session && serv->ssl->session->time + SSLTMOUT < time (nullptr))
+//		{
+//			snprintf (buf, sizeof (buf), "SSL handshake timed out");
+//			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, nullptr,
+//							 nullptr, nullptr, 0);
+//			serv->cleanup (); /* ->connecting = FALSE */
+//
+//			if (prefs.hex_net_auto_reconnectonfail)
+//				serv->auto_reconnect (false, -1);
+//
+//			return (0);				  /* remove it (0) */
+//		}
+//
+//		return (1);					  /* call it more (1) */
+//	}
+//}
 #endif
 
 static int
