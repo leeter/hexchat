@@ -25,7 +25,6 @@
 #include <random>
 #include <string>
 #include <utility>
-#include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
