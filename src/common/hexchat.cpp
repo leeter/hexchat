@@ -133,10 +133,12 @@ pxProxyFactory *libproxy_factory;
 
 int RAND_INT(int n)
 {
-	static std::random_device rd;
-	static std::mt19937 twstr(rd());
-	std::uniform_int_distribution<int> dist(0, n);
-	return dist(twstr);
+	using dist_t = std::uniform_int_distribution<int>;
+	using param_t = typename dist_t::param_type;
+
+	static std::mt19937 twstr(std::random_device{}());
+	static dist_t dist{};
+	return dist(twstr, param_t{ 0, n });
 }
 
 /*
@@ -727,7 +729,7 @@ static void
 set_locale (void)
 {
 #ifdef WIN32
-	char hexchat_lang[13] = { 0 };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
+	char hexchat_lang[13] = { };	/* LC_ALL= plus 5 chars of hex_gui_lang and trailing \0 */
 
 	if (0 <= prefs.hex_gui_lang && prefs.hex_gui_lang < LANGUAGES_LENGTH)
 		std::strcat (hexchat_lang, languages[prefs.hex_gui_lang]);
