@@ -241,5 +241,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\win32\config.h.tt" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
