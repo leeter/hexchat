@@ -43,7 +43,6 @@ struct text_event
 void scrollback_close (session &sess);
 void scrollback_load (session &sess);
 
-int text_word_check (char *word, int len);
 void PrintText(session *sess, const boost::string_ref & text);
 void PrintTextTimeStamp(session *sess, const boost::string_ref & text, time_t timestamp);
 void PrintTextf(session * sess, const boost::format & fmt);
@@ -55,8 +54,10 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 int pevent_load (boost::string_ref filename);
 void pevent_make_pntevts (void);
 int text_color_of(const boost::string_ref & name);
+[[deprecated]]
 void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		time_t timestamp);
+[[deprecated]]
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
 					   char *a, char *b, char *c, char *d);
 std::string text_validate (const boost::string_ref &);

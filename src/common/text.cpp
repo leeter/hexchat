@@ -42,6 +42,7 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref.hpp>
+#include "gsl/gsl.h"
 
 
 #ifdef WIN32
@@ -612,6 +613,7 @@ void PrintTextTimeStampf (session *sess, time_t timestamp, const char format[], 
  */
 std::array<std::string, NUM_XP> pntevts_text;
 std::array<std::string, NUM_XP> pntevts;
+std::array<boost::format, NUM_XP> fmtevents;
 
 #define pevt_generic_none_help nullptr
 
@@ -1355,7 +1357,7 @@ void load_text_events ()
 
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args)
 {
-	if (index < 0 || index > sizeof(pntevts))
+	if (index < 0 || index > pntevts.size())
 		throw std::invalid_argument("Invalid index");
 	int len, output_index, input_index, numargs;
 	bool done_all = false;
@@ -1436,6 +1438,21 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 		dst[0] = 0;
 }
 
+std::string format_event(session & sess, size_t eventIndex, const gsl::span<std::string> args) {
+	if (eventIndex > pntevts.size())
+		throw std::invalid_argument(u8"Invalid index");
+	auto numargs = te[eventIndex].num_args & 0x7f;
+	if (numargs != args.size())
+	{
+		auto message = (boost::format(u8"args.size() (%1%) differers from expected argument count (%2%)") % args.size() % numargs).str();
+		throw std::invalid_argument(message);
+	}
+
+	const std::string& display_evt = pntevts[eventIndex];
+	auto arg_index = args.cbegin();
+	return{};
+}
+
 static void display_event (session *sess, int event, char **args, 
 					unsigned int stripcolor_args, time_t timestamp)
 {
@@ -1452,6 +1469,10 @@ namespace
 		int len;
 		char *data;
 		struct pevt_stage1 *next;
+	};
+
+	struct pevent {
+
 	};
 } // end anonymous namespace
 
@@ -1574,6 +1595,27 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 
 	output = std::move(obuf);
 	return 0;
+}
+
+/**
+ * Converts a text event to a boost::format object
+ */
+boost::format text_event_to_format(const boost::string_ref & evt) {
+
+	std::ostringstream builder;
+	std::string buf = check_special_chars(evt, true);
+	std::istringstream in(buf);
+	char val;
+	while (in >> val) {
+		
+		if(val != '$' || val != '%'){
+			builder << val;
+		}
+		else if (val == '%') {
+			builder << "%%";
+		}
+	}
+	return boost::format{ in.str() };
 }
 
 

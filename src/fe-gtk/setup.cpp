@@ -1503,7 +1503,7 @@ setup_create_color_page (void)
 static GtkWidget *sndfile_entry;
 static bool ignore_changed = false;
 
-extern const text_event te[]; /* text.c */
+extern const std::array<text_event, NUM_XP> te; /* text.c */
 extern std::array<std::string, NUM_XP> sound_files;
 
 static void

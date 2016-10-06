@@ -48,7 +48,7 @@ int main(void)
 	std::vector<std::string> defines;
   	int i = 0, max;
 	std::cout.sync_with_stdio(false);
-	std::cout << "/* this file is auto generated, edit textevents.in instead! */\nextern const struct text_event te[] = {\n";
+	std::cout << "/* this file is auto generated, edit textevents.in instead! */\n#include <array>\nextern const std::array<text_event, NUM_XP> te = {{\n";
 	for (std::string name; std::getline(std::cin, name);)
 	{
 		std::string num, help, def, args;
@@ -70,7 +70,7 @@ int main(void)
 		i++;
 	}
 
-	std::cout << "};\n";
+	std::cout << "}};\n";
 	std::cout.flush();
 	
 	std::clog.sync_with_stdio(false);    
