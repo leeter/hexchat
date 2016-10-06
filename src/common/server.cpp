@@ -1672,11 +1672,11 @@ server::connect (char *hostname, int port, bool no_login)
 		return;
 	}
 	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
-	this->server_connection->on_connect.connect(std::bind(server_connected1, this, std::placeholders::_1));
+	this->server_connection->on_connect.connect([this](const auto & error) { server_connected1(this, error); });
 	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str()); });
-	this->server_connection->on_error.connect(std::bind(server_error, this, std::placeholders::_1));
-	this->server_connection->on_message.connect(std::bind(server_read_cb, this, std::placeholders::_1, std::placeholders::_2));
-	this->server_connection->on_ssl_handshakecomplete.connect(std::bind(ssl_print_cert_info, this, std::placeholders::_1));
+	this->server_connection->on_error.connect([this](const auto& error) { server_error(this, error); });
+	this->server_connection->on_message.connect([this](const auto & message, auto length) { server_read_cb(this, message, length); });
+	this->server_connection->on_ssl_handshakecomplete.connect([this](auto ctx) { ssl_print_cert_info(this, ctx); });
 	this->server_connection->connect(resolved.second);
 	
 	this->reset_to_defaults();

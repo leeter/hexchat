@@ -251,8 +251,8 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 		for (auto i = gtk_adjustment_get_value(adj); ((i > new_value) && (tab_left_is_moving)); i -= 0.1)
 		{
 			gtk_adjustment_set_value(adj, i);
-			while (g_main_context_pending(NULL))
-				g_main_context_iteration(NULL, TRUE);
+			while (g_main_context_pending(nullptr))
+				g_main_context_iteration(nullptr, TRUE);
 		}
 
 		gtk_adjustment_set_value(adj, new_value);
@@ -299,8 +299,8 @@ tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
 		for (auto i = gtk_adjustment_get_value(adj); ((i < new_value) && (tab_right_is_moving)); i += 0.1)
 		{
 			gtk_adjustment_set_value(adj, i);
-			while (g_main_context_pending(NULL))
-				g_main_context_iteration(NULL, TRUE);
+			while (g_main_context_pending(nullptr))
+				g_main_context_iteration(nullptr, TRUE);
 		}
 
 		gtk_adjustment_set_value(adj, new_value);
@@ -365,7 +365,7 @@ make_sbutton(GtkArrowType type, GSourceFunc click_cb, void *userdata)
 static void
 cv_tabs_init(chanview *cv)
 {
-	GtkWidget *box, *hbox = NULL;
+	GtkWidget *box, *hbox = nullptr;
 	GtkWidget *viewport;
 	GtkWidget *outer;
 	GtkWidget *button;
@@ -427,7 +427,7 @@ cv_tabs_init(chanview *cv)
 		gtk_box_pack_start(GTK_BOX(outer), ((tabview *)cv)->b1, 0, 0, 0);
 	}
 
-	button = gtkutil_button(outer, GTK_STOCK_CLOSE, NULL, G_CALLBACK(cv_tabs_xclick_cb),
+	button = gtkutil_button(outer, GTK_STOCK_CLOSE, nullptr, G_CALLBACK(cv_tabs_xclick_cb),
 		cv, 0);
 	gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
 	gtk_widget_set_can_focus(button, FALSE);
@@ -644,9 +644,9 @@ cv_tabs_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 		G_CALLBACK(tab_click_cb), ch);
 	/* avoid prelights */
 	g_signal_connect(G_OBJECT(but), "enter_notify_event",
-		G_CALLBACK(tab_ignore_cb), NULL);
+		G_CALLBACK(tab_ignore_cb), nullptr);
 	g_signal_connect(G_OBJECT(but), "leave_notify_event",
-		G_CALLBACK(tab_ignore_cb), NULL);
+		G_CALLBACK(tab_ignore_cb), nullptr);
 	g_signal_connect(G_OBJECT(but), "pressed",
 		G_CALLBACK(tab_pressed_cb), ch);
 	/* for keyboard */
@@ -783,7 +783,7 @@ static void
 cv_tabs_remove(chan *ch)
 {
 	gtk_widget_destroy(static_cast<GtkWidget*>(ch->impl));
-	ch->impl = NULL;
+	ch->impl = nullptr;
 
 	cv_tabs_prune(ch->cv);
 }
@@ -816,7 +816,7 @@ static void
 cv_tabs_move_family(chan *ch, int delta)
 {
 	int pos = 0;
-	GtkWidget *box = NULL;
+	GtkWidget *box = nullptr;
 
 	/* find position of tab's family */
 	int i = 0;
@@ -881,7 +881,7 @@ cv_tabs_is_collapsed(chan *ch)
 static chan *
 cv_tabs_get_parent(chan *ch)
 {
-	return NULL;
+	return nullptr;
 }
 
 
@@ -998,7 +998,7 @@ cv_tree_init(chanview *cv)
 	/* Indented channels with no server looks silly, but we still want expanders */
 	if (!prefs.hex_gui_tab_server)
 	{
-		gtk_widget_style_get(view, "expander-size", &wid1, "horizontal-separator", &wid2, NULL);
+		gtk_widget_style_get(view, "expander-size", &wid1, "horizontal-separator", &wid2, nullptr);
 		gtk_tree_view_set_level_indentation(GTK_TREE_VIEW(view), -wid1 - wid2);
 	}
 
@@ -1011,19 +1011,19 @@ cv_tree_init(chanview *cv)
 	{
 		renderer = gtk_cell_renderer_pixbuf_new();
 		if (prefs.hex_gui_compact)
-			g_object_set(G_OBJECT(renderer), "ypad", 0, NULL);
+			g_object_set(G_OBJECT(renderer), "ypad", 0, nullptr);
 
 		gtk_tree_view_column_pack_start(col, renderer, FALSE);
-		gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COL_PIXBUF, NULL);
+		gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COL_PIXBUF, nullptr);
 	}
 
 	/* main column */
 	renderer = gtk_cell_renderer_text_new();
 	if (prefs.hex_gui_compact)
-		g_object_set(G_OBJECT(renderer), "ypad", 0, NULL);
+		g_object_set(G_OBJECT(renderer), "ypad", 0, nullptr);
 	gtk_cell_renderer_text_set_fixed_height_from_font(GTK_CELL_RENDERER_TEXT(renderer), 1);
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COL_NAME, "attributes", COL_ATTR, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COL_NAME, "attributes", COL_ATTR, nullptr);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	g_signal_connect(G_OBJECT(gtk_tree_view_get_selection(GTK_TREE_VIEW(view))),
@@ -1031,22 +1031,22 @@ cv_tree_init(chanview *cv)
 	g_signal_connect(G_OBJECT(view), "button-press-event",
 		G_CALLBACK(cv_tree_click_cb), cv);
 	g_signal_connect(G_OBJECT(view), "row-activated",
-		G_CALLBACK(cv_tree_activated_cb), NULL);
+		G_CALLBACK(cv_tree_activated_cb), nullptr);
 	g_signal_connect(G_OBJECT(view), "scroll_event",
-		G_CALLBACK(cv_tree_scroll_event_cb), NULL);
+		G_CALLBACK(cv_tree_scroll_event_cb), nullptr);
 
 	gtk_drag_dest_set(view, GTK_DEST_DEFAULT_ALL, dnd_dest_target, 1,
 		static_cast<GdkDragAction>(GDK_ACTION_MOVE | GDK_ACTION_COPY | GDK_ACTION_LINK));
 	gtk_drag_source_set(view, GDK_BUTTON1_MASK, dnd_src_target, 1, GDK_ACTION_COPY);
 
 	g_signal_connect(G_OBJECT(view), "drag_begin",
-		G_CALLBACK(mg_drag_begin_cb), NULL);
+		G_CALLBACK(mg_drag_begin_cb), nullptr);
 	g_signal_connect(G_OBJECT(view), "drag_drop",
-		G_CALLBACK(mg_drag_drop_cb), NULL);
+		G_CALLBACK(mg_drag_drop_cb), nullptr);
 	g_signal_connect(G_OBJECT(view), "drag_motion",
-		G_CALLBACK(mg_drag_motion_cb), NULL);
+		G_CALLBACK(mg_drag_motion_cb), nullptr);
 	g_signal_connect(G_OBJECT(view), "drag_end",
-		G_CALLBACK(mg_drag_end_cb), NULL);
+		G_CALLBACK(mg_drag_end_cb), nullptr);
 
 	((treeview *)cv)->tree = GTK_TREE_VIEW(view);
 	((treeview *)cv)->scrollw = win;
@@ -1075,7 +1075,7 @@ cv_tree_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -1112,16 +1112,16 @@ cv_tree_focus(chan *ch)
 	if (path)
 	{
 		/* This full section does what
-		* gtk_tree_view_scroll_to_cell (tree, path, NULL, TRUE, 0.5, 0.5);
+		* gtk_tree_view_scroll_to_cell (tree, path, nullptr, TRUE, 0.5, 0.5);
 		* does, except it only scrolls the window if the provided cell is
 		* not visible. Basic algorithm taken from gtktreeview.c */
 
 		/* obtain information to see if the cell is visible */
-		gtk_tree_view_get_background_area(tree, path.get(), NULL, &cell_rect);
+		gtk_tree_view_get_background_area(tree, path.get(), nullptr, &cell_rect);
 		gtk_tree_view_get_visible_rect(tree, &vis_rect);
 
 		/* The cordinates aren't offset correctly */
-		gtk_tree_view_convert_widget_to_bin_window_coords(tree, cell_rect.x, cell_rect.y, NULL, &cell_rect.y);
+		gtk_tree_view_convert_widget_to_bin_window_coords(tree, cell_rect.x, cell_rect.y, nullptr, &cell_rect.y);
 
 		/* only need to scroll if out of bounds */
 		if (cell_rect.y < vis_rect.y ||
@@ -1133,7 +1133,7 @@ cv_tree_focus(chan *ch)
 			gtk_tree_view_scroll_to_point(tree, -1, dest_y);
 		}
 		/* theft done, now make it focused like */
-		gtk_tree_view_set_cursor(tree, path.get(), NULL, FALSE);
+		gtk_tree_view_set_cursor(tree, path.get(), nullptr, FALSE);
 	}
 }
 
@@ -1173,7 +1173,7 @@ move_row(chan *ch, int delta, GtkTreeIter *parent)
 		if (gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &dest))
 			gtk_tree_store_swap(store, src, &dest);
 		else	/* move to top */
-			gtk_tree_store_move_after(store, src, NULL);
+			gtk_tree_store_move_after(store, src, nullptr);
 
 	}
 	else
@@ -1186,7 +1186,7 @@ move_row(chan *ch, int delta, GtkTreeIter *parent)
 		}
 		else
 		{	/* move to bottom */
-			gtk_tree_store_move_before(store, src, NULL);
+			gtk_tree_store_move_before(store, src, nullptr);
 		}
 	}
 }
@@ -1204,7 +1204,7 @@ cv_tree_move(chan *ch, int delta)
 static void
 cv_tree_move_family(chan *ch, int delta)
 {
-	move_row(ch, delta, NULL);
+	move_row(ch, delta, nullptr);
 }
 
 static void
@@ -1230,7 +1230,7 @@ cv_tree_rename(chan *, const char[])
 static chan *
 cv_tree_get_parent(chan *ch)
 {
-	chan *parent_ch = NULL;
+	chan *parent_ch = nullptr;
 	GtkTreeIter parent;
 
 	if (gtk_tree_model_iter_parent(GTK_TREE_MODEL(ch->cv->store), &parent, &ch->iter))
@@ -1246,7 +1246,7 @@ cv_tree_is_collapsed(chan *ch)
 {
 	chan *parent = cv_tree_get_parent(ch);
 
-	if (parent == NULL)
+	if (parent == nullptr)
 		return FALSE;
 
 	GtkTreePathPtr path( gtk_tree_model_get_path(GTK_TREE_MODEL(parent->cv->store),
@@ -1308,7 +1308,7 @@ chanview_pop_cb (chanview *cv, GtkTreeIter *iter)
 	gtk_tree_model_get (GTK_TREE_MODEL (cv->store), iter,
 							  COL_NAME, &name, COL_CHAN, &ch, COL_ATTR, &attr, -1);
 	glib_string name_ptr{ name };
-	ch->impl = cv->func_add (cv, ch, name, NULL);
+	ch->impl = cv->func_add (cv, ch, name, nullptr);
 	if (attr)
 	{
 		cv->func_set_color (ch, attr);
@@ -1319,8 +1319,9 @@ chanview_pop_cb (chanview *cv, GtkTreeIter *iter)
 static void
 chanview_populate (chanview *cv)
 {
-	auto callback = std::bind(chanview_pop_cb, cv, std::placeholders::_1);
-	model_foreach_1(GTK_TREE_MODEL(cv->store), callback);
+	model_foreach_1(GTK_TREE_MODEL(cv->store), [cv](auto itr) {
+		chanview_pop_cb(cv, itr);
+	});
 }
 
 void
@@ -1391,8 +1392,9 @@ chanview_free_ch (chanview *cv, GtkTreeIter *iter)
 static void
 chanview_destroy_store (chanview *cv)	/* free every (chan *) in the store */
 {
-	auto callback = std::bind(chanview_free_ch, cv, std::placeholders::_1);
-	model_foreach_1(GTK_TREE_MODEL(cv->store), callback);
+	model_foreach_1(GTK_TREE_MODEL(cv->store), [cv](auto itr) {
+		chanview_free_ch(cv, itr);
+	});
 	g_object_unref (cv->store);
 }
 
@@ -1412,7 +1414,7 @@ chanview_destroy (chanview *cv)
 static void
 chanview_box_destroy_cb (GtkWidget *box, chanview *cv)
 {
-	cv->box = NULL;
+	cv->box = nullptr;
 	chanview_destroy (cv);
 }
 
@@ -1711,7 +1713,7 @@ cv_find_chan_by_number (chanview *cv, int num)
 		while (gtk_tree_model_iter_next (GTK_TREE_MODEL (cv->store), &iter));
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -1761,7 +1763,7 @@ bool chan_remove (chan *ch, bool force)
 	/* is it the focused one? */
 	if (ch->cv->focused == ch)
 	{
-		ch->cv->focused = NULL;
+		ch->cv->focused = nullptr;
 
 		/* try to move the focus to some other valid channel */
 		num = cv_find_number_of_chan (ch->cv, ch);

@@ -65,11 +65,12 @@ static bool notify_do_network (struct notify *notify, const server &serv)
 	if (notify->networks.empty())	/* ALL networks for this nick */
 		return true;
 	std::string serv_str = serv.get_network(true).to_string();
+	std::locale loc;
 	serv_str.erase(
 		std::remove_if(
 		serv_str.begin(),
 		serv_str.end(),
-		std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+			[&loc](auto c) {return std::isspace<char>(c, loc); }),
 		serv_str.end());
 	return std::find_if(
 		notify->networks.cbegin(),
@@ -549,11 +550,12 @@ void notify_adduser (const char *name, const char *networks)
 	if (networks)
 	{
 		std::string netwks_str(networks);
+		std::locale loc;
 		netwks_str.erase(
 			std::remove_if(
 			netwks_str.begin(),
 			netwks_str.end(),
-			std::bind(std::isspace<char>, std::placeholders::_1, std::locale())),
+			[&loc](auto c){ return std::isspace<char>(c, loc); }),
 			netwks_str.end());
 		boost::split(notify->networks, netwks_str, boost::is_any_of(","));
 	}
