@@ -94,11 +94,6 @@ notify_find_server_entry (struct notify &notify, struct server &serv)
 	if (!notify_do_network (notify, serv))
 		return nullptr;
 
-	/*std::unique_ptr<notify_per_server> servnot(new notify_per_server());
-	servnot->server = &serv;
-	servnot->notify = notify;*/
-	//notify->server_list = g_slist_prepend(notify->server_list, servnot.get());
-	//notify_per_server note{ &serv, notify };
 	notify.server_list.emplace_back(notify_per_server{ &serv, &notify });
 	return &notify.server_list.back();
 }
