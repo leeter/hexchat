@@ -21,6 +21,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <ctime>
+#include <chrono>
 #include <boost/utility/string_ref.hpp>
 
 #include "fe-gtk.hpp"
@@ -291,7 +292,7 @@ notify_gui_update (void)
 	GSList *list = notify_list;
 	while (list)
 	{
-		auto notify = (struct notify *) list->data;
+		auto notify = static_cast<struct notify *>(list->data);
 		auto name = notify->name.c_str();
 		const char* status = _("Offline");
 		boost::string_ref server{ "", 0 };
@@ -343,7 +344,7 @@ notify_gui_update (void)
 						name = "";
 					server = servnot.server->get_network(true);
 
-					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (0) - lastseen) / 60);
+					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (nullptr) - lastseen) / 60);
 					seen = agobuf;
 
 					if (!valid)	/* create new tree row if required */

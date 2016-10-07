@@ -25,6 +25,7 @@
 #include "proto-irc.hpp"
 #include "serverfwd.hpp"
 #include "sessfwd.hpp"
+#include <boost/utility/string_ref_fwd.hpp>
 
 struct notify_per_server;
 
@@ -61,11 +62,11 @@ void notify_set_offline_list (server & serv, const std::string& users, bool quie
 void notify_send_watches (server & serv);
 
 /* the general stuff */
-void notify_adduser (const char *name, const char *networks);
+void notify_adduser (boost::string_ref name, boost::string_ref networks);
 bool notify_deluser (const std::string& name);
 void notify_cleanup (void);
-void notify_load (void);
-void notify_save (void);
+void notify_load ();
+void notify_save ();
 void notify_showlist (session *sess, const message_tags_data *tags_data);
 bool notify_is_in_list (const server &serv, const std::string & name);
 bool notify_isnotify (session *sess, const char *name);

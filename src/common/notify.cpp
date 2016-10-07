@@ -38,6 +38,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/utility/string_ref.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #ifdef WIN32
 #include <io.h>
@@ -53,9 +54,10 @@
 #include "util.hpp"
 #include "hexchatc.hpp"
 #include "session.hpp"
+#include "filesystem.hpp"
 
 
-GSList *notify_list = 0;
+GSList *notify_list = nullptr;
 int notify_tag = 0;
 
 /* monitor this nick on this particular network? */
@@ -98,58 +100,58 @@ notify_find_server_entry (struct notify &notify, struct server &serv)
 	return &notify.server_list.back();
 }
 
-void notify_save (void)
+void notify_save ()
 {
-	int fh = hexchat_open_file ("notify.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	if (fh == -1)
+	const auto path = io::fs::make_config_path("notify.conf");
+	io::fs::create_file_with_mode(path, 0600);
+	namespace bfs = boost::filesystem;
+	bfs::ofstream out{ path, std::ios::trunc | std::ios::out | std::ios::binary | std::ios::app };
+	if (!out)
 	{
 		return;
 	}
 	GSList *list = notify_list;
 	while (list)
 	{
-		auto notify = static_cast<struct notify *>(list->data);
-		write(fh, notify->name.c_str(), notify->name.size());
+		const auto notify = static_cast<struct notify *>(list->data);
+		out << notify->name;
 		if (!notify->networks.empty())
 		{
-			write(fh, " ", 1);
-			auto result = boost::join(notify->networks, ",");
-			write(fh, result.c_str(), result.size());
+			out << " " << boost::join(notify->networks, ",");
 		}
-		write(fh, "\n", 1);
+		out << '\n';
 		list = list->next;
 	}
-	close(fh);
 }
 
-void notify_load (void)
+void notify_load ()
 {
-	int fh = hexchat_open_file ("notify.conf", O_RDONLY, 0, 0);
-	if (fh == -1)
+	const auto path = io::fs::make_config_path("notify.conf");
+	namespace bfs = boost::filesystem;
+	bfs::ifstream in{ path, std::ios::binary | std::ios::in };
+	if (!in)
 	{
 		return;
 	}
 
-	char buf[256];
-	char *sep;
-	while (waitline(fh, buf, sizeof buf, FALSE) != -1)
+	for (std::string line; std::getline(in, line, '\n');)
 	{
-		if (buf[0] != '#' && buf[0] != 0)
-		{
-			sep = strchr(buf, ' ');
-			if (sep)
-			{
-				sep[0] = 0;
-				notify_adduser(buf, sep + 1);
-			}
-			else
-				notify_adduser(buf, NULL);
+		if (boost::starts_with(line, "#")) {
+			continue;
+		}
+
+		std::vector<std::string> parts;
+		boost::split(parts, line, [](auto c) { return c == ' '; });
+		if (parts.size() == 2) {
+			notify_adduser(parts[0], parts[1]);
+		}
+		else if(parts.size() == 1) {
+			notify_adduser(parts[0], {});
 		}
 	}
-	close(fh);
 }
 
-static struct notify_per_server * notify_find (server &serv, const std::string& nick)
+static notify_per_server * notify_find (server &serv, const std::string& nick)
 {
 	GSList *list = notify_list;
 	while (list)
@@ -169,7 +171,7 @@ static struct notify_per_server * notify_find (server &serv, const std::string& 
 		list = list->next;
 	}
 
-	return 0;
+	return nullptr;
 }
 
 static void notify_announce_offline (server & serv, struct notify_per_server *servnot,
@@ -184,7 +186,7 @@ static void notify_announce_offline (server & serv, struct notify_per_server *se
 		auto net = serv.get_network(true).to_string();
 		session *sess = serv.front_session;
 		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
-			&net[0], NULL, 0,
+			&net[0], nullptr, 0,
 			tags_data->timestamp);
 	}
 	fe_notify_update(&mutable_nick);
@@ -484,7 +486,7 @@ void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 	GSList *list = notify_list;
 	int i = 0;
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYHEAD, sess, NULL, NULL, NULL, NULL, 0,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYHEAD, sess, nullptr, nullptr, nullptr, nullptr, 0,
 								  tags_data->timestamp);
 	while (list)
 	{
@@ -500,11 +502,11 @@ void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 	}
 	if (i)
 	{
-		sprintf (outbuf, "%d", i);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYNUMBER, sess, outbuf, NULL, NULL, NULL,
+		snprintf (outbuf, sizeof(outbuf), "%d", i);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYNUMBER, sess, outbuf, nullptr, nullptr, nullptr,
 									  0, tags_data->timestamp);
 	} else
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYEMPTY, sess, NULL, NULL, NULL, NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYEMPTY, sess, nullptr, nullptr, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 }
 
@@ -537,12 +539,12 @@ bool notify_deluser(const std::string& name)
 	return false;
 }
 
-void notify_adduser (const char *name, const char *networks)
+void notify_adduser (boost::string_ref name, boost::string_ref networks)
 {
-	auto notif = std::make_unique<struct notify>(notify{ name });
-	if (networks)
+	auto notif = std::make_unique<struct notify>(notify{ name.to_string() });
+	if (!networks.empty())
 	{
-		std::string netwks_str(networks);
+		auto netwks_str = networks.to_string();
 		std::locale loc;
 		netwks_str.erase(
 			std::remove_if(
@@ -606,10 +608,9 @@ notify_cleanup ()
 	{
 		/* Traverse the list of notify structures */
 		auto notify = static_cast<struct notify *>(list->data);
-		auto notifEnd = notify->server_list.end();
 		notify->server_list.erase(std::remove_if(
 			notify->server_list.begin(),
-			notifEnd,
+			notify->server_list.end(),
 			[](const auto & servnot) {
 			bool valid = false;
 			auto srvlist = serv_list;
@@ -624,7 +625,7 @@ notify_cleanup ()
 				srvlist = srvlist->next;
 			}
 			return !valid;
-		}), notifEnd);
+		}), notify->server_list.end());
 
 		list = list->next;
 	}

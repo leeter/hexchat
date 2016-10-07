@@ -54,7 +54,7 @@ namespace io
 #endif
 		}
 
-		bool create_file_with_mode(const bfs::path& path, int mode)
+		bool create_file_with_mode(const bfs::path& path, int mode) noexcept
 		{
 			int tfd;
 #ifdef WIN32

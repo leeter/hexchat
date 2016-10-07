@@ -36,7 +36,7 @@ namespace io
 			XOF_FULLPATH = 2
 		};
 		
-		bool create_file_with_mode(const boost::filesystem::path&, int mode);
+		bool create_file_with_mode(const boost::filesystem::path&, int mode) noexcept;
 	}
 }
 
