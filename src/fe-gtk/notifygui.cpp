@@ -204,7 +204,7 @@ static void
 notifygui_add_cb(GtkDialog *dialog, gint response, gpointer entry)
 {
 	auto text = gtk_entry_get_text(GTK_ENTRY(entry));
-	if (text[0] && response == GTK_RESPONSE_ACCEPT)
+	if (text && text[0] && response == GTK_RESPONSE_ACCEPT)
 	{
 		auto networks = gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(entry), "net")));
 		if (g_ascii_strcasecmp(networks, "ALL") == 0 || networks[0] == 0)
@@ -231,7 +231,7 @@ namespace notify{
 		fe_notify_ask(char *nick, char *networks)
 	{
 		const char *msg = _("Enter nickname to add:");
-		char buf[256];
+		char buf[256] = {};
 
 		auto dialog = gtk_dialog_new_with_buttons(msg, nullptr, GtkDialogFlags(),
 			GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -357,8 +357,13 @@ notify_gui_update (void)
 
 					if (!valid)	/* create new tree row if required */
 						gtk_list_store_append (store, &iter);
-					gtk_list_store_set (store, &iter, 0, name, 1, status,
-										2, server.data(), 3, seen, 4, &colors[3], 5, servnot, -1);
+					gtk_list_store_set (store, &iter,
+						USER_COLUMN, name,
+						STATUS_COLUMN, status,
+						SERVER_COLUMN, server.data(),
+						SEEN_COLUMN, seen,
+						COLOUR_COLUMN, &colors[3],
+						NPS_COLUMN, &servnot, -1);
 					if (valid)
 						valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
