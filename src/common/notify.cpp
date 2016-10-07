@@ -31,20 +31,12 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 #include "notify.hpp"
 #include "cfgfiles.hpp"
@@ -62,9 +54,9 @@ int notify_tag = 0;
 
 /* monitor this nick on this particular network? */
 
-static bool notify_do_network (struct notify &notify, const server &serv)
+static bool notify_do_network (const notify &ntfy, const server &serv)
 {
-	if (notify.networks.empty())	/* ALL networks for this nick */
+	if (ntfy.networks.empty())	/* ALL networks for this nick */
 		return true;
 	std::string serv_str = serv.get_network(true).to_string();
 	std::locale loc;
@@ -75,11 +67,11 @@ static bool notify_do_network (struct notify &notify, const server &serv)
 			[&loc](auto c) {return std::isspace<char>(c, loc); }),
 		serv_str.end());
 	return std::find_if(
-		notify.networks.cbegin(),
-		notify.networks.cend(),
-		[&serv_str](const std::string & net){
+		ntfy.networks.cbegin(),
+		ntfy.networks.cend(),
+		[&serv_str](const auto & net){
 			return rfc_casecmp(net.c_str(), serv_str.c_str()) == 0;
-		}) == notify.networks.cend();
+		}) == ntfy.networks.cend();
 }
 
 struct notify_per_server *

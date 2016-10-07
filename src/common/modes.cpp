@@ -813,10 +813,10 @@ inbound_005 (server & serv, char *word[], const message_tags_data *tags_data)
 			}
 		} else if (strncmp (word[w], "WATCH=", 6) == 0)
 		{
-			serv.supports_watch = TRUE;
+			serv.supports_watch = true;
 		} else if (strncmp (word[w], "MONITOR=", 8) == 0)
 		{
-			serv.supports_monitor = TRUE;
+			serv.supports_monitor = true;
 		} else if (strncmp (word[w], "NETWORK=", 8) == 0)
 		{
 /*			if (serv.networkname)
