@@ -299,15 +299,12 @@ notify_gui_update (void)
 		bool online = false;
 		std::time_t lastseen = 0;
 		/* First see if they're online on any servers */
-		auto slist = notify->server_list;
-		while (slist)
+		for (const auto & servnot : notify->server_list)
 		{
-			auto servnot = (struct notify_per_server *) slist->data;
-			if (servnot->ison)
+			if (servnot.ison)
 				online = true;
-			if (servnot->lastseen > lastseen)
-				lastseen = servnot->lastseen;
-			slist = slist->next;
+			if (servnot.lastseen > lastseen)
+				lastseen = servnot.lastseen;
 		}
 		const gchar *seen = nullptr;
 		char agobuf[128];
@@ -337,16 +334,14 @@ notify_gui_update (void)
 		{
 			/* Online - add one line per server */
 			int servcount = 0;
-			slist = notify->server_list;
 			status = _("Online");
-			while (slist)
+			for(const auto & servnot : notify->server_list)
 			{
-				auto servnot = (struct notify_per_server *) slist->data;
-				if (servnot->ison)
+				if (servnot.ison)
 				{
 					if (servcount > 0)
 						name = "";
-					server = servnot->server->get_network(true);
+					server = servnot.server->get_network(true);
 
 					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (0) - lastseen) / 60);
 					seen = agobuf;
@@ -360,7 +355,6 @@ notify_gui_update (void)
 
 					servcount++;
 				}
-				slist = slist->next;
 			}
 		}
 		

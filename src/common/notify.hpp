@@ -26,11 +26,13 @@
 #include "serverfwd.hpp"
 #include "sessfwd.hpp"
 
+struct notify_per_server;
+
 struct notify
 {
 	std::string name;
 	std::vector<std::string> networks;
-	GSList *server_list;
+	std::vector<notify_per_server> server_list;
 };
 
 struct notify_per_server
@@ -67,7 +69,7 @@ void notify_save (void);
 void notify_showlist (session *sess, const message_tags_data *tags_data);
 bool notify_is_in_list (const server &serv, const std::string & name);
 bool notify_isnotify (session *sess, const char *name);
-struct notify_per_server *notify_find_server_entry (struct notify *notify, server &serv);
+struct notify_per_server *notify_find_server_entry (struct notify &notify, server &serv);
 
 /* the old ISON stuff - remove me? */
 void notify_markonline (server &serv, const char * const word[], 

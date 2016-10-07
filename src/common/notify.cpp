@@ -60,9 +60,9 @@ int notify_tag = 0;
 
 /* monitor this nick on this particular network? */
 
-static bool notify_do_network (struct notify *notify, const server &serv)
+static bool notify_do_network (struct notify &notify, const server &serv)
 {
-	if (notify->networks.empty())	/* ALL networks for this nick */
+	if (notify.networks.empty())	/* ALL networks for this nick */
 		return true;
 	std::string serv_str = serv.get_network(true).to_string();
 	std::locale loc;
@@ -73,23 +73,20 @@ static bool notify_do_network (struct notify *notify, const server &serv)
 			[&loc](auto c) {return std::isspace<char>(c, loc); }),
 		serv_str.end());
 	return std::find_if(
-		notify->networks.cbegin(),
-		notify->networks.cend(),
+		notify.networks.cbegin(),
+		notify.networks.cend(),
 		[&serv_str](const std::string & net){
 			return rfc_casecmp(net.c_str(), serv_str.c_str()) == 0;
-		}) == notify->networks.cend();
+		}) == notify.networks.cend();
 }
 
 struct notify_per_server *
-notify_find_server_entry (struct notify *notify, struct server &serv)
+notify_find_server_entry (struct notify &notify, struct server &serv)
 {
-	GSList *list = notify->server_list;
-	while (list)
+	for(auto & servnot : notify.server_list)
 	{
-		auto servnot = static_cast<struct notify_per_server *>(list->data);
-		if (servnot->server == &serv)
-			return servnot;
-		list = list->next;
+		if (servnot.server == &serv)
+			return &servnot;
 	}
 
 	/* not found, should we add it, or is this not a network where
@@ -97,11 +94,13 @@ notify_find_server_entry (struct notify *notify, struct server &serv)
 	if (!notify_do_network (notify, serv))
 		return nullptr;
 
-	std::unique_ptr<notify_per_server> servnot(new notify_per_server());
+	/*std::unique_ptr<notify_per_server> servnot(new notify_per_server());
 	servnot->server = &serv;
-	servnot->notify = notify;
-	notify->server_list = g_slist_prepend(notify->server_list, servnot.get());
-	return servnot.release();
+	servnot->notify = notify;*/
+	//notify->server_list = g_slist_prepend(notify->server_list, servnot.get());
+	//notify_per_server note{ &serv, notify };
+	notify.server_list.emplace_back(notify_per_server{ &serv, &notify });
+	return &notify.server_list.back();
 }
 
 void notify_save (void)
@@ -162,7 +161,7 @@ static struct notify_per_server * notify_find (server &serv, const std::string& 
 	{
 		auto notify = static_cast<struct notify *>(list->data);
 
-		auto servnot = notify_find_server_entry (notify, serv);
+		auto servnot = notify_find_server_entry (*notify, serv);
 		if (!servnot)
 		{
 			list = list->next;
@@ -315,14 +314,14 @@ static void notify_watch (server * serv, const std::string& nick, bool add)
 }
 
 static void
-notify_watch_all (struct notify *notify, bool add)
+notify_watch_all (struct notify &notify, bool add)
 {
 	GSList *list = serv_list;
 	while (list)
 	{
 		auto serv = static_cast<server*>(list->data);
 		if (serv->connected && serv->end_of_motd && notify_do_network (notify, *serv))
-			notify_watch (serv, notify->name, add);
+			notify_watch (serv, notify.name, add);
 		list = list->next;
 	}
 }
@@ -362,7 +361,7 @@ notify_send_watches (server & serv)
 	{
 		auto notify = static_cast<struct notify*>(list->data);
 
-		if (notify_do_network (notify, serv))
+		if (notify && notify_do_network (*notify, serv))
 		{
 			send_list.push_back(notify);
 		}
@@ -372,7 +371,7 @@ notify_send_watches (server & serv)
 
 	/* Now send that list in batches */
 	auto point = send_list.cbegin();
-	for (auto it = send_list.cbegin(); it != send_list.cend(); ++it)
+	for (auto it = send_list.cbegin(), end = send_list.cend(); it != end; ++it)
 	{
 		auto notify = *it;
 
@@ -402,7 +401,7 @@ void notify_markonline(server &serv, const char * const word[], const message_ta
 	while (list)
 	{
 		auto notify = static_cast<struct notify *>(list->data);
-		auto servnot = notify_find_server_entry (notify, serv);
+		auto servnot = notify_find_server_entry (*notify, serv);
 		if (!servnot)
 		{
 			list = list->next;
@@ -447,7 +446,7 @@ static void notify_checklist_for_server (server &serv)
 	while (list)
 	{
 		auto notify = static_cast<struct notify*>(list->data);
-		if (notify_do_network (notify, serv))
+		if (notify && notify_do_network (*notify, serv))
 		{
 			i++;
 			outbuf << notify->name;
@@ -486,7 +485,7 @@ int notify_checklist (void)	/* check ISON list */
 
 void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 {
-	char outbuf[256];
+	char outbuf[256] = {};
 	GSList *list = notify_list;
 	int i = 0;
 
@@ -496,7 +495,7 @@ void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 	{
 		i++;
 		auto notify = (struct notify *) list->data;
-		auto servnot = notify_find_server_entry (notify, *sess->server);
+		auto servnot = notify_find_server_entry (*notify, *sess->server);
 		if (servnot && servnot->ison)
 			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), notify->name.c_str());
 		else
@@ -526,15 +525,15 @@ bool notify_deluser(const std::string& name)
 			std::unique_ptr<struct notify> note(notfy);
 			fe_notify_update (&note->name);
 			/* Remove the records for each server */
-			while (note->server_list)
+			/*while (note->server_list)
 			{
 				std::unique_ptr<notify_per_server> servnot(
 					static_cast<notify_per_server*>(note->server_list->data));
 				note->server_list =
 					g_slist_remove (note->server_list, servnot.get());
-			}
+			}*/
 			notify_list = g_slist_remove (notify_list, note.get());
-			notify_watch_all (note.get(), false);
+			notify_watch_all (*note, false);
 			fe_notify_update (nullptr);
 			return true;
 		}
@@ -545,8 +544,7 @@ bool notify_deluser(const std::string& name)
 
 void notify_adduser (const char *name, const char *networks)
 {
-	std::unique_ptr<struct notify> notify(new struct notify);
-	notify->name = name;
+	auto notif = std::make_unique<struct notify>(notify{ name });
 	if (networks)
 	{
 		std::string netwks_str(networks);
@@ -557,15 +555,15 @@ void notify_adduser (const char *name, const char *networks)
 			netwks_str.end(),
 			[&loc](auto c){ return std::isspace<char>(c, loc); }),
 			netwks_str.end());
-		boost::split(notify->networks, netwks_str, boost::is_any_of(","));
+		boost::split(notif->networks, netwks_str, boost::is_any_of(","));
 	}
-	notify->server_list = 0;
-	notify_list = g_slist_prepend(notify_list, notify.get());
-	struct notify* note = notify.release();
+	//notify->server_list = 0;
+	notify_list = g_slist_prepend(notify_list, notif.get());
+	struct notify* note = notif.release();
 	notify_checklist();
-	fe_notify_update(&notify->name);
+	fe_notify_update(&note->name);
 	fe_notify_update(nullptr);
-	notify_watch_all(note, true);
+	notify_watch_all(*note, true);
 }
 
 bool
@@ -594,7 +592,7 @@ notify_isnotify (struct session *sess, const char *name)
 		auto notify = static_cast<struct notify *>(list->data);
 		if (!sess->server->p_cmp (notify->name.c_str(), name))
 		{
-			auto servnot = notify_find_server_entry (notify, *sess->server);
+			auto servnot = notify_find_server_entry (*notify, *sess->server);
 			if (servnot && servnot->ison)
 				return true;
 		}
@@ -613,36 +611,26 @@ notify_cleanup ()
 	{
 		/* Traverse the list of notify structures */
 		auto notify = static_cast<struct notify *>(list->data);
-		auto nslist = notify->server_list;
-		while (nslist)
-		{
-			/* Look at each per-server structure */
-			auto servnot = static_cast<struct notify_per_server *>(nslist->data);
-
-			/* Check the server is valid */
+		auto notifEnd = notify->server_list.end();
+		notify->server_list.erase(std::remove_if(
+			notify->server_list.begin(),
+			notifEnd,
+			[](const auto & servnot) {
 			bool valid = false;
 			auto srvlist = serv_list;
 			while (srvlist)
 			{
-				auto serv = static_cast<struct server *>(srvlist->data);
-				if (servnot->server == serv)
+				const auto serv = static_cast<struct server *>(srvlist->data);
+				if (servnot.server == serv)
 				{
 					valid = serv->connected;	/* Only valid if server is too */
 					break;
 				}
 				srvlist = srvlist->next;
 			}
-			if (!valid)
-			{
-				notify->server_list =
-					g_slist_remove (notify->server_list, servnot);
-				delete servnot;
-				nslist = notify->server_list;
-			} else
-			{
-				nslist = nslist->next;
-			}
-		}
+			return !valid;
+		}), notifEnd);
+
 		list = list->next;
 	}
 	fe_notify_update (nullptr);
