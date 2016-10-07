@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -296,9 +301,9 @@ notify_gui_update (void)
 		auto name = notify->name.c_str();
 		const char* status = _("Offline");
 		boost::string_ref server{ "", 0 };
-
+		using namespace std::chrono_literals;
 		bool online = false;
-		std::time_t lastseen = 0;
+		auto lastseen = notify_per_server::time_point{};
 		/* First see if they're online on any servers */
 		for (const auto & servnot : notify->server_list)
 		{
@@ -308,20 +313,20 @@ notify_gui_update (void)
 				lastseen = servnot.lastseen;
 		}
 		const gchar *seen = nullptr;
-		char agobuf[128];
+		char agobuf[128] = {};
 		if (!online)				  /* Offline on all servers */
 		{
-			if (!lastseen)
+			if (lastseen == notify_per_server::time_point{})
 				seen = _("Never");
 			else
 			{
-				int lastseenminutes = (int)(time (0) - lastseen) / 60;
-				if (lastseenminutes < 60) 
-					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), lastseenminutes);
-				else if (lastseenminutes < 120)
+				auto lastseenminutes = std::chrono::duration_cast<std::chrono::minutes>(notify_per_server::clock::now() - lastseen);
+				if (lastseenminutes < 60min) 
+					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), lastseenminutes.count());
+				else if (lastseenminutes < 120min)
 					snprintf (agobuf, sizeof (agobuf), _("An hour ago"));
 				else
-					snprintf (agobuf, sizeof (agobuf), _("%d hours ago"), lastseenminutes / 60);
+					snprintf (agobuf, sizeof (agobuf), _("%d hours ago"), std::chrono::duration_cast<std::chrono::hours>(lastseenminutes).count());
 				seen = agobuf;
 			}
 			if (!valid)	/* create new tree row if required */
@@ -336,6 +341,8 @@ notify_gui_update (void)
 			/* Online - add one line per server */
 			int servcount = 0;
 			status = _("Online");
+			auto lastOnMinutesAgo = std::chrono::duration_cast<std::chrono::minutes>(
+				notify_per_server::clock::now() - lastseen);
 			for(const auto & servnot : notify->server_list)
 			{
 				if (servnot.ison)
@@ -344,7 +351,8 @@ notify_gui_update (void)
 						name = "";
 					server = servnot.server->get_network(true);
 
-					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), (int)(time (nullptr) - lastseen) / 60);
+					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"),
+						lastOnMinutesAgo.count());
 					seen = agobuf;
 
 					if (!valid)	/* create new tree row if required */

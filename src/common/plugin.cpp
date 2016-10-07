@@ -1407,11 +1407,11 @@ hexchat_list_time (hexchat_plugin *, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x1ad6f:	/* off */
-			return xlist->notifyps->lastoff;
+			return notify_per_server::clock::to_time_t(xlist->notifyps->lastoff);
 		case 0xddf:	/* on */
-			return xlist->notifyps->laston;
+			return notify_per_server::clock::to_time_t(xlist->notifyps->laston);
 		case 0x35ce7b:	/* seen */
-			return xlist->notifyps->lastseen;
+			return notify_per_server::clock::to_time_t(xlist->notifyps->lastseen);
 		}
 		break;
 

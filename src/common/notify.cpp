@@ -174,13 +174,13 @@ static notify_per_server * notify_find (server &serv, const std::string& nick)
 	return nullptr;
 }
 
-static void notify_announce_offline (server & serv, struct notify_per_server *servnot,
-								 const std::string &nick, bool quiet, 
+static void notify_announce_offline (server & serv, notify_per_server &servnot,
+								 const boost::string_ref nick, bool quiet, 
 								 const message_tags_data *tags_data)
 {
-	servnot->ison = false;
-	servnot->lastoff = time (0);
-	std::string mutable_nick(nick);
+	servnot.ison = false;
+	servnot.lastoff = notify_per_server::clock::now();
+	std::string mutable_nick = nick.to_string();
 	if (!quiet)
 	{
 		auto net = serv.get_network(true).to_string();
@@ -194,18 +194,17 @@ static void notify_announce_offline (server & serv, struct notify_per_server *se
 }
 
 static void notify_announce_online (server & serv, notify_per_server &servnot,
-								const std::string& nick, const message_tags_data *tags_data)
+								const boost::string_ref nick, const message_tags_data *tags_data)
 {
-	servnot.lastseen = time (0);
+	servnot.lastseen = notify_per_server::clock::now();
 	if (servnot.ison)
 		return;
 	
 	session *sess = serv.front_session;
 	
 	servnot.ison = true;
-	servnot.laston = std::time (nullptr);
-	std::string mutable_nick = nick;
-	mutable_nick.push_back(0);
+	servnot.laston = notify_per_server::clock::now();
+	auto mutable_nick = nick.to_string();
 	auto mutable_net = serv.get_network(true).to_string();
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
 					 &mutable_net[0], nullptr, 0,
@@ -232,7 +231,7 @@ notify_set_offline(server & serv, const std::string & nick, bool quiet,
 	if (!servnot)
 		return;
 
-	notify_announce_offline (serv, servnot, nick, quiet, tags_data);
+	notify_announce_offline (serv, *servnot, nick, quiet, tags_data);
 }
 
 /* handles numeric 604 and 600 */
@@ -256,9 +255,6 @@ void
 notify_set_offline_list (server & serv, const std::string & users, bool quiet,
 						  const message_tags_data *tags_data)
 {
-	struct notify_per_server *servnot;
-	//char nick[NICKLEN] = { 0 };
-
 	std::istringstream stream(users);
 	for (std::string token; std::getline(stream, token, ',');)
 	{
@@ -271,9 +267,9 @@ notify_set_offline_list (server & serv, const std::string & users, bool quiet,
 		auto nick = token.substr(0, pos);
 		//std::copy_n(token.cbegin(), pos, std::begin(nick));
 
-		servnot = notify_find (serv, nick);
+		auto servnot = notify_find (serv, nick);
 		if (servnot)
-			notify_announce_offline (serv, servnot, nick, quiet, tags_data);
+			notify_announce_offline (serv, *servnot, nick, quiet, tags_data);
 	}
 }
 
@@ -425,7 +421,7 @@ void notify_markonline(server &serv, const char * const word[], const message_ta
 		}
 		if (!seen && servnot->ison)
 		{
-			notify_announce_offline (serv, servnot, notify->name, FALSE, tags_data);
+			notify_announce_offline (serv, *servnot, notify->name, false, tags_data);
 		}
 		list = list->next;
 	}
@@ -510,25 +506,17 @@ void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 									  tags_data->timestamp);
 }
 
-bool notify_deluser(const std::string& name)
+bool notify_deluser(const boost::string_ref name)
 {
 	GSList *list = notify_list;
-
+	const auto nameStr = name.to_string();
 	while (list)
 	{
 		auto notfy = static_cast<struct notify *>(list->data);
-		if (!rfc_casecmp (notfy->name.c_str(), name.c_str()))
+		if (!rfc_casecmp (notfy->name.c_str(), nameStr.c_str()))
 		{
 			std::unique_ptr<struct notify> note(notfy);
 			fe_notify_update (&note->name);
-			/* Remove the records for each server */
-			/*while (note->server_list)
-			{
-				std::unique_ptr<notify_per_server> servnot(
-					static_cast<notify_per_server*>(note->server_list->data));
-				note->server_list =
-					g_slist_remove (note->server_list, servnot.get());
-			}*/
 			notify_list = g_slist_remove (notify_list, note.get());
 			notify_watch_all (*note, false);
 			fe_notify_update (nullptr);
@@ -579,25 +567,25 @@ notify_is_in_list (const server &serv, const std::string & name)
 	return false;
 }
 
-bool
-notify_isnotify (struct session *sess, const char *name)
-{
-	GSList *list = notify_list;
-
-	while (list)
-	{
-		auto notify = static_cast<struct notify *>(list->data);
-		if (!sess->server->p_cmp (notify->name.c_str(), name))
-		{
-			auto servnot = notify_find_server_entry (*notify, *sess->server);
-			if (servnot && servnot->ison)
-				return true;
-		}
-		list = list->next;
-	}
-
-	return false;
-}
+//bool
+//notify_isnotify (struct session *sess, const boost::string_ref name)
+//{
+//	GSList *list = notify_list;
+//	const auto nameStr = name.to_string();
+//	while (list)
+//	{
+//		auto notify = static_cast<struct notify *>(list->data);
+//		if (!sess->server->p_cmp (notify->name.c_str(), nameStr.c_str()))
+//		{
+//			auto servnot = notify_find_server_entry (*notify, *sess->server);
+//			if (servnot && servnot->ison)
+//				return true;
+//		}
+//		list = list->next;
+//	}
+//
+//	return false;
+//}
 
 void
 notify_cleanup ()
