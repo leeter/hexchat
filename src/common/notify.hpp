@@ -27,6 +27,7 @@
 #include "serverfwd.hpp"
 #include "sessfwd.hpp"
 #include <boost/utility/string_ref_fwd.hpp>
+#include <gsl.h>
 
 struct notify_per_server;
 
@@ -77,7 +78,7 @@ bool notify_is_in_list (const server &serv, const std::string & name);
 struct notify_per_server *notify_find_server_entry (struct notify &notify, server &serv);
 
 /* the old ISON stuff - remove me? */
-void notify_markonline (server &serv, const char * const word[], 
+void notify_markonline (server &serv, const gsl::span<const char*> word, 
 								const message_tags_data *tags_data);
 int notify_checklist (void);
 

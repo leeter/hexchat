@@ -36,6 +36,7 @@
 #include <boost/format.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <gsl.h>
 
 
 #include "notify.hpp"
@@ -378,44 +379,36 @@ notify_send_watches (server & serv)
 
 /* called when receiving a ISON 303 - should this func go? */
 
-void notify_markonline(server &serv, const char * const word[], const message_tags_data *tags_data)
+void notify_markonline(server &serv, const gsl::span<const char*> word, const message_tags_data *tags_data)
 {
-	GSList *list = notify_list;
-	int i;
-
-	while (list)
+	for (GSList *list = notify_list; list; list = list->next)
 	{
 		auto notify = static_cast<struct notify *>(list->data);
 		auto servnot = notify_find_server_entry (*notify, serv);
 		if (!servnot)
 		{
-			list = list->next;
 			continue;
 		}
-		i = 4;
 		bool seen = false;
-		while (*word[i])
+		for (auto it = word.cbegin() + 4, end = word.cend(); it != end; ++it)
 		{
-			if (!serv.p_cmp (notify->name.c_str(), word[i]))
+			const auto val = *it;
+			if (!val && val[0]) {
+				break;
+			}
+			if (!serv.p_cmp (notify->name.c_str(), val))
 			{
 				seen = true;
 				notify_announce_online (serv, *servnot, notify->name, tags_data);
 				break;
 			}
-			i++;
 			/* FIXME: word[] is only a 32 element array, limits notify list to
 			   about 27 people */
-			if (i > PDIWORDS - 5)
-			{
-				/*fprintf (stderr, _("*** HEXCHAT WARNING: notify list too large.\n"));*/
-				break;
-			}
 		}
 		if (!seen && servnot->ison)
 		{
 			notify_announce_offline (serv, *servnot, notify->name, false, tags_data);
 		}
-		list = list->next;
 	}
 	fe_notify_update (nullptr);
 }

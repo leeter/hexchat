@@ -605,7 +605,7 @@ process_numeric (session * sess, int n,
 
 	case 303:
 		word[4]++;
-		notify_markonline (serv, word, tags_data);
+		notify_markonline (serv, gsl::as_span(const_cast<const char **>(word), PDIWORDS), tags_data);
 		break;
 
 	case 305:
