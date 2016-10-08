@@ -210,6 +210,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="hexchat.rc.tt" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\..\data\hexchat.gresource.xml" />

@@ -42,7 +42,7 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref.hpp>
-#include "gsl/gsl.h"
+#include <gsl.h>
 
 
 #ifdef WIN32

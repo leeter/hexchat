@@ -566,7 +566,7 @@ process_numeric (session * sess, int n,
 		goto def;
 
 	case 5:
-		inbound_005 (serv, word, tags_data);
+		inbound_005 (serv, gsl::as_span(word, PDIWORDS));
 		goto def;
 
 	case 263:	/*Server load is temporarily too heavy */

@@ -24,13 +24,14 @@
 
 #include <string>
 #include <vector>
+#include <gsl.h>
 #include "proto-irc.hpp"
 #include "serverfwd.hpp"
 
 char get_nick_prefix (const server *serv, unsigned int access);
 unsigned int nick_access (const server *serv, const char *nick, int &modechars);
 int mode_access (const server *serv, char mode, char *prefix);
-void inbound_005 (server &serv, char *word[], const message_tags_data *tags_data);
+void inbound_005 (server &serv, gsl::span<char*> word);
 void handle_mode (server &serv, char *word[], char *word_eol[], char *nick,
 						bool numeric_324, const message_tags_data *tags_data);
 void send_channel_modes(session *sess, const std::vector<std::string> &word, int start, int end, char sign, char mode, int modes_per_line);

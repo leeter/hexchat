@@ -28,6 +28,8 @@
 #include <cstdio>
 #include <stdexcept>
 #include <boost/utility/string_ref.hpp>
+#include <gsl.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include "hexchat.hpp"
 #include "hexchatc.hpp"
@@ -778,91 +780,104 @@ namespace
 /* handle the 005 numeric */
 
 void
-inbound_005 (server & serv, char *word[], const message_tags_data *tags_data)
+inbound_005 (server & serv, gsl::span<char*> word)
 {
-	int w;
-	char *pre;
-
-	w = 4;							  /* start at the 4th word */
-	while (w < PDIWORDS && *word[w])
-	{
-		if (strncmp (word[w], "MODES=", 6) == 0)
+	auto it = word.cbegin();
+	std::advance(it, 4);
+	std::for_each(it, word.cend(), 
+		[&serv](auto & wordVal) {
+		auto span = gsl::cstring_span<>(wordVal, std::strlen(wordVal));
+		if (boost::starts_with(span, "MODES="))
 		{
-			serv.modes_per_line = atoi (word[w] + 6);
-		} else if (strncmp (word[w], "CHANTYPES=", 10) == 0)
+			serv.modes_per_line = std::stoi(gsl::to_string(span.subspan(6)));
+		}
+		else if (boost::starts_with(span, "CHANTYPES="))
 		{
 			serv.chantypes.clear();
-			serv.chantypes = (word[w] + 10);
-		} else if (strncmp (word[w], "CHANMODES=", 10) == 0)
+			serv.chantypes = gsl::to_string(span.subspan(10));
+		}
+		else if (boost::starts_with(span, "CHANMODES="))
 		{
-			serv.chanmodes = (word[w] + 10);
-		} else if (strncmp (word[w], "PREFIX=", 7) == 0)
+			serv.chanmodes = gsl::to_string(span.subspan(10));
+		}
+		else if (boost::starts_with(span, "PREFIX="))
 		{
-			pre = strchr (word[w] + 7, ')');
-			if (pre)
+			auto prefixSpan = span.subspan(7);
+			auto parenLoc = std::find(prefixSpan.cbegin(), prefixSpan.cend(), ')');
+			if (parenLoc != prefixSpan.cend())
 			{
-				pre[0] = 0;			  /* NULL out the ')' */
-				serv.nick_prefixes = (pre + 1);
-				serv.nick_modes = (word[w] + 8);
-			} else
+				const auto pre = std::distance(prefixSpan.cbegin(), parenLoc);
+				serv.nick_prefixes = gsl::to_string(prefixSpan.subspan(pre + 1));
+				serv.nick_modes = gsl::to_string(span.subspan(8, pre - 1));
+			}
+			else
 			{
 				/* bad! some ircds don't give us the modes. */
 				/* in this case, we use it only to strip /NAMES */
 				serv.bad_prefix = true;
-				serv.bad_nick_prefixes = (word[w] + 7);
+				serv.bad_nick_prefixes = gsl::to_string(span.subspan(7));
 			}
-		} else if (strncmp (word[w], "WATCH=", 6) == 0)
+		}
+		else if (boost::starts_with(span, "WATCH="))
 		{
 			serv.supports_watch = true;
-		} else if (strncmp (word[w], "MONITOR=", 8) == 0)
+		}
+		else if (boost::starts_with(span, "MONITOR="))
 		{
 			serv.supports_monitor = true;
-		} else if (strncmp (word[w], "NETWORK=", 8) == 0)
+		}
+		else if (boost::starts_with(span, "NETWORK="))
 		{
-/*			if (serv.networkname)
-				free (serv.networkname);
-			serv.networkname = strdup (word[w] + 8);*/
+			/*			if (serv.networkname)
+			free (serv.networkname);
+			serv.networkname = strdup (span + 8);*/
 
 			if (serv.server_session->type == session::SESS_SERVER)
 			{
-				safe_strcpy (serv.server_session->channel, word[w] + 8, CHANLEN);
-				fe_set_channel (serv.server_session);
+				safe_strcpy(serv.server_session->channel, span.subspan(8).data(), CHANLEN);
+				fe_set_channel(serv.server_session);
 			}
 
-		} else if (strncmp (word[w], "CASEMAPPING=", 12) == 0)
+		}
+		else if (boost::starts_with(span, "CASEMAPPING="))
 		{
-			if (strcmp(word[w] + 12, "ascii") == 0)	/* bahamut */
+			if (span.subspan(12) == "ascii")	/* bahamut */
 			{
 				serv.p_cmp = (int(*)(const char*, const char*))g_ascii_strcasecmp;
 				serv.imbue(std::locale(std::locale(), new ascii_strcasecmp));
 			}
-		} else if (strncmp (word[w], "CHARSET=", 8) == 0)
+		}
+		else if (boost::starts_with(span, "CHARSET="))
 		{
-			if (g_ascii_strncasecmp (word[w] + 8, "UTF-8", 5) == 0)
+			if (g_ascii_strncasecmp(span.subspan(8).data(), "UTF-8", 5) == 0)
 			{
-				serv.set_encoding ("UTF-8");
+				serv.set_encoding("UTF-8");
 			}
-		} else if (strcmp (word[w], "NAMESX") == 0)
+		}
+		else if (span == "NAMESX")
 		{
-									/* 12345678901234567 */
-			tcp_send (serv, "PROTOCTL NAMESX\r\n");
-		} else if (strcmp (word[w], "WHOX") == 0)
+			/* 12345678901234567 */
+			tcp_send(serv, "PROTOCTL NAMESX\r\n");
+		}
+		else if (span == "WHOX")
 		{
 			serv.have_whox = true;
-		} else if (strcmp (word[w], "EXCEPTS") == 0)
+		}
+		else if (span == "EXCEPTS")
 		{
 			serv.have_except = true;
-		} else if (strcmp (word[w], "INVEX") == 0)
+		}
+		else if (span == "INVEX")
 		{
 			/* supports mode letter +I, default channel invite */
 			serv.have_invite = true;
-		} else if (strncmp (word[w], "ELIST=", 6) == 0)
+		}
+		else if (span == "ELIST=")
 		{
+			auto elistSpan = span.subspan(6);
 			/* supports LIST >< min/max user counts? */
-			if (strchr (word[w] + 6, 'U') || strchr (word[w] + 6, 'u'))
+			if (boost::icontains(elistSpan, "U"))
 				serv.use_listargs = true;
 		}
-
-		w++;
-	}
+	});
 }
