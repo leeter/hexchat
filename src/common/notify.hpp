@@ -50,9 +50,9 @@ struct notify_per_server
 	time_point lastoff;
 	bool ison;
 };
-
-extern GSList *notify_list;
 extern int notify_tag;
+
+gsl::span<notify> get_notifies() noexcept;
 
 /* the WATCH stuff */
 void notify_set_online(server & serv, const std::string &nick,

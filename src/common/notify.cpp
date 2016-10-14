@@ -48,9 +48,9 @@
 #include "hexchatc.hpp"
 #include "session.hpp"
 #include "filesystem.hpp"
+#include "glist_iterators.hpp"
 
-
-GSList *notify_list = nullptr;
+static std::vector<notify> notifies;
 int notify_tag = 0;
 
 /* monitor this nick on this particular network? */
@@ -60,7 +60,7 @@ static bool notify_do_network (const notify &ntfy, const server &serv)
 	if (ntfy.networks.empty())	/* ALL networks for this nick */
 		return true;
 	std::string serv_str = serv.get_network(true).to_string();
-	std::locale loc;
+	const std::locale loc;
 	serv_str.erase(
 		std::remove_if(
 		serv_str.begin(),
@@ -75,7 +75,7 @@ static bool notify_do_network (const notify &ntfy, const server &serv)
 		}) == ntfy.networks.cend();
 }
 
-struct notify_per_server *
+notify_per_server *
 notify_find_server_entry (struct notify &notify, struct server &serv)
 {
 	for(auto & servnot : notify.server_list)
@@ -103,17 +103,14 @@ void notify_save ()
 	{
 		return;
 	}
-	GSList *list = notify_list;
-	while (list)
+	for(const auto & ntfy : get_notifies())
 	{
-		const auto notify = static_cast<struct notify *>(list->data);
-		out << notify->name;
-		if (!notify->networks.empty())
+		out << ntfy.name;
+		if (!ntfy.networks.empty())
 		{
-			out << " " << boost::join(notify->networks, ",");
+			out << " " << boost::join(ntfy.networks, ",");
 		}
 		out << '\n';
-		list = list->next;
 	}
 }
 
@@ -146,22 +143,16 @@ void notify_load ()
 
 static notify_per_server * notify_find (server &serv, const std::string& nick)
 {
-	GSList *list = notify_list;
-	while (list)
+	for(auto & ntfy: get_notifies())
 	{
-		auto notify = static_cast<struct notify *>(list->data);
-
-		auto servnot = notify_find_server_entry (*notify, serv);
+		auto servnot = notify_find_server_entry (ntfy, serv);
 		if (!servnot)
 		{
-			list = list->next;
 			continue;
 		}
 
-		if (!serv.compare(notify->name, nick))
+		if (!serv.compare(ntfy.name, nick))
 			return servnot;
-
-		list = list->next;
 	}
 
 	return nullptr;
@@ -218,9 +209,8 @@ void
 notify_set_offline(server & serv, const std::string & nick, bool quiet,
 						  const message_tags_data *tags_data)
 {
-	struct notify_per_server *servnot;
 
-	servnot = notify_find (serv, nick);
+	auto servnot = notify_find (serv, nick);
 	if (!servnot)
 		return;
 
@@ -229,13 +219,16 @@ notify_set_offline(server & serv, const std::string & nick, bool quiet,
 
 /* handles numeric 604 and 600 */
 
+gsl::span<notify> get_notifies() noexcept
+{
+	return notifies;
+}
+
 void
 notify_set_online (server & serv, const std::string& nick,
 						 const message_tags_data *tags_data)
 {
-	struct notify_per_server *servnot;
-
-	servnot = notify_find (serv, nick);
+	auto servnot = notify_find (serv, nick);
 	if (!servnot)
 		return;
 
@@ -283,52 +276,39 @@ void notify_set_online_list (server & serv, const std::string& users,
 	}
 }
 
-static void notify_watch (server * serv, const std::string& nick, bool add)
+static void notify_watch (server &serv, const std::string& nick, bool add)
 {
-	if (!serv->supports_monitor && !serv->supports_watch)
+	if (!serv.supports_monitor && !serv.supports_watch)
 		return;
 
 	char addchar = add ? '+' : '-';
 
 	std::ostringstream buf;
-	if (serv->supports_monitor)
+	if (serv.supports_monitor)
 		buf << boost::format("MONITOR %c %s") % addchar % nick;
-	else if (serv->supports_watch)
+	else if (serv.supports_watch)
 		buf << boost::format("WATCH %c%s") % addchar % nick;
 
-	serv->p_raw (buf.str());
+	serv.p_raw (buf.str());
 }
 
 static void
 notify_watch_all (struct notify &notify, bool add)
 {
-	GSList *list = serv_list;
-	while (list)
+	for (auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		auto serv = static_cast<server*>(list->data);
-		if (serv->connected && serv->end_of_motd && notify_do_network (notify, *serv))
-			notify_watch (serv, notify.name, add);
-		list = list->next;
+		if (serv.connected && serv.end_of_motd && notify_do_network(notify, serv))
+			notify_watch(serv, notify.name, add);
 	}
 }
 
 static void
-notify_flush_watches(server & serv, std::vector<struct notify*>::const_iterator from, std::vector<struct notify*>::const_iterator end)
+notify_flush_watches(server & serv, const std::vector<std::string> &toSend)
 {
+	using namespace std::string_literals;
 	std::ostringstream buffer;
-	buffer << (serv.supports_monitor ? "MONITOR + " : "WATCH");
-	auto it = from;
-	buffer << (*it)->name;
-	++it;
-	for (;it != end; ++it)
-	{
-		struct notify *notify = *it;
-		if (serv.supports_monitor)
-			buffer << ",";
-		else
-			buffer << " +";
-		buffer << notify->name;
-	}
+	buffer << (serv.supports_monitor ? u8"MONITOR + " : u8"WATCH")
+		<< boost::join(toSend, serv.supports_monitor ? u8","s: u8" +"s);
 	serv.p_raw (buffer.str());
 }
 
@@ -338,42 +318,46 @@ void
 notify_send_watches (server & serv)
 {
 	const int format_len = serv.supports_monitor ? 1 : 2; /* just , for monitor or + and space for watch */
-	std::vector<notify*> send_list;
+	std::vector<std::reference_wrapper<notify>> send_list;
 	int len = 0;
 
 	/* Only get the list for this network */
-	auto list = notify_list;
-	while (list)
+	for(auto & ntfy : get_notifies())
 	{
-		auto notify = static_cast<struct notify*>(list->data);
-
-		if (notify && notify_do_network (*notify, serv))
+		if (notify_do_network (ntfy, serv))
 		{
-			send_list.push_back(notify);
+			send_list.push_back(ntfy);
 		}
-
-		list = list->next;
 	}
 
 	/* Now send that list in batches */
 	auto point = send_list.cbegin();
+	std::vector<std::string> toSend;
+	toSend.reserve(30);
 	for (auto it = send_list.cbegin(), end = send_list.cend(); it != end; ++it)
 	{
 		auto notify = *it;
 
-		len += notify->name.size() + format_len;
+		len += notify.get().name.size() + format_len;
+		toSend.push_back(notify.get().name);
 		if (len > 500)
 		{
 			/* Too long send existing list */
-			notify_flush_watches (serv, send_list.begin(), it);
-			len = notify->name.size() + format_len;
+			notify_flush_watches (
+				serv,
+				toSend);
+			len = notify.get().name.size() + format_len;
 			point = it; /* We left off here */
+			toSend.clear();
 		}
 	}
-
-	if (len) /* We had leftovers under 500, send them all */
+	std::for_each(point, send_list.cend(),
+		[&toSend](const auto &ntfy) {
+		toSend.push_back(ntfy.get().name);
+	});
+	if (!toSend.empty()) /* We had leftovers under 500, send them all */
 	{
-		notify_flush_watches (serv, point, send_list.cend());
+		notify_flush_watches (serv, toSend);
 	}
 }
 
@@ -381,10 +365,9 @@ notify_send_watches (server & serv)
 
 void notify_markonline(server &serv, const gsl::span<const char*> word, const message_tags_data *tags_data)
 {
-	for (GSList *list = notify_list; list; list = list->next)
+	for(auto & ntfy : get_notifies())
 	{
-		auto notify = static_cast<struct notify *>(list->data);
-		auto servnot = notify_find_server_entry (*notify, serv);
+		auto servnot = notify_find_server_entry (ntfy, serv);
 		if (!servnot)
 		{
 			continue;
@@ -396,10 +379,10 @@ void notify_markonline(server &serv, const gsl::span<const char*> word, const me
 			if (!val && val[0]) {
 				break;
 			}
-			if (!serv.p_cmp (notify->name.c_str(), val))
+			if (!serv.p_cmp (ntfy.name.c_str(), val))
 			{
 				seen = true;
-				notify_announce_online (serv, *servnot, notify->name, tags_data);
+				notify_announce_online (serv, *servnot, ntfy.name, tags_data);
 				break;
 			}
 			/* FIXME: word[] is only a 32 element array, limits notify list to
@@ -407,7 +390,7 @@ void notify_markonline(server &serv, const gsl::span<const char*> word, const me
 		}
 		if (!seen && servnot->ison)
 		{
-			notify_announce_offline (serv, *servnot, notify->name, false, tags_data);
+			notify_announce_offline (serv, *servnot, ntfy.name, false, tags_data);
 		}
 	}
 	fe_notify_update (nullptr);
@@ -417,17 +400,15 @@ void notify_markonline(server &serv, const gsl::span<const char*> word, const me
 
 static void notify_checklist_for_server (server &serv)
 {
-	GSList *list = notify_list;
 	int i = 0;
 	std::ostringstream outbuf;
 	outbuf << "ISON ";
-	while (list)
+	for(const auto & ntfy : get_notifies())
 	{
-		auto notify = static_cast<struct notify*>(list->data);
-		if (notify && notify_do_network (*notify, serv))
+		if (notify_do_network (ntfy, serv))
 		{
 			i++;
-			outbuf << notify->name;
+			outbuf << ntfy.name;
 			outbuf << ' ';
 			if (outbuf.tellp() > 460)
 			{
@@ -438,7 +419,6 @@ static void notify_checklist_for_server (server &serv)
 				break;
 			}
 		}
-		list = list->next;
 	}
 
 	if (i)
@@ -447,16 +427,12 @@ static void notify_checklist_for_server (server &serv)
 
 int notify_checklist (void)	/* check ISON list */
 {
-	GSList *list = serv_list;
-
-	while (list)
+	for(auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		auto serv = static_cast<server*>(list->data);
-		if (serv->connected && serv->end_of_motd && !serv->supports_watch && !serv->supports_monitor)
+		if (serv.connected && serv.end_of_motd && !serv.supports_watch && !serv.supports_monitor)
 		{
-			notify_checklist_for_server (*serv);
+			notify_checklist_for_server (serv);
 		}
-		list = list->next;
 	}
 	return 1;
 }
@@ -464,22 +440,19 @@ int notify_checklist (void)	/* check ISON list */
 void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 {
 	char outbuf[256] = {};
-	GSList *list = notify_list;
 	int i = 0;
 
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYHEAD, sess, nullptr, nullptr, nullptr, nullptr, 0,
 								  tags_data->timestamp);
-	while (list)
+	for(auto & ntfy : get_notifies())
 	{
 		i++;
-		auto notify = (struct notify *) list->data;
-		auto servnot = notify_find_server_entry (*notify, *sess->server);
+		auto servnot = notify_find_server_entry (ntfy, *sess->server);
 		if (servnot && servnot->ison)
-			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), notify->name.c_str());
+			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), ntfy.name.c_str());
 		else
-			snprintf (outbuf, sizeof (outbuf), _("  %-20s offline\n"), notify->name.c_str());
+			snprintf (outbuf, sizeof (outbuf), _("  %-20s offline\n"), ntfy.name.c_str());
 		PrintTextTimeStamp (sess, outbuf, tags_data->timestamp);
-		list = list->next;
 	}
 	if (i)
 	{
@@ -493,28 +466,30 @@ void notify_showlist (struct session *sess, const message_tags_data *tags_data)
 
 bool notify_deluser(const boost::string_ref name)
 {
-	GSList *list = notify_list;
 	const auto nameStr = name.to_string();
-	while (list)
+	const auto originalLength = notifies.size();
+	notifies.erase(
+		std::remove_if(
+			notifies.begin(),
+			notifies.end(),
+			[&nameStr](auto & ntfy)
 	{
-		auto notfy = static_cast<struct notify *>(list->data);
-		if (!rfc_casecmp (notfy->name.c_str(), nameStr.c_str()))
-		{
-			std::unique_ptr<struct notify> note(notfy);
-			fe_notify_update (&note->name);
-			notify_list = g_slist_remove (notify_list, note.get());
-			notify_watch_all (*note, false);
-			fe_notify_update (nullptr);
-			return true;
-		}
-		list = list->next;
-	}
-	return false;
+			const auto match = !rfc_casecmp(ntfy.name.c_str(), nameStr.c_str());
+			if(match){
+				fe_notify_update(&ntfy.name);
+				notify_watch_all(ntfy, false);
+				fe_notify_update(nullptr);
+			}
+			return match;
+	}),
+		notifies.end()
+	);
+	return originalLength != notifies.size();
 }
 
 void notify_adduser (boost::string_ref name, boost::string_ref networks)
 {
-	auto notif = std::make_unique<struct notify>(notify{ name.to_string() });
+	std::vector<std::string> targetNetworks;
 	if (!networks.empty())
 	{
 		auto netwks_str = networks.to_string();
@@ -525,31 +500,26 @@ void notify_adduser (boost::string_ref name, boost::string_ref networks)
 			netwks_str.end(),
 			[&loc](auto c){ return std::isspace<char>(c, loc); }),
 			netwks_str.end());
-		boost::split(notif->networks, netwks_str, boost::is_any_of(","));
+		boost::split(targetNetworks, netwks_str, boost::is_any_of(","));
 	}
-	//notify->server_list = 0;
-	notify_list = g_slist_prepend(notify_list, notif.get());
-	struct notify* note = notif.release();
+
+	notifies.emplace_back(notify{ name.to_string(), targetNetworks, {} });
+	auto & note = notifies.back();
 	notify_checklist();
-	fe_notify_update(&note->name);
+	fe_notify_update(&note.name);
 	fe_notify_update(nullptr);
-	notify_watch_all(*note, true);
+	notify_watch_all(note, true);
 }
 
 bool
 notify_is_in_list (const server &serv, const std::string & name)
 {
-	GSList *list = notify_list;
-
-	while (list)
-	{
-		auto notify = (struct notify *) list->data;
-		if (!serv.compare(notify->name, name))
-			return true;
-		list = list->next;
-	}
-
-	return false;
+	const auto notifies_list = get_notifies();
+	return std::any_of(notifies_list.cbegin(),
+		notifies_list.cend(),
+		[&serv, &name](const auto & ntfy) {
+		return !serv.compare(ntfy.name, name);
+	});
 }
 
 //bool
@@ -575,32 +545,22 @@ notify_is_in_list (const server &serv, const std::string & name)
 void
 notify_cleanup ()
 {
-	GSList *list = notify_list;
-
-	while (list)
+	for(auto & ntfy : get_notifies())
 	{
 		/* Traverse the list of notify structures */
-		auto notify = static_cast<struct notify *>(list->data);
-		notify->server_list.erase(std::remove_if(
-			notify->server_list.begin(),
-			notify->server_list.end(),
+		ntfy.server_list.erase(std::remove_if(
+			ntfy.server_list.begin(),
+			ntfy.server_list.end(),
 			[](const auto & servnot) {
-			bool valid = false;
-			auto srvlist = serv_list;
-			while (srvlist)
+			for(const auto & serv : glib_helper::glist_iterable<server>(serv_list))
 			{
-				const auto serv = static_cast<struct server *>(srvlist->data);
-				if (servnot.server == serv)
+				if (servnot.server == &serv)
 				{
-					valid = serv->connected;	/* Only valid if server is too */
-					break;
+					return !serv.connected;	/* Only valid if server is too */
 				}
-				srvlist = srvlist->next;
 			}
-			return !valid;
-		}), notify->server_list.end());
-
-		list = list->next;
+			return true;
+		}), ntfy.server_list.end());
 	}
 	fe_notify_update (nullptr);
 }

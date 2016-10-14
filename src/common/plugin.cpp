@@ -93,14 +93,14 @@ struct t_hexchat_hook
 
 struct t_hexchat_list
 {
-	int type;			/* LIST_* */
 	GSList *pos;		/* current pos */
 	GSList *next;		/* next pos */
 	GSList *head;		/* for LIST_USERS only */
 	struct notify_per_server *notifyps;	/* notify_per_server * */
-	bool is_vector;
 	size_t loc;
 	size_t length;
+	int type;			/* LIST_* */
+	bool is_vector;
 };
 
 typedef int (hexchat_cmd_cb)(const char * const word[], const char * const word_eol[], void *user_data);
@@ -1280,7 +1280,9 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 
 	case 0xc2079749:	/* notify */
 		list->type = LIST_NOTIFY;
-		list->next = notify_list;
+		list->is_vector = true;
+		list->loc = 0;
+		list->length = get_notifies().length();
 		list->head = reinterpret_cast<GSList*>(pi->context);	/* reuse this pointer */
 		break;
 
@@ -1334,7 +1336,7 @@ hexchat_list_next (hexchat_plugin *, hexchat_list *xlist)
 		of the plugin when list_get was originally called. */
 	if (xlist->type == LIST_NOTIFY)
 	{
-		xlist->notifyps = notify_find_server_entry (*static_cast<notify*>(xlist->pos->data),
+		xlist->notifyps = notify_find_server_entry (gsl::at(get_notifies(), xlist->loc),
 													*((session *)xlist->head)->server);
 		if (!xlist->notifyps)
 			return 0;

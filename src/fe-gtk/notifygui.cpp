@@ -208,7 +208,7 @@ notifygui_add_cb(GtkDialog *dialog, gint response, gpointer entry)
 	{
 		auto networks = gtk_entry_get_text(GTK_ENTRY(g_object_get_data(G_OBJECT(entry), "net")));
 		if (g_ascii_strcasecmp(networks, "ALL") == 0 || networks[0] == 0)
-			notify_adduser(text, nullptr);
+			notify_adduser(text, {});
 		else
 			notify_adduser(text, networks);
 	}
@@ -294,18 +294,16 @@ notify_gui_update (void)
 	/* true if we don't need to append a new tree row */
 	auto valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter);
 
-	GSList *list = notify_list;
-	while (list)
+	for (const auto& ntfy : get_notifies())
 	{
-		auto notify = static_cast<struct notify *>(list->data);
-		auto name = notify->name.c_str();
+		auto name = ntfy.name.c_str();
 		const char* status = _("Offline");
 		boost::string_ref server{ "", 0 };
 		using namespace std::chrono_literals;
 		bool online = false;
 		auto lastseen = notify_per_server::time_point{};
 		/* First see if they're online on any servers */
-		for (const auto & servnot : notify->server_list)
+		for (const auto & servnot : ntfy.server_list)
 		{
 			if (servnot.ison)
 				online = true;
@@ -331,8 +329,13 @@ notify_gui_update (void)
 			}
 			if (!valid)	/* create new tree row if required */
 				gtk_list_store_append (store, &iter);
-			gtk_list_store_set (store, &iter, 0, name, 1, status,
-								2, server.data(), 3, seen, 4, &colors[4], 5, nullptr, -1);
+			gtk_list_store_set (store, &iter, 
+				USER_COLUMN, name,
+				STATUS_COLUMN, status,
+				SERVER_COLUMN, server.data(),
+				SEEN_COLUMN, seen,
+				COLOUR_COLUMN, &colors[4], 
+				NPS_COLUMN, nullptr, -1);
 			if (valid)
 				valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter);
 
@@ -343,7 +346,7 @@ notify_gui_update (void)
 			status = _("Online");
 			auto lastOnMinutesAgo = std::chrono::duration_cast<std::chrono::minutes>(
 				notify_per_server::clock::now() - lastseen);
-			for(const auto & servnot : notify->server_list)
+			for(const auto & servnot : ntfy.server_list)
 			{
 				if (servnot.ison)
 				{
@@ -371,8 +374,6 @@ notify_gui_update (void)
 				}
 			}
 		}
-		
-		list = list->next;
 	}
 
 	while (valid)
