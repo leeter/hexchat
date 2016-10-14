@@ -22,9 +22,8 @@
 #ifdef _MSC_VER
 #pragma once
 #endif
-
-#include <iterator>
 #include <type_traits>
+#include <cstddef>
 
 #include <glib.h>
 
@@ -32,14 +31,18 @@ namespace glib_helper
 {
 
 	template<typename T, typename L = GSList>
-	class glist_iterator : public std::iterator<std::forward_iterator_tag, T>
+	class glist_iterator
 	{
 		L * list;
 	public:
-		using reference = typename std::iterator < std::forward_iterator_tag, T >::reference ;
-		using pointer = typename std::iterator<std::forward_iterator_tag, T>::pointer;
+		using reference = typename std::add_lvalue_reference_t<T> ;
+		using pointer = typename std::add_pointer_t<T>;
 		using const_reference = const reference;
 		using const_pointer = const pointer;
+		using difference_type = std::ptrdiff_t;
+		using value_type = typename T;
+		using iterator_category = std::forward_iterator_tag;
+
 		explicit glist_iterator(L * list = nullptr)
 			:list(list){}
 
