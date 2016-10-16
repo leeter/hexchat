@@ -24,6 +24,7 @@
 #include <vector>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
+#include <gsl.h>
 #include "serverfwd.hpp"
 #include "sessfwd.hpp"
 
@@ -67,8 +68,8 @@ enum class ignore_add_result
 	updated
 };
 const std::vector<ignore>& get_ignore_list();
-boost::optional<ignore &> ignore_exists (const boost::string_ref& mask);
-ignore_add_result ignore_add(const std::string& mask, int type, bool overwrite);
+ignore* ignore_exists (gsl::cstring_span<> mask);
+ignore_add_result ignore_add(gsl::cstring_span<> mask, int type, bool overwrite);
 void ignore_showlist (session *sess);
 bool ignore_del(const std::string& mask);
 bool ignore_check(const boost::string_ref& mask, ignore::ignore_type type);
@@ -76,6 +77,6 @@ void ignore_load (void);
 void ignore_save (void);
 void ignore_gui_open (void);
 void ignore_gui_update (int level);
-bool flood_check (const char *nick, const char *ip, server &serv, session *sess, flood_check_type what);
+bool flood_check (gsl::cstring_span<> nick, gsl::cstring_span<> ip, server &serv, session *sess, flood_check_type what);
 
 #endif

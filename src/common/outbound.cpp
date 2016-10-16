@@ -80,6 +80,7 @@
 #include "userlist.hpp"
 #include "session.hpp"
 #include "glist_iterators.hpp"
+#include "string_span_output.hpp"
 
 namespace hexchat{
 namespace fe{
@@ -669,7 +670,7 @@ cmd_ctcp (struct session *sess, char *word[], char *word_eol[])
 
 			sess->server->p_ctcp (to, msg);
 
-			EMIT_SIGNAL (XP_TE_CTCPSEND, sess, to, msg, nullptr, nullptr, 0);
+			EMIT_SIGNAL (XP_TE_CTCPSEND, sess, gsl::ensure_z(to), gsl::ensure_z(msg), nullptr, nullptr, 0);
 
 			return true;
 		}
@@ -2086,17 +2087,17 @@ cmd_ignore (struct session *sess, char *word[], char *[])
 				mask = buffer;
 				snprintf (buffer, TBUFSIZE, "%s!*@*", word[2]);
 			}
-
-			auto result = ignore_add (mask, type, true);
+			auto mask_span = gsl::ensure_z(mask);
+			auto result = ignore_add (mask_span, type, true);
 			if (quiet)
 				return true;
 			switch (result)
 			{
 			case ignore_add_result::success:
-				EMIT_SIGNAL (XP_TE_IGNOREADD, sess, mask, nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_IGNOREADD, sess, mask_span, nullptr, nullptr, nullptr, 0);
 				break;
 			case ignore_add_result::updated:	/* old ignore changed */
-				EMIT_SIGNAL (XP_TE_IGNORECHANGE, sess, mask, nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_IGNORECHANGE, sess, gsl::ensure_z(mask), nullptr, nullptr, nullptr, 0);
 			}
 			return true;
 		}
@@ -2572,7 +2573,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
 				{
 					inbound_chanmsg (*(newsess->server), nullptr, newsess->channel,
-										  newsess->server->nick, split_text, true, false,
+										  newsess->server->nick, gsl::ensure_z(split_text), true, false,
 										  &no_tags);
 
 					if (*split_text)
@@ -2581,7 +2582,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 					g_free(split_text);
 				}
 				inbound_chanmsg (*(newsess->server), nullptr, newsess->channel,
-									  newsess->server->nick, msg + offset, true, false,
+									  newsess->server->nick, gsl::ensure_z(msg + offset), true, false,
 									  &no_tags);
 			}
 			else
@@ -2590,7 +2591,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 				if (g_ascii_strcasecmp (nick, "nickserv") == 0 &&
 					 g_ascii_strncasecmp (msg, "identify ", 9) == 0)
 					msg = "identify ****";
-				EMIT_SIGNAL (XP_TE_MSGSEND, sess, nick, msg, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_MSGSEND, sess, gsl::ensure_z(nick), gsl::ensure_z(msg), nullptr, nullptr, 0);
 			}
 
 			return true;
@@ -2667,7 +2668,7 @@ cmd_notice (struct session *sess, char *word[], char *word_eol[])
 		while ((split_text = split_up_text (sess, text + offset, cmd_length, split_text)))
 		{
 			sess->server->p_notice (word[2], split_text);
-			EMIT_SIGNAL (XP_TE_NOTICESEND, sess, word[2], split_text, nullptr, nullptr, 0);
+			EMIT_SIGNAL (XP_TE_NOTICESEND, sess, gsl::ensure_z(word[2]), gsl::ensure_z(split_text), nullptr, nullptr, 0);
 			
 			if (*split_text)
 				offset += strlen(split_text);
@@ -2676,7 +2677,7 @@ cmd_notice (struct session *sess, char *word[], char *word_eol[])
 		}
 
 		sess->server->p_notice (word[2], text + offset);
-		EMIT_SIGNAL (XP_TE_NOTICESEND, sess, word[2], text + offset, nullptr, nullptr, 0);
+		EMIT_SIGNAL (XP_TE_NOTICESEND, sess, gsl::ensure_z(word[2]), gsl::ensure_z(text + offset), nullptr, nullptr, 0);
 
 		return true;
 	}
@@ -2704,7 +2705,7 @@ cmd_notify (struct session *sess, char *word[], char *[])
 				break;
 			if (notify_deluser (word[i]))
 			{
-				EMIT_SIGNAL (XP_TE_DELNOTIFY, sess, word[i], nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_DELNOTIFY, sess, gsl::ensure_z(word[i]), nullptr, nullptr, nullptr, 0);
 				return true;
 			}
 
@@ -2713,7 +2714,7 @@ cmd_notify (struct session *sess, char *word[], char *[])
 			else
 			{
 				notify_adduser (word[i], net);
-				EMIT_SIGNAL (XP_TE_ADDNOTIFY, sess, word[i], nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_ADDNOTIFY, sess, gsl::ensure_z(word[i]), nullptr, nullptr, nullptr, 0);
 			}
 		}
 	} else
@@ -2825,7 +2826,7 @@ cmd_query (struct session *sess, char *word[], char *word_eol[])
 			{
 				sess->server->p_message (nick, split_text);
 				inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
-								 nick_sess->server->nick, split_text, true, false,
+								 nick_sess->server->nick, gsl::ensure_z(split_text), true, false,
 								 &no_tags);
 
 				if (*split_text)
@@ -2835,7 +2836,7 @@ cmd_query (struct session *sess, char *word[], char *word_eol[])
 			}
 			sess->server->p_message (nick, msg + offset);
 			inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
-							 nick_sess->server->nick, msg + offset, true, false,
+							 nick_sess->server->nick, gsl::ensure_z(msg + offset), true, false,
 							 &no_tags);
 		}
 
@@ -3304,7 +3305,7 @@ cmd_unignore (struct session *sess, char *word[],
 		if (ignore_del (mask))
 		{
 			if (g_ascii_strcasecmp (arg, "QUIET"))
-				EMIT_SIGNAL (XP_TE_IGNOREREMOVE, sess, mask, nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_IGNOREREMOVE, sess, gsl::ensure_z(mask), nullptr, nullptr, nullptr, 0);
 		}
 		return true;
 	}
@@ -3555,7 +3556,7 @@ cmd_wallchan (struct session *sess, char *[],
 				message_tags_data no_tags = message_tags_data();
 
 				inbound_chanmsg (*sess->server, nullptr, sess->channel,
-									  sess->server->nick, word_eol[2], true, false, 
+									  sess->server->nick, gsl::ensure_z(word_eol[2]), true, false, 
 									  &no_tags);
 				sess->server->p_message (sess->channel, word_eol[2]);
 			}
@@ -4255,7 +4256,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		if (dcc)
 		{
 			inbound_chanmsg (*sess->server, nullptr, sess->channel,
-				sess->server->nick, &newcmd[0], true, false, &no_tags);
+				sess->server->nick, newcmd, true, false, &no_tags);
 			set_topic (sess, net_ip (dcc->addr), net_ip (dcc->addr));
 			return;
 		}
@@ -4270,7 +4271,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		while ((split_text = split_up_text(sess, &newcmd[0] + offset, cmd_length, split_text)))
 		{
 			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
-								  split_text, true, false, &no_tags);
+								  gsl::ensure_z(split_text), true, false, &no_tags);
 			sess->server->p_message (sess->channel, split_text);
 			
 			if (*split_text)
@@ -4279,9 +4280,10 @@ handle_say (session *sess, char *text, bool check_spch)
 			g_free(split_text);
 		}
 
+		auto nmgSpan = gsl::cstring_span<>(newcmd).subspan(offset);
 		inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
-			&newcmd[0] + offset, true, false, &no_tags);
-		sess->server->p_message(sess->channel, &newcmd[0] + offset);
+			nmgSpan, true, false, &no_tags);
+		sess->server->p_message(sess->channel, to_string_ref(nmgSpan));
 	} else
 	{
 		notc_msg (sess);

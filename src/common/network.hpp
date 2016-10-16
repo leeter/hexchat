@@ -22,5 +22,5 @@
 
 #include <cstdint>
 
-char *net_ip (std::uint32_t addr);
+const char *net_ip (std::uint32_t addr);
 #endif

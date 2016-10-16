@@ -35,7 +35,7 @@
 
 /* ================== COMMON ================= */
 
-char *
+const char *
 net_ip (std::uint32_t addr)
 {
 	struct in_addr ia;

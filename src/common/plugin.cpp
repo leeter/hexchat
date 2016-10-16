@@ -1336,7 +1336,8 @@ hexchat_list_next (hexchat_plugin *, hexchat_list *xlist)
 		of the plugin when list_get was originally called. */
 	if (xlist->type == LIST_NOTIFY)
 	{
-		xlist->notifyps = notify_find_server_entry (gsl::at(get_notifies(), xlist->loc),
+		auto & ntfy = gsl::at(get_notifies(), xlist->loc);
+		xlist->notifyps = notify_find_server_entry (ntfy,
 													*((session *)xlist->head)->server);
 		if (!xlist->notifyps)
 			return 0;
@@ -1689,8 +1690,8 @@ hexchat_emit_print (hexchat_plugin *ph, const char *event_name, ...)
 			break;
 	}
 
-	i = text_emit_by_name((char *)event_name, static_cast<hexchat_plugin_internal*>(ph)->context, (time_t)0,
-						   argv[0], argv[1], argv[2], argv[3]);
+	i = text_emit_by_name(gsl::ensure_z(event_name), static_cast<hexchat_plugin_internal*>(ph)->context, (time_t)0,
+		gsl::ensure_z(argv[0]), gsl::ensure_z(argv[1]), gsl::ensure_z(argv[2]), gsl::ensure_z(argv[3]));
 	va_end (args);
 
 	return i;
@@ -1717,8 +1718,8 @@ hexchat_emit_print_attrs (hexchat_plugin *ph, hexchat_event_attrs *attrs,
 			break;
 	}
 
-	i = text_emit_by_name((char *)event_name, static_cast<hexchat_plugin_internal*>(ph)->context, attrs->server_time_utc,
-						   argv[0], argv[1], argv[2], argv[3]);
+	i = text_emit_by_name(gsl::ensure_z(event_name), static_cast<hexchat_plugin_internal*>(ph)->context, attrs->server_time_utc,
+		gsl::ensure_z(argv[0]), gsl::ensure_z(argv[1]), gsl::ensure_z(argv[2]), gsl::ensure_z(argv[3]));
 	va_end (args);
 
 	return i;

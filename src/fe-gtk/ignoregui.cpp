@@ -95,17 +95,17 @@ mask_edited (GtkCellRendererText *render, gchar *path, gchar *newStr, gpointer d
 
 	gtkutil_treemodel_string_to_iter (GTK_TREE_MODEL (store), path, &iter);
 	gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, 0, &old, -1);
-	
+	auto newStrspan = gsl::ensure_z(newStr);
 	if (!strcmp (old, newStr))	/* no change */
 		;
-	else if (ignore_exists (newStr))	/* duplicate, ignore */
+	else if (ignore_exists (newStrspan))	/* duplicate, ignore */
 		fe_message (_("That mask already exists."), FE_MSG_ERROR);
 	else
 	{
 		/* delete old mask, and add new one with original flags */
 		ignore_del (old);
 		flags = ignore_get_flags (GTK_TREE_MODEL (store), &iter);
-		ignore_add (newStr, flags, true);
+		ignore_add (newStrspan, flags, true);
 
 		/* update tree */
 		gtk_list_store_set (store, &iter, MASK_COLUMN, newStr, -1);
@@ -132,11 +132,10 @@ option_toggled (GtkCellRendererToggle *render, gchar *path, gpointer data)
 
 	/* update ignore list */
 	gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, 0, &mask, -1);
+	glib_string maskptr{ mask };
 	flags = ignore_get_flags (GTK_TREE_MODEL (store), &iter);
-	if (ignore_add (mask, flags, true) != ignore_add_result::updated)
+	if (ignore_add (gsl::ensure_z(mask), flags, true) != ignore_add_result::updated)
 		g_warning ("ignore treeview is out of sync!\n");
-	
-	g_free (mask);
 }
 
 static GtkWidget *
@@ -232,7 +231,8 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	if (cancel)
 		return;
 	/* check if it already exists */
-	if (ignore_exists (mask))
+	const auto mask_span = gsl::ensure_z(mask);
+	if (ignore_exists (mask_span))
 	{
 		fe_message (_("That mask already exists."), FE_MSG_ERROR);
 		return;
@@ -243,7 +243,7 @@ ignore_store_new (int cancel, char *mask, gpointer data)
 	GtkTreeIter iter;
 	ignore::ignore_type flags = ignore::IG_DEFAULTS;
 
-	ignore_add (mask, flags, true);
+	ignore_add (mask_span, flags, true);
 
 	gtk_list_store_append (store, &iter);
 	/* ignore everything by default */

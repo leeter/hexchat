@@ -33,6 +33,8 @@ extern GSList *serv_list;
 
 struct server
 {
+	using clock = std::chrono::steady_clock;
+	using time_point = clock::time_point;
 private:
 	void reset_to_defaults();
 	int death_timer;
@@ -160,10 +162,10 @@ public:
 	struct server_gui *gui;		  /* initialized by fe_new_server */
 
 	unsigned int ctcp_counter;	  /*flood */
-	time_t ctcp_last_time;
+	time_point ctcp_last_time;
 
 	unsigned int msg_counter;	  /*counts the msg tab opened in a certain time */
-	time_t msg_last_time;
+	time_point msg_last_time;
 
 	/*time_t connect_time;*/				/* when did it connect? */
 	unsigned long lag_sent;   /* we are still waiting for this ping response*/

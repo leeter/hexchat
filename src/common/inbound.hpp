@@ -22,6 +22,7 @@
 #ifndef HEXCHAT_INBOUND_HPP
 #define HEXCHAT_INBOUND_HPP
 #include <string>
+#include <gsl.h>
 
 void inbound_next_nick (session *sess, char *nick, int error,
 								const message_tags_data *tags_data);
@@ -76,8 +77,8 @@ void inbound_login_start (session *sess, char *nick, char *servname,
 								  const message_tags_data *tags_data);
 void inbound_login_end (session *sess, char *text,
 								const message_tags_data *tags_data);
-void inbound_chanmsg (server &serv, session *sess, char *chan, char *from,
-							 char *text, bool fromme, bool id, 
+void inbound_chanmsg(server &serv, session *sess, gsl::cstring_span<> chan, gsl::cstring_span<> from,
+	gsl::cstring_span<> text, bool fromme, bool id,
 							 const message_tags_data *tags_data);
 void clear_channel (session &sess);
 void set_topic (session *sess, const std::string& topic, const std::string &stripped_topic);
@@ -101,7 +102,7 @@ bool inbound_sasl_error (server &serv);
 void inbound_sasl_supportedmechs (server &serv, char *list);
 void do_dns (session *sess, const char nick[], const char host[],
 				 const message_tags_data *tags_data);
-bool alert_match_word (const char *word, const char *masks);
+bool alert_match_word (gsl::cstring_span<> word, gsl::cstring_span<> masks);
 bool alert_match_text (const char text[], const char masks[]);
 
 #endif

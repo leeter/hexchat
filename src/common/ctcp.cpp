@@ -167,12 +167,12 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 				if (!chansess)
 					chansess = sess;
 
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSNDC, chansess, word[5],
-											  nick, to, nullptr, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSNDC, chansess, gsl::ensure_z(word[5]),
+					gsl::ensure_z(nick), gsl::ensure_z(to), nullptr, nullptr, tags_data->timestamp);
 			} else
 			{
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSND, sess->server->front_session,
-											  word[5], nick, nullptr, nullptr, 0,
+					gsl::ensure_z(word[5]), gsl::ensure_z(nick), nullptr, nullptr, 0,
 											  tags_data->timestamp);
 			}
 
@@ -194,14 +194,14 @@ generic:
 
 	if (!sess->server->is_channel_name (to))
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGEN, sess->server->front_session, msg,
-									  nick, nullptr, nullptr, 0, tags_data->timestamp);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGEN, sess->server->front_session, gsl::ensure_z(msg),
+			gsl::ensure_z(nick), nullptr, nullptr, 0, tags_data->timestamp);
 	} else
 	{
 		chansess = find_channel (*(sess->server), to);
 		if (!chansess)
 			chansess = sess;
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGENC, chansess, msg, nick, to, nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPGENC, chansess, gsl::ensure_z(msg), gsl::ensure_z(nick), gsl::ensure_z(to), nullptr, 0,
 									  tags_data->timestamp);
 	}
 }

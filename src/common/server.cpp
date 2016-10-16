@@ -1292,7 +1292,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 		{
 			if (!shutup || sess->type == session::SESS_SERVER)
 				/* print "Disconnected" to each window using this server */
-				EMIT_SIGNAL (XP_TE_DISCON, sess, errorstring (err), nullptr, nullptr, nullptr, 0);
+				EMIT_SIGNAL (XP_TE_DISCON, sess, gsl::ensure_z(errorstring (err)), nullptr, nullptr, nullptr, 0);
 
 			if (!sess->channel[0] || sess->type == session::SESS_CHANNEL)
 				clear_channel (*sess);

@@ -1222,7 +1222,7 @@ static void pevent_trigger_load (int &i_penum, std::string i_text)
 	i_penum = 0;
 }
 
-static int pevent_find (boost::string_ref name, int &i_i)
+static int pevent_find (gsl::cstring_span<> name, int &i_i)
 {
 	int i = i_i, j;
 
@@ -1635,29 +1635,31 @@ int text_color_of(const boost::string_ref &name)
 
 /* called by EMIT_SIGNAL macro */
 
-void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
+void text_emit (int index, session *sess, gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d,
 			  time_t timestamp)
 {
 	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->chanopts["text_strip"]) ? 0xFFFFFFFF : 0);
 	char tbuf[NICKLEN + 4];
-
+	auto astr = gsl::to_string(a);
+	auto bstr = gsl::to_string(b);
+	auto cstr = gsl::to_string(c);
+	auto dstr = gsl::to_string(d);
 	if (prefs.hex_text_color_nicks && (index == XP_TE_CHANACTION || index == XP_TE_CHANMSG))
 	{
-		snprintf (tbuf, sizeof (tbuf), "\003%d%s", text_color_of (a), a);
-		a = tbuf;
+		snprintf (tbuf, sizeof (tbuf), "\003%d%s", text_color_of (astr), astr.c_str());
+		astr = tbuf;
 		stripcolor_args &= ~ARG_FLAG(1);	/* don't strip color from this argument */
 	}
 	std::string empty("\000");
-	std::string name(te[index].name);
-	name.push_back(0);
-	char *word[PDIWORDS] = { 0 };
-	word[0] = &name[0];
-	word[1] = (a ? a : &empty[0]);
-	word[2] = (b ? b : &empty[0]);
-	word[3] = (c ? c : &empty[0]);
-	word[4] = (d ? d : &empty[0]);
+	auto name = gsl::to_string(te[index].name);
+	char *word[PDIWORDS] = { };
+	word[0] = name.data();
+	word[1] = astr.data();
+	word[2] = bstr.data();
+	word[3] = cstr.data();
+	word[4] = dstr.data();
 	for (int i = 5; i < PDIWORDS; i++)
-		word[i] = &empty[0];
+		word[i] = empty.data();
 
 	if (plugin_emit_print (sess, word, timestamp))
 		return;
@@ -1724,14 +1726,14 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	display_event (sess, index, word, stripcolor_args, timestamp);
 }
 
-const char * text_find_format_string (const char name[])
+const char * text_find_format_string (const char* name)
 {
-	int i = pevent_find (name, i);
+	int i = pevent_find (gsl::ensure_z(name), i);
 	return i >= 0 ? pntevts_text[i].c_str() : nullptr;
 }
 
-int text_emit_by_name (char *name, session *sess, time_t timestamp,
-				   char *a, char *b, char *c, char *d)
+int text_emit_by_name (gsl::cstring_span<> name, session *sess, time_t timestamp,
+	gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d)
 {
 	int i = 0;
 
@@ -1870,7 +1872,7 @@ static void sound_load_event (const std::string & evt, std::string file)
 {
 	int i = 0;
 
-	if (!file.empty() && pevent_find (evt.c_str(), i) != -1)
+	if (!file.empty() && pevent_find (evt, i) != -1)
 	{
 		sound_files[i] = std::move(file);
 	}

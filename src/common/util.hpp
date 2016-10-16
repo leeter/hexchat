@@ -75,7 +75,7 @@ enum strip_flags{
 std::string strip_color(const boost::string_ref &text, strip_flags flags);
 std::string strip_color2(const boost::string_ref &src, strip_flags flags);
 int strip_hidden_attribute (const std::string & src, char *dst);
-char *errorstring (int err);
+const char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
 #ifdef WIN32
 //int waitline2 (GIOChannel *source, char *buf, int bufsize);

@@ -748,7 +748,7 @@ tray_message_cb(const char *const word[], void *userdata)
 static void
 tray_priv (const char *from, const char *text)
 {
-	if (alert_match_word (from, prefs.hex_irc_no_hilight))
+	if (alert_match_word (gsl::ensure_z(from), prefs.hex_irc_no_hilight))
 		return;
 
 	auto network = hexchat_get_info (ph, "network");

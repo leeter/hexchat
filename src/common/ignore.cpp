@@ -35,6 +35,8 @@
 #include "server.hpp"
 #include "typedef.h"
 #include "filesystem.hpp"
+#include "string_span_output.hpp"
+
 
 ignore::ignore()
 	:type()
@@ -52,13 +54,13 @@ static int ignored_total = 0;
  * returns: struct ig, if this mask is in the ignore list already
  *          nullptr, otherwise
  */
-boost::optional<ignore &>
-ignore_exists (const boost::string_ref& mask)
+ignore*
+ignore_exists (gsl::cstring_span<> mask)
 {
 	auto res = std::find_if(ignores.begin(), ignores.end(), [&mask](const ignore & ig){
 		return !rfc_casecmp(ig.mask.c_str(), mask.data());
 	});
-	return res != ignores.end() ? boost::make_optional<ignore&>(*res) : boost::none;
+	return (res != ignores.end() ? &*res : nullptr);
 }
 
 /* ignore_add(...)
@@ -70,7 +72,7 @@ ignore_exists (const boost::string_ref& mask)
  */
 
 ignore_add_result
-ignore_add(const std::string& mask, int type, bool overwrite)
+ignore_add(gsl::cstring_span<> mask, int type, bool overwrite)
 {
 	bool change_only = false;
 
@@ -81,12 +83,12 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 
 	ignore new_ig;
 	if (!change_only)
-		ig = new_ig;
+		*ig = new_ig;
 
 	if (!ig)
 		return ignore_add_result::fail;
 
-	ig->mask = mask;
+	ig->mask = gsl::to_string(mask);
 
 	if (!overwrite && change_only)
 		ig->type |= type;
@@ -94,7 +96,7 @@ ignore_add(const std::string& mask, int type, bool overwrite)
 		ig->type = type;
 
 	if (!change_only)
-		ignores.push_back(ig.get());
+		ignores.emplace_back(std::move(new_ig));
 	fe_ignore_update (1);
 
 	if (change_only)
@@ -312,46 +314,31 @@ flood_autodialog_timeout (gpointer)
 }
 
 bool
-flood_check (const char *nick, const char *ip, server &serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
+flood_check (gsl::cstring_span<> nick, gsl::cstring_span<> ip, server &serv, session *sess, flood_check_type what)	/*0=ctcp  1=priv */
 {
-	/*
-	   serv
-	   int ctcp_counter; 
-	   time_t ctcp_last_time;
-	   prefs
-	   unsigned int ctcp_number_limit;
-	   unsigned int ctcp_time_limit;
-	 */
-	char buf[512];
-	char real_ip[132];
-	int i;
-	std::time_t current_time;
-	current_time = std::time (nullptr);
-
+	namespace chrono = std::chrono;
+	const auto current_time = server::clock::now();
+	using namespace std::string_literals;
 	if (what == flood_check_type::CTCP)
 	{
-		if (serv.ctcp_last_time == 0)	/*first ctcp in this server */
+		if (serv.ctcp_last_time == server::time_point())	/*first ctcp in this server */
 		{
-			serv.ctcp_last_time = std::time (nullptr);
+			serv.ctcp_last_time = current_time;
 			serv.ctcp_counter++;
 		} else
 		{
-			if (difftime (current_time, serv.ctcp_last_time) < prefs.hex_flood_ctcp_time)	/*if we got the ctcp in the seconds limit */
+			if ((current_time - serv.ctcp_last_time) < chrono::seconds(prefs.hex_flood_ctcp_time))	/*if we got the ctcp in the seconds limit */
 			{
 				serv.ctcp_counter++;
 				if (serv.ctcp_counter == prefs.hex_flood_ctcp_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
 					serv.ctcp_last_time = current_time;	/*we got the flood, restore all the vars for next one */
 					serv.ctcp_counter = 0;
-					for (i = 0; i < 128; i++)
-						if (ip[i] == '@')
-							break;
-					snprintf (real_ip, sizeof (real_ip), "*!*%s", &ip[i]);
-
-					snprintf (buf, sizeof (buf),
-								 _("You are being CTCP flooded from %s, ignoring %s\n"),
-								 nick, real_ip);
-					PrintText (sess, buf);
+					auto at_loc = std::find(ip.cbegin(), ip.cend(), '@');
+					const auto real_ip = at_loc != ip.cend() ? gsl::to_string(ip.subspan(std::distance(ip.cbegin(), at_loc))) : "x.x.x.x"s;
+					const auto nickStr = gsl::to_string(nick);
+					const auto outformat = boost::format(_("You are being CTCP flooded from %s, ignoring *!*%s\n")) % nickStr % real_ip;
+					PrintTextf (sess, outformat);
 
 					/* ignore CTCP */
 					ignore_add(real_ip, ignore::IG_CTCP, false);
@@ -361,19 +348,19 @@ flood_check (const char *nick, const char *ip, server &serv, session *sess, floo
 		}
 	} else
 	{
-		if (serv.msg_last_time == 0)
+		if (serv.msg_last_time == server::time_point())
 		{
-			serv.msg_last_time = std::time (nullptr);
+			serv.msg_last_time = current_time;
 			serv.ctcp_counter++;
 		} else
 		{
-			if (difftime (current_time, serv.msg_last_time) <
-				 prefs.hex_flood_msg_time)
+			if ((current_time - serv.msg_last_time) <
+				chrono::seconds(prefs.hex_flood_msg_time))
 			{
 				serv.msg_counter++;
 				if (serv.msg_counter == prefs.hex_flood_msg_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
-					auto errmsg = boost::format(_("You are being MSG flooded from %s, setting gui_autoopen_dialog OFF.\n")) % ip;
+					auto errmsg = boost::format(_("You are being MSG flooded from %s, setting gui_autoopen_dialog OFF.\n")) % gsl::to_string(ip);
 					PrintText (sess, errmsg.str());
 					serv.msg_last_time = current_time;	/*we got the flood, restore all the vars for next one */
 					serv.msg_counter = 0;

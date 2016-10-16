@@ -138,7 +138,7 @@ nocasestrstr (const char *s, const char *wanted)
 	return (char *)s;
 }
 
-char *
+const char *
 errorstring (int err)
 {
 	switch (err)

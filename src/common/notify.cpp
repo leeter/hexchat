@@ -164,13 +164,13 @@ static void notify_announce_offline (server & serv, notify_per_server &servnot,
 {
 	servnot.ison = false;
 	servnot.lastoff = notify_per_server::clock::now();
-	std::string mutable_nick = nick.to_string();
+	const std::string mutable_nick = nick.to_string();
 	if (!quiet)
 	{
 		auto net = serv.get_network(true).to_string();
 		session *sess = serv.front_session;
-		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, &mutable_nick[0], serv.servername,
-			&net[0], nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, mutable_nick, serv.servername,
+			net, nullptr, 0,
 			tags_data->timestamp);
 	}
 	fe_notify_update(&mutable_nick);
@@ -188,10 +188,10 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	
 	servnot.ison = true;
 	servnot.laston = notify_per_server::clock::now();
-	auto mutable_nick = nick.to_string();
-	auto mutable_net = serv.get_network(true).to_string();
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, &mutable_nick[0], serv.servername,
-					 &mutable_net[0], nullptr, 0,
+	const auto mutable_nick = nick.to_string();
+	const auto mutable_net = serv.get_network(true).to_string();
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, mutable_nick, serv.servername,
+					 mutable_net, nullptr, 0,
 					 tags_data->timestamp);
 	fe_notify_update (&mutable_nick);
 	fe_notify_update (nullptr);

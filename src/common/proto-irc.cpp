@@ -512,7 +512,7 @@ channel_date (session *sess, char *chan, char *timestr,
 	time_t timestamp = (time_t) atol (timestr);
 	char *tim = ctime (&timestamp);
 	tim[24] = 0;	/* get rid of the \n */
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDATE, sess, chan, tim, nullptr, nullptr, 0,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDATE, sess, gsl::ensure_z(chan), gsl::ensure_z(tim), nullptr, nullptr, 0,
 								  tags_data->timestamp);
 }
 
@@ -618,7 +618,7 @@ process_numeric (session * sess, int n,
 
 	case 312:
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS3, whois_sess, word[4], word_eol[5],
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS3, whois_sess, gsl::ensure_z(word[4]), gsl::ensure_z(word_eol[5]),
 										  nullptr, nullptr, 0, tags_data->timestamp);
 		else
 			inbound_user_info (sess, nullptr, nullptr, nullptr, word[5], word[4], nullptr, nullptr,
@@ -629,8 +629,8 @@ process_numeric (session * sess, int n,
 		serv.inside_whois = 1;
 		inbound_user_info_start (sess, word[4], tags_data);
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, word[4], word[5],
-										  word[6], word_eol[8] + 1, 0, tags_data->timestamp);
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
+				gsl::ensure_z(word[6]), gsl::ensure_z(word_eol[8] + 1), 0, tags_data->timestamp);
 		else
 			inbound_user_info (sess, nullptr, word[5], word[6], nullptr, word[4],
 									 word_eol[8][0] == ':' ? word_eol[8] + 1 : word_eol[8],
@@ -639,8 +639,8 @@ process_numeric (session * sess, int n,
 
 	case 314:	/* WHOWAS */
 		inbound_user_info_start (sess, word[4], tags_data);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, word[4], word[5],
-									  word[6], word_eol[8] + 1, 0, tags_data->timestamp);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
+			gsl::ensure_z(word[6]), gsl::ensure_z(word_eol[8] + 1), 0, tags_data->timestamp);
 		break;
 
 	case 317:
@@ -655,21 +655,21 @@ process_numeric (session * sess, int n,
 						"%02ld:%02ld:%02ld", idle / 3600, (idle / 60) % 60,
 						idle % 60);
 			if (timestamp == 0)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS4, whois_sess, word[4],
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS4, whois_sess, gsl::ensure_z(word[4]),
 											  outbuf, nullptr, nullptr, 0, tags_data->timestamp);
 			else
 			{
 				tim = ctime (&timestamp);
 				tim[19] = 0; 	/* get rid of the \n */
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS4T, whois_sess, word[4],
-											  outbuf, tim, nullptr, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS4T, whois_sess, gsl::ensure_z(word[4]),
+											  outbuf, gsl::ensure_z(tim), nullptr, 0, tags_data->timestamp);
 			}
 		}
 		break;
 
 	case 318:	/* END OF WHOIS */
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS6, whois_sess, word[4], nullptr,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS6, whois_sess, gsl::ensure_z(word[4]), nullptr,
 										  nullptr, nullptr, 0, tags_data->timestamp);
 		serv.skip_next_whois = 0;
 		serv.inside_whois = 0;
@@ -678,16 +678,16 @@ process_numeric (session * sess, int n,
 	case 313:
 	case 319:
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS2, whois_sess, word[4],
-										  word_eol[5] + 1, nullptr, nullptr, 0,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS2, whois_sess, gsl::ensure_z(word[4]),
+				gsl::ensure_z(word_eol[5] + 1), nullptr, nullptr, 0,
 										  tags_data->timestamp);
 		break;
 
 	case 307:	/* dalnet version */
 	case 320:	/* :is an identified user */
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_ID, whois_sess, word[4],
-										  word_eol[5] + 1, nullptr, nullptr, 0,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_ID, whois_sess, gsl::ensure_z(word[4]),
+				gsl::ensure_z(word_eol[5] + 1), nullptr, nullptr, 0,
 										  tags_data->timestamp);
 		break;
 
@@ -711,8 +711,8 @@ process_numeric (session * sess, int n,
 
 	case 323:
 		if (!fe_is_chanwindow (sess->server))
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, text, 
-										  word[1], word[2], nullptr, 0, tags_data->timestamp);
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, gsl::ensure_z(text),
+				gsl::ensure_z(word[1]), gsl::ensure_z(word[2]), nullptr, 0, tags_data->timestamp);
 		else
 			fe_chan_list_end (sess->server);
 		break;
@@ -724,7 +724,7 @@ process_numeric (session * sess, int n,
 		if (sess->ignore_mode)
 			sess->ignore_mode = false;
 		else
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODES, sess, word[4], word_eol[5],
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODES, sess, gsl::ensure_z(word[4]), gsl::ensure_z(word_eol[5]),
 										  nullptr, nullptr, 0, tags_data->timestamp);
 		fe_update_mode_buttons (sess, 'c', '-');
 		fe_update_mode_buttons (sess, 'r', '-');
@@ -741,7 +741,7 @@ process_numeric (session * sess, int n,
 		sess = find_channel (serv, word[4]);
 		if (sess)
 		{
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANURL, sess, word[4], word[5] + 1,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANURL, sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5] + 1),
 									nullptr, nullptr, 0, tags_data->timestamp); 
 		}
 		break;
@@ -759,8 +759,8 @@ process_numeric (session * sess, int n,
 
 	case 330:
 		if (!serv.skip_next_whois)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_AUTH, whois_sess, word[4],
-										  word_eol[6] + 1, word[5], nullptr, 0,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_AUTH, whois_sess, gsl::ensure_z(word[4]),
+				gsl::ensure_z(word_eol[6] + 1), gsl::ensure_z(word[5]), nullptr, 0,
 										  tags_data->timestamp);
 		inbound_user_info (sess, nullptr, nullptr, nullptr, nullptr, word[4], nullptr, word[5],
 								 0xff, tags_data);
@@ -785,7 +785,7 @@ process_numeric (session * sess, int n,
 #endif
 
 	case 341:						  /* INVITE ACK */
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_UINVITE, sess, word[4], word[5],
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_UINVITE, sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
 									  serv.servername, nullptr, 0, tags_data->timestamp);
 		break;
 
@@ -803,8 +803,8 @@ process_numeric (session * sess, int n,
 
 			/* try to show only user initiated whos */
 			if (!who_sess || !who_sess->doing_who)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, text, word[1],
-											  word[2], nullptr, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, gsl::ensure_z(text), gsl::ensure_z(word[1]),
+					gsl::ensure_z(word[2]), nullptr, 0, tags_data->timestamp);
 		}
 		break;
 
@@ -828,8 +828,8 @@ process_numeric (session * sess, int n,
 
 				/* try to show only user initiated whos */
 				if (!who_sess || !who_sess->doing_who)
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, text,
-												  word[1], word[2], nullptr, 0,
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, gsl::ensure_z(text),
+						gsl::ensure_z(word[1]), gsl::ensure_z(word[2]), nullptr, 0,
 												  tags_data->timestamp);
 			} else
 				goto def;
@@ -843,15 +843,15 @@ process_numeric (session * sess, int n,
 			if (who_sess)
 			{
 				if (!who_sess->doing_who)
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, text,
-												  word[1], word[2], nullptr, 0,
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, gsl::ensure_z(text),
+						gsl::ensure_z(word[1]), gsl::ensure_z(word[2]), nullptr, 0,
 												  tags_data->timestamp);
 				who_sess->doing_who = false;
 			} else
 			{
 				if (!serv.doing_dns)
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, text,
-												  word[1], word[2], nullptr, 0, tags_data->timestamp);
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, gsl::ensure_z(text),
+						gsl::ensure_z(word[1]), gsl::ensure_z(word[2]), nullptr, 0, tags_data->timestamp);
 				serv.doing_dns = false;
 			}
 		}
@@ -909,7 +909,7 @@ process_numeric (session * sess, int n,
 
 	case 369:	/* WHOWAS end */
 	case 406:	/* WHOWAS error */
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, whois_sess, text, word[1], word[2],
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, whois_sess, gsl::ensure_z(text), gsl::ensure_z(word[1]), gsl::ensure_z(word[2]),
 									  nullptr, 0, tags_data->timestamp);
 		serv.inside_whois = 0;
 		break;
@@ -917,7 +917,7 @@ process_numeric (session * sess, int n,
 	case 372:	/* motd text */
 	case 375:	/* motd start */
 		if (!prefs.hex_irc_skip_motd || serv.motd_skipped)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_MOTD, serv.server_session, text, nullptr,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_MOTD, serv.server_session, gsl::ensure_z(text), nullptr,
 										  nullptr, nullptr, 0, tags_data->timestamp);
 		break;
 
@@ -949,22 +949,22 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 471:
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_USERLIMIT, sess, word[4], nullptr, nullptr, nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_USERLIMIT, sess, gsl::ensure_z(word[4]), nullptr, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		break;
 
 	case 473:
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITE, sess, word[4], nullptr, nullptr, nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITE, sess, gsl::ensure_z(word[4]), nullptr, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		break;
 
 	case 474:
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_BANNED, sess, word[4], nullptr, nullptr, nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_BANNED, sess, gsl::ensure_z(word[4]), nullptr, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		break;
 
 	case 475:
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_KEYWORD, sess, word[4], nullptr, nullptr, nullptr, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_KEYWORD, sess, gsl::ensure_z(word[4]), nullptr, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		break;
 
@@ -1004,7 +1004,7 @@ process_numeric (session * sess, int n,
 
 	case 900:	/* successful SASL 'logged in as ' */
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv.server_session, 
-									  word_eol[6]+1, word[1], word[2], nullptr, 0,
+			gsl::ensure_z(word_eol[6]+1), gsl::ensure_z(word[1]), gsl::ensure_z(word[2]), nullptr, 0,
 									  tags_data->timestamp);
 		break;
 	case 903:	/* successful SASL auth */
@@ -1014,8 +1014,8 @@ process_numeric (session * sess, int n,
 	case 905:	/* failed SASL auth */
 	case 906:	/* aborted */
 	case 907:	/* attempting to re-auth after a successful auth */
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SASLRESPONSE, serv.server_session, word[1],
-									  word[2], word[3], ++word_eol[4], 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SASLRESPONSE, serv.server_session, gsl::ensure_z(word[1]),
+			gsl::ensure_z(word[2]), gsl::ensure_z(word[3]), gsl::ensure_z(++word_eol[4]), 0,
 									  tags_data->timestamp);
 		if (!serv.sent_capend)
 		{
@@ -1033,9 +1033,9 @@ process_numeric (session * sess, int n,
 		{
 			/* some unknown WHOIS reply, ircd coders make them up weekly */
 			if (!serv.skip_next_whois)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_SPECIAL, whois_sess, word[4],
-											  (word_eol[5][0] == ':') ? word_eol[5] + 1 : word_eol[5],
-											  word[2], nullptr, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_SPECIAL, whois_sess, gsl::ensure_z(word[4]),
+					gsl::ensure_z((word_eol[5][0] == ':') ? word_eol[5] + 1 : word_eol[5]),
+					gsl::ensure_z(word[2]), nullptr, 0, tags_data->timestamp);
 			return;
 		}
 
@@ -1054,7 +1054,7 @@ process_numeric (session * sess, int n,
 			else
 				sess=serv.server_session;
 			
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, text, word[1], word[2],
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, gsl::ensure_z(text), gsl::ensure_z(word[1]), gsl::ensure_z(word[2]),
 										  nullptr, 0, tags_data->timestamp);
 		}
 	}
@@ -1150,7 +1150,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				if (*reason == ':')
 					reason++;
 
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_KILL, sess, nick, reason, nullptr, nullptr,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_KILL, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), nullptr, nullptr,
 											  0, tags_data->timestamp);
 			}
 			return;
@@ -1219,11 +1219,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				return;
 			
 			if (word[4][0] == ':')
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, word[4] + 1, nick,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, gsl::ensure_z(word[4] + 1), nick,
 											  serv.servername, nullptr, 0,
 											  tags_data->timestamp);
 			else
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, word[4], nick,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, gsl::ensure_z(word[4]), nick,
 											  serv.servername, nullptr, 0,
 											  tags_data->timestamp);
 				
@@ -1310,7 +1310,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 						{
 							if (ignore_check(word[1], ignore::IG_CHAN))
 								return;
-							inbound_chanmsg (serv, nullptr, to, nick, text, false, id,
+							inbound_chanmsg (serv, nullptr, gsl::ensure_z(to), nick, gsl::ensure_z(text), false, id,
 												  tags_data);
 						} else
 						{
@@ -1333,7 +1333,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			text = word_eol[3];
 			if (*text == ':')
 				text++;
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_WALLOPS, sess, nick, text, nullptr, nullptr, 0,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_WALLOPS, sess, nick, gsl::ensure_z(text), nullptr, nullptr, 0,
 										  tags_data->timestamp);
 			return;
 		}
@@ -1392,7 +1392,7 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 	}
 	if (!strncmp (buf, "ERROR", 5))
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVERERROR, sess, buf + 7, nullptr, nullptr, nullptr,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVERERROR, sess, gsl::ensure_z(buf + 7), nullptr, nullptr, nullptr,
 									  0, tags_data->timestamp);
 		return;
 	}
@@ -1401,7 +1401,7 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 		buf = word_eol[3];
 		if (*buf == ':')
 			buf++;
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, buf, 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, gsl::ensure_z(buf),
 									  sess->server->servername, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		return;
@@ -1412,8 +1412,8 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 		return;
 	}
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, buf, sess->server->servername,
-								  rawname, nullptr, 0, tags_data->timestamp);
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, gsl::ensure_z(buf), sess->server->servername,
+		gsl::ensure_z(rawname), nullptr, 0, tags_data->timestamp);
 }
 
 /* Returns the timezone offset. This should be the same as the variable

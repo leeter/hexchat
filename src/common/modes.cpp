@@ -430,16 +430,16 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			fe_update_channel_key (sess);
 			fe_update_mode_buttons (sess, mode, sign);
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANSETKEY, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANSETKEY, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'l':
 			sess->limit = atoi (arg);
 			fe_update_channel_limit (sess);
 			fe_update_mode_buttons (sess, mode, sign);
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANSETLIMIT, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANSETLIMIT, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'o':
 			if (!quiet)
@@ -447,7 +447,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			return;
 		case 'h':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANHOP, sess, nick, arg, NULL, NULL,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANHOP, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr, nullptr,
 											  0, tags_data->timestamp);
 			return;
 		case 'v':
@@ -456,24 +456,24 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			return;
 		case 'b':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANBAN, sess, nick, arg, NULL, NULL,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANBAN, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr, nullptr,
 											  0, tags_data->timestamp);
 			return;
 		case 'e':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANEXEMPT, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANEXEMPT, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'I':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANINVITE, sess, nick, arg, NULL, NULL,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANINVITE, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr, nullptr,
 											  0, tags_data->timestamp);
 			return;
 		case 'q':
 			if (!supportsq)
 				break; /* +q is owner on this server */
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANQUIET, sess, nick, arg, NULL, NULL, 0,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANQUIET, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr, nullptr, 0,
 								 tags_data->timestamp);
 			return;
 		}
@@ -486,16 +486,16 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			fe_update_channel_key (sess);
 			fe_update_mode_buttons (sess, mode, sign);
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMKEY, sess, nick, NULL, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMKEY, sess, gsl::ensure_z(nick), nullptr, nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'l':
 			sess->limit = 0;
 			fe_update_channel_limit (sess);
 			fe_update_mode_buttons (sess, mode, sign);
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMLIMIT, sess, nick, NULL, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMLIMIT, sess, gsl::ensure_z(nick), nullptr, nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'o':
 			if (!quiet)
@@ -503,8 +503,8 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			return;
 		case 'h':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEHOP, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEHOP, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'v':
 			if (!quiet)
@@ -512,25 +512,25 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 			return;
 		case 'b':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANUNBAN, sess, nick, arg, NULL, NULL,
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANUNBAN, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr, nullptr,
 											  0, tags_data->timestamp);
 			return;
 		case 'e':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMEXEMPT, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMEXEMPT, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'I':
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMINVITE, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANRMINVITE, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		case 'q':
 			if (!supportsq)
 				break; /* -q is owner on this server */
 			if (!quiet)
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANUNQUIET, sess, nick, arg, NULL,
-											  NULL, 0, tags_data->timestamp);
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANUNQUIET, sess, gsl::ensure_z(nick), gsl::ensure_z(arg), nullptr,
+											  nullptr, 0, tags_data->timestamp);
 			return;
 		}
 	}
@@ -548,11 +548,11 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 		{
 			std::string buf(strlen(chan) + strlen(arg) + 2, '\0');
 			sprintf(&buf[0], "%s %s", chan, arg);
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
-										  outbuf + 2, &buf[0], 0, tags_data->timestamp);
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, gsl::ensure_z(nick), outbuf,
+				gsl::ensure_z(outbuf + 2), buf, 0, tags_data->timestamp);
 		} else
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
-										  outbuf + 2, chan, 0, tags_data->timestamp);
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, gsl::ensure_z(nick), outbuf,
+				gsl::ensure_z(outbuf + 2), gsl::ensure_z(chan), 0, tags_data->timestamp);
 	}
 }
 
@@ -617,33 +617,29 @@ mode_print_grouped (session *sess, char *nick, mode_run &mr,
 	/* print all the grouped Op/Deops */
 	if (!mr.op.empty())
 	{
-		mr.op.push_back(0);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, nick, &mr.op[0], NULL, NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, gsl::ensure_z(nick), mr.op, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		mr.op.clear();
 	}
 
 	if (!mr.deop.empty())
 	{
-		mr.deop.push_back(0);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, nick, &mr.deop[0], NULL, NULL,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, gsl::ensure_z(nick), mr.deop, nullptr, nullptr,
 									  0, tags_data->timestamp);
 		mr.deop.clear();
 	}
 
 	if (!mr.voice.empty())
 	{
-		mr.voice.push_back(0);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, nick, &mr.voice[0], NULL, NULL,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, gsl::ensure_z(nick), mr.voice, nullptr, nullptr,
 									  0, tags_data->timestamp);
 		mr.voice.clear();
 	}
 
 	if (!mr.devoice.empty())
 	{
-		mr.devoice.push_back(0);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, nick, &mr.devoice[0], NULL,
-									  NULL, 0, tags_data->timestamp);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, gsl::ensure_z(nick), mr.devoice, nullptr,
+									  nullptr, 0, tags_data->timestamp);
 		mr.devoice.clear();
 	}
 }
@@ -695,7 +691,7 @@ handle_mode (server & serv, char *word[], char *word_eol[],
 		word_eol[offset][len] = 0;
 
 	if (prefs.hex_irc_raw_modes && !numeric_324)
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_RAWMODES, sess, nick, word_eol[offset], 0, 0, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_RAWMODES, sess, gsl::ensure_z(nick), gsl::ensure_z(word_eol[offset]), nullptr, nullptr, 0,
 									  tags_data->timestamp);
 
 	if (numeric_324 && !using_front_tab)
