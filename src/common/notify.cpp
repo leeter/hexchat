@@ -59,7 +59,7 @@ static bool notify_do_network (const notify &ntfy, const server &serv)
 {
 	if (ntfy.networks.empty())	/* ALL networks for this nick */
 		return true;
-	std::string serv_str = serv.get_network(true).to_string();
+	auto serv_str = serv.get_network(true).to_string();
 	const std::locale loc;
 	serv_str.erase(
 		std::remove_if(
@@ -160,7 +160,7 @@ static notify_per_server * notify_find (server &serv, const std::string& nick)
 
 static void notify_announce_offline (server & serv, notify_per_server &servnot,
 								 const boost::string_ref nick, bool quiet, 
-								 const message_tags_data *tags_data)
+								 const message_tags_data &tags_data)
 {
 	servnot.ison = false;
 	servnot.lastoff = notify_per_server::clock::now();
@@ -171,14 +171,14 @@ static void notify_announce_offline (server & serv, notify_per_server &servnot,
 		session *sess = serv.front_session;
 		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, mutable_nick, serv.servername,
 			net, nullptr, 0,
-			tags_data->timestamp);
+			tags_data.timestamp);
 	}
 	fe_notify_update(&mutable_nick);
 	fe_notify_update (nullptr);
 }
 
 static void notify_announce_online (server & serv, notify_per_server &servnot,
-								const boost::string_ref nick, const message_tags_data *tags_data)
+								const boost::string_ref nick, const message_tags_data &tags_data)
 {
 	servnot.lastseen = notify_per_server::clock::now();
 	if (servnot.ison)
@@ -192,7 +192,7 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	const auto mutable_net = serv.get_network(true).to_string();
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, mutable_nick, serv.servername,
 					 mutable_net, nullptr, 0,
-					 tags_data->timestamp);
+					 tags_data.timestamp);
 	fe_notify_update (&mutable_nick);
 	fe_notify_update (nullptr);
 
@@ -207,7 +207,7 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 
 void
 notify_set_offline(server & serv, const std::string & nick, bool quiet,
-						  const message_tags_data *tags_data)
+						  const message_tags_data &tags_data)
 {
 
 	auto servnot = notify_find (serv, nick);
@@ -226,7 +226,7 @@ gsl::span<notify> get_notifies() noexcept
 
 void
 notify_set_online (server & serv, const std::string& nick,
-						 const message_tags_data *tags_data)
+						 const message_tags_data &tags_data)
 {
 	auto servnot = notify_find (serv, nick);
 	if (!servnot)
@@ -239,7 +239,7 @@ notify_set_online (server & serv, const std::string& nick,
 
 void
 notify_set_offline_list (server & serv, const std::string & users, bool quiet,
-						  const message_tags_data *tags_data)
+						  const message_tags_data &tags_data)
 {
 	std::istringstream stream(users);
 	for (std::string token; std::getline(stream, token, ',');)
@@ -272,7 +272,7 @@ void notify_set_online_list (server & serv, const std::string& users,
 		auto nick = token.substr(0, pos);
 		auto servnot = notify_find (serv, nick);
 		if (servnot)
-			notify_announce_online (serv, *servnot, nick, tags_data);
+			notify_announce_online (serv, *servnot, nick, *tags_data);
 	}
 }
 
@@ -363,7 +363,7 @@ notify_send_watches (server & serv)
 
 /* called when receiving a ISON 303 - should this func go? */
 
-void notify_markonline(server &serv, const gsl::span<const char*> word, const message_tags_data *tags_data)
+void notify_markonline(server &serv, const gsl::span<const char*> word, const message_tags_data &tags_data)
 {
 	for(auto & ntfy : get_notifies())
 	{
@@ -437,31 +437,31 @@ int notify_checklist (void)	/* check ISON list */
 	return 1;
 }
 
-void notify_showlist (struct session *sess, const message_tags_data *tags_data)
+void notify_showlist (struct session &sess, const message_tags_data &tags_data)
 {
 	char outbuf[256] = {};
 	int i = 0;
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYHEAD, sess, nullptr, nullptr, nullptr, nullptr, 0,
-								  tags_data->timestamp);
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYHEAD, &sess, nullptr, nullptr, nullptr, nullptr, 0,
+								  tags_data.timestamp);
 	for(auto & ntfy : get_notifies())
 	{
 		i++;
-		auto servnot = notify_find_server_entry (ntfy, *sess->server);
+		auto servnot = notify_find_server_entry (ntfy, *sess.server);
 		if (servnot && servnot->ison)
 			snprintf (outbuf, sizeof (outbuf), _("  %-20s online\n"), ntfy.name.c_str());
 		else
 			snprintf (outbuf, sizeof (outbuf), _("  %-20s offline\n"), ntfy.name.c_str());
-		PrintTextTimeStamp (sess, outbuf, tags_data->timestamp);
+		PrintTextTimeStamp (&sess, outbuf, tags_data.timestamp);
 	}
 	if (i)
 	{
 		snprintf (outbuf, sizeof(outbuf), "%d", i);
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYNUMBER, sess, outbuf, nullptr, nullptr, nullptr,
-									  0, tags_data->timestamp);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYNUMBER, &sess, outbuf, nullptr, nullptr, nullptr,
+									  0, tags_data.timestamp);
 	} else
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYEMPTY, sess, nullptr, nullptr, nullptr, nullptr, 0,
-									  tags_data->timestamp);
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYEMPTY, &sess, nullptr, nullptr, nullptr, nullptr, 0,
+									  tags_data.timestamp);
 }
 
 bool notify_deluser(const boost::string_ref name)

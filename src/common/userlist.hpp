@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_USERLIST_HPP
 #define HEXCHAT_USERLIST_HPP
 
+#include <chrono>
 #include <cstddef>
 #include <ctime>
 #include <locale>
@@ -32,13 +33,15 @@
 
 struct User
 {
+	using clock = std::chrono::system_clock;
+	using time_point = clock::time_point;
 	User();
 	std::string nick;
 	boost::optional<std::string> hostname;
 	boost::optional<std::string> realname;
 	boost::optional<std::string> servername;
 	boost::optional<std::string> account;
-	time_t lasttalk;
+	time_point lasttalk;
 	unsigned int access;	/* axs bit field */
 	char prefix[2]; /* @ + % */
 	bool op;

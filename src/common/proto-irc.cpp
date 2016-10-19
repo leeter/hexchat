@@ -605,7 +605,7 @@ process_numeric (session * sess, int n,
 
 	case 303:
 		word[4]++;
-		notify_markonline (serv, gsl::as_span(const_cast<const char **>(word), PDIWORDS), tags_data);
+		notify_markonline (serv, gsl::as_span(const_cast<const char **>(word), PDIWORDS), *tags_data);
 		break;
 
 	case 305:
@@ -969,16 +969,16 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 601:
-		notify_set_offline (serv, word[4], false, tags_data);
+		notify_set_offline (serv, word[4], false, *tags_data);
 		break;
 
 	case 605:
-		notify_set_offline (serv, word[4], true, tags_data);
+		notify_set_offline (serv, word[4], true, *tags_data);
 		break;
 
 	case 600:
 	case 604:
-		notify_set_online (serv, word[4], tags_data);
+		notify_set_online (serv, word[4], *tags_data);
 		break;
 
 	case 728:	/* +q-list entry */
@@ -999,7 +999,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 731: /* RPL_MONOFFLINE */
-		notify_set_offline_list (serv, word[4] + 1, false, tags_data);
+		notify_set_offline_list (serv, word[4] + 1, false, *tags_data);
 		break;
 
 	case 900:	/* successful SASL 'logged in as ' */

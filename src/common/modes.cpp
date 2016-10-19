@@ -56,7 +56,7 @@ struct mode_run
 	std::string devoice;
 };
 
-static int is_prefix_char (const server * serv, char c);
+//static int is_prefix_char (const server & serv, char c);
 static void record_chan_mode (session &sess, char sign, char mode, char *arg);
 static void handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 										  char *chan, char *arg, bool quiet, bool is_324,
@@ -142,15 +142,15 @@ server::is_channel_name(const boost::string_ref & chan) const
 /* is the given char a valid nick mode char? e.g. @ or + */
 
 static int
-is_prefix_char (const server * serv, char c)
+is_prefix_char (const server & serv, char c)
 {
-	auto pos = serv->nick_prefixes.find_first_of(c);
+	auto pos = serv.nick_prefixes.find_first_of(c);
 	if (pos != std::string::npos)
 		return pos;
 
-	if (serv->bad_prefix)
+	if (serv.bad_prefix)
 	{
-		if (serv->bad_nick_prefixes.find_first_of(c) != std::string::npos)
+		if (serv.bad_nick_prefixes.find_first_of(c) != std::string::npos)
 		/* valid prefix char, but mode unknown */
 			return -2;
 	}
@@ -181,26 +181,23 @@ get_nick_prefix (const server * serv, unsigned int access)
 	+nick would return 001000 in binary */
 
 unsigned int
-nick_access (const server * serv, const char *nick, int &modechars)
+nick_access (const server & serv, gsl::cstring_span<> nick, std::ptrdiff_t &modechars)
 {
 	int i;
 	unsigned int access = 0;
-	const char *orig = nick;
-
-	while (*nick)
+	auto it = nick.cbegin();
+	for(const auto end = nick.cend(); it != end; ++it)
 	{
-		i = is_prefix_char (serv, *nick);
+		i = is_prefix_char (serv, *it);
 		if (i == -1)
 			break;
 
 		/* -2 == valid prefix char, but mode unknown */
 		if (i != -2)
 			access |= (1 << i);
-
-		nick++;
 	}
 
-	modechars = nick - orig;
+	modechars = std::distance(nick.cbegin(), it);
 
 	return access;
 }

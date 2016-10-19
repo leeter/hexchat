@@ -21,6 +21,7 @@
 #define NOMINMAX
 #endif
 
+#include <chrono>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -1423,7 +1424,7 @@ hexchat_list_time (hexchat_plugin *, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0xa9118c42:	/* lasttalk */
-			return ((struct User *)data)->lasttalk;
+			return User::clock::to_time_t(static_cast<User *>(data)->lasttalk);
 		}
 	}
 

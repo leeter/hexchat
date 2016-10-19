@@ -212,7 +212,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 	auto user = userlist_find (sess, from);
 	if (user)
 	{
-		user->lasttalk = time (0);
+		user->lasttalk = User::clock::now();
 		if (user->account)
 			id = true;
 	}
@@ -398,7 +398,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 	if (user)
 	{
 		nickchar[0] = user->prefix[0];
-		user->lasttalk = std::time (nullptr);
+		user->lasttalk = User::clock::now();
 		if (user->account)
 			id = true;
 		if (user->me)
@@ -476,7 +476,7 @@ inbound_chanmsg (server &serv, session *sess, gsl::cstring_span<> chan, gsl::cst
 		if (user->account)
 			id = true;
 		nickchar[0] = user->prefix[0];
-		user->lasttalk = std::time (nullptr);
+		user->lasttalk = User::clock::now();
 		if (user->me)
 			fromme = true;
 	}
@@ -843,7 +843,7 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 		}
 	}
 
-	notify_set_offline (serv, nick, was_on_front_session, tags_data);
+	notify_set_offline (serv, nick, was_on_front_session, *tags_data);
 }
 
 void

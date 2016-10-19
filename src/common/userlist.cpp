@@ -410,10 +410,10 @@ void
 userlist_add (struct session *sess, const char name[], const char hostname[],
 				const char account[], const char realname[], const message_tags_data *tags_data)
 {
-	int prefix_chars;
-	auto acc = nick_access (sess->server, name, prefix_chars);
+	std::ptrdiff_t prefix_chars;
+	auto acc = nick_access (*sess->server, gsl::ensure_z(name), prefix_chars);
 
-	notify_set_online (*sess->server, name + prefix_chars, tags_data);
+	notify_set_online (*sess->server, name + prefix_chars, *tags_data);
 
 	std::unique_ptr<User> user(new User());
 

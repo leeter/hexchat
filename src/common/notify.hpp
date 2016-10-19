@@ -43,8 +43,8 @@ struct notify_per_server
 	using clock = std::chrono::system_clock;
 	using time_point = clock::time_point;
 
-	struct server *server;
-	struct notify *notify;
+	gsl::not_null<server*> server;
+	gsl::not_null<notify*> notify;
 	time_point laston;
 	time_point lastseen;
 	time_point lastoff;
@@ -56,14 +56,14 @@ gsl::span<notify> get_notifies() noexcept;
 
 /* the WATCH stuff */
 void notify_set_online(server & serv, const std::string &nick,
-								const message_tags_data *tags_data);
+								const message_tags_data &tags_data);
 void notify_set_offline (server & serv, const std::string & nick, bool quiet,
-								 const message_tags_data *tags_data);
+								 const message_tags_data &tags_data);
 /* the MONITOR stuff */
 void notify_set_online_list (server & serv, const std::string& users,
 								const message_tags_data *tags_data);
 void notify_set_offline_list (server & serv, const std::string& users, bool quiet,
-								 const message_tags_data *tags_data);
+								 const message_tags_data &tags_data);
 void notify_send_watches (server & serv);
 
 /* the general stuff */
@@ -72,14 +72,14 @@ bool notify_deluser (const boost::string_ref name);
 void notify_cleanup (void);
 void notify_load ();
 void notify_save ();
-void notify_showlist (session *sess, const message_tags_data *tags_data);
+void notify_showlist (session &sess, const message_tags_data &tags_data);
 bool notify_is_in_list (const server &serv, const std::string & name);
 //bool notify_isnotify (session *sess, const boost::string_ref name);
 struct notify_per_server *notify_find_server_entry (struct notify &notify, server &serv);
 
 /* the old ISON stuff - remove me? */
 void notify_markonline (server &serv, const gsl::span<const char*> word, 
-								const message_tags_data *tags_data);
+								const message_tags_data &tags_data);
 int notify_checklist (void);
 
 #endif

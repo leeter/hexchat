@@ -29,7 +29,7 @@
 #include "serverfwd.hpp"
 
 char get_nick_prefix (const server *serv, unsigned int access);
-unsigned int nick_access (const server *serv, const char *nick, int &modechars);
+unsigned int nick_access (const server &serv, gsl::cstring_span<> nick, std::ptrdiff_t &modechars);
 int mode_access (const server *serv, char mode, char *prefix);
 void inbound_005 (server &serv, gsl::span<char*> word);
 void handle_mode (server &serv, char *word[], char *word_eol[], char *nick,

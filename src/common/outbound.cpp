@@ -2719,8 +2719,8 @@ cmd_notify (struct session *sess, char *word[], char *[])
 		}
 	} else
 	{
-		message_tags_data no_tags = message_tags_data();
-		notify_showlist (sess, &no_tags);
+		const auto no_tags = message_tags_data();
+		notify_showlist (*sess, no_tags);
 	}
 	return true;
 }
@@ -3487,15 +3487,13 @@ cmd_userlist (struct session *sess, char *[],
 {
 	for (auto & user : sess->usertree)
 	{
-		time_t lt;
-
-		if (!user->lasttalk)
-			lt = 0;
-		else
-			lt = time(0) - user->lasttalk;
+		const auto lt = user->lasttalk == User::time_point() ?
+			User::clock::duration() :
+			User::clock::now() - user->lasttalk;
+		const auto seconds_ago = std::chrono::duration_cast<std::chrono::seconds>(lt);
 		PrintTextf(sess,
 			boost::format("\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%ld\n") %
-			user->nick % (user->hostname ? user->hostname->c_str() : "") % user->op % user->voice % user->away % (long)lt);
+			user->nick % (user->hostname ? user->hostname->c_str() : "") % user->op % user->voice % user->away % lt.count());
 	}
 	return true;
 }

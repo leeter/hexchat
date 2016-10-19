@@ -646,12 +646,14 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 							G_CALLBACK (copy_to_clipboard_cb), 
 							user->servername ? &(*user->servername)[0] : unknown);
 
-	if (user->lasttalk)
+	if (user->lasttalk != User::time_point())
 	{
+		namespace chrono = std::chrono;
 		char min[96];
-
-		snprintf (min, sizeof (min), _("%u minutes ago"),
-					(unsigned int) ((std::time (nullptr) - user->lasttalk) / 60));
+		const auto minutes_ago =
+			chrono::duration_cast<chrono::minutes>(User::clock::now() - user->lasttalk);
+		snprintf (min, sizeof (min), _("%d minutes ago"),
+					minutes_ago.count());
 		snprintf (buf, sizeof (buf), fmt, _("Last Msg:"), min);
 	} else
 	{
