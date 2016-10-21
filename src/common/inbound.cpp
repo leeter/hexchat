@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <iomanip>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -804,14 +805,18 @@ void
 inbound_topictime (server &serv, char *chan, char *nick, time_t stamp,
 						 const message_tags_data *tags_data)
 {
-	char *tim = ctime (&stamp);
+	namespace chrono = std::chrono;
+	
+	std::tm tm = *std::localtime(&stamp);
+	std::ostringstream out;
+	out << std::put_time(&tm, "%c");
 	session *sess = find_channel (serv, chan);
 
 	if (!sess)
 		sess = serv.server_session;
 
-	tim[24] = 0;	/* get rid of the \n */
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_TOPICDATE, sess, gsl::ensure_z(chan), gsl::ensure_z(nick), gsl::ensure_z(tim), nullptr, 0,
+	const auto tim = out.str();
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_TOPICDATE, sess, gsl::ensure_z(chan), gsl::ensure_z(nick), tim, nullptr, 0,
 								  tags_data->timestamp);
 }
 
