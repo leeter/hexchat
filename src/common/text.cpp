@@ -1635,7 +1635,7 @@ int text_color_of(const boost::string_ref &name)
 
 /* called by EMIT_SIGNAL macro */
 
-void text_emit (int index, session *sess, gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d,
+void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d,
 			  time_t timestamp)
 {
 	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->chanopts["text_strip"]) ? 0xFFFFFFFF : 0);
@@ -1732,7 +1732,7 @@ const char * text_find_format_string (const char* name)
 	return i >= 0 ? pntevts_text[i].c_str() : nullptr;
 }
 
-int text_emit_by_name (gsl::cstring_span<> name, session *sess, time_t timestamp,
+int text_emit_by_name (gsl::cstring_span<> name, gsl::not_null<session *>sess, time_t timestamp,
 	gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d)
 {
 	int i = 0;
