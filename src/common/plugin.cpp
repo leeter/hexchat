@@ -1105,7 +1105,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 	/*                 1234567890 */
 	if (!strncmp (id, "event_text", 10))
 	{
-		char *e = (char *)id + 10;
+		auto e = id + 10;
 		if (*e == ' ') e++;	/* 2.8.0 only worked without a space */
 		return text_find_format_string (e);
 	}
@@ -1193,7 +1193,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return (char*)fe_gui_info_ptr (sess, 0);
 
 	case 0x6d3431b5: /* win_status */
-		switch (fe_gui_info (sess, 0))	/* check window status */
+		switch (fe_gui_info (*sess, 0))	/* check window status */
 		{
 		case 0: return "normal";
 		case 1: return "active";

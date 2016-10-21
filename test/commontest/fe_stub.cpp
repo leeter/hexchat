@@ -88,7 +88,7 @@ void fe_message(const boost::string_ref &, int) {}
 
 void fe_close_window(struct session *) {}
 
-void fe_beep(session *) { putchar(7); }
+void fe_beep() { putchar(7); }
 
 void fe_add_rawlog(struct server *, const boost::string_ref &, bool) {}
 void fe_set_topic(session *, const std::string &, const std::string &) {}
@@ -180,7 +180,7 @@ void fe_get_str(char *, char *, GSourceFunc, void *) {}
 void fe_get_int(char *, int, GSourceFunc, void *) {}
 void fe_idle_add(GSourceFunc func, void *data) { g_idle_add(func, data); }
 void fe_ctrl_gui(session *, fe_gui_action, int) {}
-int fe_gui_info(session *, int) { return -1; }
+int fe_gui_info(session &, int) { return -1; }
 void *fe_gui_info_ptr(session *, int) { return nullptr; }
 void fe_confirm(const char *, void (*)(void *), void (*)(void *), void *) {}
 const char *fe_get_inputbox_contents(struct session *) { return nullptr; }

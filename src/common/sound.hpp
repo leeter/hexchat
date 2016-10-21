@@ -28,11 +28,15 @@
 #include <boost/utility/string_ref_fwd.hpp>
 #include "sessfwd.hpp"
 
-void sound_play(const boost::string_ref & file, bool quiet);
-void sound_play_event(int i);
-void sound_beep(session *);
-void sound_load();
-void sound_save();
+namespace sound {
+
+	void play(const boost::string_ref & file, bool quiet);
+	void play_event(int i);
+	void beep(session &);
+	void load();
+	void save();
+
+}
 
 #endif // !HEXCHAT_SOUND_HPP
 

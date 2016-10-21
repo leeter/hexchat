@@ -611,7 +611,7 @@ fe_close_window (struct session *sess)
 }
 
 void
-fe_beep (session *sess)
+fe_beep ()
 {
 	putchar (7);
 }
@@ -874,7 +874,7 @@ fe_ctrl_gui (session *sess, fe_gui_action action, int arg)
 	}
 }
 int
-fe_gui_info (session *sess, int info_type)
+fe_gui_info (session &, int)
 {
 	return -1;
 }

@@ -182,7 +182,7 @@ unflash_window (GtkWidget *win)
 void
 fe_flash_window (session *sess)
 {
-	if (fe_gui_info (sess, 0) != 1)	/* only do it if not focused */
+	if (fe_gui_info (*sess, 0) != 1)	/* only do it if not focused */
 		flash_window (sess->gui->window);
 }
 

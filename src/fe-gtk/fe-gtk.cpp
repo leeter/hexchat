@@ -651,7 +651,7 @@ fe_print_text (session &sess, char *text, time_t stamp,
 }
 
 void
-fe_beep (session *sess)
+fe_beep ()
 {
 #ifdef WIN32
 	/* Play the "Instant Message Notification" system sound
@@ -876,17 +876,17 @@ fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *)
 }
 
 int
-fe_gui_info (session *sess, int info_type)
+fe_gui_info (session &sess, int info_type)
 {
 	switch (info_type)
 	{
 	case 0:	/* window status */
-		if (!gtk_widget_get_visible (GTK_WIDGET (sess->gui->window)))
+		if (!gtk_widget_get_visible (GTK_WIDGET (sess.gui->window)))
 		{
 			return 2;	/* hidden (iconified or systray) */
 		}
 
-		if (gtk_window_is_active (GTK_WINDOW (sess->gui->window)))
+		if (gtk_window_is_active (GTK_WINDOW (sess.gui->window)))
 		{
 			return 1;	/* active/focused */
 		}

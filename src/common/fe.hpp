@@ -132,7 +132,7 @@ void fe_set_title (session &sess);
 void fe_set_nonchannel (struct session *sess, int state);
 void fe_set_nick (const server &serv, const char *newnick);
 void fe_ignore_update (int level);
-void fe_beep (session *sess);
+void fe_beep ();
 void fe_lastlog (session *sess, session *lastlog_sess, const char *sstr, gtk_xtext_search_flags flags);
 void fe_set_lag (server &serv, long lag);
 void fe_set_throttle (server *serv);
@@ -167,7 +167,7 @@ enum fe_gui_action{
 	FE_GUI_APPLY
 };
 void fe_ctrl_gui (session *sess, fe_gui_action action, int arg);
-int fe_gui_info (session *sess, int info_type);
+int fe_gui_info (session &sess, int info_type);
 void *fe_gui_info_ptr (session *sess, int info_type);
 void fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *), void *ud);
 const char *fe_get_inputbox_contents (struct session *sess);

@@ -1676,7 +1676,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	case XP_TE_PRIVACTION:
 	case XP_TE_DPRIVACTION:
 		if (chanopt_is_set (prefs.hex_input_beep_priv, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
-			sound_beep (sess);
+			sound::beep (*sess);
 		if (chanopt_is_set (prefs.hex_input_flash_priv, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		/* why is this one different? because of plugin-tray.c's hooks! ugly */
@@ -1688,7 +1688,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	case XP_TE_HCHANACTION:
 	case XP_TE_HCHANMSG:
 		if (chanopt_is_set (prefs.hex_input_beep_hilight, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
-			sound_beep (sess);
+			sound::beep (*sess);
 		if (chanopt_is_set (prefs.hex_input_flash_hilight, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		if (sess->chanopts["alert_tray"] == SET_ON)
@@ -1699,7 +1699,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	case XP_TE_CHANACTION:
 	case XP_TE_CHANMSG:
 		if (chanopt_is_set (prefs.hex_input_beep_chans, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
-			sound_beep (sess);
+			sound::beep (*sess);
 		if (chanopt_is_set (prefs.hex_input_flash_chans, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		if (sess->chanopts["alert_tray"] == SET_ON)
@@ -1713,7 +1713,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 		break;
 	}
 
-	sound_play_event (index);
+	sound::play_event (index);
 	display_event (sess, index, word, stripcolor_args, timestamp);
 }
 

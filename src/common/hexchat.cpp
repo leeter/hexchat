@@ -558,7 +558,7 @@ xchat_init (void)
 		prefs.utf8_locale = TRUE;
 
 	load_text_events ();
-	sound_load ();
+	sound::load ();
 	notify_load ();
 	ignore_load ();
 
@@ -710,7 +710,7 @@ hexchat_exit (void)
 		pevent_save (nullptr);
 	}
 
-	sound_save ();
+	sound::save ();
 	notify_save ();
 	ignore_save ();
 	free_sessions ();
