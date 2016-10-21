@@ -53,6 +53,7 @@
     <ClInclude Include="sessfwd.hpp" />
     <ClInclude Include="session.hpp" />
     <ClInclude Include="session_logging.hpp" />
+    <ClInclude Include="sound.hpp" />
     <ClInclude Include="ssl.hpp" />
     <ClInclude Include="string_span_output.hpp" />
     <ClInclude Include="text.hpp" />
@@ -93,6 +94,7 @@
     <ClCompile Include="servlist.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="session_logging.cpp" />
+    <ClCompile Include="sound.cpp" />
     <ClCompile Include="ssl.cpp" />
     <ClCompile Include="text.cpp" />
     <ClCompile Include="url.cpp" />

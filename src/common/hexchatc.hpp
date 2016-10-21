@@ -21,19 +21,21 @@
 #define HEXCHAT_C_HPP
 #include <atomic>
 #include <string>
+#include <vector>
 #include <boost/utility/string_ref_fwd.hpp>
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
+#include "hexchat.hpp"
 
 extern struct hexchatprefs prefs;
 
 extern std::atomic_bool hexchat_is_quitting;
-extern gint arg_skip_plugins;	/* command-line args */
-extern gint arg_dont_autoconnect;
+extern int arg_skip_plugins;	/* command-line args */
+extern int arg_dont_autoconnect;
 extern char *arg_url;
 extern char **arg_urls;
 extern char *arg_command;
-extern gint arg_existing;
+extern int arg_existing;
 
 extern session *current_sess;
 extern session *current_tab;

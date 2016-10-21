@@ -64,12 +64,7 @@ std::string text_validate (const boost::string_ref &);
 std::string get_stamp_str (const char fmt[], time_t tim);
 void format_event (session *sess, int index, char **args, char *dst, size_t dstsize, unsigned int stripcolor_args);
 const char *text_find_format_string (const char* name);
- 
-void sound_play (const boost::string_ref & file, bool quiet);
-void sound_play_event (int i);
-void sound_beep (session *);
-void sound_load ();
-void sound_save ();
+int pevent_find(gsl::cstring_span<> name, int &i_i);
 
 
 #endif

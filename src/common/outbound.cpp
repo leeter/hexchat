@@ -81,6 +81,7 @@
 #include "session.hpp"
 #include "glist_iterators.hpp"
 #include "string_span_output.hpp"
+#include "sound.hpp"
 
 namespace hexchat{
 namespace fe{

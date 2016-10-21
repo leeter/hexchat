@@ -59,6 +59,7 @@
 #include "session.hpp"
 #include "session_logging.hpp"
 #include "servlist.hpp"
+#include "sound.hpp"
 #include "outbound.hpp"
 #include "text.hpp"
 #include "url.hpp"

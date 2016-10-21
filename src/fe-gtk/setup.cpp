@@ -39,6 +39,7 @@
 #include "../common/hexchatc.hpp"
 #include "../common/session.hpp"
 #include "../common/session_logging.hpp"
+#include "../common/sound.hpp"
 #include "fe-gtk.hpp"
 #include "gtkutil.hpp"
 #include "maingui.hpp"

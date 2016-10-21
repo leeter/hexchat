@@ -46,8 +46,6 @@
 
 
 #ifdef WIN32
-#include <Windows.h>
-#include <mmsystem.h>
 #include <io.h>
 #else
 #include <unistd.h>
@@ -69,14 +67,7 @@
 #include "session.hpp"
 #include "session_logging.hpp"
 #include "filesystem.hpp"
-
-#ifdef USE_LIBCANBERRA
-#include <canberra.h>
-#endif
-
-#ifdef USE_LIBCANBERRA
-static ca_context *ca_con;
-#endif
+#include "sound.hpp"
 
 static boost::optional<boost::filesystem::path> scrollback_get_filename (const session &sess)
 {
@@ -1222,7 +1213,7 @@ static void pevent_trigger_load (int &i_penum, std::string i_text)
 	i_penum = 0;
 }
 
-static int pevent_find (gsl::cstring_span<> name, int &i_i)
+int pevent_find (gsl::cstring_span<> name, int &i_i)
 {
 	int i = i_i, j;
 
@@ -1780,144 +1771,4 @@ void pevent_save(const char file_name[])
 	close (fd);
 }
 
-/* =========================== */
-/* ========== SOUND ========== */
-/* =========================== */
-std::array<std::string, NUM_XP> sound_files;
-//char *sound_files[NUM_XP];
 
-void sound_beep (session *sess)
-{
-	if (!prefs.hex_gui_focus_omitalerts || !fe_gui_info (sess, 0) == 1)
-	{
-		if (!sound_files[XP_TE_BEEP].empty())
-			/* user defined beep _file_ */
-			sound_play_event (XP_TE_BEEP);
-		else
-			/* system beep */
-			fe_beep (sess);
-	}
-}
-
-void sound_play(const boost::string_ref & file, bool quiet)
-{
-	namespace bfs = boost::filesystem;
-
-	/* the pevents GUI editor triggers this after removing a soundfile */
-	if (file.empty())
-	{
-		return;
-	}
-	bfs::path wavfile;
-#ifdef WIN32
-	/* check for fullpath */
-	if (file[0] == '\\' || (((file[0] >= 'A' && file[0] <= 'Z') || (file[0] >= 'a' && file[0] <= 'z')) && file[1] == ':'))
-#else
-	if (file[0] == '/')
-#endif
-	{
-		wavfile = file.to_string();
-	}
-	else
-	{
-		wavfile = bfs::path(config::config_dir()) / HEXCHAT_SOUND_DIR / file.to_string();
-	}
-
-	if (g_access (wavfile.string().c_str(), R_OK) == 0)
-	{
-#ifdef WIN32
-		PlaySoundW (wavfile.c_str(), nullptr, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
-#else
-#ifdef USE_LIBCANBERRA
-		if (ca_con == nullptr)
-		{
-			ca_context_create (&ca_con);
-			ca_context_change_props (ca_con,
-											CA_PROP_APPLICATION_ID, "hexchat",
-											CA_PROP_APPLICATION_NAME, "HexChat",
-											CA_PROP_APPLICATION_ICON_NAME, "hexchat", nullptr);
-		}
-
-		if (ca_context_play (ca_con, 0, CA_PROP_MEDIA_FILENAME, wavfile.c_str(), nullptr) != 0)
-#endif
-		{
-			glib_string cmd (g_find_program_in_path ("play"));
-	
-			if (cmd)
-			{
-				glib_string buf(g_strdup_printf ("%s \"%s\"", cmd.get(), wavfile.c_str()));
-				hexchat_exec (buf.get());
-			}
-		}
-#endif
-	}
-	else
-	{
-		if (!quiet)
-		{
-			std::ostringstream buf;
-			buf << boost::format(_("Cannot read sound file:\n%s")) % wavfile;
-			fe_message (buf.str(), FE_MSG_ERROR);
-		}
-	}
-}
-
-void sound_play_event (int i)
-{
-	sound_play(sound_files[i], false);
-}
-
-// file is intended to be an R-Value
-static void sound_load_event (const std::string & evt, std::string file)
-{
-	int i = 0;
-
-	if (!file.empty() && pevent_find (evt, i) != -1)
-	{
-		sound_files[i] = std::move(file);
-	}
-}
-
-void sound_load ()
-{
-	namespace bfs = boost::filesystem;
-	auto path = bfs::path(config::config_dir()) / "sound.conf";
-	bfs::ifstream instream(path, std::ios::in | std::ios::binary);
-	std::string evt;
-	for(std::string line; std::getline(instream, line, '\n');)
-	{
-		if (boost::starts_with(line, "event="))
-		{
-			evt = line.substr(6);
-		}
-		else if (boost::starts_with(line, "sound="))
-		{
-			if (!evt.empty())
-			{
-				sound_load_event (evt, line.substr(6));
-			}
-		}
-	}
-}
-
-void sound_save ()
-{
-	int fd = hexchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
-		 io::fs::XOF_DOMODE);
-	if (fd == -1)
-		return;
-
-	for (int i = 0; i < NUM_XP; i++)
-	{
-		if (!sound_files[i].empty())
-		{
-			char buf[512];
-			write (fd, buf, snprintf (buf, sizeof (buf),
-											  "event=%s\n", te[i].name));
-			write (fd, buf, snprintf (buf, sizeof (buf),
-											  "sound=%s\n\n", sound_files[i].c_str()));
-		}
-	}
-
-	close (fd);
-}

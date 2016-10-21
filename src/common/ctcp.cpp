@@ -43,6 +43,7 @@
 #include "server.hpp"
 #include "hexchatc.hpp"
 #include "session.hpp"
+#include "sound.hpp"
 
 namespace dcc = hexchat::dcc;
 
