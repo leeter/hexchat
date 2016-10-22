@@ -113,7 +113,7 @@ namespace sound {
 		}
 	}
 
-	void play(const boost::string_ref & file, bool quiet)
+	void play(const boost::string_ref & file, announce quiet)
 	{
 		namespace bfs = boost::filesystem;
 
@@ -139,7 +139,7 @@ namespace sound {
 
 		if (!play_sound(wavfile))
 		{
-			if (!quiet)
+			if (quiet == announce::print)
 			{
 				std::ostringstream buf;
 				buf << boost::format(_("Cannot read sound file:\n%s")) % wavfile;
@@ -150,7 +150,7 @@ namespace sound {
 
 	void play_event(int i)
 	{
-		play(sound_files[i], false);
+		play(sound_files[i], announce::print);
 	}
 
 	// file is intended to be an R-Value

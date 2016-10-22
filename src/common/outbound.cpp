@@ -3048,7 +3048,7 @@ cmd_splay (struct session *, char *word[], char *[])
 {
 	if (*word[2])
 	{
-		sound::play (word[2], false);
+		sound::play (word[2], announce::print);
 		return true;
 	}
 

@@ -23,6 +23,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="announce.hpp" />
     <ClInclude Include="base64.hpp" />
     <ClInclude Include="bitmask_operators.hpp" />
     <ClInclude Include="cfgfiles.hpp" />

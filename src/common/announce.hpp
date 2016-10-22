@@ -1,7 +1,5 @@
-/* HexChat
-* Copyright (C) 1998-2010 Peter Zelezny.
-* Copyright (C) 2009-2013 Berke Viktor.
-* Copyright (C) 2014-2016 leetsoftwerx
+/* X-Chat
+* Copyright (C) 2016 leetsoftwerx.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -18,28 +16,19 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+
 #ifdef _MSC_VER
 #pragma once
 #endif
 
-#ifndef HEXCHAT_SOUND_HPP
-#define HEXCHAT_SOUND_HPP
+#ifndef HEXCHAT_ANNOUNCE_HPP
+#define HEXCHAT_ANNOUNCE_HPP
 
-#include <boost/utility/string_ref_fwd.hpp>
-#include "sessfwd.hpp"
-#include "announce.hpp"
+enum class announce: bool {
+	print,
+	none
+};
 
-namespace sound {
-
-	void play(const boost::string_ref & file, announce quiet);
-	void play_event(int i);
-	void beep(session &);
-	void load();
-	void save();
-
-}
-
-#endif // !HEXCHAT_SOUND_HPP
-
+#endif // !HEXCHAT_ANNOUNCE_HPP
 
 

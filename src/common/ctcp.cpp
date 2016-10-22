@@ -183,7 +183,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 #else
 			if (std::strchr (word[5], '/') == nullptr)
 #endif
-				sound::play (word[5], true);
+				sound::play (word[5], announce::none);
 			return;
 		}
 	}
