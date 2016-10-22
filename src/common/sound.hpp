@@ -26,6 +26,7 @@
 #define HEXCHAT_SOUND_HPP
 
 #include <boost/utility/string_ref_fwd.hpp>
+#include <gsl.h>
 #include "sessfwd.hpp"
 #include "announce.hpp"
 
@@ -36,7 +37,7 @@ namespace sound {
 	void beep(session &);
 	void load();
 	void save();
-
+	gsl::span<std::string> files() noexcept;
 }
 
 #endif // !HEXCHAT_SOUND_HPP

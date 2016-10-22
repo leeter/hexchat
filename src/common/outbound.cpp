@@ -1988,7 +1988,7 @@ show_help_line (session *sess, help_list *hl, const char *name, const char *usag
 static int
 cmd_help (struct session *sess, char *word[], char *[])
 {
-	int i = 0, longfmt = 0;
+	int longfmt = 0;
 	const char *helpcmd = "";
 	
 	helpcmd = word[2];
@@ -2012,10 +2012,9 @@ cmd_help (struct session *sess, char *word[], char *[])
 		buf[2] = 0;
 		hl.t = 0;
 		hl.i = 0;
-		while (xc_cmds[i].name)
+		for (const auto & cmd : get_commands())
 		{
-			show_help_line (sess, &hl, xc_cmds[i].name, xc_cmds[i].help);
-			i++;
+			show_help_line (sess, &hl, cmd.name, cmd.help);
 		}
 		strcat (&buf[0], "\n");
 		PrintText (sess, buf);
@@ -3599,7 +3598,7 @@ cmd_voice (struct session *sess, char *word[], char *[])
 }
 
 /* *MUST* be kept perfectly sorted for the bsearch to work */
-const struct commands xc_cmds[] = {
+static const std::array<struct commands, 90> xc_cmds = { {
 	{"ADDBUTTON", cmd_addbutton, 0, 0, 1,
 	 N_("ADDBUTTON <name> <action>, adds a button under the user-list")},
 	{"ADDSERVER", cmd_addserver, 0, 0, 1, N_("ADDSERVER <NewNetwork> <newserver/6667>, adds a new network with a new server to the network list")},
@@ -3800,19 +3799,18 @@ const struct commands xc_cmds[] = {
 	 N_("WALLCHAN <message>, writes the message to all channels")},
 	{"WALLCHOP", cmd_wallchop, 1, 1, 1,
 	 N_("WALLCHOP <message>, sends the message to all chanops on the current channel")},
-	{0, 0, 0, 0, 0, 0}
-};
+} };
 
 static const commands * find_internal_command (const char *name)
 {
-	const commands * cmd = std::find_if(
+	const auto cmd = std::find_if(
 		std::begin(xc_cmds),
 		std::end(xc_cmds),
 		[name](const commands& c){
 		if (!c.name) return false;
 		return g_ascii_strcasecmp(name, c.name) == 0;
 	});
-	return cmd != std::end(xc_cmds) ? cmd : nullptr;
+	return cmd != std::end(xc_cmds) ? &*cmd : nullptr;
 }
 
 static gboolean
@@ -3865,13 +3863,17 @@ help (session *sess, const char *helpcmd, bool quiet)
 		PrintText (sess, _("No such command.\n"));
 }
 
+const gsl::span<const commands> get_commands() noexcept
+{
+	return xc_cmds;
+}
+
 /* inserts %a, %c, %d etc into buffer. Also handles &x %x for word/word_eol. *
  *   returns 2 on buffer overflow
  *   returns 1 on success                                                    *
  *   returns 0 on bad-args-for-user-command                                  *
  * - word/word_eol args might be nullptr                                        *
  * - this beast is used for UserCommands, UserlistButtons and CTCP replies   */
-
 int
 auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[],
 				 const char * const word_eol[], const char *a, const char *c, const char *d, const char *e, const char *h,

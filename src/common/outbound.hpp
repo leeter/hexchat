@@ -23,11 +23,12 @@
 #include <string>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
+#include <gsl.h>
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
 #include "hexchat.hpp"
 struct menu_entry;
-extern const struct commands xc_cmds[];
+const gsl::span<const commands> get_commands() noexcept;
 extern std::vector<std::unique_ptr<menu_entry> > menu_list;
 
 int auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[], const char * const word_eol[],

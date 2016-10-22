@@ -1474,9 +1474,9 @@ struct session *sess)
 			if (is_cmd)
 			{
 				tmp_list = cmdlist_double_list (command_list);
-				for(i = 0; xc_cmds[i].name != nullptr ; i++)
+				for(const auto & cmd : get_commands())
 				{
-					tmp_list = g_list_prepend (tmp_list, const_cast<char*>(xc_cmds[i].name));
+					tmp_list = g_list_prepend (tmp_list, const_cast<char*>(cmd.name));
 				}
 				tmp_list = plugin_command_list(tmp_list);
 			}

@@ -63,11 +63,12 @@ static ca_context *ca_con;
 /* =========================== */
 /* ========== SOUND ========== */
 /* =========================== */
-std::array<std::string, NUM_XP> sound_files;
 
 extern const std::array<text_event, NUM_XP> te;
 
 namespace {
+	std::array<std::string, NUM_XP> sound_files;
+
 	bool play_sound(const boost::filesystem::path & path) {
 #ifdef WIN32
 		return PlaySoundW(path.c_str(), nullptr, SND_NODEFAULT | SND_FILENAME | SND_ASYNC);
@@ -206,5 +207,9 @@ namespace sound {
 		}
 
 		close(fd);
+	}
+	gsl::span<std::string> files() noexcept
+	{
+		return sound_files;
 	}
 }

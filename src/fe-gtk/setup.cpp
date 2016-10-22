@@ -1505,7 +1505,6 @@ static GtkWidget *sndfile_entry;
 static bool ignore_changed = false;
 
 extern const std::array<text_event, NUM_XP> te; /* text.c */
-extern std::array<std::string, NUM_XP> sound_files;
 
 static void
 setup_snd_populate (GtkTreeView * treeview)
@@ -1514,11 +1513,11 @@ setup_snd_populate (GtkTreeView * treeview)
 
 	auto sel = gtk_tree_view_get_selection (treeview);
 	auto store = (GtkListStore *)gtk_tree_view_get_model (treeview);
-
+	const auto sound_files = sound::files();
 	for (int i = NUM_XP-1; i >= 0; i--)
 	{
 		gtk_list_store_prepend (store, &iter);
-		gtk_list_store_set(store, &iter, 0, te[i].name, 1, sound_files[i].c_str(), 2, i, -1);
+		gtk_list_store_set(store, &iter, 0, te[i].name, 1, gsl::at(sound_files, i).c_str(), 2, i, -1);
 		if (i == last_selected_row)
 		{
 			gtk_tree_selection_select_iter (sel, &iter);
@@ -1554,9 +1553,9 @@ setup_snd_row_cb (GtkTreeSelection *sel, gpointer)
 	if (n == -1)
 		return;
 	last_selected_row = n;
-
+	auto sound_files = sound::files();
 	ignore_changed = true;
-	gtk_entry_set_text(GTK_ENTRY(sndfile_entry), sound_files[n].c_str());
+	gtk_entry_set_text(GTK_ENTRY(sndfile_entry), gsl::at(sound_files, n).c_str());
 	ignore_changed = false;
 }
 
@@ -1643,13 +1642,14 @@ setup_snd_changed_cb (GtkEntry *ent, GtkTreeView *tree)
 	n = setup_snd_get_selected (sel, &iter);
 	if (n == -1)
 		return;
-
+	auto sound_files = sound::files();
 	/* get the new sound file */
-	sound_files[n] = gtk_entry_get_text (GTK_ENTRY (ent));
+	auto & entry = gsl::at(sound_files, n);
+	entry = gtk_entry_get_text (GTK_ENTRY (ent));
 
 	/* update the TreeView list */
 	store = (GtkListStore *)gtk_tree_view_get_model (tree);
-	gtk_list_store_set (store, &iter, 1, sound_files[n].c_str(), -1);
+	gtk_list_store_set (store, &iter, 1, entry.c_str(), -1);
 
 	gtk_widget_set_sensitive (cancel_button, false);
 }
