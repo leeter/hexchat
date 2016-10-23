@@ -1616,7 +1616,7 @@ boost::format text_event_to_format(const boost::string_ref & evt) {
 /* also light/dark gray (14/15) */
 /* 5,7,8 are all shades of yellow which happen to look damn near the same */
 
-static const std::array<char, 9> rcolors{ { 19, 20, 22, 24, 25, 26, 27, 28, 29 } };
+static constexpr std::array<char, 9> rcolors{ { 19, 20, 22, 24, 25, 26, 27, 28, 29 } };
 
 int text_color_of(const boost::string_ref &name) noexcept
 {
