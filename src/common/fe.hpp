@@ -31,8 +31,14 @@ struct User;
 /* for storage of /menu entries */
 struct menu_entry
 {
-	//~menu_entry();
+	std::string path;
+	boost::optional<std::string> label;
+	boost::optional<std::string> cmd;
+	boost::optional<std::string> ucmd; /* unselect command (toggles) */
+	boost::optional<std::string> group; /* for radio items or NULL */
+	boost::optional<std::string> icon; /* filename */
 	std::int32_t pos;	/* position */
+	int key;
 	std::int16_t modifier;	/* keybinding */
 	std::int16_t root_offset;	/* bytes to offset ->path */
 
@@ -40,14 +46,6 @@ struct menu_entry
 	char state;	/* state of toggle items */
 	bool markup;	/* use pango markup? */
 	bool enable;	/* enabled? sensitivity */
-
-	int key;
-	std::string path;
-	boost::optional<std::string> label;
-	boost::optional<std::string> cmd;
-	boost::optional<std::string> ucmd; /* unselect command (toggles) */
-	boost::optional<std::string> group; /* for radio items or NULL */
-	boost::optional<std::string> icon; /* filename */
 };
 
 int fe_args (int argc, char *argv[]);
