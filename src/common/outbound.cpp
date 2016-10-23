@@ -243,7 +243,7 @@ cmd_addbutton (struct session *sess, char *word[],
 		} else
 		{
 			button_list.emplace_back(word_eol[3], word[2]);
-			fe_buttons_update (sess);
+			fe_buttons_update (*sess);
 		}
 		return true;
 	}
@@ -898,7 +898,7 @@ cmd_delbutton (struct session *sess, char *word[],
 		} else
 		{
 			if (list_delentry (button_list, word[2]))
-				fe_buttons_update (sess);
+				fe_buttons_update (*sess);
 		}
 		return true;
 	}

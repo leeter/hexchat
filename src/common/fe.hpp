@@ -124,7 +124,7 @@ void fe_session_callback (struct session *sess);
 void fe_server_callback (struct server *serv);
 void fe_url_add (const std::string & text);
 void fe_pluginlist_update (void);
-void fe_buttons_update (struct session *sess);
+void fe_buttons_update (session &sess);
 void fe_dlgbuttons_update (struct session *sess);
 void fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive);
 void fe_set_channel (struct session *sess);

@@ -148,7 +148,7 @@ void fe_session_callback(struct session *) {}
 void fe_server_callback(struct server *) {}
 void fe_url_add(const std::string &) {}
 void fe_pluginlist_update(void) {}
-void fe_buttons_update(struct session *) {}
+void fe_buttons_update(struct session &) {}
 void fe_dlgbuttons_update(struct session *) {}
 void fe_dcc_send_filereq(struct session *, char *, int ,
 			 int)

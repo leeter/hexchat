@@ -87,7 +87,7 @@ static void editlist_save (GtkWidget *igad, gchar *file)
 		for (GSList *list = sess_list; list; list = list->next)
 		{
 			auto sess = static_cast<session *>(list->data);;
-			fe_buttons_update (sess);
+			fe_buttons_update (*sess);
 		}
 	} else if (editlist_list == &dlgbutton_list)
 	{

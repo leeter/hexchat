@@ -766,7 +766,7 @@ fe_pluginlist_update (void)
 {
 }
 void
-fe_buttons_update (struct session *sess)
+fe_buttons_update (session &)
 {
 }
 void
