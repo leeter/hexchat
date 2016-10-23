@@ -23,7 +23,7 @@
 extern GtkStyle *input_style;
 extern GtkWidget *parent_window;
 
-void mg_changui_new (session *sess, restore_gui *res, bool tab, bool focus);
+void mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus);
 void mg_update_xtext (GtkWidget *wid);
 void mg_open_quit_dialog (gboolean minimize_button);
 void mg_switch_page (int relative, int num);

@@ -3429,7 +3429,7 @@ restore_gui::restore_gui()
 	c_graph(){}
 
 void
-mg_changui_new (session *sess, restore_gui *res, bool tab, bool focus)
+mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 {
 	bool first_run = false;
 	session_gui *gui;
@@ -3440,23 +3440,23 @@ mg_changui_new (session *sess, restore_gui *res, bool tab, bool focus)
 		res = new restore_gui();
 	}
 
-	sess->res = res;
+	sess.res = res;
 
-	if (!sess->server->front_session)
-		sess->server->front_session = sess;
+	if (!sess.server->front_session)
+		sess.server->front_session = &sess;
 
-	if (!sess->server->is_channel_name (sess->channel))
-		user = userlist_find_global (sess->server, sess->channel);
+	if (!sess.server->is_channel_name (sess.channel))
+		user = userlist_find_global (sess.server, sess.channel);
 
 	if (!tab)
 	{
 		gui = new session_gui();
 		gui->is_tab = false;
-		sess->gui = gui;
-		mg_create_topwindow (sess);
-		fe_set_title (*sess);
+		sess.gui = gui;
+		mg_create_topwindow (&sess);
+		fe_set_title (sess);
 		if (user && user->hostname)
-			set_topic (sess, *user->hostname, *user->hostname);
+			set_topic (&sess, *user->hostname, *user->hostname);
 		return;
 	}
 
@@ -3466,20 +3466,20 @@ mg_changui_new (session *sess, restore_gui *res, bool tab, bool focus)
 		static_mg_gui = session_gui();
 		gui = &static_mg_gui;
 		gui->is_tab = true;
-		sess->gui = gui;
-		mg_create_tabwindow (sess);
+		sess.gui = gui;
+		mg_create_tabwindow (&sess);
 		mg_gui = gui;
 		parent_window = gui->window;
 	} else
 	{
-		sess->gui = gui = mg_gui;
+		sess.gui = gui = mg_gui;
 		gui->is_tab = true;
 	}
 
 	if (user && user->hostname)
-		set_topic (sess, *user->hostname, *user->hostname);
+		set_topic (&sess, *user->hostname, *user->hostname);
 
-	mg_add_chan (sess);
+	mg_add_chan (&sess);
 
 	if (first_run || (prefs.hex_gui_tab_newtofront == FOCUS_NEW_ONLY_ASKED && focus)
 			|| prefs.hex_gui_tab_newtofront == FOCUS_NEW_ALL )
