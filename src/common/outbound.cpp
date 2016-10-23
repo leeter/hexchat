@@ -3891,7 +3891,7 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 			{
 				if (std::isdigit<char>(src[2], locale) && std::isdigit<char>(src[3], locale))
 				{
-					char buf[32];
+					char buf[4];
 					buf[0] = src[1];
 					buf[1] = src[2];
 					buf[2] = src[3];
