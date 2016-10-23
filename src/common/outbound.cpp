@@ -2226,16 +2226,14 @@ cmd_lagcheck (struct session *, char *[], char *[])
 }
 
 static void
-lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
+lastlog (session *sess, const char *search, gtk_xtext_search_flags flags)
 {
-	session *lastlog_sess;
-
 	if (!is_session (sess))
 		return;
 	if (!sess->server)
 		throw std::runtime_error("Invalid Server reference");
 
-	lastlog_sess = find_dialog (*(sess->server), "(lastlog)");
+	auto lastlog_sess = find_dialog (*(sess->server), "(lastlog)");
 	if (!lastlog_sess)
 		lastlog_sess = new_ircwindow(sess->server, "(lastlog)", session::SESS_DIALOG, false);
 
