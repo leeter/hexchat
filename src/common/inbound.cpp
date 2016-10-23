@@ -147,22 +147,16 @@ inbound_open_dialog (server &serv, const char *from,
 	return sess;
 }
 
-static void
-inbound_make_idtext (server &serv, char *idtext, int max, bool id)
+static std::string
+inbound_make_idtext (const server &serv, bool id)
 {
-	idtext[0] = 0;
 	if (serv.have_idmsg || serv.have_accnotify)
 	{
-		if (id)
-		{
-			safe_strcpy (idtext, prefs.hex_irc_id_ytext, max);
-		} else
-		{
-			safe_strcpy (idtext, prefs.hex_irc_id_ntext, max);
-		}
+		std::string id_text = id ? prefs.hex_irc_id_ytext : prefs.hex_irc_id_ntext;
 		/* convert codes like %C,%U to the proper ones */
-		check_special_chars (idtext, true);
+		return check_special_chars (id_text, true/*do ascii*/);
 	}
+	return{};
 }
 
 void
@@ -217,8 +211,8 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 		if (user->account)
 			id = true;
 	}
-	char idtext[64];
-	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
+	
+	const auto idtext = inbound_make_idtext (serv, id);
 
 	if (sess->type == session::SESS_DIALOG && !nodiag)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, gsl::ensure_z(from), gsl::ensure_z(text), idtext, nullptr, 0,
@@ -345,7 +339,6 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 	server &serv = *(sess->server);
 	struct User *user;
 	char nickchar[2] = "\000";
-	char idtext[64];
 	bool privaction = false;
 
 	if (!fromme)
@@ -406,7 +399,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 			fromme = true;
 	}
 
-	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
+	const auto idtext = inbound_make_idtext (serv, id);
 
 	const auto from_span = gsl::ensure_z(from);
 	const auto text_span = gsl::ensure_z(text);
@@ -416,7 +409,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 		if (is_hilight (from_span, text_span, sess, serv))
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_HCHANACTION, sess, from_span, text_span, nickchar,
-				gsl::ensure_z(idtext), 0, tags_data->timestamp);
+				idtext, 0, tags_data->timestamp);
 			return;
 		}
 	}
@@ -491,8 +484,7 @@ inbound_chanmsg (server &serv, session *sess, gsl::cstring_span<> chan, gsl::cst
 		return;
 	}
 
-	char idtext[64];
-	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
+	const auto idtext = inbound_make_idtext (serv, id);
 
 	if (sess->type == session::SESS_DIALOG)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, nullptr, 0,
