@@ -56,7 +56,7 @@ static void
 
 	/* process %C %B etc */
 	auto confs = check_special_chars(conf, true);
-	auto_insert(tbuf, reinterpret_cast<const unsigned char*>(confs.c_str()), word, word_eol, "", "", word_eol[5],
+	auto_insert({ tbuf, sizeof tbuf }, reinterpret_cast<const unsigned char*>(confs.c_str()), word, word_eol, "", "", word_eol[5],
 		sess->server->get_network(true).data(), "", "", nick, "");
 	handle_command(sess, tbuf, false);
 }

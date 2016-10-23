@@ -33,6 +33,7 @@
 #include <cstring>
 #include <ctime>
 #include <functional>
+#include <iomanip>
 #include <iterator>
 #include <limits>
 #include <locale>
@@ -3879,13 +3880,8 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 				 const char * const word_eol[], const char *a, const char *c, const char *d, const char *e, const char *h,
 				 const char *n, const char *s, const char *u)
 {
-	int num;
-	char buf[32];
-	time_t now;
-	struct tm *tm_ptr;
-	const char *utf;
 	std::locale locale;
-	std::ostringstream out;
+	std::ostringstream out(std::ios::binary);
 	std::ostreambuf_iterator<char> outitr(out);
 	while (src[0])
 	{
@@ -3895,6 +3891,7 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 			{
 				if (std::isdigit<char>(src[2], locale) && std::isdigit<char>(src[3], locale))
 				{
+					char buf[32];
 					buf[0] = src[1];
 					buf[1] = src[2];
 					buf[2] = src[3];
@@ -3912,7 +3909,7 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 					if (word)
 					{
 						src++;
-						num = src[0] - '0';	/* ascii to decimal */
+						auto num = src[0] - '0';	/* ascii to decimal */
 						if (*word[num] == 0)
 							return 0;
 						gsl::cstring_span<> utf = 
@@ -3931,7 +3928,7 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 				if (src[0] == '&')
 					goto lamecode;
 				src++;
-				utf = nullptr;
+				const char* utf = nullptr;
 				switch (src[0])
 				{
 				case '%':
@@ -3951,15 +3948,17 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 				case 'h':
 					utf = h; break;
 				case 'm':
-					utf = get_sys_str (true); break;
+					out << get_sys_str (true); break;
 				case 'n':
 					utf = n; break;
 				case 's':
 					utf = s; break;
 				case 't':
-					now = time (0);
-					utf = ctime (&now);
-					//utf[19] = 0;
+				{
+					const auto now = std::time(nullptr);
+					const auto tmptr = *std::localtime(&now);
+					out << std::put_time(&tmptr, "%c");
+				}
 					break;
 				case 'u':
 					utf = u; break;
@@ -3967,11 +3966,11 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 					utf = PACKAGE_VERSION; break;
 					break;
 				case 'y':
-					now = time (0);
-					tm_ptr = localtime (&now);
-					snprintf (buf, sizeof (buf), "%4d%02d%02d", 1900 +
-								 tm_ptr->tm_year, 1 + tm_ptr->tm_mon, tm_ptr->tm_mday);
-					utf = buf;
+				{
+					const auto now = std::time(nullptr);
+					const auto tm_ptr = *std::localtime(&now);
+					out << std::put_time(&tm_ptr, "%Y%m%d");
+				}
 					break;
 				default:
 					src--;
@@ -4176,7 +4175,7 @@ user_command (session * sess, const std::string & cmd, char *word[],
 				  char *word_eol[])
 {
 	char buf[2048] = { };
-	if (!auto_insert (buf, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
+	if (!auto_insert({ buf, sizeof buf }, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
 		sess->server->get_network(true).data(), "",
 							sess->server->nick, "", ""))
 	{
