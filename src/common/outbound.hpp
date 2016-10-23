@@ -37,6 +37,7 @@ std::string command_insert_vars (session *sess, const std::string& cmd);
 bool handle_command (session *sess, char *cmd, bool check_spch);
 void process_data_init (char *buf, char *cmd, char *word[], char *word_eol[], bool handle_quotes, bool allow_escape_quotes);
 void handle_multiline (session *sess, char *cmd, int history, int nocommand);
+[[deprecated]]
 void check_special_chars (char *cmd, bool do_ascii);
 std::string check_special_chars(const boost::string_ref & cmd, bool do_ascii) /* check for %X */;
 void notc_msg (session *sess);
