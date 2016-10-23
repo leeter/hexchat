@@ -220,7 +220,7 @@ userlist_add_hostname (struct session *sess, const char nick[], const char hostn
 }
 
 void
-userlist_free (session &sess)
+userlist_free (session &sess) noexcept
 {
 	sess.usertree_alpha.clear();
 	sess.usertree.clear();
