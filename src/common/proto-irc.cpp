@@ -1061,19 +1061,13 @@ process_numeric (session * sess, int n,
 }
 
 namespace {
-	BOOST_CONSTEXPR std::uint32_t
-		wordl(std::uint8_t c0, std::uint8_t c1, std::uint8_t c2, std::uint8_t c3)
+	constexpr std::uint32_t
+		wordl(std::uint8_t c0, std::uint8_t c1, std::uint8_t c2, std::uint8_t c3) noexcept
 	{
 		return static_cast<std::uint32_t>(c0 | (c1 << 8) | (c2 << 16) | (c3 << 24));
 	}
 }
 
-#ifdef BOOST_NO_CONSTEXPR
-/* force a 32bit CMP.L */
-#define WORDL(c0, c1, c2, c3) (std::uint32_t)(c0 | (c1 << 8) | (c2 << 16) | (c3 << 24))
-#else
-#define WORDL wordl
-#endif
 
 /* handle named messages that starts with a ':' */
 
@@ -1104,11 +1098,12 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	if (len == 4)
 	{
-		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
+		const std::uint32_t t =
+			wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
-		case WORDL('J','O','I','N'):
+		case wordl('J','O','I','N'):
 			{
 				char *chan = word[3];
 				char *account = word[4];
@@ -1128,7 +1123,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('K','I','C','K'):
+		case wordl('K','I','C','K'):
 			{
 				char *kicked = word[4];
 				char *reason = word_eol[5];
@@ -1144,7 +1139,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('K','I','L','L'):
+		case wordl('K','I','L','L'):
 			{
 				char *reason = word_eol[4];
 				if (*reason == ':')
@@ -1155,17 +1150,17 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('M','O','D','E'):
+		case wordl('M','O','D','E'):
 			handle_mode (serv, word, word_eol, nick, /*numeric_324*/ false, tags_data);	/* modes.c */
 			return;
 
-		case WORDL('N','I','C','K'):
+		case wordl('N','I','C','K'):
 			inbound_newnick (serv, nick, 
 								  (word_eol[3][0] == ':') ? word_eol[3] + 1 : word_eol[3],
 								  false, tags_data);
 			return;
 
-		case WORDL('P','A','R','T'):
+		case wordl('P','A','R','T'):
 			{
 				char *chan = word[3];
 				char *reason = word_eol[4];
@@ -1181,19 +1176,19 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('P','O','N','G'):
+		case wordl('P','O','N','G'):
 			inbound_ping_reply (serv.server_session,
 									  (word[4][0] == ':') ? word[4] + 1 : word[4],
 									  word[3], tags_data);
 			return;
 
-		case WORDL('Q','U','I','T'):
+		case wordl('Q','U','I','T'):
 			inbound_quit (serv, nick, ip,
 							  (word_eol[3][0] == ':') ? word_eol[3] + 1 : word_eol[3],
 							  tags_data);
 			return;
 
-		case WORDL('A','W','A','Y'):
+		case wordl('A','W','A','Y'):
 			inbound_away_notify (serv, nick,
 										(word_eol[3][0] == ':') ? word_eol[3] + 1 : nullptr,
 										tags_data);
@@ -1210,11 +1205,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 		switch (t)
 		{
 
-		case WORDL('A','C','C','O'):
+		case wordl('A','C','C','O'):
 			inbound_account (serv, nick, word[3], tags_data);
 			return;
 			
-		case WORDL('I','N','V','I'):
+		case wordl('I','N','V','I'):
 			if (ignore_check(word[1], ignore::IG_INVI))
 				return;
 			
@@ -1229,7 +1224,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				
 			return;
 
-		case WORDL('N','O','T','I'):
+		case wordl('N','O','T','I'):
 			{
 				int id = false;								/* identified */
 
@@ -1268,7 +1263,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('P','R','I','V'):
+		case wordl('P','R','I','V'):
 			{
 				char *to = word[3];
 				int len;
@@ -1323,13 +1318,13 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			}
 			return;
 
-		case WORDL('T','O','P','I'):
+		case wordl('T','O','P','I'):
 			inbound_topicnew (serv, nick, word[3],
 									(word_eol[4][0] == ':') ? word_eol[4] + 1 : word_eol[4],
 									tags_data);
 			return;
 
-		case WORDL('W','A','L','L'):
+		case wordl('W','A','L','L'):
 			text = word_eol[3];
 			if (*text == ':')
 				text++;
@@ -1341,10 +1336,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	else if (len == 3)
 	{
-		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]);
+		const std::uint32_t t =
+			wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]);
 		switch (t)
 		{
-			case WORDL('C','A','P','\0'):
+			case wordl('C','A','P','\0'):
 				if (strncasecmp (word[4], "ACK", 3) == 0)
 				{
 					inbound_cap_ack (serv, word[1], 
