@@ -2064,8 +2064,8 @@ mg_dialog_button_cb (GtkWidget *wid, const char *cmd)
 		host = topic + 1;
 
 	/* the longest cmd is 12, and the longest nickname is 64 */
-	char buf[128];
-	auto_insert (buf, sizeof (buf), (const unsigned char*)cmd, 0, 0, "", "", "",
+	char buf[128] = {};
+	auto_insert (buf, (const unsigned char*)cmd, 0, 0, "", "", "",
 		current_sess->server->get_network(true).data(), host, "",
 					 current_sess->channel, "");
 

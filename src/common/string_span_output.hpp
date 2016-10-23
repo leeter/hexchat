@@ -24,8 +24,8 @@
 #include <gsl.h>
 
 template <typename CharT, std::ptrdiff_t Extent = gsl::dynamic_range>
-std::ostream& operator<<(std::ostream& o, const gsl::basic_string_span<CharT, Extent>& one) {
-	auto sentry = std::ostream::sentry{ o };
+std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT> & o, const gsl::basic_string_span<std::add_const_t<CharT>, Extent>& one) {
+	std::basic_ostream<CharT>::sentry sentry(o);
 	if (!one.empty() && sentry) {
 		o.write(one.data(), one.length());
 	}

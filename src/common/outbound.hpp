@@ -31,7 +31,7 @@ struct menu_entry;
 const gsl::span<const commands> get_commands() noexcept;
 extern std::vector<std::unique_ptr<menu_entry> > menu_list;
 
-int auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[], const char * const word_eol[],
+int auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * const word[], const char * const word_eol[],
 				 const char *a, const char *c, const char *d, const char *e, const char *h,const char *n, const char *s, const char *u);
 std::string command_insert_vars (session *sess, const std::string& cmd);
 bool handle_command (session *sess, char *cmd, bool check_spch);

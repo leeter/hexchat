@@ -1517,7 +1517,8 @@ setup_snd_populate (GtkTreeView * treeview)
 	for (int i = NUM_XP-1; i >= 0; i--)
 	{
 		gtk_list_store_prepend (store, &iter);
-		gtk_list_store_set(store, &iter, 0, te[i].name, 1, gsl::at(sound_files, i).c_str(), 2, i, -1);
+		const auto name_string = gsl::to_string(te[i].name);
+		gtk_list_store_set(store, &iter, 0, name_string.c_str(), 1, gsl::at(sound_files, i).c_str(), 2, i, -1);
 		if (i == last_selected_row)
 		{
 			gtk_tree_selection_select_iter (sel, &iter);

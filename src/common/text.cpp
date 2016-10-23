@@ -68,6 +68,7 @@
 #include "session_logging.hpp"
 #include "filesystem.hpp"
 #include "sound.hpp"
+#include "string_span_output.hpp"
 
 static boost::optional<boost::filesystem::path> scrollback_get_filename (const session &sess)
 {
@@ -1175,8 +1176,9 @@ void pevent_make_pntevts ()
 		int m;
 		if (pevt_build_string (pntevts_text[i], pntevts[i], m) != 0)
 		{
+			const auto name_string = gsl::to_string(te[i].name);
 			snprintf (out, sizeof (out),
-						 _("Error parsing event %s.\nLoading default."), te[i].name);
+						 _("Error parsing event %s.\nLoading default."), name_string.c_str());
 			fe_message (out, FE_MSG_WARN);
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
@@ -1616,7 +1618,7 @@ boost::format text_event_to_format(const boost::string_ref & evt) {
 
 static const std::array<char, 9> rcolors{ { 19, 20, 22, 24, 25, 26, 27, 28, 29 } };
 
-int text_color_of(const boost::string_ref &name)
+int text_color_of(const boost::string_ref &name) noexcept
 {
 	int sum = std::accumulate(name.cbegin(), name.cend(), 0);
 	sum %= rcolors.size();
@@ -1630,7 +1632,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 			  time_t timestamp)
 {
 	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->chanopts["text_strip"]) ? 0xFFFFFFFF : 0);
-	char tbuf[NICKLEN + 4];
+	char tbuf[NICKLEN + 4] = {};
 	auto astr = gsl::to_string(a);
 	auto bstr = gsl::to_string(b);
 	auto cstr = gsl::to_string(c);
@@ -1740,14 +1742,18 @@ int text_emit_by_name (gsl::cstring_span<> name, gsl::not_null<session *>sess, t
 
 void pevent_save(const char file_name[])
 {
-	int fd;
-	if (!file_name)
-		fd = hexchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
-			0x180, io::fs::XOF_DOMODE);
-	else
-		fd = hexchat_open_file (file_name, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
-			io::fs::XOF_FULLPATH | io::fs::XOF_DOMODE);
-	if (fd == -1)
+	namespace bfs = boost::filesystem;
+	const auto outpath  = !file_name ?
+		io::fs::make_config_path("pevents.conf") :
+		io::fs::make_path(file_name);
+	if (!io::fs::create_file_with_mode(outpath, 0x180)) {
+		perror("Error opening config file\n");
+		return;
+	}
+	bfs::ofstream outfile{ outpath, std::ios::out | std::ios::binary | std::ios::trunc };
+
+
+	if (!outfile)
 	{
 		/*
 		   fe_message ("Error opening config file\n", FALSE); 
@@ -1761,14 +1767,9 @@ void pevent_save(const char file_name[])
 
 	for (int i = 0; i < NUM_XP; i++)
 	{
-		char buf[1024];
-		write (fd, buf, snprintf (buf, sizeof (buf),
-										  "event_name=%s\n", te[i].name));
-		write (fd, buf, snprintf (buf, sizeof (buf),
-										  "event_text=%s\n\n", pntevts_text[i].c_str()));
+		outfile << "event_name=" << te[i].name << "\n" ;
+		outfile << boost::format("event_text=%s\n\n") % pntevts_text[i];
 	}
-
-	close (fd);
 }
 
 

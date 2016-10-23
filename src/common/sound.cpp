@@ -199,8 +199,9 @@ namespace sound {
 			if (!sound_files[i].empty())
 			{
 				char buf[512];
+				const auto name_string = gsl::to_string(te[i].name);
 				write(fd, buf, snprintf(buf, sizeof(buf),
-					"event=%s\n", te[i].name));
+					"event=%s\n", name_string.c_str()));
 				write(fd, buf, snprintf(buf, sizeof(buf),
 					"sound=%s\n\n", sound_files[i].c_str()));
 			}

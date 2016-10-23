@@ -3875,7 +3875,7 @@ const gsl::span<const commands> get_commands() noexcept
  * - word/word_eol args might be nullptr                                        *
  * - this beast is used for UserCommands, UserlistButtons and CTCP replies   */
 int
-auto_insert (char *dest, int destlen, const unsigned char *src, const char * const word[],
+auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * const word[],
 				 const char * const word_eol[], const char *a, const char *c, const char *d, const char *e, const char *h,
 				 const char *n, const char *s, const char *u)
 {
@@ -3884,11 +3884,9 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 	time_t now;
 	struct tm *tm_ptr;
 	const char *utf;
-	gsize utf_len;
-	char *orig = dest;
-
-	destlen--;
 	std::locale locale;
+	std::ostringstream out;
+	std::ostreambuf_iterator<char> outitr(out);
 	while (src[0])
 	{
 		if (src[0] == '%' || src[0] == '&')
@@ -3901,17 +3899,12 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 					buf[1] = src[2];
 					buf[2] = src[3];
 					buf[3] = 0;
-					dest[0] = atoi (buf);
-					glib_string utf(g_locale_to_utf8(dest, 1, 0, &utf_len, 0));
+					const auto character = static_cast<char>(atoi (buf));
+					gsize utf_len = 0;
+					glib_string utf(g_locale_to_utf8(&character, 1, 0, &utf_len, 0));
 					if (utf)
 					{
-						if ((dest - orig) + utf_len >= destlen)
-						{
-							return 2;
-						}
-
-						std::copy_n(utf.get(), utf_len, dest);
-						dest += utf_len;
+						std::copy_n(utf.get(), utf_len, outitr);
 					}
 					src += 3;
 				} else
@@ -3922,18 +3915,15 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 						num = src[0] - '0';	/* ascii to decimal */
 						if (*word[num] == 0)
 							return 0;
-
-						if (src[-1] == '%')
-							utf = word[num];
-						else
-							utf = word_eol[num];
+						gsl::cstring_span<> utf = 
+						(src[-1] == '%') ?
+							 gsl::ensure_z(word[num]) :
+							 gsl::ensure_z(word_eol[num]);
 
 						/* avoid recusive usercommand overflow */
-						if ((dest - orig) + strlen (utf) >= destlen)
-							return 2;
-
-						strcpy (dest, utf);
-						dest += strlen (dest);
+						/*if ((target - orig) + strlen (utf) >= destlen)
+							return 2;*/
+						std::copy(utf.cbegin(), utf.cend(), outitr);
 					}
 				}
 			} else
@@ -3945,11 +3935,10 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 				switch (src[0])
 				{
 				case '%':
-					if ((dest - orig) + 2u >= destlen)
-						return 2;
-					dest[0] = '%';
-					dest[1] = 0;
-					dest++;
+					/*if ((target - orig) + 2u >= destlen)
+						return 2;*/
+					*outitr = '%';
+					*outitr = 0;
 					break;
 				case 'a':
 					utf = a; break;
@@ -3991,37 +3980,39 @@ auto_insert (char *dest, int destlen, const unsigned char *src, const char * con
 
 				if (utf)
 				{
-					if ((dest - orig) + strlen (utf) >= destlen)
-						return 2;
-					strcpy (dest, utf);
-					dest += strlen (dest);
+					/*if ((target - orig) + strlen (utf) >= destlen)
+						return 2;*/
+					const auto span = gsl::ensure_z(utf, dest.length());
+					std::copy(span.cbegin(), span.cend(), outitr);
 				}
 
 			}
 			src++;
 		} else
 		{
-			utf_len = g_utf8_skip[src[0]];
-
-			if ((dest - orig) + utf_len >= destlen)
-				return 2;
+			const auto utf_len = g_utf8_skip[src[0]];
 
 			if (utf_len == 1)
 			{
 		 lamecode:
-				dest[0] = src[0];
-				dest++;
+				*outitr = src[0];
 				src++;
 			} else
 			{
-				std::copy_n(src, utf_len, dest);
-				dest += utf_len;
+				std::copy_n(src, utf_len, outitr);
 				src += utf_len;
 			}
 		}
 	}
 
-	dest[0] = 0;
+	const auto result = out.str();
+	if (result.size() > (dest.size() + 1))
+	{
+		return 2;
+	}
+
+	std::copy(result.cbegin(), result.cend(), dest.begin());
+	*dest.rbegin() = 0;
 
 	return 1;
 }
@@ -4184,8 +4175,8 @@ static void
 user_command (session * sess, const std::string & cmd, char *word[],
 				  char *word_eol[])
 {
-	char buf[2048] = { 0 };
-	if (!auto_insert (buf, 2048, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
+	char buf[2048] = { };
+	if (!auto_insert (buf, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
 		sess->server->get_network(true).data(), "",
 							sess->server->nick, "", ""))
 	{

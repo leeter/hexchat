@@ -52,11 +52,11 @@ static void
 	ctcp_reply(session *sess, char *nick, char *word[], char *word_eol[],
 	const std::string & conf)
 {
-	char tbuf[4096];	/* can receive 2048 from IRC, so this is enough */
+	char tbuf[4096] = {};	/* can receive 2048 from IRC, so this is enough */
 
 	/* process %C %B etc */
 	auto confs = check_special_chars(conf, true);
-	auto_insert(tbuf, sizeof(tbuf), reinterpret_cast<unsigned char*>(&confs[0]), word, word_eol, "", "", word_eol[5],
+	auto_insert(tbuf, reinterpret_cast<const unsigned char*>(confs.c_str()), word, word_eol, "", "", word_eol[5],
 		sess->server->get_network(true).data(), "", "", nick, "");
 	handle_command(sess, tbuf, false);
 }

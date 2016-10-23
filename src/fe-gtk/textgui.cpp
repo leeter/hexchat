@@ -251,8 +251,9 @@ pevent_dialog_fill (GtkWidget *list)
 	do
 	{
 		i--;
+		const auto name_string = gsl::to_string(te[i].name);
 		gtk_list_store_insert_with_values (store, &iter, 0,
-													  EVENT_COLUMN, te[i].name,
+													  EVENT_COLUMN, name_string.c_str(),
 													  TEXT_COLUMN, pntevts_text[i].c_str(),
 													  ROW_COLUMN, i, -1);
 	}

@@ -163,7 +163,7 @@ nick_command_parse(session *sess, const boost::string_ref & cmd, const boost::st
 	len = cmd.length() + nick.length() + allnick.length() + 512;
 	std::string buf(len, '\0');
 
-	auto_insert (&buf[0], len, (const unsigned char*)cmd.data(), 0, 0, allnick.data(), sess->channel, "",
+	auto_insert (buf, (const unsigned char*)cmd.data(), 0, 0, allnick.data(), sess->channel, "",
 		sess->server->get_network(true).data(), host.c_str(),
 					 sess->server->nick, nick.data(), account);
 
