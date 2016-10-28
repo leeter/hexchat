@@ -419,7 +419,7 @@ fe_new_window (session *sess, bool focus)
 			tab = true;
 	}
 
-	mg_changui_new (sess, nullptr, tab, focus);
+	mg_changui_new (*sess, nullptr, tab, focus);
 
 #ifdef WIN32
 	g_log_set_handler ("GLib", static_cast<GLogLevelFlags>(G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING), (GLogFunc)log_handler, 0);

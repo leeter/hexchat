@@ -81,7 +81,7 @@ void inbound_chanmsg(server &serv, session *sess, gsl::cstring_span<> chan, gsl:
 	gsl::cstring_span<> text, bool fromme, bool id,
 							 const message_tags_data *tags_data);
 void clear_channel (session &sess);
-void set_topic (session *sess, const std::string& topic, const std::string &stripped_topic);
+void set_topic (session &sess, const std::string& topic, const std::string &stripped_topic);
 void inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id, 
 							 const message_tags_data *tags_data);
 void inbound_action (session *sess, const std::string & chan, char *from, char *ip,

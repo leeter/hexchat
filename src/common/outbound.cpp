@@ -2364,8 +2364,8 @@ cmd_load (struct session *sess, char *word[], char *word_eol[])
 	return false;
 }
 
-char *
-split_up_text(struct session *sess, char*text, int cmd_length, char *split_text)
+static char *
+split_up_text(struct session &sess, char*text, int cmd_length, char *split_text)
 {
 	size_t space_offset;
 	char *space;
@@ -2375,10 +2375,10 @@ split_up_text(struct session *sess, char*text, int cmd_length, char *split_text)
 	size_t max = 512; /* rfc 2812 */
 	max -= 3; /* :, !, @ */
 	max -= cmd_length;
-	max -= std::strlen (sess->server->nick);
-	max -= std::strlen (sess->channel);
-	if (sess->me && sess->me->hostname)
-		max -= sess->me->hostname->size();
+	max -= std::strlen (sess.server->nick);
+	max -= std::strlen (sess.channel);
+	if (sess.me && sess.me->hostname)
+		max -= sess.me->hostname->size();
 	else
 	{
 		max -= 9;	/* username */
@@ -2450,7 +2450,7 @@ cmd_me (struct session *sess, char *[], char *word_eol[])
 		/* DCC CHAT failed, try through server */
 		if (sess->server->connected)
 		{
-			while ((split_text = split_up_text (sess, act + offset, cmd_length, split_text)))
+			while ((split_text = split_up_text (*sess, act + offset, cmd_length, split_text)))
 			{
 				sess->server->p_action (sess->channel, split_text);
 				/* print it to screen */
@@ -2550,7 +2550,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 					return true;
 				}
 
-				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
+				while ((split_text = split_up_text (*sess, msg + offset, cmd_length, split_text)))
 				{
 					sess->server->p_message (nick, split_text);
 
@@ -2569,7 +2569,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 			{
 				message_tags_data no_tags = message_tags_data();
 
-				while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
+				while ((split_text = split_up_text (*sess, msg + offset, cmd_length, split_text)))
 				{
 					inbound_chanmsg (*(newsess->server), nullptr, newsess->channel,
 										  newsess->server->nick, gsl::ensure_z(split_text), true, false,
@@ -2664,7 +2664,7 @@ cmd_notice (struct session *sess, char *word[], char *word_eol[])
 
 	if (*word[2] && *word_eol[3])
 	{
-		while ((split_text = split_up_text (sess, text + offset, cmd_length, split_text)))
+		while ((split_text = split_up_text (*sess, text + offset, cmd_length, split_text)))
 		{
 			sess->server->p_notice (word[2], split_text);
 			EMIT_SIGNAL (XP_TE_NOTICESEND, sess, gsl::ensure_z(word[2]), gsl::ensure_z(split_text), nullptr, nullptr, 0);
@@ -2821,7 +2821,7 @@ cmd_query (struct session *sess, char *word[], char *word_eol[])
 				return true;
 			}
 
-			while ((split_text = split_up_text (sess, msg + offset, cmd_length, split_text)))
+			while ((split_text = split_up_text (*sess, msg + offset, cmd_length, split_text)))
 			{
 				sess->server->p_message (nick, split_text);
 				inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
@@ -4246,7 +4246,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		{
 			inbound_chanmsg (*sess->server, nullptr, sess->channel,
 				sess->server->nick, newcmd, true, false, &no_tags);
-			set_topic (sess, net_ip (dcc->addr), net_ip (dcc->addr));
+			set_topic (*sess, net_ip (dcc->addr), net_ip (dcc->addr));
 			return;
 		}
 	}
@@ -4257,7 +4257,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		int cmd_length = 13; /* " PRIVMSG ", " ", :, \r, \n */
 		size_t offset = 0;
 
-		while ((split_text = split_up_text(sess, &newcmd[0] + offset, cmd_length, split_text)))
+		while ((split_text = split_up_text(*sess, &newcmd[0] + offset, cmd_length, split_text)))
 		{
 			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
 								  gsl::ensure_z(split_text), true, false, &no_tags);

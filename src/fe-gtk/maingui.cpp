@@ -1807,7 +1807,7 @@ mg_link_irctab (session *sess, bool focus)
 	if (sess->gui->is_tab)
 	{
 		GtkWidgetPtr win{ mg_changui_destroy(sess) };
-		mg_changui_new (sess, sess->res, false, focus);
+		mg_changui_new (*sess, sess->res, false, focus);
 		mg_populate (sess);
 		hexchat_is_quitting = false;
 		return;
@@ -1815,7 +1815,7 @@ mg_link_irctab (session *sess, bool focus)
 
 	mg_unpopulate (sess);
 	GtkWidgetPtr win{ mg_changui_destroy(sess) };
-	mg_changui_new (sess, sess->res, true, focus);
+	mg_changui_new (*sess, sess->res, true, focus);
 	/* the buffer is now attached to a different widget */
 	((xtext_buffer *)sess->res->buffer)->xtext = (GtkXText *)sess->gui->xtext;
 }
@@ -3056,28 +3056,28 @@ mg_create_irctab (session *sess, GtkWidget *table)
 }
 
 static void
-mg_create_topwindow (session *sess)
+mg_create_topwindow (session &sess)
 {
 	GtkWidget *win;
 	GtkWidget *table;
 
-	if (sess->type == session::SESS_DIALOG)
+	if (sess.type == session::SESS_DIALOG)
 		win = gtkutil_window_new ("HexChat", nullptr,
 										  prefs.hex_gui_dialog_width, prefs.hex_gui_dialog_height, 0);
 	else
 		win = gtkutil_window_new ("HexChat", nullptr,
 										  prefs.hex_gui_win_width,
 										  prefs.hex_gui_win_height, 0);
-	sess->gui->window = win;
+	sess.gui->window = win;
 	gtk_container_set_border_width (GTK_CONTAINER (win), GUI_BORDER);
 	gtk_window_set_opacity (GTK_WINDOW (win), (prefs.hex_gui_transparency / 255.));
 
 	g_signal_connect (G_OBJECT (win), "focus_in_event",
-							G_CALLBACK (mg_topwin_focus_cb), sess);
+							G_CALLBACK (mg_topwin_focus_cb), &sess);
 	g_signal_connect (G_OBJECT (win), "destroy",
-							G_CALLBACK (mg_topdestroy_cb), sess);
+							G_CALLBACK (mg_topdestroy_cb), &sess);
 	g_signal_connect (G_OBJECT (win), "configure_event",
-							G_CALLBACK (mg_configure_cb), sess);
+							G_CALLBACK (mg_configure_cb), &sess);
 
 	palette_alloc (win);
 
@@ -3089,50 +3089,50 @@ mg_create_topwindow (session *sess)
 	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
 	gtk_container_add (GTK_CONTAINER (win), table);
 
-	mg_create_irctab (sess, table);
-	mg_create_menu (sess->gui, table, sess->server->is_away);
+	mg_create_irctab (&sess, table);
+	mg_create_menu (sess.gui, table, sess.server->is_away);
 
-	if (sess->res->buffer == nullptr)
+	if (sess.res->buffer == nullptr)
 	{
-		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		gtk_xtext_buffer_show(GTK_XTEXT(sess->gui->xtext), static_cast<xtext_buffer*>(sess->res->buffer), true);
-		static_cast<xtext_buffer*>(sess->res->buffer)->time_stamp = !!prefs.hex_stamp_text;
-		sess->res->user_model = userlist_create_model ();
+		sess.res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess.gui->xtext));
+		gtk_xtext_buffer_show(GTK_XTEXT(sess.gui->xtext), static_cast<xtext_buffer*>(sess.res->buffer), true);
+		static_cast<xtext_buffer*>(sess.res->buffer)->time_stamp = !!prefs.hex_stamp_text;
+		sess.res->user_model = userlist_create_model ();
 	}
 
-	userlist_show (sess);
+	userlist_show (&sess);
 
 	gtk_widget_show_all (table);
 
 	if (prefs.hex_gui_hide_menu)
-		gtk_widget_hide (sess->gui->menu);
+		gtk_widget_hide (sess.gui->menu);
 
 	/* Will be shown when needed */
-	gtk_widget_hide (sess->gui->topic_bar);
+	gtk_widget_hide (sess.gui->topic_bar);
 
 	if (!prefs.hex_gui_ulist_buttons)
-		gtk_widget_hide (sess->gui->button_box);
+		gtk_widget_hide (sess.gui->button_box);
 
 	if (!prefs.hex_gui_input_nick)
-		gtk_widget_hide (sess->gui->nick_box);
+		gtk_widget_hide (sess.gui->nick_box);
 
-	gtk_widget_hide(sess->gui->shbox);
+	gtk_widget_hide(sess.gui->shbox);
 
-	mg_decide_userlist (sess, false);
+	mg_decide_userlist (&sess, false);
 
-	if (sess->type == session::SESS_DIALOG)
+	if (sess.type == session::SESS_DIALOG)
 	{
 		/* hide the chan-mode buttons */
-		gtk_widget_hide (sess->gui->topicbutton_box);
+		gtk_widget_hide (sess.gui->topicbutton_box);
 	} else
 	{
-		gtk_widget_hide (sess->gui->dialogbutton_box);
+		gtk_widget_hide (sess.gui->dialogbutton_box);
 
 		if (!prefs.hex_gui_mode_buttons)
-			gtk_widget_hide (sess->gui->topicbutton_box);
+			gtk_widget_hide (sess.gui->topicbutton_box);
 	}
 
-	mg_place_userlist_and_chanview (sess->gui);
+	mg_place_userlist_and_chanview (sess.gui);
 
 	gtk_widget_show (win);
 }
@@ -3453,10 +3453,10 @@ mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 		gui = new session_gui();
 		gui->is_tab = false;
 		sess.gui = gui;
-		mg_create_topwindow (&sess);
+		mg_create_topwindow (sess);
 		fe_set_title (sess);
 		if (user && user->hostname)
-			set_topic (&sess, *user->hostname, *user->hostname);
+			set_topic (sess, *user->hostname, *user->hostname);
 		return;
 	}
 
@@ -3477,7 +3477,7 @@ mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 	}
 
 	if (user && user->hostname)
-		set_topic (&sess, *user->hostname, *user->hostname);
+		set_topic (sess, *user->hostname, *user->hostname);
 
 	mg_add_chan (&sess);
 

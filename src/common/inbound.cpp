@@ -96,10 +96,10 @@ clear_channel (session &sess)
 }
 
 void
-set_topic (session *sess, const std::string & topic, const std::string & stripped_topic)
+set_topic (session &sess, const std::string & topic, const std::string & stripped_topic)
 {
-	sess->topic = stripped_topic;
-	fe_set_topic (sess, topic, stripped_topic);
+	sess.topic = stripped_topic;
+	fe_set_topic (&sess, topic, stripped_topic);
 }
 
 static session *
@@ -191,7 +191,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 				snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", from, ip);
 				write (sess->logfd, tbuf, strlen (tbuf));*/
 			}
-			set_topic (sess, ip, ip);
+			set_topic (*sess, ip, ip);
 		}
 		inbound_chanmsg (serv, nullptr, nullptr, gsl::ensure_z(from), gsl::ensure_z(text), false, id, tags_data);
 		return;
@@ -725,7 +725,7 @@ inbound_topic (server &serv, char *chan, char *topic_text,
 	if (sess)
 	{
 		auto stripped_topic = strip_color (topic_text, STRIP_ALL);
-		set_topic (sess, topic_text, stripped_topic);
+		set_topic (*sess, topic_text, stripped_topic);
 	} else
 		sess = serv.server_session;
 
@@ -745,7 +745,7 @@ inbound_topicnew (const server &serv, char *nick, char *chan, char *topic,
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_NEWTOPIC, sess, gsl::ensure_z(nick), gsl::ensure_z(topic), gsl::ensure_z(chan), nullptr, 0,
 									  tags_data->timestamp);
 		auto stripped_topic = strip_color (topic, STRIP_ALL);
-		set_topic (sess, topic, stripped_topic);
+		set_topic (*sess, topic, stripped_topic);
 	}
 }
 
