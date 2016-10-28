@@ -132,7 +132,7 @@ int dcc_resume (struct DCC *dcc);
 void dcc_check_timeouts (void);
 void dcc_change_nick (const server &serv, const char *oldnick, const char *newnick);
 void dcc_notify_kill (struct server *serv);
-struct DCC *dcc_write_chat (char *nick, char *text);
+struct DCC *dcc_write_chat (const char *nick, const char *text);
 void dcc_send (struct session *sess, const char *to, char *file, int maxcps, int passive);
 struct DCC *find_dcc(const char *nick, const char *file, DCC::dcc_type type);
 void dcc_get_nick (struct session *sess, char *nick);

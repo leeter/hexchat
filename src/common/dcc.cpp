@@ -2015,12 +2015,11 @@ dcc_notify_kill (struct server *serv)
 }
 
 DCC *
-dcc_write_chat (char *nick, char *text)
+dcc_write_chat (const char *nick, const char *text)
 {
-	::dcc::DCC *dcc;
 	int len;
 
-	dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
+	auto dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
 	if (!dcc)
 		dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
 	if (dcc && dcc->dccstat == STAT_ACTIVE)
@@ -2067,7 +2066,6 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 {
 	char outbuf[512];
 	GStatBuf st;
-	::dcc::DCC *dcc;
 
 	file = expand_homedir (file);
 
@@ -2094,7 +2092,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 		return;
 	}
 
-	dcc = new_dcc ();
+	auto dcc = new_dcc ();
 	if (!dcc)
 	{
 		free (file);
