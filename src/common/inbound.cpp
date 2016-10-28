@@ -67,6 +67,7 @@
 #include "session.hpp"
 #include "session_logging.hpp"
 #include "string_span_output.hpp"
+#include "glist_iterators.hpp"
 
 namespace dcc = hexchat::dcc;
 
@@ -559,15 +560,14 @@ find_unused_session (const server &serv)
 }
 
 static session *
-find_session_from_waitchannel (const char *chan, const server &serv)
+find_session_from_waitchannel (gsl::cstring_span<> chan, const server &serv)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
 	{
-		auto sess = static_cast<session *>(list->data);
-		if (sess->server == &serv && sess->channel[0] == 0 && sess->type == session::SESS_CHANNEL)
+		if (sess.server == &serv && sess.channel[0] == 0 && sess.type == session::SESS_CHANNEL)
 		{
-			if (!serv.p_cmp (chan, sess->waitchannel))
-				return sess;
+			if (!serv.compare(to_string_ref(chan), sess.waitchannel))
+				return &sess;
 		}
 	}
 	return nullptr;
@@ -579,13 +579,13 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 {
 	session *sess;
 	bool found_unused = false;
-
+	const auto chan_span = gsl::ensure_z(chan);
 	/* already joined? probably a bnc */
 	sess = find_channel (serv, chan);
 	if (!sess)
 	{
 		/* see if a window is waiting to join this channel */
-		sess = find_session_from_waitchannel (chan, serv);
+		sess = find_session_from_waitchannel (chan_span, serv);
 		if (!sess)
 		{
 			/* find a "<none>" tab and use that */
@@ -622,7 +622,7 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 	/* sends a MODE */
 	serv.p_join_info (chan);
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_UJOIN, sess, gsl::ensure_z(nick), gsl::ensure_z(chan), gsl::ensure_z(ip), nullptr, 0,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_UJOIN, sess, gsl::ensure_z(nick), chan_span, gsl::ensure_z(ip), nullptr, 0,
 								  tags_data->timestamp);
 
 	if (prefs.hex_irc_who_join)
