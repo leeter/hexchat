@@ -345,7 +345,7 @@ userlist_change(struct session *sess, const std::string & oldname, const std::st
 	auto user = std::find_if(
 		sess->usertree.begin(),
 		sess->usertree.end(),
-		[sess, oldname](const std::unique_ptr<User> &u){
+		[sess, oldname](const auto &u){
 			return sess->server->compare(oldname, u->nick) == 0;
 		});
 	if (user == sess->usertree.end())
@@ -396,7 +396,7 @@ userlist_remove_user (struct session *sess, struct User *user)
 		std::remove_if(
 			sess->usertree.begin(),
 			sess->usertree.end(),
-			[user](const std::unique_ptr<User>& ptr){
+			[user](const auto & ptr){
 				return user == ptr.get();
 			}));
 }
