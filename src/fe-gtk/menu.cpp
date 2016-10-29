@@ -144,7 +144,7 @@ nick_command_parse(session *sess, const boost::string_ref & cmd, const boost::st
 			host = buf + 1;
 	} else*/
 	{
-		user = userlist_find (sess, nick);
+		user = userlist_find (*sess, nick);
 		if (user)
 		{
 			if (user->hostname)
@@ -727,7 +727,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, const std::string &nick, in
 		menu_quick_item (nullptr, nullptr, menu, XCMENU_SHADED, nullptr, nullptr);
 	} else
 	{
-		user = userlist_find (sess, nick);	/* lasttalk is channel specific */
+		user = userlist_find (*sess, nick);	/* lasttalk is channel specific */
 		if (!user)
 			user = userlist_find_global (current_sess->server, nick);
 		if (user)

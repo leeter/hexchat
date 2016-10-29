@@ -152,7 +152,7 @@ namespace{
 void
 userlist_set_away (struct session *sess, const char nick[], bool away)
 {
-	auto user = userlist_find (sess, nick);
+	auto user = userlist_find (*sess, nick);
 	if (user)
 	{
 		if (user->away != away)
@@ -169,7 +169,7 @@ userlist_set_away (struct session *sess, const char nick[], bool away)
 void
 userlist_set_account (struct session *sess, const char nick[], const char account[])
 {
-	auto user = userlist_find (sess, nick);
+	auto user = userlist_find (*sess, nick);
 	if (user)
 	{
 		if (strcmp (account, "*") == 0)
@@ -186,7 +186,7 @@ bool
 userlist_add_hostname (struct session *sess, const char nick[], const char hostname[],
 							const char realname[], const char servername[], const char account[], unsigned int away)
 {
-	auto user = userlist_find (sess, nick);
+	auto user = userlist_find (*sess, nick);
 	if (user)
 	{
 		bool do_rehash = false;
@@ -241,15 +241,15 @@ userlist_clear (session *sess)
 	fe_userlist_numbers (*sess);
 }
 
-struct User * userlist_find(struct session *sess, const boost::string_ref & name)
+User * userlist_find(session &sess, const boost::string_ref & name)
 {
 	auto result = std::find_if(
-		sess->usertree_alpha.cbegin(),
-		sess->usertree_alpha.cend(),
-		[sess, name](const User* u){
-			return sess->server->compare(name, u->nick) == 0;
+		sess.usertree_alpha.cbegin(),
+		sess.usertree_alpha.cend(),
+		[&sess, name](const User* u){
+			return sess.server->compare(name, u->nick) == 0;
 		});
-	if (result != sess->usertree_alpha.cend())
+	if (result != sess.usertree_alpha.cend())
 		return *result;
 
 	return nullptr;
@@ -260,7 +260,7 @@ userlist_find_global (struct server *serv, const std::string & name)
 {
 	for(auto sess : serv->sessions)
 	{
-		auto user = userlist_find(sess, name);
+		auto user = userlist_find(*sess, name);
 		if (user) {
 			return user;
 		}
@@ -363,7 +363,7 @@ userlist_change(struct session *sess, const std::string & oldname, const std::st
 bool
 userlist_remove (struct session *sess, const char name[])
 {
-	auto user = userlist_find (sess, name);
+	auto user = userlist_find (*sess, name);
 	if (!user)
 		return false;
 

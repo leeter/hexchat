@@ -233,7 +233,7 @@ match_nick (const char *word, int *start, int *end)
 
 	glib_string str(g_strndup (&word[*start], *end - *start));
 
-	if (!userlist_find (current_sess, str.get()))
+	if (!userlist_find (*current_sess, str.get()))
 	{
 		return false;
 	}

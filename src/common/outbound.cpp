@@ -402,7 +402,7 @@ create_mask(session * sess, std::string mask, const boost::string_ref &mode, con
 	int type;
 	std::ostringstream buf;
 
-	auto user = userlist_find (sess, mask);
+	auto user = userlist_find (*sess, mask);
 	if (user && user->hostname)  /* it's a nickname, let's find a proper ban mask */
 	{
 		const std::string & p2 = deop ? user->nick : std::string{};
@@ -1273,7 +1273,7 @@ cmd_dns (struct session *sess, char *word[], char *[])
 	if (*nick)
 	{
 		message_tags_data no_tags = message_tags_data();
-		auto user = userlist_find (sess, nick);
+		auto user = userlist_find (*sess, nick);
 		if (user)
 		{
 			if (user->hostname)
@@ -2195,7 +2195,7 @@ cmd_kickban (struct session *sess, char *word[], char *word_eol[])
 	{
 		/* if the reason is a 1 digit number, treat it as a bantype */
 
-		user = userlist_find (sess, nick);
+		user = userlist_find (*sess, nick);
 
 		if (std::isdigit (reason[0], std::locale()) && reason[1] == 0)
 		{

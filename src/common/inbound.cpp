@@ -112,19 +112,19 @@ find_session_from_nick (const char *nick, server &serv)
 
 	if (serv.front_session)
 	{
-		if (userlist_find (serv.front_session, nick))
+		if (userlist_find (*serv.front_session, nick))
 			return serv.front_session;
 	}
 
 	if (current_sess && current_sess->server == &serv)
 	{
-		if (userlist_find (current_sess, nick))
+		if (userlist_find (*current_sess, nick))
 			return current_sess;
 	}
 
 	for (auto sess : serv.sessions)
 	{
-		if (userlist_find (sess, nick))
+		if (userlist_find (*sess, nick))
 			return sess;
 	}
 	return nullptr;
@@ -201,7 +201,7 @@ inbound_privmsg (server &serv, char *from, char *ip, char *text, bool id,
 		nodiag = true; /* We don't want it to look like a normal message in front sess */
 	}
 
-	auto user = userlist_find (sess, from);
+	auto user = userlist_find (*sess, from);
 	if (user)
 	{
 		user->lasttalk = User::clock::now();
@@ -385,7 +385,7 @@ inbound_action (session *sess, const std::string& chan, char *from, char *ip, ch
 		lastact_update (sess);
 	}
 
-	user = userlist_find (sess, from);
+	user = userlist_find (*sess, from);
 	if (user)
 	{
 		nickchar[0] = user->prefix[0];
@@ -460,7 +460,7 @@ inbound_chanmsg (server &serv, session *sess, gsl::cstring_span<> chan, gsl::cst
 		lastact_update (sess);
 	}
 
-	auto user = userlist_find (sess, from_string_ref);
+	auto user = userlist_find (*sess, from_string_ref);
 	char nickchar[2] = "\000";
 	if (user)
 	{
@@ -813,7 +813,7 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 		if (sess == current_sess)
 			was_on_front_session = true;
 		struct User *user;
-		if ((user = userlist_find (sess, nick)))
+		if (user = userlist_find (*sess, nick))
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
 											tags_data->timestamp);
