@@ -1634,7 +1634,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		switch (hash)
 		{
 		case 0x2de2ee:	/* away */
-			return ((struct User *)data)->away;
+			return static_cast<bool>(((struct User *)data)->away);
 		case 0x4705f29b: /* selected */
 			return ((struct User *)data)->selected;
 		}

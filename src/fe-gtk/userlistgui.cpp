@@ -313,7 +313,7 @@ fe_userlist_rehash (session *sess, struct User const *user)
 		return;
 
 	int nick_color = 0;
-	if (prefs.hex_away_track && user->away)
+	if (prefs.hex_away_track && user->away == user_status::away)
 		nick_color = COL_AWAY;
 	else if (prefs.hex_gui_ulist_color)
 		nick_color = text_color_of(user->nick);
@@ -332,7 +332,7 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, bool sel)
 	GtkTreeIter iter;
 	int nick_color = 0;
 
-	if (prefs.hex_away_track && newuser->away)
+	if (prefs.hex_away_track && newuser->away == user_status::away)
 		nick_color = COL_AWAY;
 	else if (prefs.hex_gui_ulist_color)
 		nick_color = text_color_of(newuser->nick);

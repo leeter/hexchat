@@ -3492,7 +3492,7 @@ cmd_userlist (struct session *sess, char *[],
 		const auto seconds_ago = std::chrono::duration_cast<std::chrono::seconds>(lt);
 		PrintTextf(sess,
 			boost::format("\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%ld\n") %
-			user->nick % (user->hostname ? user->hostname->c_str() : "") % user->op % user->voice % user->away % lt.count());
+			user->nick % (user->hostname ? user->hostname->c_str() : "") % user->op % user->voice % static_cast<bool>(user->away) % lt.count());
 	}
 	return true;
 }

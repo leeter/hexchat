@@ -73,12 +73,6 @@ namespace{
 	}
 
 	static int
-		nick_cmp_alpha(struct User *user1, struct User *user2, server *serv)
-	{
-		return serv->compare(user1->nick, user2->nick);
-	}
-
-	static int
 		nick_cmp(const User &user1, const User &user2, const std::locale &locale)
 	{
 		auto& collate = std::use_facet<std::collate<char>>(locale);
@@ -115,7 +109,7 @@ namespace{
 			return sess.server->current_locale()(a->nick, b->nick);
 		});
 
-		auto result = std::find_if(
+		const auto result = std::find_if(
 			sess.usertree.cbegin(),
 			sess.usertree.cend(),
 			[nick, &sess](const std::unique_ptr<User> & ptr){
@@ -129,40 +123,42 @@ namespace{
 	-1: duplicate
 	*/
 	static int
-		userlist_insertname(session *sess, std::unique_ptr<User> newuser)
+		userlist_insertname(session &sess, std::unique_ptr<User> newuser)
 	{
-		auto result = std::find_if(
-			sess->usertree.cbegin(),
-			sess->usertree.cend(),
-			[sess, &newuser](const std::unique_ptr<User>& a){
-			return sess->server->compare(a->nick, newuser->nick) == 0;
+		const auto result = std::find_if(
+			sess.usertree.cbegin(),
+			sess.usertree.cend(),
+			[&sess, &newuser](const auto& a){
+			return sess.server->compare(a->nick, newuser->nick) == 0;
 		});
-		if (result != sess->usertree.cend())
+		if (result != sess.usertree.cend())
 		{
 			return -1;
 		}
 
-		const std::string& nick = newuser->nick;
-		sess->usertree.emplace_back(std::move(newuser));
-		sess->usertree_alpha.emplace_back(sess->usertree.back().get());
-		return userlist_resort(*sess, nick);
+		const auto& nick = newuser->nick;
+		sess.usertree.emplace_back(std::move(newuser));
+		sess.usertree_alpha.emplace_back(sess.usertree.back().get());
+		return userlist_resort(sess, nick);
 	}
 } // end anonymous namespace
 
 void
-userlist_set_away (struct session *sess, const char nick[], bool away)
+userlist_set_away (session &sess, const boost::string_ref& nick, user_status away)
 {
-	auto user = userlist_find (*sess, nick);
+	auto user = userlist_find (sess, nick);
 	if (user)
 	{
-		if (user->away != away)
-		{
-			user->away = away;
-			/* rehash GUI */
-			fe_userlist_rehash (sess, user);
-			if (away)
-				fe_userlist_update (sess, user);
-		}
+		return;
+	}
+
+	if (user->away != away)
+	{
+		user->away = away;
+		/* rehash GUI */
+		fe_userlist_rehash(&sess, user);
+		if (away == user_status::away)
+			fe_userlist_update(&sess, user);
 	}
 }
 
@@ -204,7 +200,7 @@ userlist_add_hostname (struct session *sess, const char nick[], const char hostn
 			user->account = std::string(account);
 		if (away != 0xff)
 		{
-			bool actually_away = !!away;
+			const auto actually_away = away ? user_status::away : user_status::present;
 			if (user->away != actually_away)
 				do_rehash = true;
 			user->away = actually_away;
@@ -269,22 +265,22 @@ userlist_find_global (struct server *serv, const std::string & name)
 }
 
 static void
-update_counts (session *sess, struct User *user, char prefix,
+update_counts (session &sess, User &user, char prefix,
 					bool level, int offset)
 {
 	switch (prefix)
 	{
 	case '@':
-		user->op = level;
-		sess->ops += offset;
+		user.op = level;
+		sess.ops += offset;
 		break;
 	case '%':
-		user->hop = level;
-		sess->hops += offset;
+		user.hop = level;
+		sess.hops += offset;
 		break;
 	case '+':
-		user->voice = level;
-		sess->voices += offset;
+		user.voice = level;
+		sess.voices += offset;
 		break;
 	}
 }
@@ -330,7 +326,7 @@ userlist_update_mode (session *sess, const char name[], char mode, char sign)
 	user->prefix[0] = get_nick_prefix (sess->server, user->access);
 
 	/* update the various counts using the CHANGED prefix only */
-	update_counts (sess, user, prefix, level, offset);
+	update_counts (*sess, *user, prefix, level, offset);
 	
 	int pos = userlist_resort(*sess, user->nick);
 
@@ -434,8 +430,8 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 			user->realname = std::string (realname);
 	}
 
-	User * user_ref = user.get();
-	auto row = userlist_insertname (sess, std::move(user));
+	auto user_ref = user.get();
+	auto row = userlist_insertname (*sess, std::move(user));
 
 	/* duplicate? some broken servers trigger this */
 	if (row == -1)
@@ -449,7 +445,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 	  for /NAMES - though they should. */
 	while (prefix_chars)
 	{
-		update_counts (sess, user_ref, name[0], true, 1);
+		update_counts (*sess, *user_ref, name[0], true, 1);
 		name++;
 		prefix_chars--;
 	}

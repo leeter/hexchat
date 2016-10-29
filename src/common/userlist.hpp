@@ -31,6 +31,11 @@
 #include "sessfwd.hpp"
 #include "serverfwd.hpp"
 
+enum class user_status: bool {
+	present = false,
+	away = true
+};
+
 struct User
 {
 	using clock = std::chrono::system_clock;
@@ -48,7 +53,7 @@ struct User
 	bool hop;
 	bool voice;
 	bool me;
-	bool away;
+	user_status away;
 	bool selected;
 };
 
@@ -75,7 +80,8 @@ enum{ USERACCESS_SIZE = 12 };
 bool userlist_add_hostname (session *sess, const char nick[],
 									const char hostname[], const char realname[],
 									const char servername[], const char account[], unsigned int away);
-void userlist_set_away (session *sess, const char nick[], bool away);
+
+void userlist_set_away (session &sess, const boost::string_ref& nick, user_status away);
 void userlist_set_account (session *sess, const char nick[], const char account[]);
 struct User *userlist_find(session &sess, const boost::string_ref & name);
 struct User *userlist_find_global (server *serv, const std::string & name);

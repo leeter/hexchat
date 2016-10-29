@@ -661,7 +661,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	}
 	menu_quick_item (nullptr, buf, submenu, XCMENU_MARKUP, nullptr, nullptr);
 
-	if (user->away)
+	if (user->away == user_status::away)
 	{
 		auto away = current_sess->server->get_away_message(user->nick);// server_away_find_message(current_sess->server, user->nick);
 		if (away)

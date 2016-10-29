@@ -1025,7 +1025,7 @@ inbound_away (server &serv, char *nick, char *msg,
 
 	for (auto sess : serv.sessions)
 	{
-		userlist_set_away (sess, nick, true);
+		userlist_set_away (*sess, nick, user_status::away);
 	}
 }
 
@@ -1035,7 +1035,7 @@ inbound_away_notify (const server &serv, char *nick, char *reason,
 {
 	for (auto sess : serv.sessions)
 	{
-		userlist_set_away (sess, nick, reason ? true : false);
+		userlist_set_away (*sess, nick, reason ? user_status::away : user_status::present);
 		if (sess == serv.front_session && notify_is_in_list (serv, nick))
 		{
 			if (reason)
@@ -1307,11 +1307,11 @@ inbound_login_start (session *sess, char *nick, char *servname,
 }
 
 static void
-inbound_set_all_away_status (const server &serv, const char *nick, bool away)
+inbound_set_all_away_status (const server &serv, const boost::string_ref & nick, user_status away)
 {
 	for (auto sess : serv.sessions)
 	{
-		userlist_set_away (sess, nick, away);
+		userlist_set_away (*sess, nick, away);
 	}
 }
 
@@ -1322,7 +1322,7 @@ inbound_uaway (server &serv, const message_tags_data *tags_data)
 	serv.away_time = time (nullptr);
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, true);
+	inbound_set_all_away_status (serv, serv.nick, user_status::away);
 }
 
 void
@@ -1332,7 +1332,7 @@ inbound_uback (server &serv, const message_tags_data *tags_data)
 	serv.reconnect_away = false;
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, false);
+	inbound_set_all_away_status (serv, serv.nick, user_status::present);
 }
 
 void
@@ -1355,7 +1355,7 @@ inbound_user_info_start (session *sess, const char *nick,
 								 const message_tags_data *tags_data)
 {
 	/* set away to false now, 301 may turn it back on */
-	inbound_set_all_away_status (*(sess->server), nick, false);
+	inbound_set_all_away_status (*(sess->server), nick, user_status::present);
 }
 
 /* reporting new information found about this user. chan may be nullptr.
