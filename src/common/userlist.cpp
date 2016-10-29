@@ -258,17 +258,12 @@ struct User * userlist_find(struct session *sess, const boost::string_ref & name
 struct User *
 userlist_find_global (struct server *serv, const std::string & name)
 {
-	GSList *list = sess_list;
-	while (list)
+	for(auto sess : serv->sessions)
 	{
-		session *sess = static_cast<session *>(list->data);
-		if (sess->server == serv)
-		{
-			auto user = userlist_find(sess, name);
-			if (user)
-				return user;
+		auto user = userlist_find(sess, name);
+		if (user) {
+			return user;
 		}
-		list = list->next;
 	}
 	return nullptr;
 }

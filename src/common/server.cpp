@@ -2041,8 +2041,6 @@ server::get_network (bool fallback) const
 void
 server::set_name (const std::string& name)
 {
-	GSList *list = sess_list;
-	session *sess;
 	std::string name_to_set = name;
 
 	if (name.empty())
@@ -2054,12 +2052,9 @@ server::set_name (const std::string& name)
 		safe_strcpy (this->servername, name.c_str());
 	}
 
-	while (list)
+	for (auto sess : this->sessions)
 	{
-		sess = (session *) list->data;
-		if (sess->server == this)
-			fe_set_title (*sess);
-		list = list->next;
+		fe_set_title (*sess);
 	}
 
 	if (this->server_session->type == session::SESS_SERVER)

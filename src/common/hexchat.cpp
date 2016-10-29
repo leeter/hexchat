@@ -221,28 +221,28 @@ is_session (session * sess)
 
 session * find_dialog(const server &serv, const boost::string_ref &nick)
 {
-	sess_itr end;
+	auto end = serv.sessions.end();
 	auto result = std::find_if(
-		sess_itr(sess_list),
+		serv.sessions.begin(),
 		end,
-		[&nick, &serv](const session& sess)
+		[&nick, &serv](const auto sess)
 		{
-			return (sess.server == &serv && sess.type == session::SESS_DIALOG) && !serv.compare(nick, sess.channel);
+			return (sess->type == session::SESS_DIALOG) && !serv.compare(nick, sess->channel);
 		});
-	return result != end ? &(*result) : nullptr;
+	return result != end ? *result : nullptr;
 }
 
 session *find_channel(const server &serv, const boost::string_ref &chan)
 {
-	sess_itr end;
+	auto end = serv.sessions.end();
 	auto result = std::find_if(
-		sess_itr(sess_list),
+		serv.sessions.begin(),
 		end,
-		[&chan, &serv](const session& sess)
+		[&chan, &serv](const auto sess)
 	{
-		return (sess.server == &serv && sess.type == session::SESS_CHANNEL) && !serv.compare(chan, sess.channel);
+		return sess->type == session::SESS_CHANNEL && !serv.compare(chan, sess->channel);
 	});
-	return result != end ? &(*result) : nullptr;
+	return result != end ? *result : nullptr;
 }
 
 void
@@ -293,18 +293,11 @@ nbexec::nbexec(session *sess)
 static void
 send_quit_or_part (session * killsess)
 {
-	bool willquit = true;
+	//bool willquit = true;
 	server *killserv = killsess->server;
-
+	const auto end = killserv->sessions.cend();
 	/* check if this is the last session using this server */
-	for(const auto & sess : glib_helper::glist_iterable<session>(sess_list))
-	{
-		if (sess.server == killserv && (&sess) != killsess)
-		{
-			willquit = false;
-			break;
-		}
-	}
+	auto willquit = killserv->sessions.empty();
 
 	if (hexchat_is_quitting)
 		willquit = true;
@@ -335,7 +328,7 @@ session_free (session *killsess)
 {
 	server *killserv = killsess->server;
 	int oldidx;
-
+	killserv->sessions.erase(killsess);
 	plugin_emit_dummy_print (killsess, "Close Context");
 
 	if (current_tab == killsess)
@@ -383,7 +376,7 @@ session_free (session *killsess)
 		if (sess_list)
 			current_sess = static_cast<session*>(sess_list->data);
 	}
-
+	
 	delete killsess;
 
 	if (!sess_list && !in_hexchat_exit)

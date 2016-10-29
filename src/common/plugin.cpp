@@ -1067,21 +1067,17 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 			if (channel == nullptr)
 				return serv->front_session;
 
-			for(auto clist = sess_list; clist; clist = g_slist_next(clist))
+			for(auto sess : serv->sessions)
 			{
-				auto sess = static_cast<session*>(clist->data);
-				if (sess->server == serv)
+				if (rfc_casecmp (channel, sess->channel) == 0)
 				{
-					if (rfc_casecmp (channel, sess->channel) == 0)
+					if (sess->server == pi->context->server)
 					{
-						if (sess->server == pi->context->server)
-						{
-							g_slist_free (sessions);
-							return sess;
-						} else
-						{
-							sessions = g_slist_prepend (sessions, sess);
-						}
+						g_slist_free (sessions);
+						return sess;
+					} else
+					{
+						sessions = g_slist_prepend (sessions, sess);
 					}
 				}
 			}

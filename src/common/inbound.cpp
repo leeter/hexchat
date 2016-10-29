@@ -122,16 +122,12 @@ find_session_from_nick (const char *nick, server &serv)
 			return current_sess;
 	}
 
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
-		{
-			if (userlist_find (sess, nick))
-				return sess;
-		}
+		if (userlist_find (sess, nick))
+			return sess;
 	}
-	return 0;
+	return nullptr;
 }
 
 static session *
@@ -509,31 +505,27 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 		safe_strcpy (serv.nick, newnick, NICKLEN);
 	}
 
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
+		if (userlist_change(sess, nick, newnick) || (me && sess->type == session::SESS_SERVER))
 		{
-			if (userlist_change(sess, nick, newnick) || (me && sess->type == session::SESS_SERVER))
+			if (!quiet)
 			{
-				if (!quiet)
-				{
-					if (me)
-						EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, gsl::ensure_z(nick),
-							gsl::ensure_z(newnick), nullptr, nullptr, 0,
-													  tags_data->timestamp);
-					else
-						EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANGENICK, sess, gsl::ensure_z(nick),
-							gsl::ensure_z(newnick), nullptr, nullptr, 0, tags_data->timestamp);
-				}
+				if (me)
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, gsl::ensure_z(nick),
+						gsl::ensure_z(newnick), nullptr, nullptr, 0,
+													tags_data->timestamp);
+				else
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANGENICK, sess, gsl::ensure_z(nick),
+						gsl::ensure_z(newnick), nullptr, nullptr, 0, tags_data->timestamp);
 			}
-			if (sess->type == session::SESS_DIALOG && !serv.p_cmp(sess->channel, nick))
-			{
-				safe_strcpy (sess->channel, newnick, CHANLEN);
-				fe_set_channel (sess);
-			}
-			fe_set_title (*sess);
 		}
+		if (sess->type == session::SESS_DIALOG && !serv.p_cmp(sess->channel, nick))
+		{
+			safe_strcpy (sess->channel, newnick, CHANLEN);
+			fe_set_channel (sess);
+		}
+		fe_set_title (*sess);
 	}
 
 	dcc::dcc_change_nick (serv, nick, newnick);
@@ -546,11 +538,9 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 static session *
 find_unused_session (const server &serv)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session *>(list->data);
-		if (sess->type == session::SESS_CHANNEL && sess->channel[0] == 0 &&
-			 sess->server == &serv)
+		if (sess->type == session::SESS_CHANNEL && sess->channel[0] == 0)
 		{
 			if (sess->waitchannel[0] == 0)
 				return sess;
@@ -562,12 +552,12 @@ find_unused_session (const server &serv)
 static session *
 find_session_from_waitchannel (gsl::cstring_span<> chan, const server &serv)
 {
-	for(auto & sess : glib_helper::glist_iterable<session>(sess_list))
+	for(auto sess : serv.sessions)
 	{
-		if (sess.server == &serv && sess.channel[0] == 0 && sess.type == session::SESS_CHANNEL)
+		if (sess->channel[0] == 0 && sess->type == session::SESS_CHANNEL)
 		{
-			if (!serv.compare(to_string_ref(chan), sess.waitchannel))
-				return &sess;
+			if (!serv.compare(to_string_ref(chan), sess->waitchannel))
+				return sess;
 		}
 	}
 	return nullptr;
@@ -818,25 +808,21 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 {
 	bool was_on_front_session = false;
 
-	for(auto list = sess_list; list; list = g_slist_next(list))
+	for(auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session *>(list->data);
-		if (sess->server == &serv)
+		if (sess == current_sess)
+			was_on_front_session = true;
+		struct User *user;
+		if ((user = userlist_find (sess, nick)))
 		{
-			if (sess == current_sess)
-				was_on_front_session = true;
-			struct User *user;
-			if ((user = userlist_find (sess, nick)))
-			{
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
-											  tags_data->timestamp);
-				userlist_remove_user (sess, user);
-			}
-			else if (sess->type == session::SESS_DIALOG && !serv.p_cmp(sess->channel, nick))
-			{
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
-											  tags_data->timestamp);
-			}
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
+											tags_data->timestamp);
+			userlist_remove_user (sess, user);
+		}
+		else if (sess->type == session::SESS_DIALOG && !serv.p_cmp(sess->channel, nick))
+		{
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
+											tags_data->timestamp);
 		}
 	}
 
@@ -845,13 +831,11 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 
 void
 inbound_account (const server &serv, const char *nick, const char *account,
-					  const message_tags_data *tags_data)
+					  const message_tags_data *)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
-			userlist_set_account (sess, nick, account);
+		userlist_set_account (sess, nick, account);
 	}
 }
 
@@ -899,12 +883,11 @@ inbound_ping_reply (session *sess, char *timestring, char *from,
 }
 
 static session *
-find_session_from_type (int type, server &serv)
+find_session_from_type (session::session_type type, server &serv)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->type == type && sess->server == &serv)
+		if (sess->type == type)
 			return sess;
 	}
 	return nullptr;
@@ -1040,11 +1023,9 @@ inbound_away (server &serv, char *nick, char *msg,
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS5, sess, gsl::ensure_z(nick), gsl::ensure_z(msg), nullptr, nullptr, 0,
 									  tags_data->timestamp);
 
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
-			userlist_set_away (sess, nick, true);
+		userlist_set_away (sess, nick, true);
 	}
 }
 
@@ -1052,21 +1033,17 @@ void
 inbound_away_notify (const server &serv, char *nick, char *reason,
 							const message_tags_data *tags_data)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
+		userlist_set_away (sess, nick, reason ? true : false);
+		if (sess == serv.front_session && notify_is_in_list (serv, nick))
 		{
-			userlist_set_away (sess, nick, reason ? true : false);
-			if (sess == serv.front_session && notify_is_in_list (serv, nick))
-			{
-				if (reason)
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYAWAY, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), nullptr,
-												  nullptr, 0, tags_data->timestamp);
-				else
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, gsl::ensure_z(nick), nullptr, nullptr,
-												  nullptr, 0, tags_data->timestamp);
-			}
+			if (reason)
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYAWAY, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), nullptr,
+												nullptr, 0, tags_data->timestamp);
+			else
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, gsl::ensure_z(nick), nullptr, nullptr,
+												nullptr, 0, tags_data->timestamp);
 		}
 	}
 }
@@ -1077,14 +1054,10 @@ inbound_nameslist_end (const server &serv, const std::string & chan,
 {
 	if (chan == "*")
 	{
-		for (auto list = sess_list; list; list = g_slist_next(list))
+		for (auto sess : serv.sessions)
 		{
-			auto sess = static_cast<session*>(list->data);
-			if (sess->server == &serv)
-			{
-				sess->end_of_names = true;
-				sess->ignore_names = false;
-			}
+			sess->end_of_names = true;
+			sess->ignore_names = false;
 		}
 		return true;
 	}
@@ -1110,40 +1083,35 @@ check_autojoin_channels (server &serv)
 	std::vector<favchannel> sess_channels;      /* joined channels that are not in the favorites list */
 	int i = 0;
 	/* If there's a session (i.e. this is a reconnect), autojoin to everything that was open previously. */
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-
-		if (sess->server == &serv)
+		if (sess->willjoinchannel[0] != 0)
 		{
-			if (sess->willjoinchannel[0] != 0)
+			strcpy(sess->waitchannel, sess->willjoinchannel);
+			sess->willjoinchannel[0] = 0;
+
+			const auto fav = servlist_favchan_find(serv.network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
+
+																						/* session->channelkey is initially unset for channels joined from the favorites. You have to fill them up manually from favorites settings. */
+			if (fav)
 			{
-				strcpy (sess->waitchannel, sess->willjoinchannel);
-				sess->willjoinchannel[0] = 0;
-
-				auto fav = servlist_favchan_find (serv.network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
-
-				/* session->channelkey is initially unset for channels joined from the favorites. You have to fill them up manually from favorites settings. */
-				if (fav)
+				/* session->channelkey is set if there was a key change during the session. In that case, use the session key, not the one from favorites. */
+				if (fav->key && !strlen(sess->channelkey))
 				{
-					/* session->channelkey is set if there was a key change during the session. In that case, use the session key, not the one from favorites. */
-					if (fav->key && !strlen (sess->channelkey))
-					{
-						safe_strcpy (sess->channelkey, fav->key->c_str(), sizeof (sess->channelkey));
-					}
+					safe_strcpy(sess->channelkey, fav->key->c_str(), sizeof(sess->channelkey));
 				}
-
-				/* for easier checks, ensure that favchannel->key is just nullptr when session->channelkey is empty i.e. '' */
-				if (strlen (sess->channelkey))
-				{
-					sess_channels.push_back(favchannel{ sess->waitchannel, boost::make_optional<std::string>(sess->channelkey) });
-				}
-				else
-				{
-					sess_channels.push_back(favchannel{ sess->waitchannel, boost::none });
-				}
-				i++;
 			}
+
+			/* for easier checks, ensure that favchannel->key is just nullptr when session->channelkey is empty i.e. '' */
+			if (strlen(sess->channelkey))
+			{
+				sess_channels.emplace_back(favchannel{ sess->waitchannel, boost::make_optional<std::string>(sess->channelkey) });
+			}
+			else
+			{
+				sess_channels.emplace_back(favchannel{ sess->waitchannel, boost::none });
+			}
+			i++;
 		}
 	}
 
@@ -1341,11 +1309,9 @@ inbound_login_start (session *sess, char *nick, char *servname,
 static void
 inbound_set_all_away_status (const server &serv, const char *nick, bool away)
 {
-	for (auto list = sess_list; list; list = g_slist_next(list))
+	for (auto sess : serv.sessions)
 	{
-		auto sess = static_cast<session*>(list->data);
-		if (sess->server == &serv)
-			userlist_set_away (sess, nick, away);
+		userlist_set_away (sess, nick, away);
 	}
 }
 
@@ -1424,10 +1390,9 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 	else
 	{
 		/* came from WHOIS, not channel specific */
-		for (auto list = sess_list; list; list = g_slist_next(list))
+		for (auto sess : serv->sessions)
 		{
-			auto sess = static_cast<session*>(list->data);
-			if (sess->type == session::SESS_CHANNEL && sess->server == serv)
+			if (sess->type == session::SESS_CHANNEL)
 			{
 				userlist_add_hostname (sess, nick, uhost.get(), realname, servname, account, away);
 			}

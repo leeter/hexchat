@@ -266,9 +266,9 @@ static session *
 session_new(server *serv, const char *from, int type, bool focus)
 {
 	session *sess = new session(serv, from, type);
-
+	
 	sess_list = g_slist_prepend(sess_list, sess);
-
+	serv->sessions.emplace(sess);
 	fe_new_window(sess, focus);
 
 	return sess;

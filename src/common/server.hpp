@@ -24,12 +24,14 @@ extern GSList *serv_list;
 #include <string>
 #include <utility>
 #include <unordered_map>
+#include <unordered_set>
 #include <chrono>
 #include <locale>
 #include <boost/chrono.hpp>
 #include <boost/optional.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <tcpfwd.hpp>
+#include <gsl.h>
 
 struct server
 {
@@ -108,7 +110,7 @@ public:
 	boost::optional<const std::pair<bool, std::string>& > get_away_message(const std::string & nick) const NOEXCEPT;
 	void save_away_message(const std::string& nick, const boost::optional<std::string>& message);
 
-
+	std::unordered_set<session*> sessions;
 	int port;
 	int sok;					/* is equal to sok4 or sok6 (the one we are using) */
 	int sok4;					/* tcp4 socket */
