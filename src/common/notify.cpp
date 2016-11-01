@@ -307,7 +307,7 @@ notify_flush_watches(server & serv, const std::vector<std::string> &toSend)
 {
 	using namespace std::string_literals;
 	std::ostringstream buffer;
-	buffer << (serv.supports_monitor ? u8"MONITOR + " : u8"WATCH")
+	buffer << (serv.supports_monitor ? u8"MONITOR + " : u8"WATCH +")
 		<< boost::join(toSend, serv.supports_monitor ? u8","s: u8" +"s);
 	serv.p_raw (buffer.str());
 }
