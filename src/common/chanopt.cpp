@@ -53,23 +53,27 @@ namespace {
 static bool chanopt_open = false;
 static bool chanopt_changed = false;
 
+template<size_t N>
+constexpr boost::string_ref make_ref(const char(&in)[N]) {
+	return boost::string_ref(in, N - 1);
+}
 
 struct channel_options
 {
-	const std::string name;
+	boost::string_ref name;
 	const char *alias;	/* old names from 2.8.4 */
 };
 
-static const std::array<channel_options, 7> chanopt =
+static constexpr std::array<channel_options, 7> chanopt =
 { {
-	{ "alert_beep",  "BEEP"},
-	{ "alert_taskbar", nullptr},
-	{ "alert_tray", "TRAY"},
+	{ make_ref("alert_beep"),  "BEEP"},
+	{ make_ref("alert_taskbar"), nullptr},
+	{ make_ref("alert_tray"), "TRAY"},
 
-	{ "text_hidejoinpart", "CONFMODE" },
-	{ "text_logging", nullptr },
-	{ "text_scrollback", nullptr},
-	{ "text_strip", nullptr },
+	{ make_ref("text_hidejoinpart"), "CONFMODE" },
+	{ make_ref("text_logging"), nullptr },
+	{ make_ref("text_scrollback"), nullptr},
+	{ make_ref("text_strip"), nullptr },
 }};
 
 #undef S_F
@@ -121,28 +125,29 @@ int chanopt_command (session *sess, char *word[])
 
 	for(const auto & op : chanopt)
 	{
-		if (find[0] == 0 || match_with_wildcards(find, op.name, /*caseSensitive*/ false) || (op.alias && match(find, op.alias)))
+		const auto op_name = op.name.to_string();
+		if (find[0] == 0 || match_with_wildcards(find, op_name, /*caseSensitive*/ false) || (op.alias && match(find, op.alias)))
 		{
 			if (newval != -1)	/* set new value */
 			{
-				sess->chanopts[op.name] = static_cast<chanopt_val>(newval);
+				sess->chanopts[op_name] = static_cast<chanopt_val>(newval);
 				chanopt_changed = true;
 			}
 
 			if (!quiet)	/* print value */
 			{
 				std::ostringstream buf;
-				buf << op.name;
+				buf << op_name;
 				char t = 3;
 				buf.write(&t, 1);
 				buf << '2';
 
-				auto dots = 20 - op.name.length();
+				auto dots = 20 - op_name.length();
 				std::ostream_iterator<char> itr(buf);
 				for (size_t j = 0; j < dots; ++j)
 					*itr++ = '.';
 				
-				auto val = sess->chanopts[op.name];
+				auto val = sess->chanopts[op_name];
 				PrintTextf(sess, boost::format("%s\0033:\017 %s") % buf.str() % chanopt_value(val));
 			}
 		}
@@ -230,10 +235,11 @@ std::istream &operator>>(std::istream &i, chanopt_in_memory &chanop)
 			chanopt_val value = static_cast<chanopt_val>(std::stoi(second_part));
 			for (const auto &op : chanopt)
 			{
-				if (first_part == op.name ||
+				const auto op_name = op.name.to_string();
+				if (first_part == op_name ||
 				    (op.alias && first_part == op.alias))
 				{
-					chanop.chanopts[op.name] = value;
+					chanop.chanopts[op_name] = value;
 					break;
 				}
 			}
@@ -336,7 +342,7 @@ chanopt_save (session *sess)
 	if (sess->name.empty())
 		return;
 
-	auto network = sess->server->get_network(FALSE);
+	auto network = sess->server->get_network(false);
 	if (network.empty())
 		return;
 
@@ -346,12 +352,13 @@ chanopt_save (session *sess)
 
 	for (const auto& op : chanopt)
 	{
-		auto vals = sess->chanopts[op.name];
-		auto valm = co.chanopts[op.name];
+		const auto op_name = op.name.to_string();
+		auto vals = sess->chanopts[op_name];
+		auto valm = co.chanopts[op_name];
 
 		if (vals != valm)
 		{
-			co.chanopts[op.name] = vals;
+			co.chanopts[op_name] = vals;
 			chanopt_changed = true;
 		}
 	}

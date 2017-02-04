@@ -1139,7 +1139,7 @@ mg_count_dccs (void)
 		[](const dcc::DCC& dcc)
 		{
 			return (dcc.type == dcc::DCC::dcc_type::TYPE_SEND || dcc.type == dcc::DCC::dcc_type::TYPE_RECV) &&
-				dcc.dccstat == STAT_ACTIVE;
+				dcc.dccstat == ::hexchat::dcc_state::active;
 		});
 }
 

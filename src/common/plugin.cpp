@@ -142,7 +142,7 @@ GSList *plugin_list = nullptr;  /* export for plugingui.c */
 static GSList *hook_list = nullptr;
 
 
-extern struct prefs vars[];	/* cfgfiles.c */
+extern const struct prefs vars[];	/* cfgfiles.c */
 
 
 /* unload a plugin and remove it from our linked list */
@@ -1554,7 +1554,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x3284d523: /* sizehigh */
 			return (((dcc::DCC *)data)->size >> 32) & 0xffffffff;
 		case 0xcacdcff2: /* status */
-			return ((dcc::DCC *)data)->dccstat;
+			return static_cast<int>(((dcc::DCC *)data)->dccstat);
 		case 0x368f3a: /* type */
 			return static_cast<int>(((dcc::DCC *)data)->type);
 		}

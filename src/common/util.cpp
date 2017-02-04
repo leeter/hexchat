@@ -682,7 +682,7 @@ void escape_regex(std::string &regex)
 	boost::replace_all(regex, "/", "\\/");
 }
 
-bool match_with_wildcards(const std::string &text, std::string wildcardPattern, bool caseSensitive /*= true*/)
+bool match_with_wildcards(const boost::string_ref text, std::string wildcardPattern, bool caseSensitive /*= true*/)
 {
 	// Escape all regex special chars
 	escape_regex(wildcardPattern);
@@ -692,8 +692,8 @@ bool match_with_wildcards(const std::string &text, std::string wildcardPattern, 
 	boost::replace_all(wildcardPattern, "\\*", ".*");
 
 	boost::regex pattern(wildcardPattern, caseSensitive ? boost::regex::normal : boost::regex::icase);
-
-	return regex_match(text, pattern);
+	const auto text_str = text.to_string();
+	return regex_match(text_str, pattern);
 }
 
 bool

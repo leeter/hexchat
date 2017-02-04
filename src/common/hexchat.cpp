@@ -497,17 +497,17 @@ namespace
 		winsock_raii(const winsock_raii&) = delete;
 		winsock_raii& operator=(const winsock_raii&) = delete;
 	public:
-		explicit winsock_raii() NOEXCEPT
-			:wsadata({ 0 }), success(WSAStartup(MAKEWORD(2, 2), &wsadata) == 0)
+		explicit winsock_raii() noexcept
+			:wsadata(), success(WSAStartup(WINSOCK_VERSION, &wsadata) == 0)
 		{
 		}
-		~winsock_raii() NOEXCEPT
+		~winsock_raii() noexcept
 		{
 			if (success)
 				WSACleanup();
 		}
 
-		explicit operator bool() const NOEXCEPT
+		explicit operator bool() const noexcept
 		{
 			return success;
 		}
@@ -835,7 +835,7 @@ hexmain (int argc, char *argv[])
 #endif
 #endif /* !WIN32 */
 #ifdef WIN32
-	winsock_raii winsock;
+	const winsock_raii winsock;
 
 	if (!winsock)
 	{

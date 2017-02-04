@@ -70,7 +70,7 @@ using SOCKET = int;
 #include "session.hpp"
 
 #ifdef USE_DCC64
-#define BIG_STR_TO_INT(x) strtoull(x,nullptr,10)
+#define BIG_STR_TO_INT(x) std::strtoull(x,nullptr,10)
 #ifdef WIN32
 #define stat _stat64
 #endif
@@ -79,11 +79,11 @@ using SOCKET = int;
 #endif
 namespace fe = ::hexchat::fe::dcc;
 namespace dcc = ::hexchat::dcc;
-static char *dcctypes[] = { "SEND", "RECV", "CHAT", "CHAT" };
+static constexpr std::array<const char *, 4>dcctypes = { { "SEND", "RECV", "CHAT", "CHAT" } };
 
 namespace hexchat{
 namespace dcc{
-struct dccstat_info dccstat[] = {
+extern const struct dccstat_info dccstat[] = {
 	{  N_("Waiting"), 1 /*black */ },
 	{  N_("Active"), 12 /*cyan */ },
 	{  N_("Failed"), 4 /*red */ },
@@ -99,7 +99,7 @@ struct dccstat_info dccstat[] = {
 namespace {
 static int dcc_global_throttle;	/* 0x1 = sends, 0x2 = gets */
 static ::dcc::DCC *new_dcc (void);
-static void dcc_close (::dcc::DCC *dcc, int dccstat, int destroy);
+static void dcc_close (::dcc::DCC *dcc, ::hexchat::dcc_state dccstat, bool destroy);
 static gboolean dcc_send_data (GIOChannel *, GIOCondition, ::dcc::DCC *);
 static gboolean dcc_read (GIOChannel *, GIOCondition, ::dcc::DCC *);
 static gboolean dcc_read_ack (GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc);
@@ -225,7 +225,7 @@ dcc_calc_cps (::dcc::DCC *dcc)
 static void
 dcc_remove_from_sum (::dcc::DCC *dcc)
 {
-	if (dcc->dccstat != STAT_ACTIVE)
+	if (dcc->dccstat != ::hexchat::dcc_state::active)
 		return;
 	if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND)
 		dcc_sendcpssum -= dcc->cps;
@@ -236,7 +236,6 @@ dcc_remove_from_sum (::dcc::DCC *dcc)
 static int
 dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 {
-	struct hostent *h;
 	static std::string cache_host;
 	static guint32 cache_addr;
 
@@ -251,7 +250,7 @@ dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 		cache_host.erase();
 	}
 
-	h = gethostbyname (host);
+	auto h = gethostbyname (host);
 	if (h != nullptr && h->h_length == 4 && h->h_addr_list[0] != nullptr)
 	{
 		memcpy (&addr->sin_addr, h->h_addr, 4);
@@ -299,7 +298,7 @@ dcc_connect_sok (::dcc::DCC *dcc)
 }
 
 static void
-dcc_close (::dcc::DCC *dcc, int dccstat, int destroy)
+dcc_close (::dcc::DCC *dcc, ::hexchat::dcc_state dccstat, bool destroy)
 {
 	if (dcc->wiotag)
 	{
@@ -326,7 +325,7 @@ dcc_close (::dcc::DCC *dcc, int dccstat, int destroy)
 		close (dcc->fp);
 		dcc->fp = -1;
 
-		if(dccstat == STAT_DONE)
+		if(dccstat == ::hexchat::dcc_state::done)
 		{
 			/* if we just completed a dcc receive, move the */
 			/* completed file to the completed directory */
@@ -484,7 +483,7 @@ dcc_read_chat(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			EMIT_SIGNAL(XP_TE_DCCCHATF, dcc->serv->front_session, gsl::ensure_z(dcc->nick),
 				gsl::ensure_z(net_ip(dcc->addr)), gsl::ensure_z(portbuf),
 				gsl::ensure_z(errorstring((len < 0) ? sock_error() : 0)), 0);
-			dcc_close(dcc, STAT_FAILED, false);
+			dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 			return true;
 		}
 		i = 0;
@@ -586,7 +585,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		/* the last executed function is open(), errno should be valid */
 		EMIT_SIGNAL(XP_TE_DCCFILEERR, dcc->serv->front_session, gsl::ensure_z(dcc->destfile),
 			gsl::ensure_z(errorstring(errno)), nullptr, nullptr, 0);
-		dcc_close(dcc, STAT_FAILED, false);
+		dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 		return true;
 	}
 	for (;;)
@@ -622,7 +621,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			/* send ack here? but the socket is dead */
 			/*if (need_ack)
 			dcc_send_ack (dcc);*/
-			dcc_close(dcc, STAT_FAILED, false);
+			dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 			return true;
 		}
 
@@ -632,7 +631,7 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 				gsl::ensure_z(dcc->destfile), gsl::ensure_z(dcc->nick), gsl::ensure_z(errorstring(errno)), 0);
 			if (need_ack)
 				dcc_send_ack(dcc);
-			dcc_close(dcc, STAT_FAILED, false);
+			dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 			return true;
 		}
 
@@ -643,10 +642,10 @@ dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		if (dcc->pos >= dcc->size)
 		{
 			dcc_send_ack(dcc);
-			dcc_close(dcc, STAT_DONE, false);
+			dcc_close(dcc, ::hexchat::dcc_state::done, false);
 			dcc_calc_average_cps(dcc);	/* this must be done _after_ dcc_close, or dcc_remove_from_sum will see the wrong value in dcc->cps */
 			/* cppcheck-suppress deallocuse */
-			auto buf = std::to_string(dcc->cps);
+			const auto buf = std::to_string(dcc->cps);
 			EMIT_SIGNAL(XP_TE_DCCRECVCOMP, dcc->serv->front_session,
 				gsl::ensure_z(dcc->file), gsl::ensure_z(dcc->destfile), gsl::ensure_z(dcc->nick), buf, 0);
 			return true;
@@ -678,7 +677,7 @@ dcc_did_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		EMIT_SIGNAL(XP_TE_DCCCONFAIL, dcc->serv->front_session,
 			gsl::ensure_z(dcctypes[static_cast<std::size_t>(dcc->type)]), gsl::ensure_z(dcc->nick), gsl::ensure_z(errorstring(er)),
 			nullptr, 0);
-		dcc->dccstat = STAT_FAILED;
+		dcc->dccstat = ::hexchat::dcc_state::failed;
 		::fe::fe_dcc_update(dcc);
 		return false;
 	}
@@ -698,7 +697,7 @@ dcc_did_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			EMIT_SIGNAL(XP_TE_DCCCONFAIL, dcc->serv->front_session,
 				dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick, errorstring(er),
 				nullptr, 0);
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 			return false;
 		}
@@ -722,7 +721,7 @@ dcc_connect_finished(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc
 	if (!dcc_did_connect(source, condition, dcc))
 		return true;
 
-	dcc->dccstat = STAT_ACTIVE;
+	dcc->dccstat = ::hexchat::dcc_state::active;
 	snprintf(host, sizeof host, "%s:%d", net_ip(dcc->addr), dcc->port);
 
 	switch (dcc->type)
@@ -777,7 +776,7 @@ read_proxy(::dcc::DCC *dcc)
 				return false;
 			else
 			{
-				dcc->dccstat = STAT_FAILED;
+				dcc->dccstat = ::hexchat::dcc_state::failed;
 				::fe::fe_dcc_update(dcc);
 				if (dcc->iotag)
 				{
@@ -807,7 +806,7 @@ write_proxy(::dcc::DCC *dcc)
 				return false;
 			else
 			{
-				dcc->dccstat = STAT_FAILED;
+				dcc->dccstat = ::hexchat::dcc_state::failed;
 				::fe::fe_dcc_update(dcc);
 				if (dcc->wiotag)
 				{
@@ -917,7 +916,7 @@ dcc_socks_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC 
 			dcc_connect_finished(source, static_cast<GIOCondition>(0), dcc);
 		else
 		{
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 		}
 	}
@@ -987,7 +986,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 			if (proxy->buffer[0] != 5 || proxy->buffer[1] != 2)  /* UPA not supported by server */
 			{
 				PrintText(dcc->serv->front_session, "SOCKS\tServer doesn't support UPA authentication.\n");
-				dcc->dccstat = STAT_FAILED;
+				dcc->dccstat = ::hexchat::dcc_state::failed;
 				::fe::fe_dcc_update(dcc);
 				return true;
 			}
@@ -1014,7 +1013,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 			if (proxy->buffer[0] != 5 || proxy->buffer[1] != 0)
 			{
 				PrintText(dcc->serv->front_session, "SOCKS\tAuthentication required but disabled in settings.\n");
-				dcc->dccstat = STAT_FAILED;
+				dcc->dccstat = ::hexchat::dcc_state::failed;
 				::fe::fe_dcc_update(dcc);
 				return true;
 			}
@@ -1048,7 +1047,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 		{
 			PrintText(dcc->serv->front_session, "SOCKS\tAuthentication failed. "
 				"Is username and password correct?\n");
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 			return true;
 		}
@@ -1099,7 +1098,7 @@ dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC
 				PrintText(dcc->serv->front_session, "SOCKS\tProxy refused to connect to host (not allowed).\n");
 			else
 				PrintTextf(dcc->serv->front_session, "SOCKS\tProxy failed to connect to host (error %d).\n", proxy->buffer[1]);
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 			return true;
 		}
@@ -1185,7 +1184,7 @@ dcc_http_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC *
 			fe_input_remove(dcc->iotag);
 			dcc->iotag = 0;
 			PrintText(dcc->serv->front_session, (char*)proxy->buffer);
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 			return true;
 		}
@@ -1232,7 +1231,7 @@ dcc_proxy_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	dcc->proxy = new ::dcc::proxy_state();
 	if (!dcc->proxy)
 	{
-		dcc->dccstat = STAT_FAILED;
+		dcc->dccstat = ::hexchat::dcc_state::failed;
 		::fe::fe_dcc_update(dcc);
 		return true;
 	}
@@ -1255,9 +1254,9 @@ dcc_connect(::dcc::DCC *dcc)
 	int ret;
 	char tbuf[400];
 
-	if (dcc->dccstat == STAT_CONNECTING)
+	if (dcc->dccstat == ::hexchat::dcc_state::connecting)
 		return;
-	dcc->dccstat = STAT_CONNECTING;
+	dcc->dccstat = ::hexchat::dcc_state::connecting;
 
 	if (dcc->pasvid && dcc->port == 0)
 	{
@@ -1265,7 +1264,7 @@ dcc_connect(::dcc::DCC *dcc)
 		ret = dcc_listen_init(dcc, dcc->serv->front_session);
 		if (!ret)
 		{
-			dcc_close(dcc, STAT_FAILED, false);
+			dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 			return;
 		}
 		/* possible problems with filenames containing spaces? */
@@ -1284,7 +1283,7 @@ dcc_connect(::dcc::DCC *dcc)
 		dcc->sok = dcc_connect_sok(dcc);
 		if (dcc->sok == -1)
 		{
-			dcc->dccstat = STAT_FAILED;
+			dcc->dccstat = ::hexchat::dcc_state::failed;
 			::fe::fe_dcc_update(dcc);
 			return;
 		}
@@ -1336,7 +1335,7 @@ dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 		EMIT_SIGNAL(XP_TE_DCCSENDFAIL, dcc->serv->front_session,
 			gsl::ensure_z(file_part(dcc->file)), gsl::ensure_z(dcc->nick),
 			gsl::ensure_z(errorstring(sock_error())), nullptr, 0);
-		dcc_close(dcc, STAT_FAILED, false);
+		dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 		return true;
 	}
 	if (sent > 0)
@@ -1382,7 +1381,7 @@ dcc_handle_new_ack(::dcc::DCC *dcc)
 	if (dcc->pos >= dcc->size && dcc->ack >= (dcc->size & 0xffffffff))
 	{
 		dcc->ack = dcc->size;	/* force 100% ack for >4 GB */
-		dcc_close(dcc, STAT_DONE, false);
+		dcc_close(dcc, ::hexchat::dcc_state::done, false);
 		dcc_calc_average_cps(dcc);	/* this must be done _after_ dcc_close, or dcc_remove_from_sum will see the wrong value in dcc->cps */
 		const auto buf = std::to_string(dcc->cps);
 		EMIT_SIGNAL(XP_TE_DCCSENDCOMP, dcc->serv->front_session,
@@ -1423,7 +1422,7 @@ dcc_read_ack(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 			EMIT_SIGNAL(XP_TE_DCCSENDFAIL, dcc->serv->front_session,
 				gsl::ensure_z(file_part(dcc->file)), gsl::ensure_z(dcc->nick),
 				gsl::ensure_z(errorstring((len < 0) ? sock_error() : 0)), nullptr, 0);
-			dcc_close(dcc, STAT_FAILED, false);
+			dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 			return true;
 		}
 
@@ -1454,7 +1453,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	if (sok < 0)
 	{
 		dcc->sok = -1;
-		dcc_close(dcc, STAT_FAILED, false);
+		dcc_close(dcc, ::hexchat::dcc_state::failed, false);
 		return true;
 	}
 	set_nonblocking(sok);
@@ -1464,7 +1463,7 @@ dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 	if (dcc->pasvid)
 		return dcc_connect_finished(nullptr, static_cast<GIOCondition>(0), dcc);
 
-	dcc->dccstat = STAT_ACTIVE;
+	dcc->dccstat = ::hexchat::dcc_state::active;
 	dcc->lasttime = dcc->starttime = time(0);
 	dcc->fastsend = !!prefs.hex_dcc_fast_send;
 
@@ -1640,7 +1639,7 @@ dcc_add_chat(session *sess, char *nick, int port, guint32 addr, int pasvid)
 	{
 		dcc->serv = sess->server;
 		dcc->type = ::dcc::DCC::dcc_type::TYPE_CHATRECV;
-		dcc->dccstat = STAT_QUEUED;
+		dcc->dccstat = ::hexchat::dcc_state::queued;
 		dcc->addr = addr;
 		dcc->port = port;
 		dcc->pasvid = pasvid;
@@ -1712,7 +1711,7 @@ dcc_add_file(session *sess, char *file, ::dcc::DCC_SIZE size, int port, char *ni
 		dcc->pos = 0;
 		dcc->serv = sess->server;
 		dcc->type = ::dcc::DCC::dcc_type::TYPE_RECV;
-		dcc->dccstat = STAT_QUEUED;
+		dcc->dccstat = ::hexchat::dcc_state::queued;
 		dcc->addr = addr;
 		dcc->port = port;
 		dcc->pasvid = pasvid;
@@ -1762,7 +1761,7 @@ find_dcc_from_id(int id, ::dcc::DCC::dcc_type type)
 	{
 		dcc = (::dcc::DCC *) list->data;
 		if (dcc->pasvid == id &&
-			dcc->dccstat == STAT_QUEUED && dcc->type == type)
+			dcc->dccstat == ::hexchat::dcc_state::queued && dcc->type == type)
 			return dcc;
 		list = list->next;
 	}
@@ -1778,7 +1777,7 @@ find_dcc_from_port(int port, ::dcc::DCC::dcc_type type)
 	{
 		dcc = (::dcc::DCC *) list->data;
 		if (dcc->port == port &&
-			dcc->dccstat == STAT_QUEUED && dcc->type == type)
+			dcc->dccstat == ::hexchat::dcc_state::queued && dcc->type == type)
 			return dcc;
 		list = list->next;
 	}
@@ -1858,8 +1857,8 @@ is_resumable(::dcc::DCC *dcc)
 		while (list)
 		{
 			d = static_cast< ::dcc::DCC*>(list->data);
-			if (d->type == ::dcc::DCC::dcc_type::TYPE_RECV && d->dccstat != STAT_ABORTED &&
-				d->dccstat != STAT_DONE && d->dccstat != STAT_FAILED)
+			if (d->type == ::dcc::DCC::dcc_type::TYPE_RECV && d->dccstat != ::hexchat::dcc_state::aborted &&
+				d->dccstat != ::hexchat::dcc_state::done && d->dccstat != ::hexchat::dcc_state::failed)
 			{
 				if (d != dcc && is_same_file(d, dcc))
 				{
@@ -1898,7 +1897,7 @@ bool
 is_dcc_completed(::dcc::DCC *dcc)
 {
 	if (dcc != nullptr)
-		return (dcc->dccstat == STAT_FAILED || dcc->dccstat == STAT_DONE || dcc->dccstat == STAT_ABORTED);
+		return (dcc->dccstat == ::hexchat::dcc_state::failed || dcc->dccstat == ::hexchat::dcc_state::done || dcc->dccstat == ::hexchat::dcc_state::aborted);
 
 	return false;
 }
@@ -1919,7 +1918,7 @@ dcc_check_timeouts(void)
 
 		switch (dcc->dccstat)
 		{
-		case STAT_ACTIVE:
+		case ::hexchat::dcc_state::active:
 			dcc_calc_cps(dcc);
 			::fe::fe_dcc_update(dcc);
 
@@ -1933,12 +1932,12 @@ dcc_check_timeouts(void)
 						EMIT_SIGNAL(XP_TE_DCCSTALL, dcc->serv->front_session,
 							gsl::ensure_z(dcctypes[static_cast<std::size_t>(dcc->type)]),
 							gsl::ensure_z(file_part(dcc->file)), gsl::ensure_z(dcc->nick), nullptr, 0);
-						dcc_close(dcc, STAT_ABORTED, false);
+						dcc_close(dcc, ::hexchat::dcc_state::aborted, false);
 					}
 				}
 			}
 			break;
-		case STAT_QUEUED:
+		case ::hexchat::dcc_state::queued:
 			if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND || dcc->type == ::dcc::DCC::dcc_type::TYPE_CHATSEND)
 			{
 				if (tim - dcc->offertime > prefs.hex_dcc_timeout)
@@ -1948,16 +1947,16 @@ dcc_check_timeouts(void)
 						EMIT_SIGNAL(XP_TE_DCCTOUT, dcc->serv->front_session,
 							gsl::ensure_z(dcctypes[static_cast<std::size_t>(dcc->type)]),
 							gsl::ensure_z(file_part(dcc->file)), gsl::ensure_z(dcc->nick), nullptr, 0);
-						dcc_close(dcc, STAT_ABORTED, false);
+						dcc_close(dcc, ::hexchat::dcc_state::aborted, false);
 					}
 				}
 			}
 			break;
-		case STAT_DONE:
-		case STAT_FAILED:
-		case STAT_ABORTED:
+		case ::hexchat::dcc_state::done:
+		case ::hexchat::dcc_state::failed:
+		case ::hexchat::dcc_state::aborted:
 			if (prefs.hex_dcc_remove)
-				dcc_close(dcc, 0, true);
+				dcc_close(dcc, ::hexchat::dcc_state::queued, true);
 			break;
 		}
 		list = next;
@@ -1971,10 +1970,10 @@ dcc_abort (session *sess, ::dcc::DCC *dcc)
 	{
 		switch (dcc->dccstat)
 		{
-		case STAT_QUEUED:
-		case STAT_CONNECTING:
-		case STAT_ACTIVE:
-			dcc_close (dcc, STAT_ABORTED, false);
+		case ::hexchat::dcc_state::queued:
+		case ::hexchat::dcc_state::connecting:
+		case ::hexchat::dcc_state::active:
+			dcc_close (dcc, ::hexchat::dcc_state::aborted, false);
 			switch (dcc->type)
 			{
 			case ::dcc::DCC::dcc_type::TYPE_CHATSEND:
@@ -1992,7 +1991,7 @@ dcc_abort (session *sess, ::dcc::DCC *dcc)
 			}
 			break;
 		default:
-			dcc_close (dcc, 0, true);
+			dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 		}
 	}
 }
@@ -2017,14 +2016,12 @@ dcc_notify_kill (struct server *serv)
 DCC *
 dcc_write_chat (const char *nick, const char *text)
 {
-	int len;
-
 	auto dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATRECV);
 	if (!dcc)
 		dcc = ::dcc::find_dcc(nick, "", ::dcc::DCC::dcc_type::TYPE_CHATSEND);
-	if (dcc && dcc->dccstat == STAT_ACTIVE)
+	if (dcc && dcc->dccstat == ::hexchat::dcc_state::active)
 	{
-		len = strlen (text);
+		const auto len = strlen (text);
 		tcp_send_real (nullptr, dcc->sok, dcc->serv->encoding->c_str(), dcc->serv->using_irc,
 							text, len, nullptr);
 		send (dcc->sok, "\n", 1, 0);
@@ -2120,7 +2117,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 
 		dcc->starttime = dcc->offertime = time (0);
 		dcc->serv = sess->server;
-		dcc->dccstat = STAT_QUEUED;
+		dcc->dccstat = ::hexchat::dcc_state::queued;
 		dcc->size = st.st_size;
 		dcc->type = DCC::dcc_type::TYPE_SEND;
 		dcc->fp = g_open (file, OFLAGS | O_RDONLY, 0);
@@ -2172,7 +2169,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 								 mutable_to, gsl::ensure_z(dcc->file), nullptr, 0);
 			} else
 			{
-				dcc_close (dcc, 0, true);
+				dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 			}
 			return;
 		}
@@ -2180,7 +2177,7 @@ dcc_send (struct session *sess, const char *to, char *file, int maxcps, int pass
 	PrintTextf (sess, _("Cannot access %s\n"), dcc->file);
 	PrintTextf (sess, "%s %d: %s\n", _("Error"), errno, errorstring (errno));
 xit:
-	dcc_close (dcc, 0, true);		/* dcc_close will free dcc->file */
+	dcc_close (dcc, ::hexchat::dcc_state::queued, true);		/* dcc_close will free dcc->file */
 }
 
 ::dcc::DCC *
@@ -2237,7 +2234,7 @@ dcc_get (::dcc::DCC *dcc)
 {
 	switch (dcc->dccstat)
 	{
-	case STAT_QUEUED:
+	case ::hexchat::dcc_state::queued:
 		if (dcc->type != DCC::dcc_type::TYPE_CHATSEND)
 		{
 			if (dcc->type == DCC::dcc_type::TYPE_RECV && prefs.hex_dcc_auto_resume && dcc->resumable)
@@ -2252,10 +2249,10 @@ dcc_get (::dcc::DCC *dcc)
 			}
 		}
 		break;
-	case STAT_DONE:
-	case STAT_FAILED:
-	case STAT_ABORTED:
-		dcc_close (dcc, 0, true);
+	case ::hexchat::dcc_state::done:
+	case ::hexchat::dcc_state::failed:
+	case ::hexchat::dcc_state::aborted:
+		dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 		break;
 	}
 }
@@ -2284,7 +2281,7 @@ dcc_get_nick (struct session *sess, char *nick)
 		dcc = (::dcc::DCC *) list->data;
 		if (!sess->server->p_cmp (nick, dcc->nick))
 		{
-			if (dcc->dccstat == STAT_QUEUED && dcc->type == DCC::dcc_type::TYPE_RECV)
+			if (dcc->dccstat == ::hexchat::dcc_state::queued && dcc->type == DCC::dcc_type::TYPE_RECV)
 			{
 				dcc->resumable = 0;
 				dcc->pos = 0;
@@ -2310,14 +2307,14 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	{
 		switch (dcc->dccstat)
 		{
-		case STAT_ACTIVE:
-		case STAT_QUEUED:
-		case STAT_CONNECTING:
+		case ::hexchat::dcc_state::active:
+		case ::hexchat::dcc_state::queued:
+		case ::hexchat::dcc_state::connecting:
 			EMIT_SIGNAL (XP_TE_DCCCHATREOFFER, sess, gsl::ensure_z(nick), nullptr, nullptr, nullptr, 0);
 			return;
-		case STAT_ABORTED:
-		case STAT_FAILED:
-			dcc_close (dcc, 0, true);
+		case ::hexchat::dcc_state::aborted:
+		case ::hexchat::dcc_state::failed:
+			dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 		}
 	}
 	dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATRECV);
@@ -2325,12 +2322,12 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	{
 		switch (dcc->dccstat)
 		{
-		case STAT_QUEUED:
+		case ::hexchat::dcc_state::queued:
 			dcc_connect (dcc);
 			break;
-		case STAT_FAILED:
-		case STAT_ABORTED:
-			dcc_close (dcc, 0, true);
+		case ::hexchat::dcc_state::failed:
+		case ::hexchat::dcc_state::aborted:
+			dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 		}
 		return;
 	}
@@ -2341,7 +2338,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 		return;
 	dcc->starttime = dcc->offertime = time (0);
 	dcc->serv = sess->server;
-	dcc->dccstat = STAT_QUEUED;
+	dcc->dccstat = ::hexchat::dcc_state::queued;
 	dcc->type = DCC::dcc_type::TYPE_CHATSEND;
 	dcc->nick = new_strdup (nick);
 	if (passive || dcc_listen_init (dcc, sess))
@@ -2367,7 +2364,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 		EMIT_SIGNAL (XP_TE_DCCCHATOFFERING, sess, gsl::ensure_z(nick), nullptr, nullptr, nullptr, 0);
 	} else
 	{
-		dcc_close (dcc, 0, true);
+		dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 	}
 }
 
@@ -2376,7 +2373,7 @@ dcc_resume (::dcc::DCC *dcc)
 {
 	char tbuf[500];
 
-	if (dcc->dccstat == STAT_QUEUED && dcc->resumable)
+	if (dcc->dccstat == ::hexchat::dcc_state::queued && dcc->resumable)
 	{
 		dcc->resume_sent = 1;
 		/* filename contains spaces? Quote them! */
@@ -2444,11 +2441,11 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 
 		dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATSEND);
 		if (dcc)
-			dcc_close (dcc, 0, true);
+			dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 
 		dcc = ::dcc::find_dcc(nick, "", DCC::dcc_type::TYPE_CHATRECV);
 		if (dcc)
-			dcc_close (dcc, 0, true);
+			dcc_close (dcc, ::hexchat::dcc_state::queued, true);
 
 		dcc_add_chat (sess, nick, port, addr, pasvid);
 		return;
@@ -2503,7 +2500,7 @@ handle_dcc (struct session *sess, char *nick, char *word[], char *word_eol[],
 	{
 		port = atoi (word[7]);
 		dcc = find_dcc_from_port(port, DCC::dcc_type::TYPE_RECV);
-		if (dcc && dcc->dccstat == STAT_QUEUED)
+		if (dcc && dcc->dccstat == ::hexchat::dcc_state::queued)
 		{
 			dcc_connect (dcc);
 		}
@@ -2585,7 +2582,7 @@ dcc_show_list (struct session *sess)
 		i++;
 		PrintTextf (sess, " %s  %-10.10s %-7.7s %-7" DCC_SFMT " %-7" DCC_SFMT " %s\n",
 					 dcctypes[static_cast<std::size_t>(dcc->type)], dcc->nick,
-					 _(dccstat[dcc->dccstat].name), dcc->size, dcc->pos,
+					 _(dccstat[static_cast<int>(dcc->dccstat)].name), dcc->size, dcc->pos,
 					 file_part (dcc->file));
 		list = list->next;
 	}

@@ -837,7 +837,7 @@ dcc_saveas_cb (dcc::DCC *dcc, char *file)
 {
 	if (is_dcc (dcc))
 	{
-		if (dcc->dccstat == STAT_QUEUED)
+		if (dcc->dccstat == ::hexchat::dcc_state::queued)
 		{
 			if (file)
 				dcc_get_with_destfile (dcc, file);

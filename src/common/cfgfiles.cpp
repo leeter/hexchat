@@ -68,13 +68,13 @@ const char * const languages[LANGUAGES_LENGTH] = {
 	"uk", "vi", "wa"                                                     /* 50 .. */
 };
 
-void
-list_addentry(GSList ** list, std::string cmd, std::string name)
-{
-	auto pop = std::make_unique<popup>(std::move(cmd), std::move(name));
-
-	*list = g_slist_append (*list, pop.release());
-}
+//void
+//list_addentry(GSList ** list, std::string cmd, std::string name)
+//{
+//	auto pop = std::make_unique<popup>(std::move(cmd), std::move(name));
+//
+//	*list = g_slist_append (*list, pop.release());
+//}
 
 static void list_load_from_data(std::vector<popup> & list, std::istream & data)
 {
@@ -311,7 +311,7 @@ static const char * default_file (void)
 
 /* Keep these sorted!! */
 
-struct prefs vars[] =
+extern const struct prefs vars[] =
 {
 	{"away_auto_unmark", P_OFFINT (hex_away_auto_unmark), TYPE_BOOL},
 	{"away_omit_alerts", P_OFFINT (hex_away_omit_alerts), TYPE_BOOL},

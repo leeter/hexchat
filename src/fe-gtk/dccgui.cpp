@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 #include <string>
 #include <cstdio>
 #include <cstdlib>
@@ -168,18 +173,18 @@ dcc_prepare_row_chat (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 
 	proper_unit (dcc->pos, pos, sizeof (pos));
 	proper_unit (dcc->size, siz, sizeof (siz));
-
+	const auto stat_index = static_cast<int>(dcc->dccstat);
 	gtk_list_store_set (store, iter,
-							  CCOL_STATUS, _(dcc::dccstat[dcc->dccstat].name),
+							  CCOL_STATUS, _(dcc::dccstat[stat_index].name),
 							  CCOL_NICK, dcc->nick,
 							  CCOL_RECV, pos,
 							  CCOL_SENT, siz,
 							  CCOL_START, date,
 							  CCOL_DCC, dcc,
 							  CCOL_COLOR,
-							  dcc::dccstat[dcc->dccstat].color == 1 ?
-								NULL :
-								colors + dcc::dccstat[dcc->dccstat].color,
+							  dcc::dccstat[stat_index].color == 1 ?
+								nullptr :
+								colors + dcc::dccstat[stat_index].color,
 							  -1);
 }
 
@@ -210,22 +215,23 @@ dcc_prepare_row_send (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 	} else
 		strcpy (eta, "--:--:--");
 
+	const auto dccstat_index = static_cast<int>(dcc->dccstat);
 	if (update_only)
 		gtk_list_store_set (store, iter,
-								  COL_STATUS, _(dcc::dccstat[dcc->dccstat].name),
+								  COL_STATUS, _(dcc::dccstat[dccstat_index].name),
 								  COL_POS, pos,
 								  COL_PERC, perc,
 								  COL_SPEED, kbs,
 								  COL_ETA, eta,
 								  COL_COLOR,
-								  dcc::dccstat[dcc->dccstat].color == 1 ?
+								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dcc->dccstat].color,
+									colors + dcc::dccstat[dccstat_index].color,
 									-1);
 	else
 		gtk_list_store_set (store, iter,
 								  COL_TYPE, pix_up,
-								  COL_STATUS, _(dcc::dccstat[dcc->dccstat].name),
+								  COL_STATUS, _(dcc::dccstat[dccstat_index].name),
 								  COL_FILE, file_part (dcc->file),
 								  COL_SIZE, size,
 								  COL_POS, pos,
@@ -235,9 +241,9 @@ dcc_prepare_row_send (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_NICK, dcc->nick,
 								  COL_DCC, dcc,
 								  COL_COLOR,
-								  dcc::dccstat[dcc->dccstat].color == 1 ?
+								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dcc->dccstat].color,
+									colors + dcc::dccstat[dccstat_index].color,
 									-1);
 }
 
@@ -254,7 +260,7 @@ dcc_prepare_row_recv (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 													GTK_ICON_SIZE_MENU, NULL);
 
 	proper_unit (dcc->size, size, sizeof (size));
-	if (dcc->dccstat == STAT_QUEUED)
+	if (dcc->dccstat == ::hexchat::dcc_state::queued)
 		proper_unit (dcc->resumable, pos, sizeof (pos));
 	else
 		proper_unit (dcc->pos, pos, sizeof (pos));
@@ -269,23 +275,23 @@ dcc_prepare_row_recv (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 					 to_go / 3600, (to_go / 60) % 60, to_go % 60);
 	} else
 		strcpy (eta, "--:--:--");
-
+	const auto dccstat_index = static_cast<int>(dcc->dccstat);
 	if (update_only)
 		gtk_list_store_set (store, iter,
-								  COL_STATUS, _(dcc::dccstat[dcc->dccstat].name),
+								  COL_STATUS, _(dcc::dccstat[dccstat_index].name),
 								  COL_POS, pos,
 								  COL_PERC, perc,
 								  COL_SPEED, kbs,
 								  COL_ETA, eta,
 								  COL_COLOR,
-								  dcc::dccstat[dcc->dccstat].color == 1 ?
+								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dcc->dccstat].color,
+									colors + dcc::dccstat[dccstat_index].color,
 									-1);
 	else
 		gtk_list_store_set (store, iter,
 								  COL_TYPE, pix_dn,
-								  COL_STATUS, _(dcc::dccstat[dcc->dccstat].name),
+								  COL_STATUS, _(dcc::dccstat[dccstat_index].name),
 								  COL_FILE, file_part (dcc->file),
 								  COL_SIZE, size,
 								  COL_POS, pos,
@@ -295,9 +301,9 @@ dcc_prepare_row_recv (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_NICK, dcc->nick,
 								  COL_DCC, dcc,
 								  COL_COLOR,
-								  dcc::dccstat[dcc->dccstat].color == 1 ?
-									NULL :
-									colors + dcc::dccstat[dcc->dccstat].color,
+								  dcc::dccstat[dccstat_index].color == 1 ?
+									nullptr :
+									colors + dcc::dccstat[dccstat_index].color,
 									-1);
 }
 
@@ -677,7 +683,7 @@ dcc_row_cb (GtkTreeSelection *sel, gpointer user_data)
 	{
 		/* turn OFF/ON appropriate buttons */
 		dcc = static_cast<dcc::DCC*>(list->data);
-		if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
+		if (dcc->dccstat == ::hexchat::dcc_state::queued && dcc->type == dcc::DCC::dcc_type::TYPE_RECV)
 		{
 			gtk_widget_set_sensitive (dccfwin.accept_button, TRUE);
 			gtk_widget_set_sensitive (dccfwin.resume_button, TRUE);
@@ -715,9 +721,9 @@ dcc_dclick_cb (GtkTreeView *view, GtkTreePath *path,
 
 	switch (dcc->dccstat)
 	{
-	case STAT_FAILED:
-	case STAT_ABORTED:
-	case STAT_DONE:
+	case ::hexchat::dcc_state::failed:
+	case ::hexchat::dcc_state::aborted:
+	case ::hexchat::dcc_state::done:
 		dcc_abort (dcc->serv->front_session, dcc);
 	}
 }
@@ -1017,7 +1023,7 @@ dcc_chat_row_cb (GtkTreeSelection *sel, gpointer user_data)
 	{
 		/* turn OFF/ON appropriate buttons */
 		dcc = static_cast<dcc::DCC*>(list->data);
-		if (dcc->dccstat == STAT_QUEUED && dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
+		if (dcc->dccstat == ::hexchat::dcc_state::queued && dcc->type == dcc::DCC::dcc_type::TYPE_CHATRECV)
 			gtk_widget_set_sensitive (dcccwin.accept_button, TRUE);
 		else
 			gtk_widget_set_sensitive (dcccwin.accept_button, FALSE);

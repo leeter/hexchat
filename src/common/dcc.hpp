@@ -23,17 +23,21 @@
 #define HEXCHAT_DCC_HPP
 
 #include <ctime>						/* for time_t */
+#include <cstdint>
+#include <cinttypes>
 #include "proto-irc.hpp"
 #include "serverfwd.hpp"
 
 namespace hexchat{
-#define STAT_QUEUED 0
-#define STAT_ACTIVE 1
-#define STAT_FAILED 2
-#define STAT_DONE 3
-#define STAT_CONNECTING 4
-#define STAT_ABORTED 5
 
+	enum class dcc_state {
+		queued,
+		active,
+		failed,
+		done,
+		connecting,
+		aborted
+	};
 	
 
 #define CPS_AVG_WINDOW 10
@@ -42,8 +46,8 @@ namespace dcc{
 #if defined(G_GINT64_FORMAT) && defined(HAVE_STRTOULL)
 #define USE_DCC64
 /* we really get only 63 bits, since st_size is signed */
-typedef ::gint64 DCC_SIZE;
-#define DCC_SFMT G_GINT64_FORMAT
+	using DCC_SIZE = std::int64_t;
+#define DCC_SFMT PRIi64
 #else
 typedef unsigned int DCC_SIZE;
 #define DCC_SFMT "u"
@@ -92,7 +96,7 @@ struct DCC
 	char *destfile;			/* utf8 */
 	char *nick;
 	dcc_type type;		  /* 0 = SEND  1 = RECV  2 = CHAT */
-	unsigned char dccstat;	  /* 0 = QUEUED  1 = ACTIVE  2 = FAILED  3 = DONE */
+	::hexchat::dcc_state dccstat;	  /* 0 = QUEUED  1 = ACTIVE  2 = FAILED  3 = DONE */
 	bool resume_sent;	/* resume request sent */
 	bool fastsend;
 	bool ackoffset;	/* is receiver sending acks as an offset from */
@@ -122,7 +126,7 @@ struct dccstat_info
 	int color;						  /* Display color (index into colors[] ) */
 };
 
-extern struct dccstat_info dccstat[];
+extern const struct dccstat_info dccstat[];
 
 bool is_dcc (struct DCC *dcc);
 bool is_dcc_completed (struct DCC *dcc);
