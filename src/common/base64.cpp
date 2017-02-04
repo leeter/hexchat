@@ -16,6 +16,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#include <array>
 #include <algorithm>
 #include <istream>
 #include <iterator>
@@ -26,9 +27,10 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include "base64.hpp"
+#include "const_str.hpp"
 
 namespace{
-	const std::string base64_padding[] = { "", "==", "=" };
+	constexpr std::array<boost::string_ref, 3> base64_padding{ { make_ref(""), make_ref("=="), make_ref("=") }};
 }
 namespace util
 {

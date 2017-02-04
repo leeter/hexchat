@@ -48,15 +48,11 @@
 #include "util.hpp"
 #include "hexchatc.hpp"
 #include "filesystem.hpp"
+#include "const_str.hpp"
 
 namespace {
 static bool chanopt_open = false;
 static bool chanopt_changed = false;
-
-template<size_t N>
-constexpr boost::string_ref make_ref(const char(&in)[N]) {
-	return boost::string_ref(in, N - 1);
-}
 
 struct channel_options
 {
