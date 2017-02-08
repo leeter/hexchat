@@ -47,6 +47,7 @@
 #include "hexchatc.hpp"
 #include "charset_helpers.hpp"
 #include "filesystem.hpp"
+#include "const_str.hpp"
 
 #ifdef WIN32
 #define STRICT_TYPED_ITEMIDS
@@ -55,9 +56,9 @@
 #include <unistd.h>
 #define HEXCHAT_DIR "hexchat"
 #endif
-
-const std::string DEF_FONT("Monospace 9");
-const std::string DEF_FONT_ALTER("Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont");
+using namespace helpers::literals;
+constexpr auto DEF_FONT = "Monospace 9"_sr;
+constexpr auto DEF_FONT_ALTER = "Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont"_sr;
 
 const char * const languages[LANGUAGES_LENGTH] = {
 	"af", "sq", "am", "ast", "az", "eu", "be", "bg", "ca", "zh_CN",      /*  0 ..  9 */
@@ -831,11 +832,11 @@ load_default_config(void)
 	}
 	else
 	{
-		strcpy (prefs.hex_text_font, DEF_FONT.c_str());
-		strcpy (prefs.hex_text_font_main, DEF_FONT.c_str());
+		strcpy (prefs.hex_text_font, DEF_FONT.data());
+		strcpy (prefs.hex_text_font_main, DEF_FONT.data());
 	}
 
-	safe_strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.c_str());
+	safe_strcpy (prefs.hex_text_font_alternative, DEF_FONT_ALTER.data());
 	langs = get_default_spell_languages ();
 	safe_strcpy (prefs.hex_text_spell_langs, langs, sizeof(prefs.hex_text_spell_langs));
 

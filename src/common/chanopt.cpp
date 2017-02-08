@@ -59,17 +59,17 @@ struct channel_options
 	boost::string_ref name;
 	const char *alias;	/* old names from 2.8.4 */
 };
-
+using namespace helpers::literals;
 static constexpr std::array<channel_options, 7> chanopt =
 { {
-	{ make_ref("alert_beep"),  "BEEP"},
-	{ make_ref("alert_taskbar"), nullptr},
-	{ make_ref("alert_tray"), "TRAY"},
+	{ "alert_beep"_sr,  "BEEP"},
+	{ "alert_taskbar"_sr, nullptr},
+	{ "alert_tray"_sr, "TRAY"},
 
-	{ make_ref("text_hidejoinpart"), "CONFMODE" },
-	{ make_ref("text_logging"), nullptr },
-	{ make_ref("text_scrollback"), nullptr},
-	{ make_ref("text_strip"), nullptr },
+	{ "text_hidejoinpart"_sr, "CONFMODE" },
+	{ "text_logging"_sr, nullptr },
+	{ "text_scrollback"_sr, nullptr},
+	{ "text_strip"_sr, nullptr },
 }};
 
 #undef S_F

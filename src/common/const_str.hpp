@@ -26,4 +26,12 @@ constexpr boost::string_ref make_ref(const char(&in)[N]) {
 	return boost::string_ref(in, N - 1);
 }
 
+namespace helpers {
+	namespace literals {
+		constexpr boost::string_ref operator"" _sr(const char* str, size_t len) noexcept {
+			return boost::string_ref(str, len);
+		}
+	}
+}
+
 #endif
