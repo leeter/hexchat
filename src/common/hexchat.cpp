@@ -67,6 +67,7 @@
 #include "dcc.hpp"
 #include "userlist.hpp"
 #include "glist_iterators.hpp"
+#include "const_str.hpp"
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
 #include <glib-object.h>			/* for g_type_init() */
@@ -77,7 +78,7 @@
 #endif
 
 namespace dcc = hexchat::dcc;
-
+using namespace helpers::literals;
 std::vector<popup> popup_list;
 std::vector<popup> button_list;
 std::vector<popup> dlgbutton_list;
@@ -404,16 +405,16 @@ free_sessions (void)
 }
 
 
-static const char defaultconf_ctcp[] =
+static constexpr auto defaultconf_ctcp =
 	"NAME TIME\n"				"CMD nctcp %s TIME %t\n\n"\
-	"NAME PING\n"				"CMD nctcp %s PING %d\n\n";
+	"NAME PING\n"				"CMD nctcp %s PING %d\n\n"_sr;
 
-static const char defaultconf_replace[] =
-	"NAME teh\n"				"CMD the\n\n";
+static constexpr auto defaultconf_replace =
+	"NAME teh\n"				"CMD the\n\n"_sr;
 /*	"NAME r\n"					"CMD are\n\n"\
 	"NAME u\n"					"CMD you\n\n"*/
 
-static const char defaultconf_commands[] =
+static constexpr auto defaultconf_commands  =
 	"NAME ACTION\n"		"CMD me &2\n\n"\
 	"NAME AME\n"			"CMD allchan me &2\n\n"\
 	"NAME ANICK\n"			"CMD allserv nick &2\n\n"\
@@ -443,7 +444,7 @@ static const char defaultconf_commands[] =
 	"NAME VERSION\n"		"CMD ctcp %2 VERSION\n\n"\
 	"NAME WALLOPS\n"		"CMD quote WALLOPS :&2\n\n"\
 		"NAME WI\n"                     "CMD quote WHOIS %2\n\n"\
-	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n";
+	"NAME WII\n"			"CMD quote WHOIS %2 %2\n\n"_sr;
 
 static const char defaultconf_urlhandlers[] =
 		"NAME Open Link in a new Firefox Window\n"		"CMD !firefox -new-window %s\n\n";

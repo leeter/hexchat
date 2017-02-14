@@ -4332,9 +4332,9 @@ namespace
 	};
 }// end anonymous namespace
 
-std::string command_insert_vars (session *sess,  const std::string& cmd)
+std::string command_insert_vars (session &sess,  const std::string& cmd)
 {
-	ircnet *mynet = sess->server->network;
+	ircnet *mynet = sess.server->network;
 	static const boost::regex replacevals("%(n|p|r|u)");
 
 	if (!mynet)										/* shouldn't really happen */
@@ -4391,7 +4391,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	std::string pdibuf(pdilen, '\0');
 
 	/* split the text into words and word_eol */
-	process_data_init (&pdibuf[0], cmd, word, word_eol, true, true);
+	process_data_init (pdibuf.data(), cmd, word, word_eol, true, true);
 
 	/* ensure an empty string at index 32 for cmd_deop etc */
 	/* (internal use only, plugins can still only read 1-31). */
@@ -4402,7 +4402,7 @@ handle_command (session *sess, char *cmd, bool check_spch)
 	/* redo it without quotes processing, for some commands like /JOIN */
 	if (int_cmd && !int_cmd->handle_quotes)
 	{
-		process_data_init (&pdibuf[0], cmd, word, word_eol, false, false);
+		process_data_init (pdibuf.data(), cmd, word, word_eol, false, false);
 	}
 
 	if (check_spch && prefs.hex_input_perc_color)

@@ -1372,8 +1372,9 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 
 	if (user && host)
 	{
-		uhost.reset(static_cast<char*>(g_malloc (strlen (user) + strlen (host) + 2)));
-		sprintf (uhost.get(), "%s@%s", user, host);
+		const auto buffer_len = strlen(user) + strlen(host) + 2;
+		uhost.reset(static_cast<char*>(g_malloc (buffer_len)));
+		snprintf (uhost.get(), buffer_len, "%s@%s", user, host);
 	}
 
 	if (chan)
@@ -1441,7 +1442,7 @@ nowindow:
 static bool
 inbound_exec_eom_cmd (const std::string & str, session *sess)
 {
-	auto cmd = command_insert_vars (sess, (str[0] == '/') ? str.substr(1) : str);
+	auto cmd = command_insert_vars (*sess, (str[0] == '/') ? str.substr(1) : str);
 	handle_command (sess, &cmd[0], true);
 
 	return true;

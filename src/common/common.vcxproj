@@ -29,6 +29,7 @@
     <ClInclude Include="cfgfiles.hpp" />
     <ClInclude Include="chanopt.hpp" />
     <ClInclude Include="charset_helpers.hpp" />
+    <ClInclude Include="const_str.hpp" />
     <ClInclude Include="ctcp.hpp" />
     <ClInclude Include="dcc.hpp" />
     <ClInclude Include="fe.hpp" />

@@ -43,6 +43,7 @@
 #include "session.hpp"
 #include "url.hpp"
 #include "userlist.hpp"
+#include "const_str.hpp"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -185,7 +186,7 @@ static int lasttype = 0;
 int
 url_check_word (const char *word)
 {
-	struct {
+	constexpr struct {
 		bool (*match) (const char *word, int *start, int *end);
 		int type;
 	} m[] = {
@@ -195,17 +196,15 @@ url_check_word (const char *word)
 	   { match_host6,   WORD_HOST6 },
 	   { match_host,    WORD_HOST },
 	   { match_path,    WORD_PATH },
-	   { match_nick,    WORD_NICK },
-	   { NULL,          0}
+	   { match_nick,    WORD_NICK }
 	};
-	int i;
 
 	laststart = lastend = lasttype = 0;
 
-	for (i = 0; m[i].match; i++)
-		if (m[i].match (word, &laststart, &lastend))
+	for (const auto & matcher : m)
+		if (matcher.match (word, &laststart, &lastend))
 		{
-			lasttype = m[i].type;
+			lasttype = matcher.type;
 			return lasttype;
 		}
 
@@ -298,14 +297,15 @@ match_path (const char *word, int *start, int *end)
 	return regex_match (re_path (), word, start, end);
 }
 }// end anonymous namespace
+using namespace helpers::literals;
 /* List of IRC commands for which contents (and thus possible URLs)
  * are visible to the user.  NOTE:  Trailing blank required in each. */
-static std::array<boost::string_ref, 5> commands = { {
-		"NOTICE ",
-		"PRIVMSG ",
-		"TOPIC ",
-		"332 ",		/* RPL_TOPIC */
-		"372 "		/* RPL_MOTD */
+constexpr static std::array<boost::string_ref, 5> commands = { {
+		"NOTICE "_sr,
+		"PRIVMSG "_sr,
+		"TOPIC "_sr,
+		"332 "_sr,		/* RPL_TOPIC */
+		"372 "_sr		/* RPL_MOTD */
 	} };
 
 void url_check_line(const boost::string_ref& buf)
@@ -326,7 +326,7 @@ void url_check_line(const boost::string_ref& buf)
 	/* Allow only commands from the above list */
 	for (i = 0; i < commands.size(); i++)
 	{
-		auto cmd = commands[i];
+		const auto& cmd = commands[i];
 		if (po.starts_with(cmd))
 		{
 			po.remove_prefix(cmd.size());
@@ -478,7 +478,7 @@ enum uri_flags{
 	URI_PATH         = (1 << 3)
 };
 
-struct
+constexpr struct
 {
 	const char *scheme;    /* scheme name. e.g. http */
 	const char *path_sep;  /* string that begins the path */
