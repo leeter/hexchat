@@ -217,10 +217,11 @@ yes:
 gboolean
 fe_add_ban_list (struct session *sess, char *mask, char *who, char *when, int rplcode)
 {
-	banlist_info *banl = sess->res->banlist;
+	
 
-	if (!banl)
+	if (!sess->res->banlist)
 		return false;
+	banlist_info *banl = sess->res->banlist.get();
 	int i;
 	GtkListStore *store;
 	GtkTreeIter iter;
@@ -312,11 +313,9 @@ banlist_sensitize (banlist_info *banl)
 gboolean
 fe_ban_list_end (struct session *sess, int rplcode)
 {
-	banlist_info *banl = sess->res->banlist;
-
-	if (!banl)
+	if (!sess->res->banlist)
 		return false;
-
+	auto banl = sess->res->banlist.get();
 	int i;
 	for (i = 0; i < MODE_CT; i++)
 		if (modes[i].endcode == rplcode)
@@ -768,9 +767,8 @@ banlist_closegui (GtkWidget *, banlist_info *banl)
 {
 	session *sess = banl->sess;
 
-	if (sess->res->banlist == banl)
+	if (sess->res->banlist && sess->res->banlist.get() == banl)
 	{
-		g_free (banl);
 		sess->res->banlist = nullptr;
 	}
 }
@@ -790,14 +788,14 @@ banlist_opengui (struct session *sess)
 
 	if (!sess->res->banlist)
 	{
-		sess->res->banlist = static_cast<banlist_info*>(g_malloc0 (sizeof (banlist_info)));
+		sess->res->banlist = std::make_unique<banlist_info>();
 		if (!sess->res->banlist)
 		{
 			fe_message (_("Banlist initialization failed."), FE_MSG_ERROR);
 			return;
 		}
 	}
-	banl = sess->res->banlist;
+	banl = sess->res->banlist.get();
 	if (banl->window)
 	{
 		mg_bring_tofront (banl->window);

@@ -23,6 +23,7 @@
 #include "../../config.h"
 
 #include <string>
+#include <memory>
 #include <bitset>
 #define DISPLAY_NAME "HexChat"
 
@@ -106,7 +107,8 @@ struct server_gui
 struct restore_gui
 {
 	restore_gui();
-	banlist_info *banlist;
+	~restore_gui();
+	std::unique_ptr<banlist_info> banlist;
 
 	void *tab;			/* (chan *) */
 

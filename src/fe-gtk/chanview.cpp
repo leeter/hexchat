@@ -1547,7 +1547,7 @@ chanview_add_real (chanview *cv, const char *name, void *family, void *userdata,
 }
 
 chan *
-chanview_add (chanview *cv, char *name, void *family, void *userdata, gboolean allow_closure, int tag, GdkPixbuf *icon)
+chanview_add (chanview *cv, const boost::string_ref name, void *family, void *userdata, gboolean allow_closure, int tag, GdkPixbuf *icon)
 {
 	auto new_name = truncate_tab_name (name, cv->trunc_len);
 

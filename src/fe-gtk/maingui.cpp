@@ -3248,7 +3248,7 @@ mg_apply_setup (void)
 }
 
 static chan *
-mg_add_generic_tab (char *name, char *title, void *family, GtkWidget *box)
+mg_add_generic_tab (const boost::string_ref name, const char *title, void *family, GtkWidget *box)
 {
 	gtk_notebook_append_page (GTK_NOTEBOOK (mg_gui->note_book), box, nullptr);
 	gtk_widget_show (box);
@@ -3428,6 +3428,8 @@ restore_gui::restore_gui()
 	queue_value(), /* outbound queue meter */
 	c_graph(){}
 
+restore_gui::~restore_gui() = default;
+
 void
 mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 {
@@ -3487,21 +3489,19 @@ mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 }
 
 GtkWidget *
-mg_create_generic_tab (char *name, char *title, int force_toplevel,
+mg_create_generic_tab (const char *name, const char *title, bool force_toplevel,
 							  int link_buttons,
 							  GCallback close_callback, void *userdata,
 							  int width, int height, GtkWidget **vbox_ret,
 							  void *family)
 {
-	GtkWidget *vbox, *win;
-
 	if (prefs.hex_gui_tab_pos == POS_HIDDEN && prefs.hex_gui_tab_utils)
 		prefs.hex_gui_tab_utils = 0;
 
 	if (force_toplevel || !prefs.hex_gui_tab_utils)
 	{
-		win = gtkutil_window_new (title, name, width, height, 2);
-		vbox = gtk_vbox_new (false, 0);
+		auto win = gtkutil_window_new (title, name, width, height, 2);
+		auto vbox = gtk_vbox_new (false, 0);
 		*vbox_ret = vbox;
 		gtk_container_add (GTK_CONTAINER (win), vbox);
 		gtk_widget_show (vbox);
@@ -3511,7 +3511,7 @@ mg_create_generic_tab (char *name, char *title, int force_toplevel,
 		return win;
 	}
 
-	vbox = gtk_vbox_new (false, 2);
+	auto vbox = gtk_vbox_new (false, 2);
 	g_object_set_data (G_OBJECT (vbox), "w", GINT_TO_POINTER (width));
 	g_object_set_data (G_OBJECT (vbox), "h", GINT_TO_POINTER (height));
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
