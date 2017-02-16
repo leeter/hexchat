@@ -175,11 +175,11 @@ pevent_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpo
 	std::string buf(text, len);
 	buf.push_back('\n');
 	buf = check_special_chars (buf, true);
-
-	PrintTextRaw(xtext->buffer, (unsigned char*)&buf[0], 0, 0);
-
+	auto buffer = xtext_get_current_buffer(xtext);
+	PrintTextRaw(buffer, (unsigned char*)buf.data(), 0, 0);
+	auto adj = xtext_get_adjustments(xtext);
 	/* Scroll to bottom */
-	gtk_adjustment_set_value (xtext->adj, gtk_adjustment_get_upper (xtext->adj));
+	gtk_adjustment_set_value (adj, gtk_adjustment_get_upper (adj));
 
 	/* save this when we exit */
 	prefs.save_pevents = 1;
@@ -292,12 +292,13 @@ pevent_ok_cb (GtkWidget * wid, void *data)
 static void
 pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 {
+	auto buffer = xtext_get_current_buffer(GTK_XTEXT(twid));
 	for (int n = 0; n < NUM_XP; n++)
 	{
 		std::string out(_(pntevts_text[n].c_str()));
 		out.push_back('\n');
 		out = check_special_chars (out, true);
-		PrintTextRaw (GTK_XTEXT (twid)->buffer, (unsigned char*)&out[0], 0, 0);
+		PrintTextRaw (buffer, (unsigned char*)&out[0], 0, 0);
 	}
 }
 

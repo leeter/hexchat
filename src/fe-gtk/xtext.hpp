@@ -129,125 +129,6 @@ public:
 #if !GTK_CHECK_VERSION(3, 0, 0)
 struct BridgeStyleContext;
 #endif
-struct GtkXText
-{
-	GtkWidget widget;
-
-	xtext_buffer *buffer;
-	xtext_buffer *orig_buffer;
-	xtext_buffer *selection_buffer;
-
-	GtkAdjustment *adj;
-	GdkPixmap *pixmap;				/* 0 = use palette[19] */
-	GdkDrawable *draw_buf;			/* points to ->window */
-	GdkCursor *hand_cursor;
-	GdkCursor *resize_cursor;
-
-	int pixel_offset;					/* amount of pixels the top line is chopped by */
-
-	int last_win_x;
-	int last_win_y;
-	int last_win_h;
-	int last_win_w;
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-	BridgeStyleContext * style;
-#endif
-	GdkColor palette[XTEXT_COLS];
-
-	gint io_tag;					  /* for delayed refresh events */
-	gint add_io_tag;				  /* "" when adding new text */
-	gint scroll_tag;				  /* marking-scroll timeout */
-	gulong vc_signal_tag;        /* signal handler for "value_changed" adj */
-
-	int select_start_adj;		  /* the adj->value when the selection started */
-	int select_start_x;
-	int select_start_y;
-	int select_end_x;
-	int select_end_y;
-
-	int max_lines;
-
-	int col_fore;
-	int col_back;
-
-	int depth;						  /* gdk window depth */
-
-	char num[8];					  /* for parsing mirc color */
-	int nc;							  /* offset into xtext->num */
-
-	textentry *hilight_ent;
-	int hilight_start;
-	int hilight_end;
-
-	guint16 fontwidth[128];	  /* each char's width, only the ASCII ones */
-
-	struct pangofont
-	{
-		PangoFontDescription *font;
-		int ascent;
-		int descent;
-	} *font, pango_font;
-	PangoLayout *layout;
-
-	int fontsize;
-	int space_width;				  /* width (pixels) of the space " " character */
-	int stamp_width;				  /* width of "[88:88:88]" */
-	int max_auto_indent;
-
-	unsigned char scratch_buffer[4096];
-
-	int(*urlcheck_function) (GtkWidget * xtext, const char *word);
-
-	int jump_out_offset;	/* point at which to stop rendering */
-	int jump_in_offset;	/* "" start rendering */
-
-	int ts_x;			/* ts origin for ->bgc GC */
-	int ts_y;
-
-	int clip_x;			/* clipping (x directions) */
-	int clip_x2;		/* from x to x2 */
-
-	int clip_y;			/* clipping (y directions) */
-	int clip_y2;		/* from y to y2 */
-
-	/* current text states */
-	bool underline;
-	bool hidden;
-
-	/* text parsing states */
-	bool parsing_backcolor;
-	bool parsing_color;
-	bool backcolor;
-
-	/* various state information */
-	bool moving_separator;
-	bool word_select;
-	bool line_select;
-	bool button_down;
-	bool hilighting;
-	bool dont_render;
-	bool dont_render2;
-	bool cursor_hand;
-	bool cursor_resize;
-	bool skip_border_fills;
-	bool skip_stamp;
-	bool mark_stamp;	/* Cut&Paste with stamps? */
-	bool force_stamp;	/* force redrawing it */
-	bool render_hilights_only;
-	bool in_hilight;
-	bool un_hilight;
-	bool force_render;
-	bool color_paste; /* CTRL was pressed when selection finished */
-
-	/* settings/prefs */
-	bool auto_indent;
-	bool thinline;
-	bool marker;
-	bool separator;
-	bool wordwrap;
-	bool ignore_hidden;	/* rawlog uses this */
-};
 
 struct GtkXTextClass
 {
@@ -287,11 +168,13 @@ void gtk_xtext_set_thin_separator(GtkXText *xtext, gboolean thin_separator);
 void gtk_xtext_set_time_stamp(xtext_buffer *buf, gboolean timestamp);
 void gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, const char *));
 void gtk_xtext_set_wordwrap(GtkXText *xtext, gboolean word_wrap);
-
+xtext_buffer* xtext_get_current_buffer(GtkXText*);
 xtext_buffer *gtk_xtext_buffer_new(GtkXText *xtext);
+GtkAdjustment* xtext_get_adjustments(GtkXText*);
 void gtk_xtext_buffer_free(xtext_buffer *buf);
 void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render);
 void gtk_xtext_copy_selection(GtkXText *xtext);
+void gtk_xtext_set_ignore_hidden(GtkXText* xtext, bool ignore_hidden);
 GType gtk_xtext_get_type(void);
 
 

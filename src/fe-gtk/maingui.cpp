@@ -2267,8 +2267,8 @@ mg_create_textarea (session *sess, GtkWidget *box)
 
 	g_signal_connect(G_OBJECT(gui->xtext), "word_click",
 							G_CALLBACK (mg_word_clicked), nullptr);
-
-	gui->vscrollbar = gtk_vscrollbar_new(GTK_XTEXT(gui->xtext)->adj);
+	auto adj = xtext_get_adjustments(GTK_XTEXT(gui->xtext));
+	gui->vscrollbar = gtk_vscrollbar_new(adj);
 	gtk_box_pack_start (GTK_BOX (inbox), gui->vscrollbar, false, true, 0);
 
 	gtk_drag_dest_set(gui->vscrollbar, static_cast<GtkDestDefaults>(GTK_DEST_DEFAULT_DROP | GTK_DEST_DEFAULT_MOTION), dnd_dest_targets, 2,

@@ -78,7 +78,8 @@ rawlog_save (server *serv, char *file)
 static int
 rawlog_clearbutton (GtkWidget * wid, server *serv)
 {
-	gtk_xtext_clear (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, 0);
+	auto buffer = xtext_get_current_buffer(GTK_XTEXT(serv->gui->rawlog_textlist));
+	gtk_xtext_clear (buffer, 0);
 	return FALSE;
 }
 
@@ -131,8 +132,10 @@ open_rawlog (struct server *serv)
 
 	serv->gui->rawlog_textlist = gtk_xtext_new (colors, false);
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), serv->gui->rawlog_textlist);
-	gtk_xtext_set_font (GTK_XTEXT (serv->gui->rawlog_textlist), prefs.hex_text_font);
-	GTK_XTEXT (serv->gui->rawlog_textlist)->ignore_hidden = true;
+	auto xtext = GTK_XTEXT(serv->gui->rawlog_textlist);
+	auto buffer = xtext_get_current_buffer(xtext);
+	gtk_xtext_set_font (xtext, prefs.hex_text_font);
+	gtk_xtext_set_ignore_hidden(xtext, true);
 
 	bbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
@@ -157,12 +160,13 @@ fe_add_rawlog(server *serv, const boost::string_ref &text, bool outbound)
 		return;
 
 	std::vector<std::string> split_strings;
+	auto buffer = xtext_get_current_buffer(GTK_XTEXT(serv->gui->rawlog_textlist));
 	for (auto & it : boost::iter_split(split_strings, text, boost::algorithm::first_finder("\r\n")))
 	{
 		if (it.empty())
 			break;
 		std::string new_text((outbound ? "\0034<<\017 " : "\0033>>\017 ") + it);
-
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, new_text, 0);
+		
+		gtk_xtext_append (buffer, new_text, 0);
 	}
 }

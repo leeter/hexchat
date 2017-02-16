@@ -422,9 +422,10 @@ key_dialog_print_text (GtkXText *xtext,const char text[])
 {
 	unsigned int old = prefs.hex_stamp_text;
 	prefs.hex_stamp_text = 0;	/* temporarily disable stamps */
-	gtk_xtext_clear (GTK_XTEXT (xtext)->buffer, 0);
+	auto buffer = xtext_get_current_buffer(GTK_XTEXT(xtext));
+	gtk_xtext_clear (buffer, 0);
 	std::string mutable_buffer(text);
-	PrintTextRaw (GTK_XTEXT (xtext)->buffer, reinterpret_cast<unsigned char*>(&mutable_buffer[0]), 0, 0);
+	PrintTextRaw (buffer, reinterpret_cast<unsigned char*>(mutable_buffer.data()), 0, 0);
 	prefs.hex_stamp_text = old;
 }
 
