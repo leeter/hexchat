@@ -39,7 +39,6 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include "fe-gtk.hpp"
 #include "xtext.hpp"
 #include "fkeys.hpp"
-#include "gtk_helpers.hpp"
 #include "gtk3bridge.hpp"
 
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
@@ -123,23 +122,6 @@ struct xtext_impl
 
 namespace
 {
-
-	CUSTOM_PTR(cairo_t, cairo_destroy)
-	CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
-	struct cairo_stack{
-		cairo_t* const _cr;
-		cairo_stack(cairo_stack&) = delete;
-		cairo_stack(cairo_t* cr) noexcept
-			:_cr(cr)
-		{
-			cairo_save(_cr);
-		}
-		~cairo_stack() noexcept
-		{
-			cairo_restore(_cr);
-		}
-	};
-
 	struct scope_exit {
 		scope_exit(std::function<void(void)> f) : f_(f) {}
 		~scope_exit(void) { f_(); }

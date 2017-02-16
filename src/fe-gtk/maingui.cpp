@@ -51,7 +51,6 @@
 #include "plugin-tray.hpp"
 #include "xtext.hpp"
 #include "sexy-spell-entry.hpp"
-#include "gtk_helpers.hpp"
 
 using sess_itr = glib_helper::glist_iterator < session >;
 
@@ -1780,11 +1779,6 @@ mg_changui_destroy (session *sess)
 		sess->gui = nullptr;
 	}
 	return ret;
-}
-
-namespace
-{
-	CUSTOM_PTR(GtkWidget, gtk_widget_destroy)
 }
 
 static void
@@ -3716,11 +3710,6 @@ mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint
 	}
 
 	return true;
-}
-
-namespace
-{
-	CUSTOM_PTR(cairo_t, cairo_destroy)
 }
 /* draw highlight rectangle in the destination */
 

@@ -72,6 +72,27 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <libintl.h>
+#include <glib-object.h>
+#include <cairo.h>
+#include "gtk_helpers.hpp"
+
+CUSTOM_PTR(cairo_t, cairo_destroy)
+CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
+CUSTOM_PTR(GtkWidget, gtk_widget_destroy)
+
+struct cairo_stack {
+	cairo_t* const _cr;
+	cairo_stack(cairo_stack&) = delete;
+	cairo_stack(cairo_t* cr) noexcept
+		:_cr(cr)
+	{
+		cairo_save(_cr);
+	}
+	~cairo_stack() noexcept
+	{
+		cairo_restore(_cr);
+	}
+};
 
 #if defined (WIN32) || defined (__APPLE__)
 #include <pango/pangocairo.h>
