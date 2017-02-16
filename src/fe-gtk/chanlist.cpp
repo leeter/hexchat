@@ -15,27 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#endif
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <fcntl.h>
-#include <ctime>
-#include <stdexcept>
-#include <boost/utility/string_ref.hpp>
 
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
+#include "precompile.hpp"
 
 #include "fe-gtk.hpp"
-
-#include <gdk/gdkkeysyms.h>
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"
@@ -453,8 +436,9 @@ chanlist_join (GtkWidget *, server *serv)
 		{
 			snprintf (tbuf, sizeof (tbuf), "join %s", chan);
 			handle_command (serv->server_session, tbuf, FALSE);
-		} else
-			gdk_beep ();
+		}
+		else
+			;//gdk_beep ();
 		g_free (chan);
 	}
 }

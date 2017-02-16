@@ -17,7 +17,7 @@
 */
 
 #define GDK_MULTIHEAD_SAFE
-
+#include "precompile.hpp"
 #include <glib.h>
 #include <gtk/gtk.h>
 #include "gtk3bridge.hpp"

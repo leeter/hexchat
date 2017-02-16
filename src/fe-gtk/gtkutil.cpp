@@ -15,26 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define _FILE_OFFSET_BITS 64 /* allow selection of large files */
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cstdarg>
-#include <functional>
-#include <sstream>
-#include <string>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <boost/filesystem.hpp>
-#include <boost/utility/string_ref.hpp>
+#include "precompile.hpp"
 
 #include "fe-gtk.hpp"
 
-#include <gdk/gdkkeysyms.h>
-#if defined (WIN32) || defined (__APPLE__)
-#include <pango/pangocairo.h>
-#endif
 
 #include "../common/hexchat.hpp"
 #include "../common/fe.hpp"
@@ -45,12 +29,6 @@
 #include "gtkutil.hpp"
 #include "pixmaps.hpp"
 #include "gtk_helpers.hpp"
-
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 /* gtkutil.c, just some gtk wrappers */
 

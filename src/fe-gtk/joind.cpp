@@ -22,20 +22,8 @@
    to find or join a channel.
 */
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#endif
+#include "precompile.hpp"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <cstring>
-#include <cstdio>
-#include <boost/utility/string_ref.hpp>
-
-#ifndef WIN32
-#include <unistd.h>
-#endif
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"

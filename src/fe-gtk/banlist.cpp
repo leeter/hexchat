@@ -23,6 +23,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include "precompile.hpp"
 #include <array>
 #include <functional>
 #include <numeric>

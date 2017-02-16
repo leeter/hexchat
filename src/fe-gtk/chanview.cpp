@@ -18,7 +18,7 @@
  */
 
 /* abstract channel view: tabs or tree or anything you like */
-
+#include "precompile.hpp"
 #include <atomic>
 #include <cstdlib>
 #include <cstring>

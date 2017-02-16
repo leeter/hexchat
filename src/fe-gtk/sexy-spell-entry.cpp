@@ -18,6 +18,7 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include "precompile.hpp"
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -26,19 +27,9 @@
 #include "config.h"
 #endif
 
-#include <cstdlib>
-#include <cstring>
-#include <limits>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <gtk/gtk.h>
 #include "sexy-spell-entry.hpp"
 #include <fcntl.h>
 #include <glib/gi18n.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "sexy-iso-codes.hpp"
 #include "../common/marshal.h"
 

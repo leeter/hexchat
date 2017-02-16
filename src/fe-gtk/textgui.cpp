@@ -15,21 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <algorithm>
-#include <array>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <iterator>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <boost/format.hpp>
-#include <boost/utility/string_ref.hpp>
+#include "precompile.hpp"
 
 #include "fe-gtk.hpp"
 
@@ -132,7 +118,7 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 			{
 				beep_done = true;
 				if (!prefs.hex_input_filter_beep)
-					gdk_beep ();
+					;//gdk_beep ();
 			}
 		default:
 			text++;

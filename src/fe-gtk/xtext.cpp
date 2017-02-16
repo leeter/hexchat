@@ -21,32 +21,11 @@
 * By Peter Zelezny <zed@xchat.org>.
 *
 */
+#include "precompile.hpp"
 
-#define GDK_MULTIHEAD_SAFE
 enum{ MARGIN = 2 };					/* dont touch. */
 #define REFRESH_TIMEOUT 20
 #define WORDWRAP_LIMIT 24
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#endif
-
-#include <algorithm>
-#include <cstring>
-#include <cstdlib>
-#include <ctime>
-#include <deque>
-#include <iterator>
-#include <functional>
-#include <locale>
-#include <ostream>
-#include <sstream>
-#include <string>
-#include <type_traits>
-#include <vector>
-
-#include <boost/utility/string_ref.hpp>
 
 #include "../../config.h"
 #include "../common/hexchat.hpp"

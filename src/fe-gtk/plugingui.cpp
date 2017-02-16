@@ -15,11 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include <string>
-#include <cstring>
-#include <boost/filesystem.hpp>
-#include <boost/utility/string_ref.hpp>
+#include "precompile.hpp"
 
 #include "fe-gtk.hpp"
 

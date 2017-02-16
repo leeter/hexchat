@@ -15,39 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#endif
-
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
-#include <stdexcept>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include <fcntl.h>
-
-#include <boost/optional.hpp>
-#include <boost/utility/string_ref.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/system/error_code.hpp>
-
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
+#include "precompile.hpp"
 
 #include "fe-gtk.hpp"
-
-#include <gdk/gdkkeysyms.h>
 
 #include "../common/hexchat.hpp"
 #include "../common/hexchatc.hpp"

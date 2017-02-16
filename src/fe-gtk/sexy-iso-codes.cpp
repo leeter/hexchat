@@ -18,10 +18,9 @@
 *    with this program; if not, write to the Free Software Foundation, Inc.,
 *    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-
+#include "precompile.hpp"
 #include "sexy-iso-codes.hpp"
-#include <libintl.h>
-#include <cstring>
+
 #include "../../config.h"
 
 #define ISO_639_DOMAIN	"iso_639"

@@ -20,6 +20,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
+#include "precompile.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
