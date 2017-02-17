@@ -133,7 +133,7 @@ namespace {
 		int clip_y;			/* clipping (y directions) */
 		int clip_y2;		/* from y to y2 */
 
-							/* current text states */
+		/* current text states */
 		bool underline;
 		bool hidden;
 
