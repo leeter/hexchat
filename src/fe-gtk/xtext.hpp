@@ -25,7 +25,7 @@
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
-G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget)
+G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget);
 
 enum text_attr{
 	ATTR_BOLD = '\002',
