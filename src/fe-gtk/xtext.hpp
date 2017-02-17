@@ -25,11 +25,7 @@
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
-#define GTK_XTEXT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), GTK_TYPE_XTEXT, GtkXText))
-#define GTK_XTEXT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GTK_TYPE_XTEXT, GtkXTextClass))
-#define GTK_IS_XTEXT(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), GTK_TYPE_XTEXT))
-#define GTK_IS_XTEXT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_TYPE_XTEXT))
-#define GTK_XTEXT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_XTEXT, GtkXTextClass))
+G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget)
 
 enum text_attr{
 	ATTR_BOLD = '\002',
@@ -55,8 +51,8 @@ enum text_attr{
 #define XTEXT_MAX_COLOR 41
 
 
-struct GtkXText;
-struct GtkXTextClass;
+//struct GtkXText;
+//struct GtkXTextClass;
 struct textentry;
 using ustring_ref = boost::basic_string_ref<unsigned char>;
 /*
@@ -130,11 +126,12 @@ public:
 struct BridgeStyleContext;
 #endif
 
-struct GtkXTextClass
+struct _GtkXTextClass
 {
 	GtkWidgetClass parent_class;
 	void(*word_click) (GtkXText * xtext, char *word, GdkEventButton * event);
 	void(*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
+	gpointer padding[12];
 };
 
 GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
@@ -175,7 +172,6 @@ void gtk_xtext_buffer_free(xtext_buffer *buf);
 void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render);
 void gtk_xtext_copy_selection(GtkXText *xtext);
 void gtk_xtext_set_ignore_hidden(GtkXText* xtext, bool ignore_hidden);
-GType gtk_xtext_get_type(void);
 
 
 #endif
