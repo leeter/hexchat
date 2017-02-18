@@ -23,6 +23,7 @@
 #include <memory>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
+#include <glib-object.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
 G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget);
@@ -83,20 +84,13 @@ struct xtext_buffer {
 private:
 	xtext_buffer(const xtext_buffer&) = delete;
 	xtext_buffer& operator=(const xtext_buffer&) = delete;
-
+	bool time_stamp;
 public:
 	explicit xtext_buffer(GtkXText* parent);
 	~xtext_buffer() NOEXCEPT;
 	std::unique_ptr<xtext_impl> impl;
 	
 	GtkXText *xtext;					/* attached to this widget */
-
-	gdouble old_value;					/* last known adj->value */
-	
-	int last_offset_start;
-	int last_offset_end;
-
-	int last_pixel_pos;
 
 	int pagetop_line;
 	int pagetop_subline;
@@ -107,7 +101,6 @@ public:
 	int window_width;				/* window size when last rendered. */
 	int window_height;
 
-	bool time_stamp;
 	bool scrollbar_down;
 	bool needs_recalc;
 	bool marker_seen;
@@ -121,6 +114,16 @@ public:
 	offsets_t curdata;		/* current offset info, from *curmark */
 	GRegex *search_re;		/* Compiled regular expression */
 	textentry *hintsearch;	/* textentry found for last search */
+
+public:
+	enum stamping : bool {
+		no_stamp = false,
+		time_stamped = true
+	};
+	void set_time_stamping(stamping);
+	bool is_time_stamped() const noexcept {
+		return time_stamp;
+	}
 };
 #if !GTK_CHECK_VERSION(3, 0, 0)
 struct BridgeStyleContext;
@@ -162,7 +165,6 @@ void gtk_xtext_set_max_lines(GtkXText *xtext, int max_lines);
 void gtk_xtext_set_show_marker(GtkXText *xtext, gboolean show_marker);
 void gtk_xtext_set_show_separator(GtkXText *xtext, gboolean show_separator);
 void gtk_xtext_set_thin_separator(GtkXText *xtext, gboolean thin_separator);
-void gtk_xtext_set_time_stamp(xtext_buffer *buf, gboolean timestamp);
 void gtk_xtext_set_urlcheck_function(GtkXText *xtext, int(*urlcheck_function) (GtkWidget *, const char *));
 void gtk_xtext_set_wordwrap(GtkXText *xtext, gboolean word_wrap);
 xtext_buffer* xtext_get_current_buffer(GtkXText*);
