@@ -118,6 +118,7 @@ struct xtext_impl
 
 	textentry *marker_pos;
 	gdouble old_value;					/* last known adj->value */
+	GRegex *search_re;		/* Compiled regular expression */
 	std::deque<textentry> entries;
 
 	xtext_impl()
@@ -131,7 +132,8 @@ struct xtext_impl
 		last_ent_end(),   /* selection. */
 		pagetop_ent(), /* what's at priv->adj->value */
 		marker_pos(),
-		old_value(-1.0) /* last known adj->value */
+		old_value(-1.0), /* last known adj->value */
+		search_re() /* Compiled regular expression */
 	{}
 };
 
@@ -257,7 +259,7 @@ namespace {
 }
 
 #ifndef __INTELLISENSE__
-G_DEFINE_TYPE_WITH_PRIVATE(GtkXText, gtk_xtext, GTK_TYPE_WIDGET);
+G_DEFINE_TYPE_WITH_PRIVATE(GtkXText, gtk_xtext, GTK_TYPE_WIDGET)
 #else
 static GtkWidgetClass* gtk_xtext_parent_class;
 #endif
@@ -324,9 +326,6 @@ namespace{
 	static void gtk_xtext_search_fini(xtext_buffer *);
 	static bool gtk_xtext_search_init(xtext_buffer *buf, const gchar *text, gtk_xtext_search_flags flags, GError **perr);
 	static const char * gtk_xtext_get_word(GtkXText * xtext, int x, int y, textentry ** ret_ent, int *ret_off, int *ret_len, std::vector<offlen_t> *slp);
-
-
-//#define xtext_draw_bg(xt,x,y,w,h) gdk_draw_rectangle(xt->draw_buf, xt->bgc, 1, x, y, w, h);
 
 	/* ======================================= */
 	/* ============ PANGO BACKEND ============ */
@@ -707,8 +706,6 @@ namespace{
 		}
 #endif
 		G_OBJECT_CLASS(gtk_xtext_parent_class)->dispose(object);
-		/*if (G_OBJECT_CLASS(parent_class)->destroy)
-			(*G_OBJECT_CLASS(parent_class)->destroy) (object);*/
 	}
 
 	static void
@@ -725,15 +722,12 @@ namespace{
 	static void
 		gtk_xtext_realize(GtkWidget * widget)
 	{
-		GdkWindowAttr attributes;
-		GdkGCValues val;
-		GdkColormap *cmap;
-
 		gtk_widget_set_realized(widget, true);
 		auto xtext = GTK_XTEXT(widget);
 
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(widget, &allocation);
+		GdkWindowAttr attributes = {};
 		attributes.x = allocation.x;
 		attributes.y = allocation.y;
 		attributes.width = allocation.width;
@@ -744,7 +738,7 @@ namespace{
 			GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
 			| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK;
 
-		cmap = gtk_widget_get_colormap(widget);
+		auto cmap = gtk_widget_get_colormap(widget);
 		attributes.colormap = cmap;
 		attributes.visual = gtk_widget_get_visual(widget);
 
@@ -756,7 +750,7 @@ namespace{
 		gdk_window_set_user_data(window, widget);
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		priv->depth = gdk_visual_get_depth(gdk_window_get_visual(window));
-
+		GdkGCValues val = {};
 		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 		val.graphics_exposures = 0;
 
@@ -787,10 +781,8 @@ namespace{
 					    GtkAllocation *allocation)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
-		bool height_only = false;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
-		if (allocation->width == priv->buffer->window_width)
-			height_only = true;
+		const auto height_only = allocation->width == priv->buffer->window_width;
 
 		gtk_widget_set_allocation(widget, allocation);
 		if (!gtk_widget_get_realized(GTK_WIDGET(widget)))
@@ -822,10 +814,9 @@ namespace{
 	static int
 		gtk_xtext_selection_clear(xtext_buffer *buf)
 	{
-		textentry *ent;
 		int ret = 0;
 
-		ent = buf->impl->last_ent_start;
+		auto ent = buf->impl->last_ent_start;
 		while (ent)
 		{
 			if (ent->mark_start != -1)
@@ -845,7 +836,6 @@ namespace{
 	{
 		int xx = indent;
 		int suboff;
-		int off, len, wid, mbl, mbw;
 
 		/* Skip to the first chunk of stuff for the subline */
 		std::vector<offlen_t>::const_iterator meta, hid = ent.slp.cend();
@@ -865,15 +855,15 @@ namespace{
 			meta = ent.slp.cbegin();
 		}
 		/* Step to the first character of the subline */
-		off = meta->off;
-		len = meta->len;
+		int off = meta->off;
+		int len = meta->len;
 		if (meta->emph & EMPH_HIDDEN)
 			hid = meta;
 		while (len > 0)
 		{
 			if (off >= suboff)
 				break;
-			mbl = charlen(ent.str.c_str() + off);
+			const auto mbl = charlen(ent.str.c_str() + off);
 			len -= mbl;
 			off += mbl;
 		}
@@ -881,12 +871,12 @@ namespace{
 			return ent.str.size();		/* Bad char -- return max offset. */
 
 		/* Step through characters to find the one at the x position */
-		wid = x - indent;
+		auto wid = x - indent;
 		len = meta->len - (off - meta->off);
 		while (wid > 0)
 		{
-			mbl = charlen(ent.str.c_str() + off);
-			mbw = backend_get_text_width_emph(xtext, ustring_ref(ent.str.c_str() + off, mbl), meta->emph);
+			const auto mbl = charlen(ent.str.c_str() + off);
+			const auto mbw = backend_get_text_width_emph(xtext, ustring_ref(ent.str.c_str() + off, mbl), meta->emph);
 			wid -= mbw;
 			xx += mbw;
 			if (xx >= x)
@@ -917,19 +907,15 @@ namespace{
 
 	static int
 		gtk_xtext_find_x(GtkXText * xtext, int x, const textentry & ent, int subline,
-		int line, gboolean *out_of_bounds)
+		int line, gboolean& out_of_bounds)
 	{
-		int indent;
 		const unsigned char *str;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
-		if (subline < 1)
-			indent = ent.indent;
-		else
-			indent = priv->buffer->indent;
+		const auto indent = subline < 1 ? ent.indent : priv->buffer->indent;
 
 		if (line > gtk_adjustment_get_page_size(priv->adj) || line < 0)
 		{
-			*out_of_bounds = true;
+			out_of_bounds = true;
 			return 0;
 		}
 
@@ -940,18 +926,18 @@ namespace{
 		/* Let user select left a few pixels to grab hidden text e.g. '<' */
 		if (x < indent - priv->space_width)
 		{
-			*out_of_bounds = true;
+			out_of_bounds = true;
 			return (str - ent.str.c_str());
 		}
 
-		*out_of_bounds = false;
+		out_of_bounds = false;
 
 		return find_x(xtext, ent, x, subline, indent);
 	}
 
 	static textentry *
 		gtk_xtext_find_char(GtkXText * xtext, int x, int y, int *off,
-		gboolean *out_of_bounds, int *ret_subline)
+		gboolean &out_of_bounds, int *ret_subline)
 	{
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		/* Adjust y value for negative rounding, double to int */
@@ -959,7 +945,7 @@ namespace{
 			y -= priv->fontsize;
 
 		int subline;
-		int line = (y + priv->pixel_offset) / priv->fontsize;
+		const auto line = (y + priv->pixel_offset) / priv->fontsize;
 		auto ent = gtk_xtext_nth(xtext, line + (int)gtk_adjustment_get_value(priv->adj), subline);
 		if (!ent)
 			return nullptr;
@@ -978,7 +964,7 @@ namespace{
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		if (!priv->separator || !priv->buffer->indent)
 			return;
-		auto x = priv->buffer->indent - ((priv->space_width + 1) / 2);
+		const auto x = priv->buffer->indent - ((priv->space_width + 1) / 2);
 		if (x < 1)
 			return;
 
@@ -1039,10 +1025,10 @@ namespace{
 		}
 		else return;
 
-		int x = 0;
-		GtkAllocation allocation;
+		constexpr int x = 0;
+		GtkAllocation allocation = {};
 		gtk_widget_get_allocation(GTK_WIDGET(xtext), &allocation);
-		int width = -allocation.width;
+		const int width = -allocation.width;
 		cairo_stack stack{ cr };
 		gdk_cairo_set_source_color(cr, &priv->palette[XTEXT_MARKER]);
 		render_y += 0.5;
@@ -1050,7 +1036,6 @@ namespace{
 		cairo_line_to(cr, x + width, render_y);
 		cairo_set_line_width(cr, 1);
 		cairo_stroke(cr);
-		//gdk_draw_line(priv->draw_buf, priv->marker_gc, x, render_y, x + width, render_y);
 
 		if (gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(xtext)))))
 		{
@@ -1068,7 +1053,7 @@ namespace{
 		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
 
 		GtkXText *xtext = GTK_XTEXT(widget);
-		GtkAllocation allocation;
+		GtkAllocation allocation = {};
 		gtk_widget_get_allocation(widget, &allocation);
 		gtk_render_background(gtk_widget_get_style_context(widget), cr, allocation.x,
 				      allocation.y, allocation.width,
@@ -1117,8 +1102,8 @@ namespace{
 		int subline_end;
 		gboolean oob = false;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
-		auto ent_start = gtk_xtext_find_char(xtext, priv->select_start_x, priv->select_start_y, &offset_start, &oob, &subline_start);
-		auto ent_end = gtk_xtext_find_char(xtext, priv->select_end_x, priv->select_end_y, &offset_end, &oob, &subline_end);
+		auto ent_start = gtk_xtext_find_char(xtext, priv->select_start_x, priv->select_start_y, &offset_start, oob, &subline_start);
+		auto ent_end = gtk_xtext_find_char(xtext, priv->select_end_x, priv->select_end_y, &offset_end, oob, &subline_end);
 	
 		if ((!ent_start || !ent_end) && !priv->buffer->impl->text_last && gtk_adjustment_get_value(priv->adj) != priv->buffer->impl->old_value)
 		{
@@ -1173,20 +1158,14 @@ namespace{
 
 		if (marking_up)
 		{
-			int temp;
-
 			/* ensure ent_start is above ent_end */
 			if (ent_start != ent_end)
 			{
-				auto ent = ent_start;
-				ent_start = ent_end;
-				ent_end = ent;
+				std::swap(ent_start, ent_end);
 			}
 
 			/* switch offsets as well */
-			temp = offset_start;
-			offset_start = offset_end;
-			offset_end = temp;
+			std::swap(offset_start, offset_end);
 		}
 
 		/* set all the old mark_ fields to -1 */
@@ -1218,7 +1197,7 @@ namespace{
 
 	static int gtk_xtext_timeout_ms(int pixes)
 	{
-		int apixes = std::abs(pixes);
+		const auto apixes = std::abs(pixes);
 
 		if (apixes < 6) return 100;
 		if (apixes < 12) return 50;
@@ -1228,15 +1207,15 @@ namespace{
 
 	static gboolean gtk_xtext_scrolldown_timeout(GtkXText * xtext)
 	{
-		int p_y, win_height;
+		
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		xtext_buffer *buf = priv->buffer;
 		GtkAdjustment *adj = priv->adj;
-
+		int p_y;
 		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
-		win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		const auto win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 
-		auto adj_value = gtk_adjustment_get_value(adj);
+		const auto adj_value = gtk_adjustment_get_value(adj);
 		if (buf->impl->last_ent_end == nullptr ||	/* If context has changed OR */
 			buf->impl->pagetop_ent == nullptr ||	/* pagetop_ent is reset OR */
 			p_y <= win_height ||			/* pointer not below bottom margin OR */
@@ -1248,8 +1227,7 @@ namespace{
 
 		priv->select_start_y -= priv->fontsize;
 		priv->select_start_adj++;
-		adj_value++;
-		gtk_adjustment_set_value(adj, adj_value);
+		gtk_adjustment_set_value(adj, adj_value + 1.0);
 		gtk_xtext_selection_draw(xtext, nullptr, true);
 		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		priv->scroll_tag = g_timeout_add(gtk_xtext_timeout_ms(p_y - win_height),
@@ -1262,12 +1240,11 @@ namespace{
 
 	static gboolean gtk_xtext_scrollup_timeout(GtkXText * xtext)
 	{
-		int p_y;
+		
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		xtext_buffer *buf = priv->buffer;
 		GtkAdjustment *adj = priv->adj;
-		int delta_y;
-
+		gint p_y;
 		gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(xtext)), nullptr, &p_y, nullptr);
 		auto adj_value = gtk_adjustment_get_value(adj);
 		if (buf->impl->last_ent_start == nullptr ||	/* If context has changed OR */
@@ -1278,7 +1255,7 @@ namespace{
 			priv->scroll_tag = 0;
 			return false;
 		}
-
+		int delta_y;
 		if (adj_value < 0.0)
 		{
 			delta_y = adj_value * priv->fontsize;
@@ -1310,7 +1287,7 @@ namespace{
 			return;
 		}
 
-		int win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
+		const auto win_height = gdk_window_get_height(gtk_widget_get_window(GTK_WIDGET(xtext)));
 		const auto adj_value = gtk_adjustment_get_value(priv->adj);
 		/* selecting past top of window, scroll up! */
 		if (p_y < 0 && adj_value >= 0)
@@ -1341,7 +1318,7 @@ namespace{
 		gboolean out_of_bounds = false;
 		int len_to_offset = 0;
 
-		auto ent = gtk_xtext_find_char(xtext, x, y, &offset, &out_of_bounds, nullptr);
+		auto ent = gtk_xtext_find_char(xtext, x, y, &offset, out_of_bounds, nullptr);
 		if (!ent || out_of_bounds || offset < 0 || offset >= ent->str.size())
 			return nullptr;
 
@@ -1433,10 +1410,10 @@ namespace{
 
 	/* check if we should mark time stamps, and if a redraw is needed */
 
-	static gboolean
+	static bool
 		gtk_xtext_check_mark_stamp(GtkXText *xtext, GdkModifierType mask)
 	{
-		gboolean redraw = false;
+		bool redraw = false;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		if (mask & STATE_SHIFT || prefs.hex_text_autocopy_stamp)
 		{
@@ -1463,7 +1440,7 @@ namespace{
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		std::vector<offlen_t> slp;
 
-		auto word = gtk_xtext_get_word(xtext, x, y, word_ent, offset, len, &slp);
+		const auto word = gtk_xtext_get_word(xtext, x, y, word_ent, offset, len, &slp);
 		if (!word)
 		{
 			return 0;
@@ -1506,8 +1483,7 @@ namespace{
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
 		GdkModifierType mask;
-		int redraw, tmp, x, y, offset, len, line_x;
-		int word_type;
+		int x, y;
 
 		gdk_window_get_pointer(gtk_widget_get_window(widget), &x, &y, &mask);
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
@@ -1517,7 +1493,7 @@ namespace{
 			gtk_widget_get_allocation(widget, &allocation);
 			if (x < (3 * allocation.width) / 5 && x > 15)
 			{
-				tmp = priv->buffer->indent;
+				const auto tmp = priv->buffer->indent;
 				priv->buffer->indent = x;
 				gtk_xtext_fix_indent(priv->buffer);
 				if (tmp != priv->buffer->indent)
@@ -1538,7 +1514,7 @@ namespace{
 
 		if (priv->button_down)
 		{
-			redraw = gtk_xtext_check_mark_stamp(xtext, mask);
+			auto redraw = gtk_xtext_check_mark_stamp(xtext, mask);
 			gtk_grab_add(widget);
 			/*gdk_pointer_grab (widget->window, true,
 			GDK_BUTTON_RELEASE_MASK |
@@ -1554,7 +1530,7 @@ namespace{
 
 		if (priv->separator && priv->buffer->indent)
 		{
-			line_x = priv->buffer->indent - ((priv->space_width + 1) / 2);
+			const auto line_x = priv->buffer->indent - ((priv->space_width + 1) / 2);
 			if (line_x == x || line_x == x + 1 || line_x == x - 1)
 			{
 				if (!priv->cursor_resize)
@@ -1572,7 +1548,8 @@ namespace{
 			return false;
 
 		textentry *word_ent;
-		word_type = gtk_xtext_get_word_adjust(xtext, x, y, &word_ent, &offset, &len);
+		int offset, len;
+		const auto word_type = gtk_xtext_get_word_adjust(xtext, x, y, &word_ent, &offset, &len);
 		if (word_type > 0)
 		{
 			if (!priv->cursor_hand ||
@@ -1661,8 +1638,8 @@ namespace{
 		if (priv->moving_separator)
 		{
 			priv->moving_separator = false;
-			auto old = priv->buffer->indent;
-			GtkAllocation allocation;
+			const auto old = priv->buffer->indent;
+			GtkAllocation allocation = {};
 			gtk_widget_get_allocation(widget, &allocation);
 			if (event->x < (4 * allocation.width) / 5 && event->x > 15)
 				priv->buffer->indent = event->x;
@@ -1721,7 +1698,7 @@ namespace{
 
 			if (!priv->hilighting)
 			{
-				auto word = gtk_xtext_get_word(xtext, event->x, event->y, 0, 0, 0, 0);
+				const auto word = gtk_xtext_get_word(xtext, event->x, event->y, 0, 0, 0, 0);
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0, word ? word : nullptr, event);
 			}
 			else
@@ -1738,13 +1715,13 @@ namespace{
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
 		GdkModifierType mask;
-		int line_x, x, y, offset, len;
+		int x, y;
 
 		gdk_window_get_pointer(gtk_widget_get_window(widget), &x, &y, &mask);
 
 		if (event->button == 3 || event->button == 2) /* right/middle click */
 		{
-			auto word = gtk_xtext_get_word(xtext, x, y, nullptr, nullptr, nullptr, nullptr);
+			const auto word = gtk_xtext_get_word(xtext, x, y, nullptr, nullptr, nullptr, nullptr);
 			if (word)
 			{
 				g_signal_emit(G_OBJECT(xtext), xtext_signals[WORD_CLICK], 0,
@@ -1764,6 +1741,7 @@ namespace{
 			gtk_xtext_selection_clear(priv->buffer);
 			textentry *ent;
 			gtk_xtext_check_mark_stamp(xtext, mask);
+			int offset, len;
 			if (gtk_xtext_get_word(xtext, x, y, &ent, &offset, &len, 0))
 			{
 				if (len == 0)
@@ -1798,7 +1776,7 @@ namespace{
 		/* check if it was a separator-bar click */
 		if (priv->separator && priv->buffer->indent)
 		{
-			line_x = priv->buffer->indent - ((priv->space_width + 1) / 2);
+			const auto line_x = priv->buffer->indent - ((priv->space_width + 1) / 2);
 			if (line_x == x || line_x == x + 1 || line_x == x - 1)
 			{
 				priv->moving_separator = true;
@@ -1882,7 +1860,7 @@ namespace{
 					/* include timestamp? */
 					if (ent->mark_start == 0 && priv->mark_stamp)
 					{
-						auto time_str = xtext_get_stamp_str(ent->stamp);
+						const auto time_str = xtext_get_stamp_str(ent->stamp);
 						std::copy(time_str.cbegin(), time_str.cend(), pos);
 					}
 
@@ -1910,7 +1888,7 @@ namespace{
 		GtkSelectionData * selection_data_ptr,
 		guint info, guint /*time*/)
 	{
-		auto stripped = gtk_xtext_selection_get_text(GTK_XTEXT(widget));
+		const auto stripped = gtk_xtext_selection_get_text(GTK_XTEXT(widget));
 		if (stripped.empty())
 			return;
 
@@ -2148,7 +2126,7 @@ namespace{
 		std::locale locale;
 		for (auto itr = text.cbegin(), end = text.cend(); itr != end;)
 		{
-			int mbl = charlen(itr); /* multi-byte length */
+			const int mbl = charlen(itr); /* multi-byte length */
 			if (mbl > std::distance(itr, end))
 				break; // bad UTF-8
 
@@ -2223,9 +2201,9 @@ namespace{
 	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry &ent)
 	{
 		ent.slp.clear();
-		auto new_buf = gtk_xtext_strip_color(ent.str, &ent.slp, 2);
+		const auto new_buf = gtk_xtext_strip_color(ent.str, &ent.slp, 2);
 
-		auto width =
+		const auto width =
 		    backend_get_text_width_slp(xtext, new_buf.c_str(), ent.slp);
 
 		for (auto &meta : ent.slp)
@@ -2240,9 +2218,9 @@ namespace{
 
 	int gtk_xtext_text_width(GtkXText *xtext, const ustring_ref & text)
 	{
-		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
+		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		std::vector<offlen_t> slp;
-		auto new_buf = gtk_xtext_strip_color(text, &slp, !priv->ignore_hidden);
+		const auto new_buf = gtk_xtext_strip_color(text, &slp, !priv->ignore_hidden);
 
 		return backend_get_text_width_slp(xtext, new_buf.c_str(), slp);
 	}
@@ -2321,8 +2299,7 @@ namespace{
 			priv->draw_buf = pix;
 		}*/
 
-		bool dofill = true;
-
+		constexpr auto dofill = true;
 		backend_draw_text_emph(xtext, dofill, cr, x, y - priv->font->ascent,
 				       str, str_width,
 				       *emphasis);
@@ -2418,7 +2395,7 @@ namespace{
 	}
 
 	/* render a single line, which WONT wrap, and parse mIRC colors */
-	static int
+	static bool
 		gtk_xtext_render_str(GtkXText * xtext, cairo_t* cr, int y, textentry * ent,
 		const unsigned char str[], int len, int win_width, int indent,
 		int /*line*/, bool left_only, int *x_size_ret, int *emphasis)
@@ -2427,7 +2404,7 @@ namespace{
 		int i = 0, x = indent, j = 0;
 		const unsigned char *pstr = str;
 		bool mark = false;
-		int ret = 1;
+		bool ret = true;
 		bool srch_underline = false;
 		bool srch_mark = false;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
@@ -2692,7 +2669,7 @@ namespace{
 			if (priv->jump_out_offset > 0 && priv->jump_out_offset <= (i + offset))
 			{
 				gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-				ret = 0;	/* skip the rest of the lines, we're done. */
+				ret = false;	/* skip the rest of the lines, we're done. */
 				j = 0;
 				break;
 			}
@@ -2715,7 +2692,7 @@ namespace{
 				if (priv->render_hilights_only)
 				{
 					/* stop drawing this ent */
-					ret = 0;
+					ret = false;
 					break;
 				}
 			}
@@ -2984,14 +2961,13 @@ namespace{
 	int gtk_xtext_render_line(GtkXText * xtext, cairo_t* cr, textentry * ent, int line,
 		int lines_max, int subline, int win_width)
 	{
-		const unsigned char *str;
-		int indent, taken, entline, len, y, start_subline;
+		int taken, len, y;
 		int emphasis = 0;
 
-		entline = taken = 0;
-		str = ent->str.c_str();
-		indent = ent->indent;
-		start_subline = subline;
+		auto entline = taken = 0;
+		auto str = ent->str.c_str();
+		int indent = ent->indent;
+		const auto start_subline = subline;
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		/* draw the timestamp */
 		if (priv->auto_indent && priv->buffer->is_time_stamped() &&
@@ -3051,7 +3027,7 @@ namespace{
 	static void
 		gtk_xtext_fix_indent(xtext_buffer *buf)
 	{
-		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
+		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
 		/* make indent a multiple of the space width */
 		if (buf->indent && priv->space_width)
 		{
@@ -3071,7 +3047,7 @@ namespace{
 	{
 		/* since we have a new font, we have to recalc the text widths
 		 */
-		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
+		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
 		for (auto &ent : buf->impl->entries)
 		{
 			if (do_str_width)
@@ -3129,19 +3105,20 @@ namespace{
 		auto window = gtk_widget_get_window(GTK_WIDGET(buf->xtext));
 		const auto height = gdk_window_get_height(window);
 		const auto width = gdk_window_get_width(window) - MARGIN;
-		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
+		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buf->xtext));
 		if (width < 30 || height < priv->fontsize ||
 		    width < buf->indent + 30)
 			return;
 
-		int lines = 0;
-		for (auto &ent : buf->impl->entries)
-		{
-			lines += gtk_xtext_lines_taken(buf, ent);
-		}
+		buf->num_lines = std::accumulate(
+			buf->impl->entries.begin(),
+			buf->impl->entries.end(),
+			0, 
+			[buf](auto val, auto& next) {
+			return val + gtk_xtext_lines_taken(buf, next);
+		});
 
 		buf->impl->pagetop_ent = nullptr;
-		buf->num_lines = lines;
 		gtk_xtext_adjustment_set(buf, fire_signal);
 	}
 
@@ -3302,7 +3279,7 @@ namespace{
 		/* Set visible to true if this is the current buffer */
 		/* and this ent shows up on the screen now */
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(buffer->xtext));
-		bool visible = priv->buffer == buffer &&
+		const bool visible = priv->buffer == buffer &&
 			gtk_xtext_check_ent_visibility(buffer->xtext, ent, 0);
 
 		if (ent == buffer->impl->pagetop_ent)
@@ -3389,9 +3366,7 @@ namespace{
 	static void
 		gtk_xtext_remove_bottom(xtext_buffer *buffer)
 	{
-		textentry *ent;
-
-		ent = buffer->impl->text_last;
+		auto ent = buffer->impl->text_last;
 		if (!ent)
 			return;
 		if (buffer->impl->entries.empty())
@@ -3464,11 +3439,8 @@ namespace{
 
 	static void gtk_xtext_unstrip_color(gint start, gint end, const std::vector<offlen_t>& slp, GList **gl, gint maxo)
 	{
-		gint off1, off2, curlen;
-		offsets_t marks;
-
-		off1 = 0;
-		curlen = 0;
+		auto off1 = 0;
+		auto curlen = 0;
 		for (const auto & meta : slp)
 		{
 			if (start < meta.len)
@@ -3481,7 +3453,7 @@ namespace{
 			end -= meta.len;
 		}
 
-		off2 = off1;
+		auto off2 = off1;
 		auto meta = slp.cbegin(), end_itr = slp.cend();
 		for (; meta != end_itr; ++meta)
 		{
@@ -3497,7 +3469,7 @@ namespace{
 		{
 			off2 = maxo;
 		}
-
+		offsets_t marks = {};
 		marks.o.start = off1;
 		marks.o.end = off2;
 		*gl = g_list_append(*gl, GUINT_TO_POINTER(marks.u));
@@ -3520,14 +3492,13 @@ namespace{
 		/* Regular-expression matching --- */
 		if (buf->search_flags & regexp)
 		{
-			GMatchInfo *gmi;
-			gint start, end;
-
-			if (buf->search_re == nullptr)
+			if (buf->impl->search_re == nullptr)
 			{
 				return gl;
 			}
-			g_regex_match(buf->search_re, str, GRegexMatchFlags(), &gmi);
+			GMatchInfo *gmi;
+			gint start, end;
+			g_regex_match(buf->impl->search_re, str, GRegexMatchFlags(), &gmi);
 			while (g_match_info_matches(gmi))
 			{
 				g_match_info_fetch_pos(gmi, 0, &start, &end);
@@ -3540,12 +3511,12 @@ namespace{
 		}
 		else {
 			gchar *pos;
-			gint lhay, off, len;
+			gint len;
 			gint match = buf->search_flags & case_match;
 
 			glib_string hay(match ? g_strdup(str) : g_utf8_casefold(str, lstr));
-			lhay = std::strlen(hay.get());
-			off = 0;
+			auto lhay = std::strlen(hay.get());
+			auto off = 0;
 
 			for (pos = hay.get(), len = lhay; len;
 				off += buf->search_nee.size(), pos = hay.get() + off, len = lhay - off)
@@ -3624,10 +3595,10 @@ namespace{
 		buf->cursearch = nullptr;
 		buf->curmark = nullptr;
 		/* but leave buf->curdata.u alone! */
-		if (buf->search_re)
+		if (buf->impl->search_re)
 		{
-			g_regex_unref(buf->search_re);
-			buf->search_re = nullptr;
+			g_regex_unref(buf->impl->search_re);
+			buf->impl->search_re = nullptr;
 		}
 	}
 
@@ -3648,7 +3619,7 @@ namespace{
 		buf->search_text = text;
 		if (flags & regexp)
 		{
-			buf->search_re = g_regex_new(text, (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS, GRegexMatchFlags(), perr);
+			buf->impl->search_re = g_regex_new(text, (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS, GRegexMatchFlags(), perr);
 			if (perr && *perr)
 			{
 				return false;
@@ -4131,7 +4102,6 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 	cursearch(),    /* GList whose 'data' pts to current textentry */
 	curmark(),      /* current item in ent->marks */
 	curdata(),      /* current offset info, from *curmark */
-	search_re(),    /* Compiled regular expression */
 	hintsearch()    /* textentry found for last search */
 {
 }
@@ -4139,6 +4109,15 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 void xtext_buffer::set_time_stamping(stamping new_stamping)
 {
 	this->time_stamp = new_stamping;
+}
+
+GError* xtext_buffer::set_search_regex(gtk_xtext_search_flags flags, const boost::string_ref & str)
+{
+	const auto search_string = str.to_string();
+	const auto gcf = (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS;
+	GError* err = nullptr;
+	this->impl->search_re = g_regex_new(search_string.c_str(), gcf, GRegexMatchFlags(), &err);
+	return err;
 }
 
 xtext_buffer::~xtext_buffer() NOEXCEPT

@@ -690,13 +690,11 @@ fe_lastlog (session *sess, session *lastlog_sess, const char *sstr, gtk_xtext_se
 	auto lbuf = static_cast<xtext_buffer*>(lastlog_sess->res->buffer);
 	if (flags & regexp)
 	{
-		GRegexCompileFlags gcf = (flags & case_match) ? GRegexCompileFlags() : G_REGEX_CASELESS;
-		GError *err = nullptr;
-		lbuf->search_re = g_regex_new (sstr, gcf, GRegexMatchFlags(), &err);
+		auto err = lbuf->set_search_regex(flags, sstr);
 		if (err)
 		{
 			std::unique_ptr<GError, decltype(&g_error_free)> err_ptr(err, g_error_free);
-			PrintText (lastlog_sess, _(err->message));
+			PrintText(lastlog_sess, _(err->message));
 			return;
 		}
 	}

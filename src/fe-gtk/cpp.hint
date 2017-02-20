@@ -2,3 +2,4 @@
 #define G_DEFINE_TYPE_EXTENDED(TN, t_n, T_P, _f_, _C_)
 #define G_DECLARE_DERIVABLE_TYPE(ModuleObjName, module_obj_name, MODULE, OBJ_NAME, ParentName)
 #define G_DEFINE_TYPE_WITH_PRIVATE(TN, t_n, T_P)
+#define CUSTOM_PTR(type, del)

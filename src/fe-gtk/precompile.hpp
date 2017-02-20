@@ -53,6 +53,7 @@
 #include <limits>
 #include <locale>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -69,6 +70,7 @@
 #include <boost/algorithm/string/iter_find.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/system/error_code.hpp>
+#include <boost/regex.hpp>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <libintl.h>

@@ -112,7 +112,6 @@ public:
 	GList *cursearch;			/* GList whose 'data' pts to current textentry */
 	GList *curmark;			/* current item in ent->marks */
 	offsets_t curdata;		/* current offset info, from *curmark */
-	GRegex *search_re;		/* Compiled regular expression */
 	textentry *hintsearch;	/* textentry found for last search */
 
 public:
@@ -121,6 +120,8 @@ public:
 		time_stamped = true
 	};
 	void set_time_stamping(stamping);
+
+	GError* set_search_regex(gtk_xtext_search_flags, const boost::string_ref&);
 	bool is_time_stamped() const noexcept {
 		return time_stamp;
 	}
