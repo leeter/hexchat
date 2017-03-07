@@ -42,7 +42,7 @@ namespace{
 	static const char upd_help[] = "Update Checker Usage:\n  /UPDCHK, check for HexChat updates\n  /UPDCHK SET delay|freq, set startup delay or check frequency\n";
 	struct inet_handle_deleter{
 		using pointer = HINTERNET;
-		void operator ()(HINTERNET handle) _NOEXCEPT
+		void operator ()(HINTERNET handle) noexcept
 		{
 			InternetCloseHandle(handle);
 		}
