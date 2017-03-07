@@ -188,7 +188,7 @@ enum
 static guint signals[LAST_SIGNAL] = {0};
 
 static gboolean
-spell_accumulator(GSignalInvocationHint *hint, GValue *return_accu, const GValue *handler_return, gpointer data)
+spell_accumulator(GSignalInvocationHint * /*hint*/, GValue *return_accu, const GValue *handler_return, gpointer /*data*/)
 {
 	gboolean ret = g_value_get_boolean(handler_return);
 	/* Handlers return TRUE if the word is misspelled.  In this
@@ -209,15 +209,15 @@ static T module_symbol(GModule* enchant, const gchar* name)
 static void
 initialize_enchant ()
 {
-	GModule *enchant = g_module_open("libenchant." G_MODULE_SUFFIX, GModuleFlags());
+	GModule *enchant = g_module_open(u8"libenchant." G_MODULE_SUFFIX, GModuleFlags());
 	if (enchant == NULL)
 	{
 #ifndef WIN32
-		enchant = g_module_open("libenchant.so.1", GModuleFlags());
+		enchant = g_module_open(u8"libenchant.so.1", GModuleFlags());
 		if (enchant == NULL)
 		{
 #ifdef __APPLE__
-			enchant = g_module_open("libenchant.dylib", GModuleFlags());
+			enchant = g_module_open(u8"libenchant.dylib", GModuleFlags());
 			if (enchant == NULL)
 #endif
 				return;
@@ -232,21 +232,21 @@ initialize_enchant ()
 #define MODULE_SYMBOL(name, func) \
 	func = module_symbol<decltype(func)>(enchant, (name)); \
 
-	MODULE_SYMBOL("enchant_broker_init", enchant_broker_init)
-	MODULE_SYMBOL("enchant_broker_free", enchant_broker_free)
-	MODULE_SYMBOL("enchant_broker_free_dict", enchant_broker_free_dict)
-	MODULE_SYMBOL("enchant_broker_list_dicts", enchant_broker_list_dicts)
-	MODULE_SYMBOL("enchant_broker_request_dict", enchant_broker_request_dict)
+	MODULE_SYMBOL(u8"enchant_broker_init", enchant_broker_init)
+	MODULE_SYMBOL(u8"enchant_broker_free", enchant_broker_free)
+	MODULE_SYMBOL(u8"enchant_broker_free_dict", enchant_broker_free_dict)
+	MODULE_SYMBOL(u8"enchant_broker_list_dicts", enchant_broker_list_dicts)
+	MODULE_SYMBOL(u8"enchant_broker_request_dict", enchant_broker_request_dict)
 
-	MODULE_SYMBOL("enchant_dict_add_to_personal", enchant_dict_add_to_personal)
-	MODULE_SYMBOL("enchant_dict_add_to_session", enchant_dict_add_to_session)
-	MODULE_SYMBOL("enchant_dict_check", enchant_dict_check)
-	MODULE_SYMBOL("enchant_dict_describe", enchant_dict_describe)
-	MODULE_SYMBOL("enchant_dict_free_suggestions",
+	MODULE_SYMBOL(u8"enchant_dict_add_to_personal", enchant_dict_add_to_personal)
+	MODULE_SYMBOL(u8"enchant_dict_add_to_session", enchant_dict_add_to_session)
+	MODULE_SYMBOL(u8"enchant_dict_check", enchant_dict_check)
+	MODULE_SYMBOL(u8"enchant_dict_describe", enchant_dict_describe)
+	MODULE_SYMBOL(u8"enchant_dict_free_suggestions",
 				  enchant_dict_free_suggestions)
-	MODULE_SYMBOL("enchant_dict_store_replacement",
+	MODULE_SYMBOL(u8"enchant_dict_store_replacement",
 				  enchant_dict_store_replacement)
-	MODULE_SYMBOL("enchant_dict_suggest", enchant_dict_suggest)
+	MODULE_SYMBOL(u8"enchant_dict_suggest", enchant_dict_suggest)
 
 #undef MODULE_SYMBOL
 }
@@ -407,7 +407,7 @@ sexy_spell_entry_find_position(SexySpellEntry *entry, gint x)
 }
 
 static void
-sexy_spell_entry_preedit_changed(SexySpellEntry *entry, gchar *preedit, gpointer userdata)
+sexy_spell_entry_preedit_changed(SexySpellEntry *entry, gchar *preedit, gpointer /*userdata*/)
 {
 	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
 	priv->preedit_length = strlen(preedit);
@@ -446,7 +446,7 @@ sexy_spell_entry_preedit_changed(SexySpellEntry *entry, gchar *preedit, gpointer
 //}
 
 static void
-insert_hiddenchar (SexySpellEntry *entry, guint start, guint end)
+insert_hiddenchar (SexySpellEntry * /*entry*/, guint /*start*/, guint /*end*/)
 {
 	/* FIXME: Pango does not properly reflect the new widths after a char
 	 * is 'hidden' */
@@ -603,7 +603,7 @@ add_to_dictionary(GtkWidget *menuitem, SexySpellEntry *entry)
 }
 
 static void
-ignore_all(GtkWidget *menuitem, SexySpellEntry *entry)
+ignore_all(GtkWidget * /*menuitem*/, SexySpellEntry *entry)
 {
 	if (!have_enchant)
 		return;
@@ -823,7 +823,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 }
 
 static void
-sexy_spell_entry_populate_popup(SexySpellEntry *entry, GtkMenu *menu, gpointer data)
+sexy_spell_entry_populate_popup(SexySpellEntry *entry, GtkMenu *menu, gpointer /*data*/)
 {
 	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
 	if (!have_enchant || (priv->checked == FALSE))
@@ -1222,7 +1222,6 @@ static gint
 sexy_spell_entry_button_press(GtkWidget *widget, GdkEventButton *event)
 {
 	SexySpellEntry *entry = SEXY_SPELL_ENTRY(widget);
-	GtkEntry *gtk_entry = GTK_ENTRY(widget);
 	auto pos = sexy_spell_entry_find_position(entry, event->x);
 	auto priv = static_cast<SexySpellEntryPrivate*>(
 		sexy_spell_entry_get_instance_private(entry));
@@ -1232,7 +1231,7 @@ sexy_spell_entry_button_press(GtkWidget *widget, GdkEventButton *event)
 }
 
 static gboolean
-sexy_spell_entry_popup_menu(GtkWidget *widget, SexySpellEntry *entry)
+sexy_spell_entry_popup_menu(GtkWidget * /*widget*/, SexySpellEntry *entry)
 {
 	/* Menu popped up from a keybinding (menu key or <shift>+F10). Use
 	 * the cursor position as the mark position */
@@ -1291,7 +1290,7 @@ entry_strsplit_utf8(GtkEntry *entry, gchar ***set, gint **starts, gint **ends)
 }
 
 static void
-sexy_spell_entry_changed(GtkEditable *editable, gpointer data)
+sexy_spell_entry_changed(GtkEditable *editable, gpointer /*data*/)
 {
 	SexySpellEntry *entry = SEXY_SPELL_ENTRY(editable);
 	auto priv = static_cast<SexySpellEntryPrivate*>(sexy_spell_entry_get_instance_private(entry));
@@ -1360,9 +1359,9 @@ sexy_spell_entry_activate_default_languages(SexySpellEntry *entry)
 
 static void
 get_lang_from_dict_cb(const char * const lang_tag,
-			  const char * const provider_name,
-			  const char * const provider_desc,
-			  const char * const provider_file,
+			  const char * const /*provider_name*/,
+			  const char * const /*provider_desc*/,
+			  const char * const /*provider_file*/,
 			  void * user_data) {
 	gchar **lang = (gchar **)user_data;
 	*lang = g_strdup(lang_tag);
@@ -1410,9 +1409,9 @@ sexy_spell_entry_activate_language_internal(SexySpellEntry *entry, const std::st
 
 static void
 dict_describe_cb(const char * const lang_tag,
-		 const char * const provider_name,
-		 const char * const provider_desc,
-		 const char * const provider_file,
+		 const char * const /*provider_name*/,
+		 const char * const /*provider_desc*/,
+		 const char * const /*provider_file*/,
 		 void * user_data)
 {
 	GSList **langs = (GSList **)user_data;
@@ -1457,7 +1456,7 @@ sexy_spell_entry_get_languages(const SexySpellEntry *entry)
  * Returns: The name of the locale. Should be freed with g_free()
  */
 gchar *
-sexy_spell_entry_get_language_name(const SexySpellEntry *entry,
+sexy_spell_entry_get_language_name(const SexySpellEntry * /*entry*/,
 								   const gchar *lang)
 {
 #ifdef HAVE_ISO_CODES
