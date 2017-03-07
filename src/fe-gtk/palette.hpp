@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_PALETTE_HPP
 #define HEXCHAT_PALETTE_HPP
 
-extern GdkColor colors[];
+extern std::array<GdkColor, 48> colors;
 
 #define COL_MARK_FG 32
 #define COL_MARK_BG 33

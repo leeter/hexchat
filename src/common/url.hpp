@@ -25,6 +25,7 @@
 #include <boost/utility/string_ref_fwd.hpp>
 
 enum word_types{
+	WORD_DEFAULT = 0,
 	WORD_URL     = 1,
 	WORD_CHANNEL = 2,
 	WORD_HOST    = 3,

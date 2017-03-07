@@ -184,7 +184,7 @@ dcc_prepare_row_chat (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 							  CCOL_COLOR,
 							  dcc::dccstat[stat_index].color == 1 ?
 								nullptr :
-								colors + dcc::dccstat[stat_index].color,
+								colors.data() + dcc::dccstat[stat_index].color,
 							  -1);
 }
 
@@ -226,7 +226,7 @@ dcc_prepare_row_send (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_COLOR,
 								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dccstat_index].color,
+									colors.data() + dcc::dccstat[dccstat_index].color,
 									-1);
 	else
 		gtk_list_store_set (store, iter,
@@ -243,7 +243,7 @@ dcc_prepare_row_send (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_COLOR,
 								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dccstat_index].color,
+									colors.data() + dcc::dccstat[dccstat_index].color,
 									-1);
 }
 
@@ -286,7 +286,7 @@ dcc_prepare_row_recv (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_COLOR,
 								  dcc::dccstat[dccstat_index].color == 1 ?
 									NULL :
-									colors + dcc::dccstat[dccstat_index].color,
+									colors.data() + dcc::dccstat[dccstat_index].color,
 									-1);
 	else
 		gtk_list_store_set (store, iter,
@@ -303,7 +303,7 @@ dcc_prepare_row_recv (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 								  COL_COLOR,
 								  dcc::dccstat[dccstat_index].color == 1 ?
 									nullptr :
-									colors + dcc::dccstat[dccstat_index].color,
+									colors.data() + dcc::dccstat[dccstat_index].color,
 									-1);
 }
 

@@ -64,7 +64,7 @@ template<> struct enable_bitmask_operators<GSignalFlags>{
 #define CUSTOM_PTR_DELETER(type, del) \
 	struct type##deleter \
 	{\
-		void operator()(type * ptr) NOEXCEPT\
+		void operator()(type * ptr) noexcept\
 		{\
 			del(ptr); \
 		}\

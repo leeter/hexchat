@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\win32\packages\Microsoft.CppCoreCheck.14.0.24210.1\build\native\Microsoft.CppCoreCheck.props" Condition="Exists('..\..\win32\packages\Microsoft.CppCoreCheck.14.0.24210.1\build\native\Microsoft.CppCoreCheck.props')" />
   <PropertyGroup Label="Configuration">
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -225,6 +225,14 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <Manifest>
       <AdditionalManifestFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
       <AdditionalManifestFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableDpiAwareness>
+      <EnableDpiAwareness Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDpiAwareness>
+    </Manifest>
+    <Manifest>
+      <EnableDpiAwareness Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableDpiAwareness>
+    </Manifest>
+    <Manifest>
+      <EnableDpiAwareness Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableDpiAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -257,6 +265,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="urlgrab.hpp" />
     <ClInclude Include="userlistgui.hpp" />
     <ClInclude Include="xtext.hpp" />
+    <ClInclude Include="xtext_backend.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ascii.cpp" />
@@ -301,6 +310,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClCompile Include="urlgrab.cpp" />
     <ClCompile Include="userlistgui.cpp" />
     <ClCompile Include="xtext.cpp" />
+    <ClCompile Include="xtext_backend.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="hexchat.exe.manifest" />

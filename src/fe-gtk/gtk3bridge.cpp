@@ -16,10 +16,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#define GDK_MULTIHEAD_SAFE
 #include "precompile.hpp"
-#include <glib.h>
-#include <gtk/gtk.h>
 #include "gtk3bridge.hpp"
 #include "gtk_helpers.hpp"
 
@@ -34,16 +31,14 @@ struct BridgeStyleContext{
 #if !GTK_CHECK_VERSION(3, 0, 0)
 /// half this code is blatantly taken from GTK3 and is only being used as a bridge
 /// until we can upgrade properly, hence the layout of parameters is preserved
-
+namespace {
 static void
 prepare_context_for_layout(cairo_t *cr,
 gdouble x,
 gdouble y,
-PangoLayout *layout) NOEXCEPT
+PangoLayout *layout) noexcept
 {
-	const PangoMatrix *matrix;
-
-	matrix = pango_context_get_matrix(pango_layout_get_context(layout));
+	auto matrix = pango_context_get_matrix(pango_layout_get_context(layout));
 
 	cairo_move_to(cr, x, y);
 
@@ -65,12 +60,10 @@ do_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
 gdouble          x,
 gdouble          y,
-PangoLayout     *layout) NOEXCEPT
+PangoLayout     *layout) noexcept
 {
-	const GdkColor *fg_color;
-
-	cairo_save(cr);
-	fg_color = context->fg_color;
+	cairo_stack stack{ cr };
+	const auto fg_color = context->fg_color;
 
 	prepare_context_for_layout(cr, x, y, layout);
 
@@ -79,8 +72,7 @@ PangoLayout     *layout) NOEXCEPT
 
 	gdk_cairo_set_source_color(cr, fg_color);
 	pango_cairo_show_layout(cr, layout);
-
-	cairo_restore(cr);
+}
 }
 
 BridgeStyleContext*
@@ -89,27 +81,27 @@ gtk_style_context_new(void)
 	return new BridgeStyleContext();
 }
 
-void bridge_style_context_free(BridgeStyleContext* context) NOEXCEPT
+void bridge_style_context_free(BridgeStyleContext* context) noexcept
 {
 	delete context;
 }
 
-void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col) NOEXCEPT
+void bridge_set_foreground(BridgeStyleContext* context, GdkColor * col) noexcept
 {
 	context->fg_color = col;
 }
 
-void bridge_set_background(BridgeStyleContext* context, GdkColor * col) NOEXCEPT
+void bridge_set_background(BridgeStyleContext* context, GdkColor * col) noexcept
 {
 	context->bg_color = col;
 }
 
-const GdkColor* bridge_get_foreground(const BridgeStyleContext* context) NOEXCEPT
+const GdkColor* bridge_get_foreground(const BridgeStyleContext* context) noexcept
 {
 	return context->fg_color;
 }
 
-const GdkColor* bridge_get_background(const BridgeStyleContext* context) NOEXCEPT
+const GdkColor* bridge_get_background(const BridgeStyleContext* context) noexcept
 {
 	return context->bg_color;
 }
@@ -119,17 +111,15 @@ gtk_render_layout(BridgeStyleContext *context,
 cairo_t         *cr,
 gdouble          x,
 gdouble          y,
-PangoLayout     *layout) NOEXCEPT
+PangoLayout     *layout) noexcept
 {
 	g_return_if_fail(PANGO_IS_LAYOUT(layout));
 	g_return_if_fail(cr != NULL);
 
-	cairo_save(cr);
+	cairo_stack stack{ cr };
 	cairo_new_path(cr);
 
 	do_render_layout(context, cr, x, y, layout);
-
-	cairo_restore(cr);
 }
 
 
@@ -140,25 +130,22 @@ cairo_t         *cr,
 gdouble          x,
 gdouble          y,
 gdouble          width,
-gdouble          height) NOEXCEPT
+gdouble          height) noexcept
 {
 	g_return_if_fail(cr != NULL);
 
 	if (width <= 0 || height <= 0)
 		return;
 
-	cairo_save(cr);
+	cairo_stack stack{ cr };
 	cairo_new_path(cr);
 
 	{
-		cairo_save(cr);
+		cairo_stack stack_1{ cr };
 		cairo_translate(cr, x, y);
 		gdk_cairo_set_source_color(cr, context->bg_color);
 		cairo_rectangle(cr, 0.0, 0.0, width, height);
 		cairo_fill(cr);
-		cairo_restore(cr);
 	}
-
-	cairo_restore(cr);
 }
 #endif

@@ -2119,7 +2119,7 @@ static int
 mg_word_check (GtkWidget * xtext, const char *word)
 {
 	session *sess = current_sess;
-	int ret = url_check_word (word);
+	auto ret = url_check_word (word);
 	if (ret == 0 && sess->type == session::SESS_DIALOG)
 		return WORD_DIALOG;
 

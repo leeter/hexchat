@@ -24,6 +24,9 @@
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
 #include <glib-object.h>
+#include <gsl.h>
+#include <../common/sessfwd.hpp>
+#include <../common/url.hpp>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
 G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget);
@@ -51,9 +54,6 @@ enum text_attr{
 #define XTEXT_MARKER 36		/* for marker line */
 #define XTEXT_MAX_COLOR 41
 
-
-//struct GtkXText;
-//struct GtkXTextClass;
 struct textentry;
 using ustring_ref = boost::basic_string_ref<unsigned char>;
 /*
@@ -138,13 +138,13 @@ struct _GtkXTextClass
 	gpointer padding[12];
 };
 
-GtkWidget *gtk_xtext_new(GdkColor palette[], bool separator);
+GtkWidget *gtk_xtext_new(const gsl::span<GdkColor, XTEXT_COLS> palette, bool separator);
 void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);
 void gtk_xtext_append_indent(xtext_buffer *buf,
 	ustring_ref left_text, ustring_ref right_text, time_t stamp);
 bool gtk_xtext_set_font(GtkXText *xtext, const char name[]);
-void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
-void gtk_xtext_set_palette(GtkXText * xtext, GdkColor palette[]);
+//void gtk_xtext_set_background(GtkXText * xtext, GdkPixmap * pixmap);
+void gtk_xtext_set_palette(GtkXText * xtext, const gsl::span<GdkColor, XTEXT_COLS> palette);
 void gtk_xtext_clear(xtext_buffer *buf, int lines);
 namespace xtext{
 	void save(const GtkXText & xtext, std::ostream & outfile);
@@ -159,7 +159,6 @@ void gtk_xtext_set_marker_last(session *sess);
 
 bool gtk_xtext_is_empty(const xtext_buffer &buf);
 
-void gtk_xtext_set_error_function(GtkXText *xtext, void(*error_function) (int));
 void gtk_xtext_set_indent(GtkXText *xtext, gboolean indent);
 void gtk_xtext_set_max_indent(GtkXText *xtext, int max_auto_indent);
 void gtk_xtext_set_max_lines(GtkXText *xtext, int max_lines);

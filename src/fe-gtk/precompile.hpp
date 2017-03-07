@@ -28,6 +28,8 @@
 #include <d2d1.h>
 #include <dwrite.h>
 #include <io.h>
+#include <wrl/client.h>
+#include <comdef.h>
 #else
 #include <unistd.h>
 #endif
@@ -60,8 +62,11 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <tuple>
 #include <type_traits>
 #include <vector>
+#include <unordered_map>
+#include <utility>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
@@ -76,11 +81,15 @@
 #include <libintl.h>
 #include <glib-object.h>
 #include <cairo.h>
+#include <gsl.h>
+#ifdef WIN32
+#include <gdk/gdkwin32.h>
+#endif
 #include "gtk_helpers.hpp"
 
-CUSTOM_PTR(cairo_t, cairo_destroy)
-CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy)
-CUSTOM_PTR(GtkWidget, gtk_widget_destroy)
+CUSTOM_PTR(cairo_t, cairo_destroy);
+CUSTOM_PTR(cairo_surface_t, cairo_surface_destroy);
+CUSTOM_PTR(GtkWidget, gtk_widget_destroy);
 
 struct cairo_stack {
 	cairo_t* const _cr;
