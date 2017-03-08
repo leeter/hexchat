@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gsl.h>
@@ -58,7 +59,7 @@ namespace xtext {
 	};
 	using applied_emph = int;
 	using ustring = std::basic_string<unsigned char>;
-	using ustring_ref = boost::basic_string_ref<unsigned char>;
+	using ustring_ref = std::basic_string_view<unsigned char>; //boost::basic_string_ref<unsigned char>;
 
 	/* For use by gtk_xtext_strip_color() and its callers -- */
 	struct offlen_t {
@@ -77,17 +78,17 @@ namespace xtext {
 		virtual ~xtext_backend() = default;
 
 		// Sets the default font for use on laying out text
-		virtual bool set_default_font(const boost::string_ref& defaultFont) = 0;
+		virtual bool set_default_font(const std::string_view& defaultFont) = 0;
 		// Gets the width of text laid out
-		virtual int get_string_width(const ustring_ref& text, int strip_hidden) = 0;
+		virtual int get_string_width(const xtext::ustring_ref& text, int strip_hidden) = 0;
 
 		virtual void set_palette(const gsl::span<GdkColor, XTEXT_COLS> colors) = 0;
 
-		virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const ustring_ref& text) = 0;
+		virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const xtext::ustring_ref& text) = 0;
 		virtual bool set_target(GdkWindow* window, GdkRegion* target_region, GdkRectangle rect) = 0;
 	};
 
-	std::unique_ptr<xtext_backend> create_backend(const boost::string_ref& defaultFont, GtkWidget* parentWidget);
+	std::unique_ptr<xtext_backend> create_backend(const std::string_view & defaultFont, GtkWidget* parentWidget);
 	ustring strip_color(const ustring_ref &text,
 		std::vector<offlen_t> *slp,
 		int strip_hidden);

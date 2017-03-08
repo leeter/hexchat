@@ -22,7 +22,7 @@
 #include "xtext_backend.hpp"
 #include "../common/charset_helpers.hpp"
 
-#define charlen(str) g_utf8_skip[*(guchar *)(str)]
+#define charlen(str) g_utf8_skip[(guchar)(*str)]
 namespace
 {
 CUSTOM_PTR(PangoFontDescription, pango_font_description_free);
@@ -99,23 +99,23 @@ struct d2d_backend : public common_backend
 			reinterpret_cast<IUnknown **>(m_dwfactory.GetAddressOf())));
 	}
 
-	int get_string_width(const ustring_ref& text, int strip_hidden) override final {
+	int get_string_width(const xtext::ustring_ref& text, int strip_hidden) override final {
 		return 0;
 	}
 
 	bool
-	set_default_font(const boost::string_ref &defaultFont) override final
+	set_default_font(const std::string_view &defaultFont) override final
 	{
 		const auto font_size_loc = defaultFont.find_last_of(' ');
-		if (font_size_loc == boost::string_ref::npos)
+		if (font_size_loc == std::string_view::npos)
 		{
 			return false;
 		}
 		const auto font_name = defaultFont.substr(0, font_size_loc);
 		const auto font_size_str =
-			defaultFont.substr(font_size_loc + 1).to_string();
+			std::string(defaultFont.substr(font_size_loc + 1));
 		const auto font_size = std::stof(font_size_str);
-		const auto wide_font = charset::widen(font_name.to_string());
+		const auto wide_font = charset::widen(std::string(font_name));
 		std::array<wchar_t, LOCALE_NAME_MAX_LENGTH> localeName = {};
 		if (::GetUserDefaultLocaleName(localeName.data(),
 						   localeName.size()) == 0)
@@ -129,7 +129,7 @@ struct d2d_backend : public common_backend
 			m_currTextFormat.ReleaseAndGetAddressOf()));
 
 		this->default_font_name =
-			charset::widen(defaultFont.to_string());
+			charset::widen(std::string(defaultFont));
 		return true;
 	}
 
@@ -372,9 +372,9 @@ public:
 	}
 
 	bool
-	set_default_font(const boost::string_ref &defaultFont) override final
+	set_default_font(const std::string_view &defaultFont) override final
 	{
-		const auto font_name = defaultFont.to_string();
+		const auto font_name = std::string(defaultFont);
 		PangoFontDescriptionPtr font{
 			pango_font_description_from_string(font_name.c_str())};
 		if (font && pango_font_description_get_size(font.get()) == 0)
@@ -468,7 +468,7 @@ public:
 		int mark_start,
 		int mark_end,
 		align alignment,
-		const ustring_ref& text) override final {
+		const xtext::ustring_ref& text) override final {
 		
 		const auto result = this->string_to_layout(text, mark_start, mark_end);
 		switch (alignment) {
@@ -528,7 +528,7 @@ void xtext_do_chunk(chunk_t &c)
 namespace xtext
 {
 std::unique_ptr<xtext_backend>
-create_backend(const boost::string_ref &defaultFont, GtkWidget *parentWidget)
+create_backend(const std::string_view &defaultFont, GtkWidget *parentWidget)
 {
 
 	auto cairobackend = std::make_unique<pangocairo_backend>(parentWidget);

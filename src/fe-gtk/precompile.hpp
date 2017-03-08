@@ -58,6 +58,7 @@
 #include <numeric>
 #include <ostream>
 #include <sstream>
+#include <string_view>
 #include <stdexcept>
 #include <string>
 #include <sys/types.h>

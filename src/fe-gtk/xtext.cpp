@@ -37,25 +37,21 @@ enum{ MARGIN = 2 };					/* dont touch. */
 #include "../common/session.hpp"
 #include "../common/glist_iterators.hpp"
 #include "../common/charset_helpers.hpp"
+#include "../common/text.hpp"
 #include "fe-gtk.hpp"
 #include "xtext.hpp"
 #include "fkeys.hpp"
 #include "gtk3bridge.hpp"
 #include "xtext_backend.hpp"
 
-#define charlen(str) g_utf8_skip[*(guchar *)(str)]
+#define charlen(str) g_utf8_skip[(guchar)(*str)]
 
-#ifdef WIN32
-//#include <io.h>
-#else
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
-#endif
 
 char *nocasestrstr(const char *text, const char *tofind);	/* util.c */
-std::string xtext_get_stamp_str(time_t);
-gpointer gtk_xtext_get_instance_private(GtkXText*);
+//gpointer gtk_xtext_get_instance_private(GtkXText*);
 
 /*
 Represents one 'line' or entry of text in the xtext, includes sublines (glyph runs of common
@@ -168,8 +164,6 @@ namespace {
 
 		int col_fore;
 		int col_back;
-
-		int depth;						  /* gdk window depth */
 
 		char num[8];					  /* for parsing mirc color */
 		int nc;							  /* offset into priv->num */
@@ -301,6 +295,7 @@ namespace{
 	static void gtk_xtext_fix_indent(xtext_buffer *buf);
 	static int gtk_xtext_find_subline(const textentry &ent, int line);
 	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
+	[[deprecated("uses the scratch buffer, use xtext::strip_color instead")]]
 	static unsigned char *
 		gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
 		int *newlen, std::vector<xtext::offlen_t> * slp, int strip_hidden);
@@ -476,7 +471,8 @@ namespace{
 				deltaw = fontwidths[emphasis][*itr];
 			else
 			{
-				pango_layout_set_text(priv->layout, reinterpret_cast<const char*>(itr), mbl);
+				
+				pango_layout_set_text(priv->layout, reinterpret_cast<const char*>(&(*itr)), mbl);
 				pango_layout_get_pixel_size(priv->layout, &deltaw, nullptr);
 			}
 			width += deltaw;
@@ -571,7 +567,7 @@ namespace{
 	}
 
 	static void
-		gtk_xtext_adjustment_changed(GtkAdjustment * adj, GtkXText * xtext)
+		gtk_xtext_adjustment_changed(GtkAdjustment * /*adj*/, GtkXText * xtext)
 	{
 		if (!gtk_widget_get_realized(GTK_WIDGET(xtext)))
 			return;
@@ -607,7 +603,9 @@ namespace{
 		}
 		priv->buffer->impl->old_value = adj_value;
 	}
-
+	auto xtext_get_stamp_str(std::time_t time) {
+		return get_stamp_str(prefs.hex_stamp_text_format, time);
+	}
 	static void
 		gtk_xtext_dispose(GObject * object)
 	{
@@ -724,7 +722,6 @@ namespace{
 
 		gdk_window_set_user_data(window, widget);
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
-		priv->depth = gdk_visual_get_depth(gdk_window_get_visual(window));
 		GdkGCValues val = {};
 		val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 		val.graphics_exposures = 0;
@@ -1183,7 +1180,6 @@ namespace{
 
 	static gboolean gtk_xtext_scrolldown_timeout(GtkXText * xtext)
 	{
-		
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		xtext_buffer *buf = priv->buffer;
 		GtkAdjustment *adj = priv->adj;
@@ -1313,7 +1309,7 @@ namespace{
 			word = ent->str.c_str();
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		/* remove color characters from the length */
-		gtk_xtext_strip_color(ustring_ref(word, len_to_offset), priv->scratch_buffer, &len_to_offset, nullptr, false);
+		len_to_offset = xtext::strip_color(ustring_ref(word, len_to_offset), nullptr, false).length();
 
 		auto last = word;
 		auto end = ent->str.c_str() + ent->str.size();
@@ -1851,7 +1847,7 @@ namespace{
 		std::string stripped = out.str();
 		if (!priv->color_paste)
 		{
-			auto result = xtext::strip_color(ustring_ref(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size()), nullptr, false);
+			auto result = xtext::strip_color(xtext::ustring_ref(reinterpret_cast<const unsigned char*>(stripped.c_str()), stripped.size()), nullptr, false);
 			stripped = std::string(result.cbegin(), result.cend());
 		}
 		return stripped;
@@ -1994,7 +1990,7 @@ namespace{
 		c.len1 = 0;
 	}
 
-	/* deprecated */
+	[[deprecated("uses the scratch buffer, use xtext::strip_color instead")]]
 	unsigned char * gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
 		int *newlen, std::vector<xtext::offlen_t> * slp, int strip_hidden)
 	{
@@ -2015,11 +2011,11 @@ namespace{
 		std::locale locale;
 		for (auto itr = text.cbegin(), end = text.cend(); itr != end;)
 		{
-			int mbl = charlen(itr); /* multi-byte length */
+			const auto mbl = charlen(itr); /* multi-byte length */
 			if (mbl > std::distance(itr, end))
 				break; // bad UTF-8
 
-			if (rcol > 0 && (std::isdigit<char>(*itr, locale) || (*itr == ',' && std::isdigit<char>(itr[1], locale) && !bgcol)))
+			if ((itr + 1) != end && rcol > 0 && (std::isdigit<char>(*itr, locale) || (*itr == ',' && std::isdigit<char>(itr[1], locale) && !bgcol)))
 			{
 				if (itr[1] != ',') rcol--;
 				if (*itr == ',')
@@ -2089,7 +2085,7 @@ namespace{
 	{
 		ent.slp.clear();
 		const auto new_buf = xtext::strip_color(ent.str, &ent.slp, 2);
-		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
+		//auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 	 
 		const auto width //= priv->backend->get_string_width(ent.str, 2);
 		   = backend_get_text_width_slp(xtext, new_buf.c_str(), ent.slp);
@@ -2104,7 +2100,7 @@ namespace{
 		return width;
 	}
 
-	int gtk_xtext_text_width(GtkXText *xtext, const ustring_ref & text)
+	int gtk_xtext_text_width(GtkXText *xtext, const xtext::ustring_ref & text)
 	{
 		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		
@@ -2273,348 +2269,349 @@ namespace{
 		}
 		return flags;
 	}
-
+#if 0
 	/* render a single line, which WONT wrap, and parse mIRC colors */
 	static bool
 		gtk_xtext_render_str(GtkXText * xtext, cairo_t* cr, int y, textentry * ent,
 		const xtext::ustring_ref str, const std::ptrdiff_t offset, int win_width, int indent,
 		bool left_only, int *x_size_ret, int *emphasis)
 	{
-		//cairo_stack cr_stack{ cr };
-		//int i = 0, x = indent, j = 0;
-		/*auto pstr = str.cbegin();
+		cairo_stack cr_stack{ cr };
+		int i = 0, x = indent, j = 0;
+		auto pstr = str.cbegin();
 		bool mark = false;
 		bool ret = true;
 		bool srch_underline = false;
-		bool srch_mark = false;*/
+		bool srch_mark = false;
 		const auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
-		/*priv->in_hilight = false;
-		//if (ent->mark_start != -1 &&
-		//	ent->mark_start <= i + offset && ent->mark_end > i + offset)
-		//{
-		//	xtext_set_bg(xtext, XTEXT_MARK_BG);
-		//	xtext_set_fg(xtext, XTEXT_MARK_FG);
-		//	priv->backcolor = true;
-		//	mark = true;
-		//}
-		//if (priv->hilight_ent == ent &&
-		//	priv->hilight_start <= i + offset && priv->hilight_end > i + offset)
-		//{
-		//	if (!priv->un_hilight)
-		//	{
-		//		priv->underline = true;
-		//	}
-		//	priv->in_hilight = true;
-		//}
+		priv->in_hilight = false;
+		if (ent->mark_start != -1 &&
+			ent->mark_start <= i + offset && ent->mark_end > i + offset)
+		{
+			xtext_set_bg(xtext, XTEXT_MARK_BG);
+			xtext_set_fg(xtext, XTEXT_MARK_FG);
+			priv->backcolor = true;
+			mark = true;
+		}
+		if (priv->hilight_ent == ent &&
+			priv->hilight_start <= i + offset && priv->hilight_end > i + offset)
+		{
+			if (!priv->un_hilight)
+			{
+				priv->underline = true;
+			}
+			priv->in_hilight = true;
+		}
 
-		//if (priv->jump_in_offset > 0 && offset < priv->jump_in_offset)
-		//	priv->dont_render2 = true;
-		//std::locale locale;
-		//const auto len = str.length();
-		//while (i < len)
-		//{
+		if (priv->jump_in_offset > 0 && offset < priv->jump_in_offset)
+			priv->dont_render2 = true;
+		std::locale locale;
+		const auto len = str.length();
+		while (i < len)
+		{
 
-		//	if (priv->hilight_ent == ent && priv->hilight_start == (i + offset))
-		//	{
-		//		x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		pstr += j;
-		//		j = 0;
-		//		if (!priv->un_hilight)
-		//		{
-		//			priv->underline = true;
-		//		}
+			if (priv->hilight_ent == ent && priv->hilight_start == (i + offset))
+			{
+				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				pstr += j;
+				j = 0;
+				if (!priv->un_hilight)
+				{
+					priv->underline = true;
+				}
 
-		//		priv->in_hilight = true;
-		//	}
+				priv->in_hilight = true;
+			}
 
-		//	if ((priv->parsing_color && std::isdigit<char>(str[i], locale) && priv->nc < 2) ||
-		//		(priv->parsing_color && str[i] == ',' && std::isdigit<char>(str[i + 1], locale) && priv->nc < 3 && !priv->parsing_backcolor))
-		//	{
-		//		pstr++;
-		//		if (str[i] == ',')
-		//		{
-		//			priv->parsing_backcolor = true;
-		//			if (priv->nc)
-		//			{
-		//				priv->num[priv->nc] = 0;
-		//				priv->nc = 0;
-		//				auto col_num = atoi(priv->num);
-		//				if (col_num == 99)	/* mIRC lameness */
-		//					col_num = XTEXT_FG;
-		//				else
-		//					if (col_num > XTEXT_MAX_COLOR)
-		//						col_num = col_num % XTEXT_MIRC_COLS;
-		//				priv->col_fore = col_num;
-		//				if (!mark)
-		//					xtext_set_fg(xtext, col_num);
-		//			}
-		//		}
-		//		else
-		//		{
-		//			priv->num[priv->nc] = str[i];
-		//			if (priv->nc < 7)
-		//				priv->nc++;
-		//		}
-		//	}
-		//	else
-		//	{
-		//		if (priv->parsing_color)
-		//		{
-		//			priv->parsing_color = false;
-		//			if (priv->nc)
-		//			{
-		//				priv->num[priv->nc] = 0;
-		//				priv->nc = 0;
-		//				auto col_num = atoi(priv->num);
-		//				if (priv->parsing_backcolor)
-		//				{
-		//					col_num = xtext::handle_mirc_oddness(col_num, XTEXT_BG);
-		//					priv->backcolor = col_num != XTEXT_BG;
-		//					if (!mark)
-		//						xtext_set_bg(xtext, col_num);
-		//					priv->col_back = col_num;
-		//				}
-		//				else
-		//				{
-		//					col_num = xtext::handle_mirc_oddness(col_num, XTEXT_FG);
-		//					if (!mark)
-		//						xtext_set_fg(xtext, col_num);
-		//					priv->col_fore = col_num;
-		//				}
-		//				priv->parsing_backcolor = false;
-		//			}
-		//			else
-		//			{
-		//				/* got a \003<non-digit>... i.e. reset colors */
-		//				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//				pstr += j;
-		//				j = 0;
-		//				gtk_xtext_reset(xtext, mark, false);
-		//			}
-		//		}
+			if ((priv->parsing_color && std::isdigit<char>(str[i], locale) && priv->nc < 2) ||
+				(priv->parsing_color && str[i] == ',' && std::isdigit<char>(str[i + 1], locale) && priv->nc < 3 && !priv->parsing_backcolor))
+			{
+				pstr++;
+				if (str[i] == ',')
+				{
+					priv->parsing_backcolor = true;
+					if (priv->nc)
+					{
+						priv->num[priv->nc] = 0;
+						priv->nc = 0;
+						auto col_num = atoi(priv->num);
+						if (col_num == 99)	/* mIRC lameness */
+							col_num = XTEXT_FG;
+						else
+							if (col_num > XTEXT_MAX_COLOR)
+								col_num = col_num % XTEXT_MIRC_COLS;
+						priv->col_fore = col_num;
+						if (!mark)
+							xtext_set_fg(xtext, col_num);
+					}
+				}
+				else
+				{
+					priv->num[priv->nc] = str[i];
+					if (priv->nc < 7)
+						priv->nc++;
+				}
+			}
+			else
+			{
+				if (priv->parsing_color)
+				{
+					priv->parsing_color = false;
+					if (priv->nc)
+					{
+						priv->num[priv->nc] = 0;
+						priv->nc = 0;
+						auto col_num = atoi(priv->num);
+						if (priv->parsing_backcolor)
+						{
+							col_num = xtext::handle_mirc_oddness(col_num, XTEXT_BG);
+							priv->backcolor = col_num != XTEXT_BG;
+							if (!mark)
+								xtext_set_bg(xtext, col_num);
+							priv->col_back = col_num;
+						}
+						else
+						{
+							col_num = xtext::handle_mirc_oddness(col_num, XTEXT_FG);
+							if (!mark)
+								xtext_set_fg(xtext, col_num);
+							priv->col_fore = col_num;
+						}
+						priv->parsing_backcolor = false;
+					}
+					else
+					{
+						/* got a \003<non-digit>... i.e. reset colors */
+						x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+						pstr += j;
+						j = 0;
+						gtk_xtext_reset(xtext, mark, false);
+					}
+				}
 
-		//		int k;
-		//		if (!left_only && !mark &&
-		//			(k = gtk_xtext_search_offset(priv->buffer, ent, offset + i)))
-		//		{
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			pstr += j;
-		//			j = 0;
-		//			if (!(priv->buffer->search_flags & highlight))
-		//			{
-		//				if (k & GTK_MATCH_CUR)
-		//				{
-		//					xtext_set_bg(xtext, XTEXT_MARK_BG);
-		//					xtext_set_fg(xtext, XTEXT_MARK_FG);
-		//					priv->backcolor = true;
-		//					srch_mark = true;
-		//				}
-		//				else
-		//				{
-		//					xtext_set_bg(xtext, priv->col_back);
-		//					xtext_set_fg(xtext, priv->col_fore);
-		//					priv->backcolor = (priv->col_back != XTEXT_BG) ? true : false;
-		//					srch_mark = false;
-		//				}
-		//			}
-		//			else
-		//			{
-		//				priv->underline = (k & GTK_MATCH_CUR) ? true : false;
-		//				if (k & (GTK_MATCH_START | GTK_MATCH_MID))
-		//				{
-		//					xtext_set_bg(xtext, XTEXT_MARK_BG);
-		//					xtext_set_fg(xtext, XTEXT_MARK_FG);
-		//					priv->backcolor = true;
-		//					srch_mark = true;
-		//				}
-		//				if (k & GTK_MATCH_END)
-		//				{
-		//					xtext_set_bg(xtext, priv->col_back);
-		//					xtext_set_fg(xtext, priv->col_fore);
-		//					priv->backcolor = (priv->col_back != XTEXT_BG) ? true : false;
-		//					srch_mark = false;
-		//					priv->underline = false;
-		//				}
-		//				srch_underline = priv->underline;
-		//			}
-		//		}
-		//		int tmp;
-		//		switch (str[i])
-		//		{
-		//		case '\n':
-		//			/*case ATTR_BEEP:*/
-		//			break;
-		//		case ATTR_REVERSE:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			pstr += j + 1;
-		//			j = 0;
-		//			std::swap(priv->col_fore, priv->col_back);
-		//			if (!mark)
-		//			{
-		//				xtext_set_fg(xtext, priv->col_fore);
-		//				xtext_set_bg(xtext, priv->col_back);
-		//			}
-		//			if (priv->col_back != XTEXT_BG)
-		//				priv->backcolor = true;
-		//			else
-		//				priv->backcolor = false;
-		//			break;
-		//		case ATTR_BOLD:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			*emphasis ^= EMPH_BOLD;
-		//			pstr += j + 1;
-		//			j = 0;
-		//			break;
-		//		case ATTR_UNDERLINE:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			priv->underline = !priv->underline;
-		//			pstr += j + 1;
-		//			j = 0;
-		//			break;
-		//		case ATTR_ITALICS:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			*emphasis ^= EMPH_ITAL;
-		//			pstr += j + 1;
-		//			j = 0;
-		//			break;
-		//		case ATTR_HIDDEN:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			priv->hidden = (!priv->hidden) && (!priv->ignore_hidden);
-		//			pstr += j + 1;
-		//			j = 0;
-		//			break;
-		//		case ATTR_RESET:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			*emphasis = 0;
-		//			pstr += j + 1;
-		//			j = 0;
-		//			gtk_xtext_reset(xtext, mark, !priv->in_hilight);
-		//			break;
-		//		case ATTR_COLOR:
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			priv->parsing_color = true;
-		//			pstr += j + 1;
-		//			j = 0;
-		//			break;
-		//		default:
-		//			tmp = charlen(str.cbegin() + i);
-		//			/* invalid utf8 safe guard */
-		//			if (tmp + i > len)
-		//				tmp = len - i;
-		//			j += tmp;	/* move to the next utf8 char */
-		//		}
-		//	}
-		//	i += charlen(str.cbegin() + i);	/* move to the next utf8 char */
-		//	/* invalid utf8 safe guard */
-		//	if (i > len)
-		//		i = len;
+				int k;
+				if (!left_only && !mark &&
+					(k = gtk_xtext_search_offset(priv->buffer, ent, offset + i)))
+				{
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					pstr += j;
+					j = 0;
+					if (!(priv->buffer->search_flags & highlight))
+					{
+						if (k & GTK_MATCH_CUR)
+						{
+							xtext_set_bg(xtext, XTEXT_MARK_BG);
+							xtext_set_fg(xtext, XTEXT_MARK_FG);
+							priv->backcolor = true;
+							srch_mark = true;
+						}
+						else
+						{
+							xtext_set_bg(xtext, priv->col_back);
+							xtext_set_fg(xtext, priv->col_fore);
+							priv->backcolor = (priv->col_back != XTEXT_BG) ? true : false;
+							srch_mark = false;
+						}
+					}
+					else
+					{
+						priv->underline = (k & GTK_MATCH_CUR) ? true : false;
+						if (k & (GTK_MATCH_START | GTK_MATCH_MID))
+						{
+							xtext_set_bg(xtext, XTEXT_MARK_BG);
+							xtext_set_fg(xtext, XTEXT_MARK_FG);
+							priv->backcolor = true;
+							srch_mark = true;
+						}
+						if (k & GTK_MATCH_END)
+						{
+							xtext_set_bg(xtext, priv->col_back);
+							xtext_set_fg(xtext, priv->col_fore);
+							priv->backcolor = (priv->col_back != XTEXT_BG) ? true : false;
+							srch_mark = false;
+							priv->underline = false;
+						}
+						srch_underline = priv->underline;
+					}
+				}
+				int tmp;
+				switch (str[i])
+				{
+				case '\n':
+					/*case ATTR_BEEP:*/
+					break;
+				case ATTR_REVERSE:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					pstr += j + 1;
+					j = 0;
+					std::swap(priv->col_fore, priv->col_back);
+					if (!mark)
+					{
+						xtext_set_fg(xtext, priv->col_fore);
+						xtext_set_bg(xtext, priv->col_back);
+					}
+					if (priv->col_back != XTEXT_BG)
+						priv->backcolor = true;
+					else
+						priv->backcolor = false;
+					break;
+				case ATTR_BOLD:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					*emphasis ^= EMPH_BOLD;
+					pstr += j + 1;
+					j = 0;
+					break;
+				case ATTR_UNDERLINE:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					priv->underline = !priv->underline;
+					pstr += j + 1;
+					j = 0;
+					break;
+				case ATTR_ITALICS:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					*emphasis ^= EMPH_ITAL;
+					pstr += j + 1;
+					j = 0;
+					break;
+				case ATTR_HIDDEN:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					priv->hidden = (!priv->hidden) && (!priv->ignore_hidden);
+					pstr += j + 1;
+					j = 0;
+					break;
+				case ATTR_RESET:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					*emphasis = 0;
+					pstr += j + 1;
+					j = 0;
+					gtk_xtext_reset(xtext, mark, !priv->in_hilight);
+					break;
+				case ATTR_COLOR:
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					priv->parsing_color = true;
+					pstr += j + 1;
+					j = 0;
+					break;
+				default:
+					tmp = charlen(str.cbegin() + i);
+					/* invalid utf8 safe guard */
+					if (tmp + i > len)
+						tmp = len - i;
+					j += tmp;	/* move to the next utf8 char */
+				}
+			}
+			i += charlen(str.cbegin() + i);	/* move to the next utf8 char */
+			/* invalid utf8 safe guard */
+			if (i > len)
+				i = len;
 
-		//	/* Separate the left part, the space and the right part
-		//	into separate runs, and reset bidi state inbetween.
-		//	Perform this only on the first line of the message.
-		//	*/
-		//	if (offset == 0)
-		//	{
-		//		/* we've reached the end of the left part? */
-		//		if (std::distance(str.cbegin(), pstr) + j == ent->left_len)
-		//		{
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			pstr += j;
-		//			j = 0;
-		//		}
-		//		else if (std::distance(str.cbegin(), pstr) + j == ent->left_len + 1)
-		//		{
-		//			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//			pstr += j;
-		//			j = 0;
-		//		}
-		//	}
+			/* Separate the left part, the space and the right part
+			into separate runs, and reset bidi state inbetween.
+			Perform this only on the first line of the message.
+			*/
+			if (offset == 0)
+			{
+				/* we've reached the end of the left part? */
+				if (std::distance(str.cbegin(), pstr) + j == ent->left_len)
+				{
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					pstr += j;
+					j = 0;
+				}
+				else if (std::distance(str.cbegin(), pstr) + j == ent->left_len + 1)
+				{
+					x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+					pstr += j;
+					j = 0;
+				}
+			}
 
-		//	/* have we been told to stop rendering at this point? */
-		//	if (priv->jump_out_offset > 0 && priv->jump_out_offset <= (i + offset))
-		//	{
-		//		gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		ret = false;	/* skip the rest of the lines, we're done. */
-		//		j = 0;
-		//		break;
-		//	}
+			/* have we been told to stop rendering at this point? */
+			if (priv->jump_out_offset > 0 && priv->jump_out_offset <= (i + offset))
+			{
+				gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				ret = false;	/* skip the rest of the lines, we're done. */
+				j = 0;
+				break;
+			}
 
-		//	if (priv->jump_in_offset > 0 && priv->jump_in_offset == (i + offset))
-		//	{
-		//		x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		pstr += j;
-		//		j = 0;
-		//		priv->dont_render2 = false;
-		//	}
+			if (priv->jump_in_offset > 0 && priv->jump_in_offset == (i + offset))
+			{
+				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				pstr += j;
+				j = 0;
+				priv->dont_render2 = false;
+			}
 
-		//	if (priv->hilight_ent == ent && priv->hilight_end == (i + offset))
-		//	{
-		//		x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		pstr += j;
-		//		j = 0;
-		//		priv->underline = false;
-		//		priv->in_hilight = false;
-		//		if (priv->render_hilights_only)
-		//		{
-		//			/* stop drawing this ent */
-		//			ret = false;
-		//			break;
-		//		}
-		//	}
+			if (priv->hilight_ent == ent && priv->hilight_end == (i + offset))
+			{
+				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				pstr += j;
+				j = 0;
+				priv->underline = false;
+				priv->in_hilight = false;
+				if (priv->render_hilights_only)
+				{
+					/* stop drawing this ent */
+					ret = false;
+					break;
+				}
+			}
 
-		//	if (!mark && ent->mark_start == (i + offset))
-		//	{
-		//		x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		pstr += j;
-		//		j = 0;
-		//		xtext_set_bg(xtext, XTEXT_MARK_BG);
-		//		xtext_set_fg(xtext, XTEXT_MARK_FG);
-		//		priv->backcolor = true;
-		//		if (srch_underline)
-		//		{
-		//			priv->underline = false;
-		//			srch_underline = false;
-		//		}
-		//		mark = true;
-		//	}
+			if (!mark && ent->mark_start == (i + offset))
+			{
+				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				pstr += j;
+				j = 0;
+				xtext_set_bg(xtext, XTEXT_MARK_BG);
+				xtext_set_fg(xtext, XTEXT_MARK_FG);
+				priv->backcolor = true;
+				if (srch_underline)
+				{
+					priv->underline = false;
+					srch_underline = false;
+				}
+				mark = true;
+			}
 
-		//	if (mark && ent->mark_end == (i + offset))
-		//	{
-		//		x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
-		//		pstr += j;
-		//		j = 0;
-		//		xtext_set_bg(xtext, priv->col_back);
-		//		xtext_set_fg(xtext, priv->col_fore);
-		//		if (priv->col_back != XTEXT_BG)
-		//			priv->backcolor = true;
-		//		else
-		//			priv->backcolor = false;
-		//		mark = false;
-		//	}
+			if (mark && ent->mark_end == (i + offset))
+			{
+				x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+				pstr += j;
+				j = 0;
+				xtext_set_bg(xtext, priv->col_back);
+				xtext_set_fg(xtext, priv->col_fore);
+				if (priv->col_back != XTEXT_BG)
+					priv->backcolor = true;
+				else
+					priv->backcolor = false;
+				mark = false;
+			}
 
-		//}
+		}
 
-		//if (j)
-		//	x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
+		if (j)
+			x += gtk_xtext_render_flush(xtext, cr, x, y, ustring_ref(pstr, j), emphasis);
 
-		//if (mark || srch_mark)
-		//{
-		//	xtext_set_bg(xtext, priv->col_back);
-		//	xtext_set_fg(xtext, priv->col_fore);
-		//	if (priv->col_back != XTEXT_BG)
-		//		priv->backcolor = true;
-		//	else
-		//		priv->backcolor = false;
-		//}
+		if (mark || srch_mark)
+		{
+			xtext_set_bg(xtext, priv->col_back);
+			xtext_set_fg(xtext, priv->col_fore);
+			if (priv->col_back != XTEXT_BG)
+				priv->backcolor = true;
+			else
+				priv->backcolor = false;
+		}
 
-		//priv->dont_render2 = false;
+		priv->dont_render2 = false;
 
-		///* return how much we drew in the x direction */
-		//if (x_size_ret)
-		//	*x_size_ret = x - indent;
+		/* return how much we drew in the x direction */
+		if (x_size_ret)
+			*x_size_ret = x - indent;
 
-		//return ret;
+		return ret;
 	}
+#endif
 
 	/* walk through str until this line doesn't fit anymore */
 
@@ -2828,10 +2825,10 @@ namespace{
 		int lines_max, int subline, int win_width)
 	{
 		int taken, len, y;
-		int emphasis = 0;
+		//int emphasis = 0;
 
-		auto entline = taken = 0;
-		auto str = ent->str.c_str();
+		//auto entline = taken = 0;
+		//auto str = ent->str.c_str();
 		auto priv = static_cast<GtkXTextPrivate*>(gtk_xtext_get_instance_private(xtext));
 		const auto indent = (priv->buffer->indent - ent->indent);
 		const auto start_subline = subline;
@@ -2923,15 +2920,14 @@ namespace{
 		{
 			if (do_str_width)
 			{
-				ent.str_width =
-				    gtk_xtext_text_width_ent(buf->xtext, ent);
+				ent.str_width = priv->backend->get_string_width(ent.str, 2);
 			}
 			if (ent.left_len != -1)
 			{
 				ent.indent = (buf->indent -
 					      gtk_xtext_text_width(
 						  buf->xtext,
-						  ustring_ref(ent.str.c_str(),
+						  xtext::ustring_ref(ent.str.c_str(),
 							      ent.left_len))) -
 					     priv->space_width;
 				if (ent.indent < MARGIN)
@@ -3094,7 +3090,7 @@ namespace{
 		if (!priv->pixmap && std::abs(overlap) < allocation.height)
 		{
 			GdkRectangle area = {};
-			cairo_stack cr_stack{ cr };
+			cairo_stack cr_stack1{ cr };
 			cairo_new_path(cr);
 			if (overlap < 1)	/* DOWN */
 			{

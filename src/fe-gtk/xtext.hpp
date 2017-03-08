@@ -20,6 +20,7 @@
 #ifndef HEXCHAT_XTEXT_HPP
 #define HEXCHAT_XTEXT_HPP
 
+#include <string_view>
 #include <memory>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gtk/gtk.h>
@@ -55,7 +56,7 @@ enum text_attr{
 #define XTEXT_MAX_COLOR 41
 
 struct textentry;
-using ustring_ref = boost::basic_string_ref<unsigned char>;
+using ustring_ref = std::basic_string_view<unsigned char>;
 /*
 * offsets_t is used for retaining search information.
 * It is stored in the 'data' member of a GList,
