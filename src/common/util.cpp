@@ -1164,10 +1164,10 @@ make_ping_time (void)
  */
 
 int
-rfc_casecmp (const char *s1, const char *s2)
+rfc_casecmp (const char *s1, const char *s2) noexcept
 {
-	unsigned char *str1 = (unsigned char *) s1;
-	unsigned char *str2 = (unsigned char *) s2;
+	const unsigned char *str1 = (const unsigned char *) s1;
+	const unsigned char *str2 = (const unsigned char *) s2;
 	int res;
 
 	while ((res = rfc_tolower (*str1) - rfc_tolower (*str2)) == 0)
@@ -1180,15 +1180,15 @@ rfc_casecmp (const char *s1, const char *s2)
 	return (res);
 }
 
-int rfc_casecmp(const unsigned char* low1, const unsigned char* high1, const unsigned char* low2, const unsigned char *high2)
+int rfc_casecmp(const unsigned char* low1, const unsigned char* high1, const unsigned char* low2, const unsigned char *high2) noexcept
 {
 	int res = 0;
 	while ((res = rfc_tolower(*low1) - rfc_tolower(*low2)) == 0)
 	{
 		++low1;
 		++low2;
-		bool s1_done = low1 == high1;
-		bool s2_done = low2 == high2;
+		const bool s1_done = low1 == high1;
+		const bool s2_done = low2 == high2;
 		if (s1_done && s2_done)
 			return 0;
 		else if (s1_done)
@@ -1200,10 +1200,10 @@ int rfc_casecmp(const unsigned char* low1, const unsigned char* high1, const uns
 }
 
 int
-rfc_ncasecmp (const char *str1, const char *str2, size_t n)
+rfc_ncasecmp (const char *str1, const char *str2, size_t n) noexcept
 {
-	const unsigned char *s1 = (unsigned char *) str1;
-	const unsigned char *s2 = (unsigned char *) str2;
+	const unsigned char *s1 = (const unsigned char *) str1;
+	const unsigned char *s2 = (const unsigned char *) str2;
 	int res;
 
 	while ((res = rfc_tolower (*s1) - rfc_tolower (*s2)) == 0)
@@ -1223,7 +1223,7 @@ namespace
 	{
 	protected:
 		int do_compare(const char * low1, const char * high1,
-			const char * low2, const char* high2) const
+			const char * low2, const char* high2) const override final
 		{
 			return rfc_casecmp(
 				reinterpret_cast<const unsigned char*>(low1),

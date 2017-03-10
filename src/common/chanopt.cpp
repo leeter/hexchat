@@ -31,6 +31,7 @@
 #include <cstring>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -134,17 +135,17 @@ int chanopt_command (session *sess, char *word[])
 			{
 				std::ostringstream buf;
 				buf << op_name;
-				char t = 3;
+				const char t = 3;
 				buf.write(&t, 1);
 				buf << '2';
 
-				auto dots = 20 - op_name.length();
+				const auto dots = 20 - op_name.length();
 				std::ostream_iterator<char> itr(buf);
 				for (size_t j = 0; j < dots; ++j)
 					*itr++ = '.';
 				
-				auto val = sess->chanopts[op_name];
-				PrintTextf(sess, boost::format("%s\0033:\017 %s") % buf.str() % chanopt_value(val));
+				const auto val = static_cast<std::uint8_t>(sess->chanopts[op_name]);
+				PrintTextf(sess, boost::format(u8"%s\u00033:\017 %s") % buf.str() % chanopt_value(val));
 			}
 		}
 	}

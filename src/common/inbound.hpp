@@ -26,8 +26,8 @@
 
 void inbound_next_nick (session *sess, char *nick, int error,
 								const message_tags_data *tags_data);
-void inbound_uback (server &serv, const message_tags_data *tags_data);
-void inbound_uaway (server &serv, const message_tags_data *tags_data);
+void inbound_uback (server &serv);
+void inbound_uaway (server &serv);
 void inbound_account (const server &serv, const char *nick, const char *account,
 							 const message_tags_data *tags_data);
 void inbound_part (const server &serv, char *chan, char *user, char *ip, char *reason,
@@ -53,8 +53,7 @@ void inbound_topictime (server &serv, char *chan, char *nick, time_t stamp,
 								const message_tags_data *tags_data);
 void inbound_topic (server &serv, char *chan, char *topic_text,
 						  const message_tags_data *tags_data);
-void inbound_user_info_start (session *sess, const char *nick,
-										const message_tags_data *tags_data);
+void inbound_user_info_start (session *sess, const char *nick);
 void inbound_user_info (session *sess, char *chan, char *user, char *host,
 								char *servname, char *nick, char *realname, char *account,
 								unsigned int away, const message_tags_data *tags_data);
@@ -67,8 +66,7 @@ void inbound_ping_reply (session *sess, char *timestring, char *from,
 								 const message_tags_data *tags_data);
 void inbound_nameslist (server &serv, char *chan, char *names,
 								const message_tags_data *tags_data);
-bool inbound_nameslist_end (const server &serv, const std::string & chan,
-									const message_tags_data *tags_data);
+bool inbound_nameslist_end (const server &serv, const std::string & chan);
 void inbound_away (server &serv, char *nick, char *msg,
 						 const message_tags_data *tags_data);
 void inbound_away_notify (const server &serv, char *nick, char *reason,
@@ -94,7 +92,7 @@ void inbound_cap_ack (server &serv, char *nick, char *extensions,
 							 const message_tags_data *tags_data);
 void inbound_cap_ls (server &serv, char *nick, char *extensions,
 							const message_tags_data *tags_data);
-void inbound_cap_nak (server &serv, const message_tags_data *tags_data);
+void inbound_cap_nak (server &serv);
 void inbound_cap_list (server &serv, char *nick, char *extensions,
 							  const message_tags_data *tags_data);
 void inbound_sasl_authenticate (server & serv, char *data);

@@ -109,7 +109,7 @@ struct defaultserver
 	const char *connectcmd;	/* default connect command - should only be used for rare login types, paired with LOGIN_CUSTOM */
 };
 
-static const struct defaultserver def[] =
+static constexpr struct defaultserver def[] =
 {
 	{"2600net",	0, 0, 0, 0, 0},
 	{ 0, "irc.2600.net", 0, 0, 0, 0 },
@@ -1054,7 +1054,7 @@ void servlist_net_remove (ircnet *net)
 }
 
 ircnet *
-servlist_net_add (const char *name, const char *comment, int prepend)
+servlist_net_add (const char *name, const char * /*comment*/, int prepend)
 {
 	ircnet *net = new ircnet();
 	net->name = name;

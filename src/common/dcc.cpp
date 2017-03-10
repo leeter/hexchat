@@ -287,7 +287,7 @@ dcc_connect_sok (::dcc::DCC *dcc)
 	}
 	else
 	{
-		addr.sin_port = htons (dcc->port);
+		addr.sin_port = htons (static_cast<std::uint16_t>(dcc->port));
 		addr.sin_addr.s_addr = htonl (dcc->addr);
 	}
 
@@ -538,7 +538,7 @@ dcc_send_ack(::dcc::DCC *dcc)
 }
 
 static gboolean
-dcc_read(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_read(GIOChannel * /*source*/, GIOCondition condition, ::dcc::DCC *dcc)
 {
 	char *old;
 	char buf[4096];
@@ -662,7 +662,7 @@ dcc_open_query(server &serv, const char *nick)
 
 
 static gboolean
-dcc_did_connect(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_did_connect(GIOChannel * /*source*/, GIOCondition condition, ::dcc::DCC *dcc)
 {
 	int er;
 
@@ -839,7 +839,7 @@ proxy_read_line(::dcc::DCC *dcc)
 }
 
 static gboolean
-dcc_wingate_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_wingate_proxy_traverse(GIOChannel *source, GIOCondition /*condition*/, ::dcc::DCC *dcc)
 {
 	::dcc::proxy_state *proxy = dcc->proxy;
 	if (proxy->phase == 0)
@@ -931,7 +931,7 @@ struct sock5_connect1
 	char method;
 };
 static gboolean
-dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_socks5_proxy_traverse(GIOChannel *source, GIOCondition /*condition*/, ::dcc::DCC *dcc)
 {
 	::dcc::proxy_state *proxy = dcc->proxy;
 	int auth = prefs.hex_net_proxy_auth && prefs.hex_net_proxy_user[0] && prefs.hex_net_proxy_pass[0];
@@ -1297,7 +1297,7 @@ dcc_connect(::dcc::DCC *dcc)
 }
 
 static gboolean
-dcc_send_data(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_send_data(GIOChannel * /*source*/, GIOCondition condition, ::dcc::DCC *dcc)
 {
 	int len, sent, sok = dcc->sok;
 
@@ -1438,7 +1438,7 @@ dcc_read_ack(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
 }
 
 static gboolean
-dcc_accept(GIOChannel *source, GIOCondition condition, ::dcc::DCC *dcc)
+dcc_accept(GIOChannel *source, GIOCondition /*condition*/, ::dcc::DCC *dcc)
 {
 	char host[128];
 	struct sockaddr_in CAddr;

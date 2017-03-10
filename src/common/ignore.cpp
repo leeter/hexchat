@@ -15,7 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 #include <sstream>
 #include <vector>
 #include <boost/format.hpp>
@@ -330,7 +333,7 @@ flood_check (gsl::cstring_span<> nick, gsl::cstring_span<> ip, server &serv, ses
 			if ((current_time - serv.ctcp_last_time) < chrono::seconds(prefs.hex_flood_ctcp_time))	/*if we got the ctcp in the seconds limit */
 			{
 				serv.ctcp_counter++;
-				if (serv.ctcp_counter == prefs.hex_flood_ctcp_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
+				if (serv.ctcp_counter == static_cast<unsigned int>(prefs.hex_flood_ctcp_num))	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
 					serv.ctcp_last_time = current_time;	/*we got the flood, restore all the vars for next one */
 					serv.ctcp_counter = 0;
@@ -358,7 +361,7 @@ flood_check (gsl::cstring_span<> nick, gsl::cstring_span<> ip, server &serv, ses
 				chrono::seconds(prefs.hex_flood_msg_time))
 			{
 				serv.msg_counter++;
-				if (serv.msg_counter == prefs.hex_flood_msg_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
+				if (serv.msg_counter == static_cast<unsigned int>(prefs.hex_flood_msg_num))	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
 					auto errmsg = boost::format(_("You are being MSG flooded from %s, setting gui_autoopen_dialog OFF.\n")) % gsl::to_string(ip);
 					PrintText (sess, errmsg.str());

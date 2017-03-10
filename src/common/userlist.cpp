@@ -115,7 +115,7 @@ namespace{
 			[nick, &sess](const std::unique_ptr<User> & ptr){
 			return sess.server->compare(nick, ptr->nick) == 0;
 		});
-		return std::distance(sess.usertree.cbegin(), result);
+		return static_cast<int>(std::distance(sess.usertree.cbegin(), result));
 	}
 
 	/*
@@ -553,7 +553,6 @@ public:
 			return std::make_pair(false, 0);
 		}
 
-		const std::string & nick = user->nick;
 		this->users_.emplace_back(std::move(user));
 		this->users_alpha_.emplace_back(this->users_.back().get());
 		this->sort();

@@ -98,20 +98,19 @@ send_channel_modes (session *sess, const std::vector<std::string> &word, int wpo
 		int len = modes_per_line;
 
 		/* how many can we fit? */
-		int i;
-		for (i = 0; i < modes_per_line; i++)
+		int usable_modes;	/* this is how many we'll send on this line */
+		for (usable_modes = 0; usable_modes < modes_per_line; ++usable_modes)
 		{
 			/* no more nicks left? */
-			if (wpos + i >= end)
+			if (wpos + usable_modes >= end)
 				break;
-			auto wlen = word.at(wpos + i).size() + 1;
+			const auto wlen = word.at(wpos + usable_modes).size() + 1;
 			if (wlen + len > max)
 				break;
 			len += wlen; /* length of our whole string so far */
 		}
-		if (i < 1)
+		if (usable_modes < 1)
 			return;
-		int usable_modes = i;	/* this is how many we'll send on this line */
 
 		/* add the +/-modemodemodemode */
 		*tbuf++ = sign;
@@ -121,7 +120,7 @@ send_channel_modes (session *sess, const std::vector<std::string> &word, int wpo
 		}
 
 		/* add all the nicknames */
-		for (i = 0; i < usable_modes; i++)
+		for (int i = 0; i < usable_modes; i++)
 		{
 			*tbuf++ = ' ';
 			buf << word[wpos + i];
@@ -244,7 +243,7 @@ record_chan_mode (session &sess, char sign, char mode, char *arg)
 	auto current_char = current.begin();
 	std::string::size_type modes_length;
 	gint argument_num = 0;
-	gint argument_offset = 0;
+	std::string::difference_type argument_offset = 0;
 	gint argument_length = 0;
 	int i = 0;
 	//gchar *arguments_start;
@@ -762,8 +761,8 @@ namespace
 	struct ascii_strcasecmp : public std::collate < char >
 	{
 	protected:
-		int do_compare(const char * low1, const char * high1,
-			const char * low2, const char* high2) const
+		int do_compare(const char * low1, const char * /*high1*/,
+			const char * low2, const char* /*high2*/) const override final
 		{
 			return g_ascii_strcasecmp(low1, low2);
 		}

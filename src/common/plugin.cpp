@@ -1333,7 +1333,8 @@ hexchat_list_next (hexchat_plugin *, hexchat_list *xlist)
 		of the plugin when list_get was originally called. */
 	if (xlist->type == LIST_NOTIFY)
 	{
-		auto & ntfy = gsl::at(get_notifies(), xlist->loc);
+		auto notifies = get_notifies();
+		auto & ntfy = gsl::at(notifies, xlist->loc);
 		xlist->notifyps = notify_find_server_entry (ntfy,
 													*((session *)xlist->head)->server);
 		if (!xlist->notifyps)
@@ -1941,17 +1942,17 @@ hexchat_pluginpref_list (hexchat_plugin *pl, char* dest)
 	strcpy(dest, "");
 	bfs::ifstream stream(config_path, std::ios::in | std::ios::binary);
 	std::locale locale;
-	std::vector<std::string> prefs;
+	std::vector<std::string> prefs_list;
 	for (std::string line; std::getline(stream, line, '\n');)
 	{
-		auto eq = line.find_first_of('=');
+		const auto eq = line.find_first_of('=');
 		if (eq == std::string::npos)
 			continue;
 		auto part1 = line.substr(0, eq);
 		boost::algorithm::trim_right(part1, locale);
-		prefs.emplace_back(part1);
+		prefs_list.emplace_back(part1);
 	}
-	auto prefs_joined = boost::join(prefs, ",");
+	const auto prefs_joined = boost::join(prefs_list, ",");
 	// we have no idea how long dest is...
 	g_strlcat(dest, prefs_joined.c_str(), 4096);
 

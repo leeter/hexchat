@@ -39,6 +39,7 @@
 #include <locale>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <stdexcept>
 #include <vector>
 #include <boost/algorithm/string.hpp>
@@ -582,10 +583,10 @@ cmd_charset (struct session *sess, char *word[], char *[])
 	{
 		serv->set_encoding (word[2 + offset]);
 		if (offset < 1)
-			PrintTextf (sess, "Charset changed to: %s\n", word[2 + offset]);
+			PrintTextf (sess, u8"Charset changed to: %s\n", word[2 + offset]);
 	} else
 	{
-		PrintTextf (sess, "\0034Unknown charset:\017 %s\n", word[2 + offset]);
+		PrintTextf (sess, u8"\u00034Unknown charset:\017 %s\n", word[2 + offset]);
 	}
 
 	return true;
@@ -658,7 +659,7 @@ cmd_ctcp (struct session *sess, char *word[], char *word_eol[])
 		if (*msg)
 		{
 			unsigned char *cmd = (unsigned char *)msg;
-
+			std::locale locale;
 			/* make the first word upper case (as per RFC) */
 			for (;;)
 			{
@@ -666,7 +667,7 @@ cmd_ctcp (struct session *sess, char *word[], char *word_eol[])
 					break;
 				mbl = g_utf8_skip[*cmd];
 				if (mbl == 1)
-					*cmd = std::toupper (*cmd);
+					*cmd = std::toupper<char> (*cmd, locale);
 				cmd += mbl;
 			}
 
@@ -1071,7 +1072,7 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	if (me)
 	{
 		/* update only */
-		me->state = state;
+		me->state = static_cast<char>(state);
 		me->enable = enable;
 		fe_menu_update (me);
 		return;
@@ -1079,9 +1080,9 @@ menu_add (const char path[], const char label[], const char cmd[], const char uc
 	std::unique_ptr<menu_entry> me_ptr(new menu_entry);
 	me = me_ptr.get();
 	me->pos = pos;
-	me->modifier = mod;
+	me->modifier = static_cast<char>(mod);
 	me->is_main = menu_is_mainmenu_root (path, me->root_offset);
-	me->state = state;
+	me->state = static_cast<char>(state);
 	me->markup = markup;
 	me->enable = enable;
 	me->key = key;
@@ -1943,18 +1944,19 @@ show_help_line (session *sess, help_list *hl, const char *name, const char *usag
 	if (hl->longfmt)	/* long format for /HELP -l */
 	{
 		if (!usage || usage[0] == 0)
-			PrintTextf (sess, "   \0034%s\003 :\n", name);
+			PrintTextf (sess, u8"   \u00034%s\003 :\n", name);
 		else
-			PrintTextf (sess, "   \0034%s\003 : %s\n", name, _(usage));
+			PrintTextf (sess, u8"   \u00034%s\003 : %s\n", name, _(usage));
 		return;
 	}
 
 	/* append the name into buffer, but convert to uppercase */
 	len = strlen (hl->buf);
 	p = name;
+	std::locale locale;
 	while (*p)
 	{
-		hl->buf[len] = toupper ((unsigned char) *p);
+		hl->buf[len] = std::toupper (*p, locale);
 		len++;
 		p++;
 	}
@@ -2418,6 +2420,46 @@ split_up_text(struct session &sess, char*text, int cmd_length, char *split_text)
 	}
 
 	return nullptr;
+}
+
+static std::vector<std::string_view> split_up_text(struct session &sess, const std::string_view text, int cmd_length) {
+
+	/* maximum allowed text */
+	/* :nickname!username@host.com cmd_length */
+	size_t max = 512; /* rfc 2812 */
+	max -= 3; /* :, !, @ */
+	max -= cmd_length;
+	max -= std::strlen(sess.server->nick);
+	max -= std::strlen(sess.channel);
+	if (sess.me && sess.me->hostname)
+		max -= sess.me->hostname->size();
+	else
+	{
+		max -= 9;	/* username */
+		max -= 65;	/* max possible hostname and '@' */
+	}
+	std::vector<std::string_view> splits;
+	splits.reserve((text.length() / max) + 1);
+	if (text.length() <= max) {
+		splits.push_back(text);
+		return splits;
+	}
+
+	auto offset = max;
+	auto front = 0;
+	while (offset < text.length()) {
+		const auto space_loc = text.find_last_of(' ', offset - 1);
+		const auto split_loc = space_loc != std::string_view::npos ? space_loc : max;
+		splits.emplace_back(text.substr(front, split_loc));
+		offset += split_loc;
+		front += (space_loc != std::string_view::npos ? split_loc + 1 : split_loc);
+	}
+
+	if (front < text.length()) {
+		splits.emplace_back(text.substr(front));
+	}
+
+	return splits;
 }
 
 static int
@@ -3491,7 +3533,7 @@ cmd_userlist (struct session *sess, char *[],
 			User::clock::now() - user->lasttalk;
 		const auto seconds_ago = std::chrono::duration_cast<std::chrono::seconds>(lt);
 		PrintTextf(sess,
-			boost::format("\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%ld\n") %
+			boost::format(u8"\u000306%s\t\u000314[\u000310%-38s\u000314] \017ov\u00033=\017%d%d away=%u lt\u00033=\017%ld\n") %
 			user->nick % (user->hostname ? user->hostname->c_str() : "") % user->op % user->voice % static_cast<bool>(user->away) % lt.count());
 	}
 	return true;
@@ -4003,7 +4045,7 @@ auto_insert (gsl::string_span<> dest, const unsigned char *src, const char * con
 	}
 
 	const auto result = out.str();
-	if (result.size() > (dest.size() + 1))
+	if (result.size() > static_cast<size_t>(dest.size() + 1))
 	{
 		return 2;
 	}
@@ -4047,7 +4089,7 @@ std::string check_special_chars(const boost::string_ref & cmd, bool do_ascii) /*
 				tbuf[1] = cmd[j + 2];
 				tbuf[2] = cmd[j + 3];
 				tbuf[3] = 0;
-				buf[i] = atoi(tbuf);
+				buf[i] = static_cast<char>(atoi(tbuf));
 				gsize utf_len;
 				glib_string utf(g_locale_to_utf8(&buf[0] + i, 1, 0, &utf_len, 0));
 				if (utf)

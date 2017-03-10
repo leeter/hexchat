@@ -609,11 +609,11 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 305:
-		inbound_uback (serv, tags_data);
+		inbound_uback (serv);
 		goto def;
 
 	case 306:
-		inbound_uaway (serv, tags_data);
+		inbound_uaway (serv);
 		goto def;
 
 	case 312:
@@ -627,7 +627,7 @@ process_numeric (session * sess, int n,
 
 	case 311:	/* WHOIS 1st line */
 		serv.inside_whois = 1;
-		inbound_user_info_start (sess, word[4], tags_data);
+		inbound_user_info_start (sess, word[4]);
 		if (!serv.skip_next_whois)
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
 				gsl::ensure_z(word[6]), gsl::ensure_z(word_eol[8] + 1), 0, tags_data->timestamp);
@@ -638,7 +638,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 314:	/* WHOWAS */
-		inbound_user_info_start (sess, word[4], tags_data);
+		inbound_user_info_start (sess, word[4]);
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS1, whois_sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
 			gsl::ensure_z(word[6]), gsl::ensure_z(word_eol[8] + 1), 0, tags_data->timestamp);
 		break;
@@ -889,7 +889,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 366:
-		if (!inbound_nameslist_end (serv, word[4], tags_data))
+		if (!inbound_nameslist_end (serv, word[4]))
 			goto def;
 		break;
 
@@ -1355,7 +1355,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				}
 				else if (strncasecmp (word[4], "NAK", 3) == 0)
 				{
-					inbound_cap_nak (serv, tags_data);
+					inbound_cap_nak (serv);
 				}
 				else if (strncasecmp (word[4], "LIST", 4) == 0)	
 				{

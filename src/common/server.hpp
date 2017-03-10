@@ -20,6 +20,11 @@
 #ifndef HEXCHAT_SERVER_HPP
 #define HEXCHAT_SERVER_HPP
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
+
 extern GSList *serv_list;
 #include <string>
 #include <utility>

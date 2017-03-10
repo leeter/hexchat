@@ -122,10 +122,10 @@ find_session_from_nick (const char *nick, server &serv)
 			return current_sess;
 	}
 
-	for (auto sess : serv.sessions)
+	for (auto serv_sess : serv.sessions)
 	{
-		if (userlist_find (*sess, nick))
-			return sess;
+		if (userlist_find (*serv_sess, nick))
+			return serv_sess;
 	}
 	return nullptr;
 }
@@ -812,8 +812,8 @@ inbound_quit (server &serv, char *nick, char *ip, char *reason,
 	{
 		if (sess == current_sess)
 			was_on_front_session = true;
-		struct User *user;
-		if (user = userlist_find (*sess, nick))
+		auto user = userlist_find(*sess, nick);
+		if (user)
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_QUIT, sess, gsl::ensure_z(nick), gsl::ensure_z(reason), gsl::ensure_z(ip), nullptr, 0,
 											tags_data->timestamp);
@@ -1023,9 +1023,9 @@ inbound_away (server &serv, char *nick, char *msg,
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS5, sess, gsl::ensure_z(nick), gsl::ensure_z(msg), nullptr, nullptr, 0,
 									  tags_data->timestamp);
 
-	for (auto sess : serv.sessions)
+	for (auto serv_sess : serv.sessions)
 	{
-		userlist_set_away (*sess, nick, user_status::away);
+		userlist_set_away (*serv_sess, nick, user_status::away);
 	}
 }
 
@@ -1049,8 +1049,7 @@ inbound_away_notify (const server &serv, char *nick, char *reason,
 }
 
 bool
-inbound_nameslist_end (const server &serv, const std::string & chan,
-							  const message_tags_data *tags_data)
+inbound_nameslist_end (const server &serv, const std::string & chan)
 {
 	if (chan == "*")
 	{
@@ -1316,7 +1315,7 @@ inbound_set_all_away_status (const server &serv, const boost::string_ref & nick,
 }
 
 void
-inbound_uaway (server &serv, const message_tags_data *tags_data)
+inbound_uaway (server &serv)
 {
 	serv.is_away = true;
 	serv.away_time = time (nullptr);
@@ -1326,7 +1325,7 @@ inbound_uaway (server &serv, const message_tags_data *tags_data)
 }
 
 void
-inbound_uback (server &serv, const message_tags_data *tags_data)
+inbound_uback (server &serv)
 {
 	serv.is_away = false;
 	serv.reconnect_away = false;
@@ -1351,8 +1350,7 @@ inbound_foundip (session *sess, char *ip, const message_tags_data *tags_data)
 }
 
 void
-inbound_user_info_start (session *sess, const char *nick,
-								 const message_tags_data *tags_data)
+inbound_user_info_start (session *sess, const char *nick)
 {
 	/* set away to false now, 301 may turn it back on */
 	inbound_set_all_away_status (*(sess->server), nick, user_status::present);
@@ -1391,11 +1389,11 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 	else
 	{
 		/* came from WHOIS, not channel specific */
-		for (auto sess : serv->sessions)
+		for (auto serv_sess : serv->sessions)
 		{
-			if (sess->type == session::SESS_CHANNEL)
+			if (serv_sess->type == session::SESS_CHANNEL)
 			{
-				userlist_add_hostname (sess, nick, uhost.get(), realname, servname, account, away);
+				userlist_add_hostname (serv_sess, nick, uhost.get(), realname, servname, account, away);
 			}
 		}
 	}
@@ -1406,7 +1404,6 @@ bool inbound_banlist (session *sess, time_t stamp, char *chan, char *mask,
 {
 	char *time_str = ctime (&stamp);
 	server *serv = sess->server;
-	char *nl;
 
 	if (stamp <= 0)
 	{
@@ -1414,8 +1411,9 @@ bool inbound_banlist (session *sess, time_t stamp, char *chan, char *mask,
 	}
 	else
 	{
-		if ((nl = strchr (time_str, '\n')))
-			*nl = 0;
+		auto new_line = strchr(time_str, '\n');
+		if (new_line)
+			*new_line = 0;
 	}
 
 	sess = find_channel (*serv, chan);
@@ -1712,7 +1710,7 @@ inbound_cap_ls (server &serv, char *nick, char *extensions_str,
 }
 
 void
-inbound_cap_nak (server &serv, const message_tags_data *tags_data)
+inbound_cap_nak (server &serv)
 {
 	serv.sent_capend = true;
 	tcp_send (serv, "CAP END\r\n");

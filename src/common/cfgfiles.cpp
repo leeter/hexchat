@@ -1009,19 +1009,19 @@ set_showval(session *sess, const struct prefs & var)
 	switch (var.type)
 	{
 		case TYPE_STR:
-			buffer << boost::format(_("\0033:\017 %s\n")) % ((char *)&prefs + var.offset);
+			buffer << boost::format(_(u8"\u00033:\017 %s\n")) % ((char *)&prefs + var.offset);
 			break;
 		case TYPE_INT:
-			buffer << boost::format(_("\0033:\017 %d\n")) % *((int *)&prefs + var.offset);
+			buffer << boost::format(_(u8"\u00033:\017 %d\n")) % *((int *)&prefs + var.offset);
 			break;
 		case TYPE_BOOL:
 			if (*((int *) &prefs + var.offset))
 			{
-				buffer << boost::format(_("\0033:\017 %s\n")) % _("ON");
+				buffer << boost::format(_(u8"\u00033:\017 %s\n")) % _("ON");
 			}
 			else
 			{
-				buffer << boost::format(_("\0033:\017 %s\n")) % _("OFF");
+				buffer << boost::format(_(u8"\u00033:\017 %s\n")) % _("OFF");
 			}
 			break;
 	}

@@ -37,33 +37,8 @@
 #include "ssl.hpp"				  /* struct cert_info */
 #include "util.hpp"
 
-/* globals */
-static char err_buf[256];			/* generic error buffer */
-
-
 /* +++++ Internal functions +++++ */
 namespace {
-static std::string
-__SSL_fill_err_buf (const std::string & funcname)
-{
-	char buf[256] = { 0 };
-	unsigned long err = ERR_get_error ();
-	ERR_error_string_n (err, buf, sizeof(buf));
-
-	std::ostringstream stream(funcname, std::ios::ate);
-	stream << ": " << buf << " (" << err << ")\n";
-	auto err_string = stream.str();
-	std::copy(err_string.cbegin(), err_string.cend(), std::begin(err_buf));
-	return err_string;
-}
-
-static void
-__SSL_critical_error (const std::string & funcname)
-{
-	std::cerr << __SSL_fill_err_buf(funcname) << std::endl;
-
-	std::exit (1);
-}
 
 static std::string
 ASN1_TIME_to_string(ASN1_TIME * tm)
@@ -109,23 +84,6 @@ broke_oneline(char *oneline, char *parray[])
 namespace io{
 	namespace ssl{
 
-SSL_CTX *
-_SSL_context_init(void(*info_cb_func)(const SSL*, int, int), int server)
-{
-	SSL_CTX *ctx;
-
-	SSLeay_add_ssl_algorithms ();
-	SSL_load_error_strings ();
-	ctx = SSL_CTX_new (server ? SSLv23_server_method() : SSLv23_client_method ());
-
-	SSL_CTX_set_session_cache_mode (ctx, SSL_SESS_CACHE_BOTH);
-	SSL_CTX_set_timeout (ctx, 300);
-
-	/* used in SSL_connect(), SSL_accept() */
-	SSL_CTX_set_info_callback(ctx, info_cb_func);
-
-	return(ctx);
-}
 /*
     FIXME: Master-Key, Extensions, CA bits
 	    (openssl x509 -text -in servcert.pem)
@@ -198,114 +156,6 @@ get_cipher_info (const SSL * ssl)
 	SSL_CIPHER_get_bits (c, &info.cipher_bits);
 
 	return info;
-}
-
-
-int
-_SSL_send (SSL * ssl, const char *buf, int len)
-{
-	int num;
-
-
-	num = SSL_write (ssl, buf, len);
-
-	switch (SSL_get_error (ssl, num))
-	{
-	case SSL_ERROR_SSL:			  /* setup errno! */
-		/* ??? */
-		std::cerr << __SSL_fill_err_buf("SSL_write") << std::endl;
-		break;
-	case SSL_ERROR_SYSCALL:
-		/* ??? */
-		perror ("SSL_write/write");
-		break;
-	case SSL_ERROR_ZERO_RETURN:
-		/* fprintf(stderr, "SSL closed on write\n"); */
-		break;
-	}
-
-	return (num);
-}
-
-
-int
-_SSL_recv (SSL * ssl, char *buf, int len)
-{
-	int num;
-
-
-	num = SSL_read (ssl, buf, len);
-
-	switch (SSL_get_error (ssl, num))
-	{
-	case SSL_ERROR_SSL:
-		/* ??? */
-		std::cerr << __SSL_fill_err_buf("SSL_read") << std::endl;
-		break;
-	case SSL_ERROR_SYSCALL:
-		/* ??? */
-		if (!would_block ())
-			perror ("SSL_read/read");
-		break;
-	case SSL_ERROR_ZERO_RETURN:
-		/* fprintf(stdeerr, "SSL closed on read\n"); */
-		break;
-	}
-
-	return (num);
-}
-
-
-SSL *
-_SSL_socket (SSL_CTX *ctx, int sd)
-{
-	SSL *ssl;
-
-
-	if (!(ssl = SSL_new (ctx)))
-		/* FATAL */
-		__SSL_critical_error ("SSL_new");
-
-	SSL_set_fd (ssl, sd);
-	if (ctx->method == SSLv23_client_method())
-		SSL_set_connect_state (ssl);
-	else
-	        SSL_set_accept_state(ssl);
-
-	return (ssl);
-}
-
-
-char *
-_SSL_set_verify(SSL_CTX *ctx, int(*verify_callback)(int, X509_STORE_CTX*), char *cacert)
-{
-	if (!SSL_CTX_set_default_verify_paths (ctx))
-	{
-		__SSL_fill_err_buf ("SSL_CTX_set_default_verify_paths");
-		return (err_buf);
-	}
-/*
-	if (cacert)
-	{
-		if (!SSL_CTX_load_verify_locations (ctx, cacert, NULL))
-		{
-			__SSL_fill_err_buf ("SSL_CTX_load_verify_locations");
-			return (err_buf);
-		}
-	}
-*/
-	SSL_CTX_set_verify (ctx, SSL_VERIFY_PEER, verify_callback);
-
-	return (NULL);
-}
-
-
-void
-_SSL_close (SSL * ssl)
-{
-	SSL_set_shutdown (ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
-	SSL_free (ssl);
-	ERR_remove_state (0);		  /* free state buffer */
 }
 
 	}

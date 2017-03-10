@@ -409,80 +409,6 @@ server_read_cb(server * serv, const std::string & message, size_t length)
 	}
 }
 
-static gboolean
-server_read (GIOChannel *source, GIOCondition condition, server *serv)
-{
-	int sok = serv->sok;
-	int error, i, len;
-	char lbuf[2050];
-
-	while (1)
-	{
-#ifdef USE_OPENSSL
-		if (!serv->ssl)
-#endif
-			len = recv (sok, lbuf, sizeof (lbuf) - 2, 0);
-#ifdef USE_OPENSSL
-		else
-			len = io::ssl::_SSL_recv (serv->ssl, lbuf, sizeof (lbuf) - 2);
-#endif
-		if (len < 1)
-		{
-			error = 0;
-			if (len < 0)
-			{
-				if (would_block ())
-					return TRUE;
-				error = sock_error ();
-			}
-			if (!serv->end_of_motd)
-			{
-				serv->disconnect (serv->server_session, false, error);
-				if (!servlist_cycle (serv))
-				{
-					if (prefs.hex_net_auto_reconnect)
-						serv->auto_reconnect (false, error);
-				}
-			} else
-			{
-				if (prefs.hex_net_auto_reconnect)
-					serv->auto_reconnect (false, error);
-				else
-					serv->disconnect (serv->server_session, false, error);
-			}
-			return TRUE;
-		}
-
-		i = 0;
-
-		lbuf[len] = 0;
-
-		while (i < len)
-		{
-			switch (lbuf[i])
-			{
-			case '\r':
-				break;
-
-			case '\n':
-				serv->linebuf[serv->pos] = 0;
-				server_inline (serv, serv->linebuf, serv->pos);
-				serv->pos = 0;
-				break;
-
-			default:
-				serv->linebuf[serv->pos] = lbuf[i];
-				if (serv->pos >= (sizeof (serv->linebuf) - 1))
-					std::perror(_(
-								"*** HEXCHAT WARNING: Buffer overflow - shit server!\n"));
-				else
-					serv->pos++;
-			}
-			i++;
-		}
-	}
-}
-
 static void
 server_connected1(server * serv, const boost::system::error_code & error)
 {
@@ -521,57 +447,6 @@ server_connected1(server * serv, const boost::system::error_code & error)
 	serv->set_name(serv->servername);
 	fe_server_event(serv, fe_serverevents::CONNECT, 0);
 }
-
-static void
-server_connected (server * serv)
-{
-	prefs.wait_on_exit = TRUE;
-	serv->ping_recv = boost::chrono::steady_clock::now();
-	serv->lag_sent = 0;
-	serv->connected = true;
-	set_nonblocking (serv->sok);
-	serv->iotag = fe_input_add(serv->sok, FIA_READ | FIA_EX, (GIOFunc)server_read, serv);
-	if (!serv->no_login)
-	{
-		EMIT_SIGNAL (XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
-						 nullptr, 0);
-		if (serv->network)
-		{
-			ircnet* net = serv->network;
-			serv->p_login (	(!(net->flags & FLAG_USE_GLOBAL) &&
-								 (net->user)) ?
-								(net->user) :
-								prefs.hex_irc_user_name,
-								(!(net->flags & FLAG_USE_GLOBAL) &&
-								 (net->real)) ?
-								(net->real) :
-								prefs.hex_irc_real_name);
-		} else
-		{
-			serv->p_login (prefs.hex_irc_user_name, prefs.hex_irc_real_name);
-		}
-	} else
-	{
-		EMIT_SIGNAL (XP_TE_SERVERCONNECTED, serv->server_session, nullptr, nullptr,
-						 nullptr, nullptr, 0);
-	}
-
-	serv->set_name (serv->servername);
-	fe_server_event(serv, fe_serverevents::CONNECT, 0);
-}
-
-#ifdef WIN32
-
-static gboolean
-server_close_pipe (int *pipefd)	/* see comments below */
-{
-//	close (pipefd[0]);	/* close WRITE end first to cause an EOF on READ */
-//	close (pipefd[1]);	/* in giowin32, and end that thread. */
-	free (pipefd);
-	return FALSE;
-}
-
-#endif
 
 static void
 server_stopconnecting (server * serv)
@@ -625,20 +500,6 @@ server_stopconnecting (server * serv)
 
 #ifdef USE_OPENSSL
 #define	SSLTMOUT	90				  /* seconds */
-static void
-ssl_cb_info (const SSL * s, int where, int ret)
-{
-/*	char buf[128];*/
-
-
-	return;							  /* FIXME: make debug level adjustable in serverlist or settings */
-
-/*	snprintf (buf, sizeof (buf), "%s (%d)", SSL_state_string_long (s), where);
-	if (g_sess)
-		EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
-	else
-		fprintf (stderr, "%s\n", buf);*/
-}
 
 static void
 ssl_print_cert_info(server *serv, const SSL* ctx)
@@ -733,27 +594,6 @@ ssl_print_cert_info(server *serv, const SSL* ctx)
 
 		serv->cleanup();*/
 	}
-}
-
-static int
-ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
-{
-	char subject[256];
-	char issuer[256];
-	char buf[512];
-
-
-	X509_NAME_oneline (X509_get_subject_name (ctx->current_cert), subject,
-							 sizeof (subject));
-	X509_NAME_oneline (X509_get_issuer_name (ctx->current_cert), issuer,
-							 sizeof (issuer));
-
-	snprintf (buf, sizeof (buf), "* Subject: %s", subject);
-	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, nullptr, nullptr, nullptr, 0);
-	snprintf (buf, sizeof (buf), "* Issuer: %s", issuer);
-	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, nullptr, nullptr, nullptr, 0);
-
-	return (TRUE);					  /* always ok */
 }
 
 //static int
