@@ -27,17 +27,15 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-#include <thread>
+
 #include <boost/filesystem.hpp>
 #include <boost/utility/string_ref.hpp>
 #include "fe-gtk.hpp"
 
 
 #ifdef WIN32
-#include <Windows.h>
 #include <mmsystem.h>
 #include <shellapi.h>
-#include <gdk/gdkwin32.h>
 #else
 #include <unistd.h>
 #endif
@@ -240,7 +238,7 @@ fe_args (int argc, char *argv[])
 	/* cuts can. So we have to set the current dir manually, to the path  */
 	/* of the exe. */
 	{
-		wchar_t path[MAX_PATH] = { 0 };
+		wchar_t path[MAX_PATH] = { };
 		DWORD len = GetModuleFileNameW(nullptr, path, MAX_PATH);
 		if (len)
 		{

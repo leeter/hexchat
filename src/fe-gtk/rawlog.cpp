@@ -165,7 +165,7 @@ fe_add_rawlog(server *serv, const boost::string_ref &text, bool outbound)
 	{
 		if (it.empty())
 			break;
-		std::string new_text((outbound ? "\0034<<\017 " : "\0033>>\017 ") + it);
+		std::string new_text((outbound ? u8"\u00034<<\017 " : u8"\u00033>>\017 ") + it);
 		
 		gtk_xtext_append (buffer, new_text, 0);
 	}

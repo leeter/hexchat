@@ -61,6 +61,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <tuple>
