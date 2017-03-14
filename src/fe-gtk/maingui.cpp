@@ -3218,7 +3218,6 @@ mg_apply_setup (void)
 	for (sess_itr sess{ sess_list }, end; sess != end; ++sess)
 	{
 		gtk_xtext_buffer_set_stamping(static_cast<xtext_buffer*>(sess->res->buffer), prefs.hex_stamp_text ? time_stamped :no_stamp);
-		((xtext_buffer *)sess->res->buffer)->needs_recalc = true;
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);
 		if (sess->gui->is_tab)

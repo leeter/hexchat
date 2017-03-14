@@ -30,7 +30,7 @@
 #include <../common/url.hpp>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
-G_DECLARE_DERIVABLE_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget);
+G_DECLARE_FINAL_TYPE(GtkXText, gtk_xtext, GTK, XTEXT, GtkWidget)
 
 enum text_attr{
 	ATTR_BOLD = '\002',
@@ -78,62 +78,24 @@ enum marker_reset_reason {
 	MARKER_RESET_BY_CLEAR
 };
 
-struct xtext_impl;
-
 enum time_stamping : bool {
 	no_stamp = false,
 	time_stamped = true
 };
 
-struct xtext_buffer {
-private:
-	xtext_buffer(const xtext_buffer&) = delete;
-	xtext_buffer& operator=(const xtext_buffer&) = delete;
-	bool time_stamp;
-public:
-	explicit xtext_buffer(GtkXText* parent);
-	~xtext_buffer() noexcept;
-	std::unique_ptr<xtext_impl> impl;
+struct xtext_buffer;
 
-	int pagetop_line;
-	int pagetop_subline;
-
-	int num_lines;
-
-	int window_width;				/* window size when last rendered. */
-	int window_height;
-
-	bool scrollbar_down;
-	bool needs_recalc;
-	bool marker_seen;
-
-	GList *search_found;		/* list of textentries where search found strings */
-	std::string search_text;		/* desired text to search for */
-	std::string search_nee;		/* prepared needle to look in haystack for */
-	gtk_xtext_search_flags search_flags;	/* match, bwd, highlight */
-	GList *cursearch;			/* GList whose 'data' pts to current textentry */
-	GList *curmark;			/* current item in ent->marks */
-	offsets_t curdata;		/* current offset info, from *curmark */
-
-public:
-	void set_time_stamping(time_stamping);
-
-	GError* set_search_regex(gtk_xtext_search_flags, const boost::string_ref&);
-	bool is_time_stamped() const noexcept {
-		return time_stamp;
-	}
-};
 #if !GTK_CHECK_VERSION(3, 0, 0)
 struct BridgeStyleContext;
 #endif
 
-struct _GtkXTextClass
-{
-	GtkWidgetClass parent_class;
-	void(*word_click) (GtkXText * xtext, char *word, GdkEventButton * event);
-	void(*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
-	gpointer padding[12];
-};
+//struct _GtkXTextClass
+//{
+//	GtkWidgetClass parent_class;
+//	void(*word_click) (GtkXText * xtext, char *word, GdkEventButton * event);
+//	void(*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
+//	gpointer padding[12];
+//};
 
 GtkWidget *gtk_xtext_new(const gsl::span<GdkColor, XTEXT_COLS> palette, bool separator);
 void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);
