@@ -55,7 +55,6 @@ enum text_attr{
 #define XTEXT_MARKER 36		/* for marker line */
 #define XTEXT_MAX_COLOR 41
 
-struct textentry;
 using ustring_ref = std::basic_string_view<unsigned char>;
 /*
 * offsets_t is used for retaining search information.
@@ -90,14 +89,11 @@ public:
 	explicit xtext_buffer(GtkXText* parent);
 	~xtext_buffer() NOEXCEPT;
 	std::unique_ptr<xtext_impl> impl;
-	
-	GtkXText *xtext;					/* attached to this widget */
 
 	int pagetop_line;
 	int pagetop_subline;
 
 	int num_lines;
-	int indent;						  /* position of separator (pixels) from left */
 
 	int window_width;				/* window size when last rendered. */
 	int window_height;
@@ -113,7 +109,6 @@ public:
 	GList *cursearch;			/* GList whose 'data' pts to current textentry */
 	GList *curmark;			/* current item in ent->marks */
 	offsets_t curdata;		/* current offset info, from *curmark */
-	textentry *hintsearch;	/* textentry found for last search */
 
 public:
 	enum stamping : bool {
@@ -152,7 +147,7 @@ namespace xtext{
 }
 void gtk_xtext_refresh(GtkXText * xtext);
 int gtk_xtext_lastlog(xtext_buffer *out, xtext_buffer *search_area);
-textentry *gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
+bool gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags flags, GError **err);
 void gtk_xtext_reset_marker_pos(GtkXText *xtext);
 int gtk_xtext_moveto_marker_pos(GtkXText *xtext);
 void gtk_xtext_check_marker_visibility(GtkXText *xtext);
@@ -175,6 +170,6 @@ void gtk_xtext_buffer_free(xtext_buffer *buf);
 void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render);
 void gtk_xtext_copy_selection(GtkXText *xtext);
 void gtk_xtext_set_ignore_hidden(GtkXText* xtext, bool ignore_hidden);
-
+void gtk_xtext_buffer_set_xtext(xtext_buffer* buf, GtkXText* xtext);
 
 #endif

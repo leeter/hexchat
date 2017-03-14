@@ -40,7 +40,7 @@ parse_color_string(const std::string &color_str)
 	char* fg_out = nullptr;
 	const auto fg_index = std::strtol(color_str.c_str(), &fg_out, 10);
 	const auto fg_dist = std::distance(color_str.c_str(), const_cast<const char*>(fg_out));
-	if ((fg_dist + 1) >= color_str.size() || color_str[fg_dist] != ',')
+	if (static_cast<std::size_t>(fg_dist + 1) >= color_str.size() || color_str[fg_dist] != ',')
 	{
 		return std::make_tuple(fg_index, XTEXT_BG, fg_dist);
 	}
@@ -171,7 +171,6 @@ class pangocairo_backend : public common_backend
 	int ascent;
 	int descent;
 	GtkWidget *parent;
-	cairo_tPtr m_cr;
 	std::string default_font_name;
 	xtext::PangoLayoutPtr layout;
 	PangoFontDescriptionPtr font_desc;

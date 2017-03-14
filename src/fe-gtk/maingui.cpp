@@ -1797,7 +1797,7 @@ mg_link_irctab (session *sess, bool focus)
 	GtkWidgetPtr win{ mg_changui_destroy(sess) };
 	mg_changui_new (*sess, sess->res, true, focus);
 	/* the buffer is now attached to a different widget */
-	((xtext_buffer *)sess->res->buffer)->xtext = (GtkXText *)sess->gui->xtext;
+	gtk_xtext_buffer_set_xtext(static_cast<xtext_buffer*>(sess->res->buffer), GTK_XTEXT(sess->gui->xtext));
 }
 
 void
@@ -2703,7 +2703,6 @@ enum search_type{
 static void
 search_handle_event(int search_type, session *sess)
 {
-	textentry *last;
 	const gchar *text = nullptr;
 	gtk_xtext_search_flags flags;
 	GError *err = nullptr;
@@ -2721,7 +2720,7 @@ search_handle_event(int search_type, session *sess)
 
 	if (search_type != SEARCH_REFRESH)
 		text = gtk_entry_get_text (GTK_ENTRY(sess->gui->shentry));
-	last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
+	auto last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
 
 	if (err)
 	{

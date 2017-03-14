@@ -38,8 +38,10 @@
 #include "gtk_helpers.hpp"
 
 namespace xtext {
+
 	CUSTOM_PTR(PangoAttrList, pango_attr_list_unref);
 	CUSTOM_PTR(PangoLayout, g_object_unref);
+
 	enum text_attr: unsigned char {
 		ATTR_BOLD = '\002',
 		ATTR_COLOR = '\003',
@@ -68,6 +70,8 @@ namespace xtext {
 		guint16 emph;
 		guint16 width;
 	};
+
+	
 	struct xtext_backend
 	{
 		enum align {
