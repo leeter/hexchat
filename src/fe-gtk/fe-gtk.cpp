@@ -686,9 +686,10 @@ fe_lastlog (session *sess, session *lastlog_sess, const char *sstr, gtk_xtext_se
 	}
 
 	auto lbuf = static_cast<xtext_buffer*>(lastlog_sess->res->buffer);
+	std::string needle;
 	if (flags & regexp)
 	{
-		auto err = lbuf->set_search_regex(flags, sstr);
+		auto err = gtk_xtext_buffer_set_search_regex(lbuf, flags, sstr);
 		if (err)
 		{
 			std::unique_ptr<GError, decltype(&g_error_free)> err_ptr(err, g_error_free);
@@ -700,16 +701,15 @@ fe_lastlog (session *sess, session *lastlog_sess, const char *sstr, gtk_xtext_se
 	{
 		if (flags & case_match)
 		{
-			lbuf->search_nee = sstr;
+			needle = sstr;
 		}
 		else
 		{
 			glib_string folded{ g_utf8_casefold(sstr, strlen(sstr)) };
-			lbuf->search_nee = folded.get();
+			needle = folded.get();
 		}
 	}
-	lbuf->search_flags = flags;
-	lbuf->search_text = sstr;
+	gtk_xtext_buffer_set_search_paramters(lbuf, sstr, needle, flags);
 	gtk_xtext_lastlog (lbuf, buf);
 }
 

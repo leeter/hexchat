@@ -1660,7 +1660,7 @@ mg_add_chan (session *sess)
 	if (sess->res->buffer == nullptr)
 	{
 		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		static_cast<xtext_buffer*>(sess->res->buffer)->set_time_stamping(prefs.hex_stamp_text ? xtext_buffer::time_stamped : xtext_buffer::no_stamp);
+		gtk_xtext_buffer_set_stamping(static_cast<xtext_buffer*>(sess->res->buffer), prefs.hex_stamp_text ? time_stamped : no_stamp);
 		sess->res->user_model = userlist_create_model ();
 	}
 }
@@ -3075,7 +3075,7 @@ mg_create_topwindow (session &sess)
 	{
 		sess.res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess.gui->xtext));
 		gtk_xtext_buffer_show(GTK_XTEXT(sess.gui->xtext), static_cast<xtext_buffer*>(sess.res->buffer), true);
-		static_cast<xtext_buffer*>(sess.res->buffer)->set_time_stamping(prefs.hex_stamp_text ? xtext_buffer::time_stamped : xtext_buffer::no_stamp);
+		gtk_xtext_buffer_set_stamping(static_cast<xtext_buffer*>(sess.res->buffer), prefs.hex_stamp_text ? time_stamped : no_stamp);
 		sess.res->user_model = userlist_create_model ();
 	}
 
@@ -3217,7 +3217,7 @@ mg_apply_setup (void)
 
 	for (sess_itr sess{ sess_list }, end; sess != end; ++sess)
 	{
-		static_cast<xtext_buffer*>(sess->res->buffer)->set_time_stamping(prefs.hex_stamp_text ? xtext_buffer::time_stamped : xtext_buffer::no_stamp);
+		gtk_xtext_buffer_set_stamping(static_cast<xtext_buffer*>(sess->res->buffer), prefs.hex_stamp_text ? time_stamped :no_stamp);
 		((xtext_buffer *)sess->res->buffer)->needs_recalc = true;
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);

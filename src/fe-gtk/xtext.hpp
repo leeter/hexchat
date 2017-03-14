@@ -80,6 +80,11 @@ enum marker_reset_reason {
 
 struct xtext_impl;
 
+enum time_stamping : bool {
+	no_stamp = false,
+	time_stamped = true
+};
+
 struct xtext_buffer {
 private:
 	xtext_buffer(const xtext_buffer&) = delete;
@@ -87,7 +92,7 @@ private:
 	bool time_stamp;
 public:
 	explicit xtext_buffer(GtkXText* parent);
-	~xtext_buffer() NOEXCEPT;
+	~xtext_buffer() noexcept;
 	std::unique_ptr<xtext_impl> impl;
 
 	int pagetop_line;
@@ -111,11 +116,7 @@ public:
 	offsets_t curdata;		/* current offset info, from *curmark */
 
 public:
-	enum stamping : bool {
-		no_stamp = false,
-		time_stamped = true
-	};
-	void set_time_stamping(stamping);
+	void set_time_stamping(time_stamping);
 
 	GError* set_search_regex(gtk_xtext_search_flags, const boost::string_ref&);
 	bool is_time_stamped() const noexcept {
@@ -171,5 +172,7 @@ void gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render);
 void gtk_xtext_copy_selection(GtkXText *xtext);
 void gtk_xtext_set_ignore_hidden(GtkXText* xtext, bool ignore_hidden);
 void gtk_xtext_buffer_set_xtext(xtext_buffer* buf, GtkXText* xtext);
-
+GError* gtk_xtext_buffer_set_search_regex(xtext_buffer* buf, gtk_xtext_search_flags, const boost::string_ref&);
+void gtk_xtext_buffer_set_stamping(xtext_buffer*, time_stamping);
+void gtk_xtext_buffer_set_search_paramters(xtext_buffer* buffer, const std::string_view search_string, const std::string_view needle, gtk_xtext_search_flags flags);
 #endif

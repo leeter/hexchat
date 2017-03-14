@@ -4034,7 +4034,7 @@ xtext_buffer::xtext_buffer(GtkXText* parent)
 {
 }
 
-void xtext_buffer::set_time_stamping(stamping new_stamping)
+void xtext_buffer::set_time_stamping(time_stamping new_stamping)
 {
 	this->time_stamp = new_stamping;
 }
@@ -4048,7 +4048,7 @@ GError* xtext_buffer::set_search_regex(gtk_xtext_search_flags flags, const boost
 	return err;
 }
 
-xtext_buffer::~xtext_buffer() NOEXCEPT
+xtext_buffer::~xtext_buffer() noexcept
 {
 	if (this->search_found)
 	{
@@ -4212,6 +4212,22 @@ void gtk_xtext_set_ignore_hidden(GtkXText * xtext, bool ignore_hidden)
 void gtk_xtext_buffer_set_xtext(xtext_buffer * buf, GtkXText * xtext)
 {
 	buf->impl->set_xtext(xtext);
+}
+
+GError* gtk_xtext_buffer_set_search_regex(xtext_buffer * buf, gtk_xtext_search_flags flags, const boost::string_ref &regex)
+{
+	return buf->set_search_regex(flags, regex);
+}
+
+void gtk_xtext_buffer_set_stamping(xtext_buffer* buffer, time_stamping stamping) {
+	buffer->set_time_stamping(stamping);
+}
+
+void gtk_xtext_buffer_set_search_paramters(xtext_buffer* buffer, const std::string_view search_string, const std::string_view needle, gtk_xtext_search_flags flags)
+{
+	buffer->search_flags = flags;
+	buffer->search_text = search_string;
+	buffer->search_nee = needle;
 }
 
 void
