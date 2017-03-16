@@ -238,13 +238,13 @@ struct xtext_buffer
 private:
 	bool time_stamp;
 	GtkXText *m_parent;					/* attached to this widget */
-
+	int m_indent;						  /* position of separator (pixels) from left */
 public:
 	~xtext_buffer() noexcept;
 	int last_offset_start;
 	int last_offset_end;
 	int last_pixel_pos;
-	int indent;						  /* position of separator (pixels) from left */
+	
 	marker_reset_reason marker_state;
 	textentry *text_first;
 	textentry *text_last;
@@ -282,10 +282,10 @@ public:
 	xtext_buffer(GtkXText* parent, int space_width)
 		:time_stamp(),
 		m_parent(parent),
+		m_indent(space_width * 2),
 		last_offset_start(),
 		last_offset_end(),
 		last_pixel_pos(),
-		indent(space_width * 2),
 		marker_state(),
 		text_first(), text_last(),
 
@@ -317,6 +317,10 @@ public:
 		return m_parent;
 	}
 
+	int indent() const noexcept {
+		return m_indent;
+	}
+
 	void set_xtext(GtkXText* xtext) {
 		g_return_if_fail(GTK_IS_XTEXT(xtext));
 		g_return_if_fail(xtext != nullptr);
@@ -326,8 +330,14 @@ public:
 		this->m_parent = xtext;
 	}
 
+	/* force scrolling off */
+	void dontscroll()
+	{
+		this->last_pixel_pos = std::numeric_limits<decltype(xtext_buffer::last_pixel_pos)>::max();
+	}
+
 	void set_indent(int new_indent) {
-		if (new_indent < MARGIN) 
+		if (new_indent < MARGIN) /* 2 pixels is our left margin */
 		{
 			new_indent = MARGIN;
 		}
@@ -335,7 +345,19 @@ public:
 		{
 			new_indent = m_parent->max_auto_indent;
 		}
-		this->indent = new_indent;
+		
+		/* make indent a multiple of the space width */
+		if (m_parent->space_width)
+		{
+			int j = 0;
+			while (j < new_indent)
+			{
+				j += m_parent->space_width;
+			}
+			new_indent = j;
+		}
+		this->dontscroll();	/* force scrolling off, WHY? */
+		this->m_indent = new_indent;
 		invalidate();
 	}
 
@@ -356,13 +378,6 @@ namespace{
 	inline bool is_del(T c)
 	{
 		return (c == ' ' || c == '\n' || c == '>' || c == '<' || c == 0);
-	}
-
-
-	/* force scrolling off */
-	void dontscroll(xtext_buffer* buf)
-	{
-		buf->last_pixel_pos = std::numeric_limits<decltype(xtext_buffer::last_pixel_pos)>::max();
 	}
 
 	enum
@@ -393,7 +408,6 @@ namespace{
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
 		GtkAdjustment *vadj);
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf, bool);
-	static void gtk_xtext_fix_indent(xtext_buffer *buf);
 	static int gtk_xtext_find_subline(const textentry &ent, int line);
 	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
 	[[deprecated("uses the scratch buffer, use xtext::strip_color instead")]]
@@ -855,7 +869,7 @@ namespace{
 		gdk_window_move_resize(gtk_widget_get_window(widget), allocation->x,
 				       allocation->y, allocation->width,
 				       allocation->height);
-		dontscroll(xtext->buffer); /* force scrolling off */
+		xtext->buffer->dontscroll(); /* force scrolling off */
 		if (!height_only)
 			gtk_xtext_calc_lines(xtext->buffer, false);
 		else
@@ -969,7 +983,7 @@ namespace{
 		int line, gboolean& out_of_bounds)
 	{
 		const unsigned char *str;
-		const auto indent = subline < 1 ? ent.indent : xtext->buffer->indent;
+		const auto indent = subline < 1 ? ent.indent : xtext->buffer->indent();
 
 		if (line > gtk_adjustment_get_page_size(xtext->adj) || line < 0)
 		{
@@ -1018,9 +1032,9 @@ namespace{
 
 	static void gtk_xtext_draw_sep(GtkXText *xtext, cairo_t *cr, int height)
 	{
-		if (!xtext->separator || !xtext->buffer->indent)
+		if (!xtext->separator || !xtext->buffer->indent())
 			return;
-		const auto x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
+		const auto x = xtext->buffer->indent() - ((xtext->space_width + 1) / 2);
 		if (x < 1)
 			return;
 
@@ -1114,7 +1128,7 @@ namespace{
 		gtk_render_background(gtk_widget_get_style_context(widget), cr, allocation.x,
 				      allocation.y, allocation.width,
 				      allocation.height);
-		dontscroll(xtext_get_current_buffer(xtext)); /* force scrolling off */
+		xtext_get_current_buffer(xtext)->dontscroll(); /* force scrolling off */
 		gtk_xtext_render_page(xtext, cr);
 		return false;
 	}
@@ -1537,10 +1551,9 @@ namespace{
 			gtk_widget_get_allocation(widget, &allocation);
 			if (x < (3 * allocation.width) / 5 && x > 15)
 			{
-				const auto tmp = xtext->buffer->indent;
+				const auto old_indent = xtext->buffer->indent();
 				xtext->buffer->set_indent(x);
-				gtk_xtext_fix_indent(xtext->buffer);
-				if (tmp != xtext->buffer->indent)
+				if (old_indent != xtext->buffer->indent())
 				{
 					gtk_xtext_recalc_widths(xtext->buffer, false);
 					if (xtext->buffer->scrollbar_down)
@@ -1572,9 +1585,9 @@ namespace{
 			return false;
 		}
 
-		if (xtext->separator && xtext->buffer->indent)
+		if (xtext->separator && xtext->buffer->indent())
 		{
-			const auto line_x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
+			const auto line_x = xtext->buffer->indent() - ((xtext->space_width + 1) / 2);
 			if (line_x == x || line_x == x + 1 || line_x == x - 1)
 			{
 				if (!xtext->cursor_resize)
@@ -1680,14 +1693,14 @@ namespace{
 		if (xtext->moving_separator)
 		{
 			xtext->moving_separator = false;
-			const auto old = xtext->buffer->indent;
+			const auto old = xtext->buffer->indent();
 			GtkAllocation allocation = {};
 			gtk_widget_get_allocation(widget, &allocation);
 			if (event->x < (4 * allocation.width) / 5 && event->x > 15) {
 				xtext->buffer->set_indent(event->x);
 			}
-			gtk_xtext_fix_indent(xtext->buffer);
-			if (xtext->buffer->indent != old)
+
+			if (xtext->buffer->indent() != old)
 			{
 				gtk_xtext_recalc_widths(xtext->buffer, false);
 				gtk_xtext_adjustment_set(xtext->buffer, true);
@@ -1816,9 +1829,9 @@ namespace{
 		}
 
 		/* check if it was a separator-bar click */
-		if (xtext->separator && xtext->buffer->indent)
+		if (xtext->separator && xtext->buffer->indent())
 		{
-			const auto line_x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
+			const auto line_x = xtext->buffer->indent() - ((xtext->space_width + 1) / 2);
 			if (line_x == x || line_x == x + 1 || line_x == x - 1)
 			{
 				xtext->moving_separator = true;
@@ -2826,11 +2839,9 @@ namespace{
 	}
 
 	/* horrible hack for drawing time stamps */
-	void gtk_xtext_render_stamp(GtkXText * xtext, cairo_t* cr, textentry * ent,
+	void gtk_xtext_render_stamp(GtkXText * xtext, cairo_t* cr,
 		const boost::string_ref & text, int line, int win_width)
 	{
-
-		/* trashing ent here, so make a backup first */
 		textentry tmp_ent;
 		auto jo = xtext->jump_out_offset;	/* back these up */
 		auto ji = xtext->jump_in_offset;
@@ -2889,7 +2900,7 @@ namespace{
 
 		//auto entline = taken = 0;
 		//auto str = ent->str.c_str();
-		const auto indent = (xtext->buffer->indent - ent->indent);
+		const auto indent = (xtext->buffer->indent() - ent->indent);
 		const auto start_subline = subline;
 		
 		/* draw the timestamp */
@@ -2897,12 +2908,12 @@ namespace{
 			(!xtext->skip_stamp || xtext->mark_stamp || xtext->force_stamp))
 		{
 			const auto time_str = xtext_get_stamp_str(ent->stamp);
-			gtk_xtext_render_stamp(xtext, cr, ent, time_str, line, win_width);
+			gtk_xtext_render_stamp(xtext, cr, time_str, line, win_width);
 		}
 
 		/* draw each line one by one */
 		y = (xtext->fontsize * line) /* + xtext->font->ascent*/ - xtext->pixel_offset;
-		const auto real_x = xtext->buffer->indent - indent;
+		const auto real_x = xtext->buffer->indent() - indent;
 		return xtext->backend->render_at(cr, real_x, y, win_width - real_x, 0 - indent, ent->mark_start, ent->mark_end, xtext::xtext_backend::left, ent->str);
 		//do
 		//{
@@ -2939,7 +2950,7 @@ namespace{
 		//		taken--;
 		//	}
 
-		//	indent = xtext->buffer->indent;
+		//	indent = xtext->buffer->indent();
 
 		//	if (line >= lines_max)
 		//		break;
@@ -2949,24 +2960,6 @@ namespace{
 		gtk_xtext_draw_marker(xtext, cr, ent, y - xtext->fontsize * (taken + start_subline));
 
 		return taken;
-	}
-
-	static void
-		gtk_xtext_fix_indent(xtext_buffer *buf)
-	{
-		const auto xtext = buf->current_xtext();
-		/* make indent a multiple of the space width */
-		if (buf->indent && xtext->space_width)
-		{
-			int j = 0;
-			while (j < buf->indent)
-			{
-				j += xtext->space_width;
-			}
-			buf->indent = j;
-		}
-
-		dontscroll(buf);	/* force scrolling off */
 	}
 
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf,
@@ -2983,7 +2976,7 @@ namespace{
 			}
 			if (ent.left_len != -1)
 			{
-				ent.indent = (buf->indent -
+				ent.indent = (buf->indent() -
 					      gtk_xtext_text_width(
 						  xtext,
 						  xtext::ustring_ref(ent.str.c_str(),
@@ -3017,7 +3010,7 @@ namespace{
 		{
 			int len = find_next_wrap(xtext, ent, str, win_width, indent);
 			ent.sublines.push_back(str + len - ent.str.c_str());
-			indent = buf->indent;
+			indent = buf->indent();
 			str += len;
 		} while (str < ent.str.c_str() + ent.str.size());
 
@@ -3033,7 +3026,7 @@ namespace{
 		const auto height = gdk_window_get_height(window);
 		const auto width = gdk_window_get_width(window) - MARGIN;
 		if (width < 30 || height < xtext->fontsize ||
-		    width < buf->indent + 30)
+		    width < buf->indent() + 30)
 			return;
 
 		buf->num_lines = std::accumulate(
@@ -3107,8 +3100,6 @@ namespace{
 	void gtk_xtext_render_page(GtkXText * xtext, cairo_t * cr)
 	{
 		cairo_stack cr_stack{ cr };
-		if (xtext->buffer->indent < MARGIN)
-			xtext->buffer->indent = MARGIN;	  /* 2 pixels is our left margin */
 
 		GtkWidget * widget = GTK_WIDGET(xtext);
 		GtkAllocation allocation;
@@ -3116,7 +3107,7 @@ namespace{
 
 		if (allocation.width < 34 ||
 			allocation.height < xtext->fontsize ||
-			allocation.width < xtext->buffer->indent + 32)
+			allocation.width < xtext->buffer->indent() + 32)
 		{
 			return;
 		}
@@ -3136,8 +3127,9 @@ namespace{
 		xtext->buffer->pagetop_subline = subline;
 		xtext->buffer->pagetop_line = firstLineToRender;
 
-		if (xtext->buffer->num_lines <= gtk_adjustment_get_page_size(xtext->adj))
-			dontscroll(xtext->buffer);
+		if (xtext->buffer->num_lines <= gtk_adjustment_get_page_size(xtext->adj)) {
+			xtext->buffer->dontscroll();
+		}
 
 		const auto pos = adj_value * xtext->fontsize;
 		const auto overlap = xtext->buffer->last_pixel_pos - pos;
@@ -3640,7 +3632,7 @@ namespace{
 		{
 			buf->marker_pos = ent_ptr;
 			buf->marker_state = MARKER_IS_SET;
-			dontscroll(buf); /* force scrolling off */
+			buf->dontscroll(); /* force scrolling off */
 			buf->marker_seen = false;
 		}
 
@@ -3652,8 +3644,9 @@ namespace{
 		if (xtext->buffer == buf)
 		{
 			/* this could be improved */
-			if ((buf->num_lines - 1) <= page_size)
-				dontscroll(buf);
+			if ((buf->num_lines - 1) <= page_size) {
+				buf->dontscroll();
+			}
 
 			if (!xtext->add_io_tag)
 			{
@@ -3705,27 +3698,26 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 	    gtk_xtext_text_width(xtext, left_text);
 
 	ent.left_len = left_text.length();
-	ent.indent = (buf->indent - left_width) - xtext->space_width;
+	ent.indent = (buf->indent() - left_width) - xtext->space_width;
 
 	auto space = buf->is_time_stamped() ? xtext->stamp_width : 0;
 
 	/* do we need to auto adjust the separator position? */
 	if (xtext->auto_indent && ent.indent < MARGIN + space)
 	{
-		auto tempindent =
+		const auto tempindent =
 		    MARGIN + space + xtext->space_width + left_width;
 
-		if (tempindent > buf->indent)
+		if (tempindent > buf->indent())
 			buf->set_indent(tempindent);
 
-		if (buf->indent > xtext->max_auto_indent)
+		if (buf->indent() > xtext->max_auto_indent)
 			buf->set_indent(xtext->max_auto_indent);
 
-		gtk_xtext_fix_indent(buf);
 		gtk_xtext_recalc_widths(buf, false);
 
 		ent.indent =
-		    (buf->indent - left_width) - xtext->space_width;
+		    (buf->indent() - left_width) - xtext->space_width;
 		xtext->force_render = true;
 	}
 
@@ -3858,7 +3850,7 @@ gtk_xtext_reset_marker_pos(GtkXText *xtext)
 	if (xtext->buffer->marker_pos)
 	{
 		xtext->buffer->marker_pos = nullptr;
-		dontscroll(xtext->buffer); /* force scrolling off */
+		xtext->buffer->dontscroll(); /* force scrolling off */
 		gtk_widget_queue_draw(GTK_WIDGET(xtext));
 		xtext->buffer->marker_state = MARKER_RESET_MANUALLY;
 	}
@@ -3944,7 +3936,7 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 
 	/* now change to the new buffer */
 	xtext->buffer = buf;
-	dontscroll(buf);	/* force scrolling off */
+	buf->dontscroll();	/* force scrolling off */
 	auto value = buf->old_value;
 	auto upper = static_cast<gdouble>(buf->num_lines);
 	const auto page_size = gtk_adjustment_get_page_size(xtext->adj);
@@ -3991,14 +3983,14 @@ xtext_buffer *
 gtk_xtext_buffer_new(GtkXText *xtext)
 {
 	xtext_buffer *buf = new xtext_buffer(xtext, xtext->space_width);
-	dontscroll(buf);
+	buf->dontscroll();
 
 	return buf;
 }
 
 void xtext_buffer::set_time_stamping(time_stamping new_stamping)
 {
-	if (this->time_stamp == new_stamping) {
+	if (this->time_stamp == static_cast<bool>(new_stamping)) {
 		return;
 	}
 	this->time_stamp = new_stamping;
@@ -4071,8 +4063,8 @@ gtk_xtext_init(GtkXText * xtext)
 
 static void gtk_xtext_class_init(GtkXTextClass * klass)
 {
-	auto object_class = G_OBJECT_CLASS(klass);
-	auto widget_class = GTK_WIDGET_CLASS(klass);
+	const auto object_class = G_OBJECT_CLASS(klass);
+	const auto widget_class = GTK_WIDGET_CLASS(klass);
 
 	xtext_signals[WORD_CLICK] =
 		g_signal_new("word_click",
@@ -4200,7 +4192,7 @@ bool gtk_xtext_set_font(GtkXText *xtext, const char name[])
 			gtk_xtext_text_width(xtext, ustring_ref(reinterpret_cast<const unsigned char*>(time_str.c_str()), time_str.size())) + MARGIN;
 	}
 
-	gtk_xtext_fix_indent(xtext->buffer);
+	xtext->buffer->invalidate();
 
 	if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
 		gtk_xtext_recalc_widths(xtext->buffer, true);
@@ -4271,14 +4263,14 @@ gtk_xtext_clear(xtext_buffer *buf, int lines)
 		if (buf->search_found)
 			gtk_xtext_search_fini(buf);
 		if (xtext->auto_indent)
-			buf->indent = MARGIN;
+			buf->set_indent(MARGIN);
 		buf->scrollbar_down = true;
 		buf->last_ent_start = nullptr;
 		buf->last_ent_end = nullptr;
 		buf->marker_pos = nullptr;
 		if (buf->text_first)
 			marker_reset = true;
-		dontscroll(buf);
+		buf->dontscroll();
 		buf->entries.clear();
 		buf->text_first = nullptr;
 		/*while (buf->text_first)
