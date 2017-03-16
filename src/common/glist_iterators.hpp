@@ -46,9 +46,8 @@ namespace glib_helper
 		explicit glist_iterator(L * list = nullptr)
 			:list(list){}
 
-		auto operator*() -> reference;
+		auto operator*()const -> reference;
 		auto operator->() -> pointer;
-		auto operator*() const->const_reference;
 		auto operator->() const->const_pointer;
 		auto operator++()->glist_iterator&;
 		auto operator++(int)->glist_iterator&;
@@ -60,15 +59,9 @@ namespace glib_helper
 	};
 
 	template<typename T, typename L>
-	auto glist_iterator<T, L>::operator*() -> reference
+	auto glist_iterator<T, L>::operator*() const -> reference
 	{
 		return *static_cast<T*>(list->data);
-	}
-
-	template<typename T, typename L>
-	auto glist_iterator<T, L>::operator*() const -> const_reference
-	{
-		return *static_cast<const T*>(list->data);
 	}
 
 	template<typename T, typename L>
