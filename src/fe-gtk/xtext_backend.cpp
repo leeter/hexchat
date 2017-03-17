@@ -165,9 +165,262 @@ struct d2d_backend : public common_backend
 #endif
 
 
-
 class pangocairo_backend : public common_backend
 {
+	class pango_layout : public xtext::layout {
+		std::uint32_t m_max_width;
+		pangocairo_backend* m_backend;
+		xtext::PangoLayoutPtr m_layout;
+		xtext::PangoAttrListPtr m_attrList;
+		xtext::ustring m_original_text;
+		std::vector<xtext::text_range> m_marks;
+
+		// rebuilds the layout and attributes
+		void invalidate()
+		{
+			xtext::PangoLayoutPtr temp_layout{
+				pango_layout_copy(m_backend->layout.get()) };
+			xtext::PangoAttrListPtr attr_list{ pango_attr_list_new() };
+			const auto beginning = m_original_text.cbegin();
+			using oustringstream = std::basic_stringstream<unsigned char>;
+			oustringstream outbuf;
+			std::ostream_iterator<unsigned char, unsigned char> out{ outbuf };
+			std::locale locale;
+			std::ptrdiff_t dist_from_start = 0;
+			std::vector<PangoAttributePtr> active_attrs;
+
+			for (auto itr = m_original_text.cbegin(), end = m_original_text.cend(); itr != end;)
+			{
+				const int mbl = charlen(itr); /* multi-byte length */
+				if (mbl > std::distance(itr, end))
+					break; // bad UTF-8
+				switch (*itr)
+				{
+				case xtext::ATTR_COLOR:
+				{
+					++itr;
+					if (itr == end)
+					{
+						break;
+					}
+					const auto color_str = std::string{ itr, end };
+					int fg_color, bg_color;
+					std::ptrdiff_t dist = 0;
+					std::tie(fg_color, bg_color, dist) =
+						parse_color_string(color_str);
+					// is the string valid?
+					if (dist == 0) {
+						continue;
+					}
+					if (fg_color != XTEXT_FG)
+					{
+						fg_color = handle_mirc_oddness(fg_color, XTEXT_FG);
+						const auto &color =
+							m_backend->color_pallet[fg_color];
+						PangoAttributePtr fg_color_attr{
+							pango_attr_foreground_new(
+								color.red, color.green,
+								color.blue) };
+						fg_color_attr->start_index =
+							dist_from_start;
+						active_attrs.emplace_back(std::move(fg_color_attr));
+					}
+					if (bg_color != XTEXT_BG)
+					{
+						bg_color = handle_mirc_oddness(bg_color, XTEXT_BG);
+						const auto &color =
+							m_backend->color_pallet[bg_color];
+						PangoAttributePtr bg_color_attr{
+							pango_attr_background_new(
+								color.red, color.green,
+								color.blue) };
+						bg_color_attr->start_index =
+							dist_from_start;
+						active_attrs.emplace_back(std::move(bg_color_attr));
+					}
+					itr += dist;
+					continue;
+				}
+				//case xtext::ATTR_BEEP:
+
+				case xtext::ATTR_REVERSE:
+				{
+					const auto &fg_color =
+						m_backend->color_pallet[XTEXT_BG];
+					PangoAttributePtr fg_color_attr{
+						pango_attr_foreground_new(
+							fg_color.red, fg_color.green,
+							fg_color.blue) };
+					fg_color_attr->start_index =
+						dist_from_start;
+					active_attrs.emplace_back(std::move(fg_color_attr));
+
+					const auto &bg_color =
+						m_backend->color_pallet[XTEXT_FG];
+					PangoAttributePtr bg_color_attr{
+						pango_attr_background_new(
+							bg_color.red, bg_color.green,
+							bg_color.blue) };
+					bg_color_attr->start_index =
+						dist_from_start;
+					active_attrs.emplace_back(std::move(bg_color_attr));
+				}
+				break;
+				case xtext::ATTR_BOLD:
+				{
+					PangoAttributePtr bold_attr{
+						pango_attr_weight_new(PANGO_WEIGHT_BOLD) };
+					bold_attr->start_index = dist_from_start;
+					active_attrs.emplace_back(std::move(bold_attr));
+				}
+				break;
+				case ATTR_UNDERLINE:
+				{
+					PangoAttributePtr underline_attr{
+						pango_attr_underline_new(
+							PANGO_UNDERLINE_SINGLE) };
+					underline_attr->start_index =
+						dist_from_start;
+					active_attrs.emplace_back(
+						std::move(underline_attr));
+				}
+				break;
+				case xtext::ATTR_ITALICS:
+				{
+					PangoAttributePtr italics_attr{
+						pango_attr_style_new(PANGO_STYLE_ITALIC) };
+					italics_attr->start_index = dist_from_start;
+					active_attrs.emplace_back(
+						std::move(italics_attr));
+				}
+				break;
+				case xtext::ATTR_HIDDEN:
+					++itr;
+					for (; itr != end && *itr != xtext::ATTR_HIDDEN; ++itr) { continue; }
+					++itr;
+					continue;
+				case xtext::ATTR_RESET:
+				{
+					for (auto &active_attr : active_attrs)
+					{
+						active_attr->end_index =
+							dist_from_start;
+						pango_attr_list_insert(
+							attr_list.get(),
+							active_attr.release());
+					}
+					active_attrs.clear();
+				}
+				break;
+				default:
+					dist_from_start += mbl;
+					std::copy_n(itr, mbl, out);
+				}
+				itr += mbl;
+			}
+			for (auto &active_attr : active_attrs)
+			{
+				active_attr->end_index =
+					PANGO_ATTR_INDEX_TO_TEXT_END;
+				pango_attr_list_insert(
+					attr_list.get(),
+					active_attr.release());
+			}
+			const auto stripped_str = outbuf.str();
+
+			for (const auto & mark : m_marks) {
+				if (mark.start == -1 && mark.end == -1) {
+					continue;
+				}
+				const auto &fg_color =
+					m_backend->color_pallet[XTEXT_MARK_FG];
+				PangoAttributePtr fg_color_attr{
+					pango_attr_foreground_new(
+						fg_color.red, fg_color.green,
+						fg_color.blue) };
+				fg_color_attr->start_index =
+					mark.start;
+				fg_color_attr->end_index = mark.end;
+				pango_attr_list_insert(
+					attr_list.get(),
+					fg_color_attr.release());
+
+				const auto &bg_color =
+					m_backend->color_pallet[XTEXT_MARK_BG];
+				PangoAttributePtr bg_color_attr{
+					pango_attr_background_new(
+						bg_color.red, bg_color.green,
+						bg_color.blue) };
+				bg_color_attr->start_index =
+					mark.start;
+				bg_color_attr->end_index = mark.end;
+				pango_attr_list_insert(
+					attr_list.get(),
+					bg_color_attr.release());
+			}
+			pango_layout_set_text(temp_layout.get(), reinterpret_cast<const char*>(stripped_str.c_str()), stripped_str.size());
+			pango_layout_set_attributes(temp_layout.get(), attr_list.get());
+			pango_layout_set_width(temp_layout.get(), m_max_width * PANGO_SCALE);
+			pango_layout_set_single_paragraph_mode(temp_layout.get(), true);
+			m_layout = std::move(temp_layout);
+			m_attrList = std::move(attr_list);
+		}
+	public:
+		pango_layout(pangocairo_backend* backend, xtext::ustring_ref text, std::uint32_t width, gsl::span<xtext::text_range> marks)
+			:m_max_width(width), m_backend(backend), m_original_text(text), m_marks(marks.cbegin(), marks.cend()){
+			
+			invalidate();
+		}
+
+		std::uint32_t width() const noexcept override final {
+			int width_val = 0;
+			pango_layout_get_pixel_size(m_layout.get(), &width_val, nullptr);
+			return width_val;
+		}
+
+		std::uint32_t line_count() const noexcept override final {
+			return pango_layout_get_line_count(m_layout.get());
+		}
+
+		void set_width(std::uint32_t new_width) override final {
+			m_max_width = new_width;
+			pango_layout_set_width(m_layout.get(), new_width * PANGO_SCALE);
+		}
+
+		void set_marks(gsl::span<xtext::text_range> marks) override final {
+			m_marks.clear();
+			m_marks.insert(m_marks.begin(), marks.cbegin(), marks.cend());
+			invalidate();
+		}
+
+		void clear_marks() override final {
+			m_marks.clear();
+			invalidate();
+		}
+
+		PangoLayout* layout() {
+			return m_layout.get();
+		}
+
+		std::string_view text() const noexcept override final {
+			return pango_layout_get_text(m_layout.get());
+		}
+
+		void set_alignment(xtext::align align_to) override final {
+			switch (align_to) {
+			case xtext::align::center:
+				pango_layout_set_alignment(m_layout.get(), PANGO_ALIGN_CENTER);
+				break;
+			case xtext::align::right:
+				pango_layout_set_alignment(m_layout.get(), PANGO_ALIGN_RIGHT);
+				break;
+			default:
+				break;
+			}
+		}
+
+
+	};
 	int ascent;
 	int descent;
 	GtkWidget *parent;
@@ -179,189 +432,7 @@ class pangocairo_backend : public common_backend
 
 	auto font_size() const noexcept { return ascent + descent; }
 
-	std::pair<xtext::PangoLayoutPtr, xtext::PangoAttrListPtr> string_to_layout(const xtext::ustring_ref &text,
-		int mark_start, int mark_end)
-	{
-		xtext::PangoLayoutPtr temp_layout{
-			pango_layout_copy(this->layout.get()) };
-		xtext::PangoAttrListPtr attr_list{ pango_attr_list_new() };
-		auto beginning = text.cbegin();
-		using oustringstream = std::basic_stringstream<unsigned char>;
-		oustringstream outbuf;
-		std::ostream_iterator<unsigned char, unsigned char> out{ outbuf };
-		std::locale locale;
-		std::ptrdiff_t dist_from_start = 0;
-		std::vector<PangoAttributePtr> active_attrs;
-
-		for (auto itr = text.cbegin(), end = text.cend(); itr != end;)
-		{
-			const int mbl = charlen(itr); /* multi-byte length */
-			if (mbl > std::distance(itr, end))
-				break; // bad UTF-8
-			switch (*itr)
-			{
-			case xtext::ATTR_COLOR:
-			{
-				++itr;
-				if (itr == end)
-				{
-					break;
-				}
-				const auto color_str = std::string{ itr, end };
-				int fg_color, bg_color;
-				std::ptrdiff_t dist = 0;
-				std::tie(fg_color, bg_color, dist) =
-					parse_color_string(color_str);
-				// is the string valid?
-				if (dist == 0) {
-					continue;
-				}
-				if (fg_color != XTEXT_FG)
-				{
-					fg_color = handle_mirc_oddness(fg_color, XTEXT_FG);
-					const auto &color =
-						this->color_pallet[fg_color];
-					PangoAttributePtr fg_color_attr{
-						pango_attr_foreground_new(
-							color.red, color.green,
-							color.blue) };
-					fg_color_attr->start_index =
-						dist_from_start;
-					active_attrs.emplace_back(std::move(fg_color_attr));
-				}
-				if (bg_color != XTEXT_BG)
-				{
-					bg_color = handle_mirc_oddness(bg_color, XTEXT_BG);
-					const auto &color =
-						this->color_pallet[bg_color];
-					PangoAttributePtr bg_color_attr{
-						pango_attr_background_new(
-							color.red, color.green,
-							color.blue) };
-					bg_color_attr->start_index =
-						dist_from_start;
-					active_attrs.emplace_back(std::move(bg_color_attr));
-				}
-				itr += dist;
-				continue;
-			}
-			//case xtext::ATTR_BEEP:
-
-			case xtext::ATTR_REVERSE:
-			{
-				const auto &fg_color =
-					this->color_pallet[XTEXT_BG];
-				PangoAttributePtr fg_color_attr{
-					pango_attr_foreground_new(
-						fg_color.red, fg_color.green,
-						fg_color.blue) };
-				fg_color_attr->start_index =
-					dist_from_start;
-				active_attrs.emplace_back(std::move(fg_color_attr));
-
-				const auto &bg_color =
-					this->color_pallet[XTEXT_FG];
-				PangoAttributePtr bg_color_attr{
-					pango_attr_background_new(
-						bg_color.red, bg_color.green,
-						bg_color.blue) };
-				bg_color_attr->start_index =
-					dist_from_start;
-				active_attrs.emplace_back(std::move(bg_color_attr));
-			}
-			break;
-			case xtext::ATTR_BOLD:
-			{
-				PangoAttributePtr bold_attr{
-					pango_attr_weight_new(PANGO_WEIGHT_BOLD) };
-				bold_attr->start_index = dist_from_start;
-				active_attrs.emplace_back(std::move(bold_attr));
-			}
-			break;
-			case ATTR_UNDERLINE:
-			{
-				PangoAttributePtr underline_attr{
-					pango_attr_underline_new(
-						PANGO_UNDERLINE_SINGLE) };
-				underline_attr->start_index =
-					dist_from_start;
-				active_attrs.emplace_back(
-					std::move(underline_attr));
-			}
-			break;
-			case xtext::ATTR_ITALICS:
-			{
-				PangoAttributePtr italics_attr{
-					pango_attr_style_new(PANGO_STYLE_ITALIC) };
-				italics_attr->start_index = dist_from_start;
-				active_attrs.emplace_back(
-					std::move(italics_attr));
-			}
-			break;
-			case xtext::ATTR_HIDDEN:
-				++itr;
-				for (; itr != end && *itr != xtext::ATTR_HIDDEN; ++itr) { continue; }
-				++itr;
-				continue;
-			case xtext::ATTR_RESET:
-			{
-				for (auto &active_attr : active_attrs)
-				{
-					active_attr->end_index =
-						dist_from_start;
-					pango_attr_list_insert(
-						attr_list.get(),
-						active_attr.release());
-				}
-				active_attrs.clear();
-			}
-			break;
-			default:
-				dist_from_start += mbl;
-				std::copy_n(itr, mbl, out);
-			}
-			itr += mbl;
-		}
-		for (auto &active_attr : active_attrs)
-		{
-			active_attr->end_index =
-				PANGO_ATTR_INDEX_TO_TEXT_END;
-			pango_attr_list_insert(
-				attr_list.get(),
-				active_attr.release());
-		}
-		const auto stripped_str = outbuf.str();
-		if (mark_start != -1 && mark_end != -1) {
-			const auto &fg_color =
-				this->color_pallet[XTEXT_MARK_FG];
-			PangoAttributePtr fg_color_attr{
-				pango_attr_foreground_new(
-					fg_color.red, fg_color.green,
-					fg_color.blue) };
-			fg_color_attr->start_index =
-				mark_start;
-			fg_color_attr->end_index = mark_end;
-			pango_attr_list_insert(
-				attr_list.get(),
-				fg_color_attr.release());
-
-			const auto &bg_color =
-				this->color_pallet[XTEXT_MARK_BG];
-			PangoAttributePtr bg_color_attr{
-				pango_attr_background_new(
-					bg_color.red, bg_color.green,
-					bg_color.blue) };
-			bg_color_attr->start_index =
-				mark_start;
-			bg_color_attr->end_index = mark_end;
-			pango_attr_list_insert(
-				attr_list.get(),
-				bg_color_attr.release());
-		}
-		pango_layout_set_text(temp_layout.get(), reinterpret_cast<const char*>(stripped_str.c_str()), stripped_str.size());
-		pango_layout_set_attributes(temp_layout.get(), attr_list.get());
-		return std::make_pair(std::move(temp_layout), std::move(attr_list));
-	}
+	
 
 public:
 	pangocairo_backend(GtkWidget *parentWidget)
@@ -466,34 +537,36 @@ public:
 		int indent,
 		int mark_start,
 		int mark_end,
-		align alignment,
+		xtext::align alignment,
 		const xtext::ustring_ref& text) override final {
-		
-		const auto result = this->string_to_layout(text, mark_start, mark_end);
+		std::array<xtext::text_range, 1> marks = { { mark_start, mark_end } };
+		pango_layout layout(this, text, width, marks);
 		switch (alignment) {
-		case align::center:
-			pango_layout_set_alignment(result.first.get(), PANGO_ALIGN_CENTER);
+		case xtext::align::center:
+			pango_layout_set_alignment(layout.layout(), PANGO_ALIGN_CENTER);
 			break;
-		case align::right:
-			pango_layout_set_alignment(result.first.get(), PANGO_ALIGN_RIGHT);
+		case xtext::align::right:
+			pango_layout_set_alignment(layout.layout(), PANGO_ALIGN_RIGHT);
 			break;
 		default:
 			break;
 		}
-		pango_layout_set_width(result.first.get(), width * PANGO_SCALE);
-		pango_layout_set_indent(result.first.get(), indent * PANGO_SCALE);
-		pango_layout_set_single_paragraph_mode(result.first.get(), true);
+		pango_layout_set_indent(layout.layout(), indent * PANGO_SCALE);
 		cairo_stack stack{ cr };
 		cairo_new_path(cr);
 		cairo_move_to(cr, x, y);
 		
-		pango_cairo_show_layout(cr, result.first.get());
+		pango_cairo_show_layout(cr, layout.layout());
 
-		return pango_layout_get_line_count(result.first.get());
+		return pango_layout_get_line_count(layout.layout());
 	}
 
 	bool set_target(GdkWindow* window, GdkRegion* target_region, GdkRectangle rect) override final {
 		return false;
+	}
+
+	virtual std::unique_ptr<xtext::layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) override final {
+		return std::make_unique<pango_layout>(this, text, max_width, nullptr);
 	}
 };
 

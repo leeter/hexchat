@@ -64,11 +64,16 @@ namespace {
 	*/
 	struct textentry
 	{
-		xtext::PangoLayoutPtr m_layout;
-		xtext::PangoAttrListPtr m_attributes;
+		// the width of the text on the left if there are no restrictions
+		std::uint32_t m_indent_text_width;
+		std::unique_ptr<xtext::layout> m_layout;
+		std::unique_ptr<xtext::layout> m_indentLayout;
 	public:
-		textentry()
-			:str_width(),
+		textentry(std::unique_ptr<xtext::layout> layout, std::unique_ptr<xtext::layout> indent_layout = nullptr)
+			:m_indent_text_width(),
+			m_layout(std::move(layout)),
+			m_indentLayout(std::move(indent_layout)),
+			str_width(m_layout->width()),
 			mark_start(),
 			mark_end(),
 			indent(),
@@ -76,11 +81,18 @@ namespace {
 			stamp(),
 			next(),
 			prev(),
-			marks() {}
+			marks() 
+		{
+			if (m_indentLayout) {
+				m_indentLayout->set_alignment(xtext::right);
+				m_indent_text_width = m_indentLayout->width();
+			}
+		}
 
 		gint16 str_width;
 		gint16 mark_start;
 		gint16 mark_end;
+		// the actual width in pixels for the entry to render, this may be wider than needed
 		gint16 indent;
 		gint16 left_len;
 		std::time_t stamp;
@@ -97,7 +109,22 @@ namespace {
 		}
 
 		std::string_view stripped_text() const noexcept {
-			return pango_layout_get_text(m_layout.get());
+			return m_layout->text();
+		}
+
+		std::uint32_t indent_width() const noexcept {
+			return m_indent_text_width;
+		}
+
+		void set_width(std::uint32_t indent, std::uint32_t text_width) {
+			m_layout->set_width(text_width);
+			if (m_indentLayout) {
+				m_indentLayout->set_width(indent);
+			}
+		}
+
+		std::uint32_t line_count() const noexcept {
+			return m_layout->line_count();
 		}
 
 	};
@@ -238,7 +265,8 @@ struct xtext_buffer
 private:
 	bool time_stamp;
 	GtkXText *m_parent;					/* attached to this widget */
-	int m_indent;						  /* position of separator (pixels) from left */
+	std::uint32_t m_indent;						  /* position of separator (pixels) from left */
+	std::uint32_t m_window_width;				/* window size when last rendered. */
 public:
 	~xtext_buffer() noexcept;
 	int last_offset_start;
@@ -264,7 +292,6 @@ public:
 
 	int num_lines;
 
-	int window_width;				/* window size when last rendered. */
 	int window_height;
 
 	bool scrollbar_down;
@@ -283,6 +310,7 @@ public:
 		:time_stamp(),
 		m_parent(parent),
 		m_indent(space_width * 2),
+		m_window_width(), /* window size when last rendered. */
 		last_offset_start(),
 		last_offset_end(),
 		last_pixel_pos(),
@@ -300,7 +328,6 @@ public:
 
 		num_lines(),
 
-		window_width(), /* window size when last rendered. */
 		window_height(),
 
 		scrollbar_down(true), needs_recalc(), marker_seen(),
@@ -317,7 +344,7 @@ public:
 		return m_parent;
 	}
 
-	int indent() const noexcept {
+	std::uint32_t indent() const noexcept {
 		return m_indent;
 	}
 
@@ -336,20 +363,21 @@ public:
 		this->last_pixel_pos = std::numeric_limits<decltype(xtext_buffer::last_pixel_pos)>::max();
 	}
 
-	void set_indent(int new_indent) {
+	void set_indent(std::uint32_t new_indent) {
 		if (new_indent < MARGIN) /* 2 pixels is our left margin */
 		{
 			new_indent = MARGIN;
 		}
-		if (new_indent > m_parent->max_auto_indent)
+		const auto max_auto_indent = static_cast<std::uint32_t>(m_parent->max_auto_indent);
+		if (new_indent > max_auto_indent)
 		{
-			new_indent = m_parent->max_auto_indent;
+			new_indent = max_auto_indent;
 		}
 		
 		/* make indent a multiple of the space width */
 		if (m_parent->space_width)
 		{
-			int j = 0;
+			std::uint32_t j = 0;
 			while (j < new_indent)
 			{
 				j += m_parent->space_width;
@@ -363,6 +391,18 @@ public:
 
 	void invalidate() {
 		gtk_widget_queue_draw(GTK_WIDGET(m_parent));
+	}
+
+	void set_width(std::uint32_t width) {
+		m_window_width = width;
+	}
+
+	std::uint32_t width() const noexcept {
+		return m_window_width;
+	}
+
+	std::uint32_t rendered_width() const noexcept {
+		return m_window_width > MARGIN ? m_window_width - MARGIN : 0;
 	}
 
 	void set_time_stamping(time_stamping);
@@ -855,7 +895,7 @@ namespace{
 					    GtkAllocation *allocation)
 	{
 		GtkXText *xtext = GTK_XTEXT(widget);
-		const auto height_only = allocation->width == xtext->buffer->window_width;
+		const auto height_only = allocation->width == xtext->buffer->width();
 
 		gtk_widget_set_allocation(widget, allocation);
 		if (!gtk_widget_get_realized(GTK_WIDGET(widget)))
@@ -863,7 +903,7 @@ namespace{
 			return;
 		}
 
-		xtext->buffer->window_width = allocation->width;
+		xtext->buffer->set_width(allocation->width);
 		xtext->buffer->window_height = allocation->height;
 
 		gdk_window_move_resize(gtk_widget_get_window(widget), allocation->x,
@@ -2842,7 +2882,7 @@ namespace{
 	void gtk_xtext_render_stamp(GtkXText * xtext, cairo_t* cr,
 		const boost::string_ref & text, int line, int win_width)
 	{
-		textentry tmp_ent;
+		textentry tmp_ent(xtext->backend->make_layout(xtext::ustring{ text.cbegin(), text.cend() }, xtext->buffer->indent()));
 		auto jo = xtext->jump_out_offset;	/* back these up */
 		auto ji = xtext->jump_in_offset;
 		auto hs = xtext->hilight_start;
@@ -2861,14 +2901,14 @@ namespace{
 			else
 			{
 				tmp_ent.mark_start = -1;
-				tmp_ent.mark_end = -1;
+				tmp_ent.mark_end = -1;				
 			}
 			tmp_ent.str = xtext::ustring{ text.cbegin(), text.cend() };
 		}
 
 		//int xsize, emphasis = 0;
 		const auto y = (xtext->fontsize * line)/* + xtext->font->ascent*/ - xtext->pixel_offset;
-		xtext->backend->render_at(cr, 0, y, win_width, 0, tmp_ent.mark_start, tmp_ent.mark_end, xtext::xtext_backend::left, { reinterpret_cast<unsigned const char*>(text.data()), text.size() });
+		xtext->backend->render_at(cr, 0, y, win_width, 0, tmp_ent.mark_start, tmp_ent.mark_end, xtext::left, { reinterpret_cast<unsigned const char*>(text.data()), text.size() });
 		/*gtk_xtext_render_str(xtext, cr, y, &tmp_ent, { reinterpret_cast<unsigned const char*>(text.data()), text.size() }, 0,
 			win_width, 2, true, &xsize, &emphasis);*/
 
@@ -2914,7 +2954,7 @@ namespace{
 		/* draw each line one by one */
 		y = (xtext->fontsize * line) /* + xtext->font->ascent*/ - xtext->pixel_offset;
 		const auto real_x = xtext->buffer->indent() - indent;
-		return xtext->backend->render_at(cr, real_x, y, win_width - real_x, 0 - indent, ent->mark_start, ent->mark_end, xtext::xtext_backend::left, ent->str);
+		return xtext->backend->render_at(cr, real_x, y, win_width - real_x, 0 - indent, ent->mark_start, ent->mark_end, xtext::left, ent->str);
 		//do
 		//{
 		//	
@@ -2995,7 +3035,7 @@ namespace{
 	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry & ent)
 	{
 		ent.sublines.clear();
-		const auto win_width = buf->window_width - MARGIN;
+		const auto win_width = buf->rendered_width();
 
 		if (win_width >= ent.indent + ent.pixel_width())
 		{
@@ -3688,14 +3728,13 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 	if (right_text.back() == '\n')
 		right_text.remove_suffix(1);
 
-	textentry ent;
+	textentry ent(xtext->backend->make_layout(right_text, ~0), xtext->backend->make_layout(left_text, ~0));
 	ent.str.reserve(left_text.length() + right_text.length() + 2);
 	ent.str.append(left_text.cbegin(), left_text.cend());
 	ent.str.push_back(' ');
 	ent.str.append(right_text.cbegin(), right_text.cend());
 
-	const auto left_width =
-	    gtk_xtext_text_width(xtext, left_text);
+	const auto left_width = ent.indent_width();
 
 	ent.left_len = left_text.length();
 	ent.indent = (buf->indent() - left_width) - xtext->space_width;
@@ -3711,8 +3750,8 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 		if (tempindent > buf->indent())
 			buf->set_indent(tempindent);
 
-		if (buf->indent() > xtext->max_auto_indent)
-			buf->set_indent(xtext->max_auto_indent);
+		/*if (buf->indent() > xtext->max_auto_indent)
+			buf->set_indent(xtext->max_auto_indent);*/
 
 		gtk_xtext_recalc_widths(buf, false);
 
@@ -3732,7 +3771,7 @@ void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp)
 	if (text.size() >= sizeof(GtkXText::scratch_buffer))
 		text.remove_suffix(sizeof(GtkXText::scratch_buffer) - 1);
 
-	textentry ent;
+	textentry ent(buf->current_xtext()->backend->make_layout(xtext::ustring_ref(reinterpret_cast<const unsigned char*>(text.data()), text.size()), 1000));
 	if (!text.empty())
 	{
 		ent.str = xtext::ustring{text.cbegin(), text.cend()};
@@ -3957,9 +3996,9 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 	if (render)
 	{
 		/* did the window change size since this buffer was last shown? */
-		if (buf->window_width != w)
+		if (buf->width() != w)
 		{
-			buf->window_width = w;
+			buf->set_width(w);
 			gtk_xtext_calc_lines(buf, false);
 			if (buf->scrollbar_down)
 				gtk_adjustment_set_value(xtext->adj, gtk_adjustment_get_upper(xtext->adj) -

@@ -71,14 +71,30 @@ namespace xtext {
 		guint16 width;
 	};
 
-	
+	struct text_range {
+		std::uint32_t start;
+		std::uint32_t end;
+	};
+	enum align {
+		left,
+		center,
+		right
+	};
+	/**
+	 Represents a single rectangle paragraph of text
+	 */
+	struct layout {
+		virtual ~layout() = default;
+		virtual std::uint32_t width() const noexcept = 0;
+		virtual std::uint32_t line_count() const noexcept = 0;
+		virtual std::string_view text() const noexcept = 0;
+		virtual void set_width(std::uint32_t new_width) = 0;
+		virtual void set_marks(gsl::span<text_range> marks) = 0;
+		virtual void set_alignment(align align_to) = 0;
+		virtual void clear_marks() = 0;
+	};
 	struct xtext_backend
 	{
-		enum align {
-			left,
-			center,
-			right
-		};
 		virtual ~xtext_backend() = default;
 
 		// Sets the default font for use on laying out text
@@ -90,6 +106,7 @@ namespace xtext {
 
 		virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const xtext::ustring_ref& text) = 0;
 		virtual bool set_target(GdkWindow* window, GdkRegion* target_region, GdkRectangle rect) = 0;
+		virtual std::unique_ptr<layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) = 0;
 	};
 
 	std::unique_ptr<xtext_backend> create_backend(const std::string_view & defaultFont, GtkWidget* parentWidget);
