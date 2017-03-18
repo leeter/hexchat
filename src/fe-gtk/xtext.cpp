@@ -65,14 +65,16 @@ namespace {
 	struct textentry
 	{
 		// the width of the text on the left if there are no restrictions
-		std::uint32_t m_indent_text_width;
+		std::uint32_t m_left_text_width;
 		std::unique_ptr<xtext::layout> m_layout;
-		std::unique_ptr<xtext::layout> m_indentLayout;
+		std::unique_ptr<xtext::layout> m_left_layout;
+		std::unique_ptr<xtext::layout> m_stampLayout;
 	public:
-		textentry(std::unique_ptr<xtext::layout> layout, std::unique_ptr<xtext::layout> indent_layout = nullptr)
-			:m_indent_text_width(),
+		textentry(std::unique_ptr<xtext::layout> layout, std::unique_ptr<xtext::layout> left_layout = nullptr, std::unique_ptr<xtext::layout> stamp_layout = nullptr)
+			:m_left_text_width(),
 			m_layout(std::move(layout)),
-			m_indentLayout(std::move(indent_layout)),
+			m_left_layout(std::move(left_layout)),
+			m_stampLayout(std::move(stamp_layout)),
 			str_width(m_layout->width()),
 			mark_start(),
 			mark_end(),
@@ -83,9 +85,9 @@ namespace {
 			prev(),
 			marks() 
 		{
-			if (m_indentLayout) {
-				m_indentLayout->set_alignment(xtext::right);
-				m_indent_text_width = m_indentLayout->width();
+			if (m_left_layout) {
+				m_left_layout->set_alignment(xtext::right);
+				m_left_text_width = m_left_layout->width();
 			}
 		}
 
@@ -112,14 +114,14 @@ namespace {
 			return m_layout->text();
 		}
 
-		std::uint32_t indent_width() const noexcept {
-			return m_indent_text_width;
+		std::uint32_t one_line_left_width() const noexcept {
+			return m_left_text_width;
 		}
 
-		void set_width(std::uint32_t indent, std::uint32_t text_width) {
-			m_layout->set_width(text_width);
-			if (m_indentLayout) {
-				m_indentLayout->set_width(indent);
+		void set_width(std::uint32_t left_width, std::uint32_t right_width) {
+			m_layout->set_width(right_width);
+			if (m_left_text_width) {
+				m_left_layout->set_width(left_width);
 			}
 		}
 
@@ -127,9 +129,18 @@ namespace {
 			return m_layout->line_count();
 		}
 
-	};
+		xtext::layout * left_layout() const noexcept {
+			return m_left_layout.get();
+		}
 
-	
+		xtext::layout * right_layout() const noexcept {
+			return m_layout.get();
+		}
+
+		xtext::layout * stamp_layout() const noexcept {
+			return m_stampLayout.get();
+		}
+	};
 
 }
 
@@ -405,6 +416,16 @@ public:
 		return m_window_width > MARGIN ? m_window_width - MARGIN : 0;
 	}
 
+	std::uint32_t right_rendered_width() const noexcept {
+		return width()
+			- MARGIN
+			- left_rendered_width();
+	}
+
+	std::uint32_t left_rendered_width() const noexcept {
+		return m_indent - MARGIN - (is_time_stamped() ? m_parent->stamp_width : 0);
+	}
+
 	void set_time_stamping(time_stamping);
 
 	GError* set_search_regex(gtk_xtext_search_flags, const boost::string_ref&);
@@ -671,21 +692,18 @@ namespace{
 			return;
 		}
 
-		auto lower = 0.0;
-		auto upper = static_cast<gdouble>(buf->num_lines);
-
-		if (upper == 0.0)
-			upper = 1.0;
+		constexpr auto lower = 0.0;
+		const auto upper = static_cast<gdouble>(buf->num_lines ? buf->num_lines : 1);
 
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(GTK_WIDGET(buf->current_xtext()), &allocation);
-		auto page_size = static_cast<gdouble>(
+		const auto page_size = static_cast<gdouble>(
 		    allocation.height /
 		    xtext->fontsize);
-		auto page_increment = page_size;
+		const auto page_increment = page_size;
 
 		// TODO: need a better name for this
-		auto adjustment = upper - page_size;
+		const auto adjustment = upper - page_size;
 		auto adj_value = gtk_adjustment_get_value(adj);
 		if (adj_value > adjustment)
 		{
@@ -1131,7 +1149,7 @@ namespace{
 		}
 		else if (xtext->buffer->marker_pos == ent->next && ent->next != nullptr)
 		{
-			render_y = y + xtext->font->descent + xtext->fontsize * ent->sublines.size();
+			render_y = y + xtext->font->descent + xtext->fontsize * ent->line_count();
 		}
 		else return;
 
@@ -3006,6 +3024,8 @@ namespace{
 					    bool do_str_width)
 	{
 		const auto xtext = buf->current_xtext();
+		const auto buf_indent = buf->indent();
+		const auto stamp_width = buf->is_time_stamped() ? xtext->stamp_width : 0;
 		/* since we have a new font, we have to recalc the text widths
 		 */
 		for (auto &ent : buf->entries)
@@ -3017,44 +3037,15 @@ namespace{
 			if (ent.left_len != -1)
 			{
 				ent.indent = (buf->indent() -
-					      gtk_xtext_text_width(
-						  xtext,
-						  xtext::ustring_ref(ent.str.c_str(),
-							      ent.left_len))) -
+					      ent.one_line_left_width()) -
 					     xtext->space_width;
 				if (ent.indent < MARGIN)
 					ent.indent = MARGIN;
 			}
+			ent.set_width(buf->left_rendered_width(), buf->right_rendered_width());
 		}
 
 		gtk_xtext_calc_lines(buf, false);
-	}
-
-	/* count how many lines 'ent' will take (with wraps) */
-
-	int gtk_xtext_lines_taken(xtext_buffer *buf, textentry & ent)
-	{
-		ent.sublines.clear();
-		const auto win_width = buf->rendered_width();
-
-		if (win_width >= ent.indent + ent.pixel_width())
-		{
-			ent.sublines.push_back(ent.str.size());
-			return 1;
-		}
-
-		int indent = ent.indent;
-		auto str = ent.str.c_str();
-		auto xtext = buf->current_xtext();
-		do
-		{
-			int len = find_next_wrap(xtext, ent, str, win_width, indent);
-			ent.sublines.push_back(str + len - ent.str.c_str());
-			indent = buf->indent();
-			str += len;
-		} while (str < ent.str.c_str() + ent.str.size());
-
-		return ent.sublines.size();
 	}
 
 	/* Calculate number of actual lines (with wraps), to set adj->lower. *
@@ -3074,7 +3065,8 @@ namespace{
 			buf->entries.end(),
 			0, 
 			[buf](auto val, auto& next) {
-			return val + gtk_xtext_lines_taken(buf, next);
+			next.set_width(buf->left_rendered_width(), buf->right_rendered_width());
+			return val + next.line_count(); //gtk_xtext_lines_taken(buf, next);
 		});
 
 		buf->pagetop_ent = nullptr;
@@ -3116,7 +3108,7 @@ namespace{
 					ent = ent->prev;
 					if (!ent)
 						break;
-					lines -= ent->sublines.size();
+					lines -= ent->line_count();
 				}
 				return nullptr;
 			}
@@ -3125,10 +3117,11 @@ namespace{
 
 		while (ent)
 		{
-			lines += ent->sublines.size();
+			const auto line_count = ent->line_count();
+			lines += line_count;
 			if (lines > line)
 			{
-				subline = ent->sublines.size() - (lines - line);
+				subline = line_count - (lines - line);
 				return ent;
 			}
 			ent = ent->next;
@@ -3279,25 +3272,26 @@ namespace{
 		{
 			throw std::runtime_error("attempt to remove without anything in the store!");
 		}
-		buffer->num_lines -= ent->sublines.size();
-		buffer->pagetop_line -= ent->sublines.size();
+		const auto lines = ent->line_count();
+		buffer->num_lines -= lines;
+		buffer->pagetop_line -= lines;
 		const auto xtext = buffer->current_xtext();
-		buffer->last_pixel_pos -= (ent->sublines.size() * xtext->fontsize);
+		buffer->last_pixel_pos -= (lines * xtext->fontsize);
 		buffer->text_first = ent->next;
 		if (buffer->text_first)
 			buffer->text_first->prev = nullptr;
 		else
 			buffer->text_last = nullptr;
 
-		buffer->old_value -= ent->sublines.size();
+		buffer->old_value -= lines;
 		if (xtext->buffer ==
 		    buffer) /* is it the current buffer? */
 		{
 			gtk_adjustment_set_value(
 			    xtext->adj,
 			    gtk_adjustment_get_value(xtext->adj) -
-				ent->sublines.size());
-			xtext->select_start_adj -= ent->sublines.size();
+				lines);
+			xtext->select_start_adj -= lines;
 		}
 
 		if (gtk_xtext_kill_ent(buffer, ent))
@@ -3330,7 +3324,7 @@ namespace{
 		{
 			throw std::runtime_error("attempt to remove without anything in the store!");
 		}
-		buffer->num_lines -= ent->sublines.size();
+		buffer->num_lines -= ent->line_count();
 		buffer->text_last = ent->prev;
 		if (buffer->text_last)
 			buffer->text_last->next = nullptr;
@@ -3377,7 +3371,7 @@ namespace{
 		auto lines = ((height + xtext->pixel_offset) / xtext->fontsize) + buf->pagetop_subline + add;
 		while (ent)
 		{
-			lines -= ent->sublines.size();
+			lines -= ent->line_count();
 			if (lines <= 0)
 			{
 				return false;
@@ -3655,7 +3649,7 @@ namespace{
 
 		if (ent.indent < MARGIN)
 			ent.indent = MARGIN;	  /* 2 pixels is the left margin */
-
+		
 		buf->entries.emplace_back(std::move(ent));
 		textentry * ent_ptr = &buf->entries.back();
 		/* append to our linked list */
@@ -3665,8 +3659,9 @@ namespace{
 			buf->text_first = ent_ptr;
 		ent_ptr->prev = buf->text_last;
 		buf->text_last = ent_ptr;
-
-		buf->num_lines += gtk_xtext_lines_taken(buf, *ent_ptr);
+		ent_ptr->set_width(buf->left_rendered_width(), buf->right_rendered_width());
+		const auto new_lines = ent_ptr->line_count();
+		buf->num_lines += new_lines;
 		if ((buf->marker_pos == nullptr || buf->marker_seen) && (xtext->buffer != buf ||
 			!gtk_window_has_toplevel_focus(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(xtext))))))
 		{
@@ -3734,12 +3729,12 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 	ent.str.push_back(' ');
 	ent.str.append(right_text.cbegin(), right_text.cend());
 
-	const auto left_width = ent.indent_width();
+	const auto left_width = ent.one_line_left_width();
 
 	ent.left_len = left_text.length();
 	ent.indent = (buf->indent() - left_width) - xtext->space_width;
 
-	auto space = buf->is_time_stamped() ? xtext->stamp_width : 0;
+	const auto space = buf->is_time_stamped() ? xtext->stamp_width : 0;
 
 	/* do we need to auto adjust the separator position? */
 	if (xtext->auto_indent && ent.indent < MARGIN + space)
@@ -3752,7 +3747,7 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 
 		/*if (buf->indent() > xtext->max_auto_indent)
 			buf->set_indent(xtext->max_auto_indent);*/
-
+		
 		gtk_xtext_recalc_widths(buf, false);
 
 		ent.indent =
@@ -3910,7 +3905,7 @@ gtk_xtext_moveto_marker_pos(GtkXText *xtext)
 		{
 			if (&ent == buf->marker_pos)
 				break;
-			ivalue += ent.sublines.size();
+			ivalue += ent.line_count();
 		}
 
 		gdouble value = static_cast<gdouble>(ivalue);
@@ -3963,8 +3958,8 @@ gtk_xtext_buffer_show(GtkXText *xtext, xtext_buffer *buf, bool render)
 		gtk_widget_realize(widget);
 
 	auto window = gtk_widget_get_window(widget);
-	int h = gdk_window_get_height(window);
-	int w = gdk_window_get_width(window);
+	const auto h = gdk_window_get_height(window);
+	const auto w = gdk_window_get_width(window);
 
 	/* after a font change */
 	if (buf->needs_recalc)
@@ -4475,7 +4470,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		for (value = 0.0, ent = buf->text_first;
 			ent && ent != buf->hintsearch; ent = ent->next)
 		{
-			value += ent->sublines.size();
+			value += ent->line_count();
 		}
 		const auto page_size = gtk_adjustment_get_page_size(adj);
 		const auto diff_to_page_top = gtk_adjustment_get_upper(adj) - page_size;
@@ -4485,7 +4480,7 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 		}
 		else if ((flags & backward) && ent)
 		{
-			value -= page_size - ent->sublines.size();
+			value -= page_size - ent->line_count();
 			if (value < 0.0)
 			{
 				value = 0.0;
