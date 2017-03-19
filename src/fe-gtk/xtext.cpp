@@ -401,11 +401,15 @@ public:
 	}
 
 	void invalidate() {
+		for (auto & ent : entries) {
+			ent.set_width(left_rendered_width(), right_rendered_width());
+		}
 		gtk_widget_queue_draw(GTK_WIDGET(m_parent));
 	}
 
 	void set_width(std::uint32_t width) {
 		m_window_width = width;
+		invalidate();
 	}
 
 	std::uint32_t width() const noexcept {
@@ -415,15 +419,15 @@ public:
 	std::uint32_t rendered_width() const noexcept {
 		return m_window_width > MARGIN ? m_window_width - MARGIN : 0;
 	}
-
+	// | MARGIN | STAMP? | SPACE | LEFT_TEXT | SPACE | RIGHT TEXT | MARGIN |
 	std::uint32_t right_rendered_width() const noexcept {
-		return width()
+		return rendered_width()
 			- MARGIN
 			- left_rendered_width();
 	}
 
 	std::uint32_t left_rendered_width() const noexcept {
-		return m_indent - MARGIN - (is_time_stamped() ? m_parent->stamp_width : 0);
+		return indent() - m_parent->space_width;
 	}
 
 	void set_time_stamping(time_stamping);
@@ -954,6 +958,7 @@ namespace{
 				ret = 1;
 			ent->mark_start = -1;
 			ent->mark_end = -1;
+			ent->right_layout()->clear_marks();
 			if (ent == buf->last_ent_end)
 				break;
 			ent = ent->next;
@@ -966,7 +971,7 @@ namespace{
 		find_x(GtkXText *xtext, const textentry &ent, int x, int subline, int indent)
 	{
 		int xx = indent;
-		int suboff;
+		int suboff = 0;
 
 		/* Skip to the first chunk of stuff for the subline */
 		std::vector<xtext::offlen_t>::const_iterator meta, hid = ent.slp.cend();
@@ -1074,13 +1079,16 @@ namespace{
 			y -= xtext->fontsize;
 
 		int subline;
-		const auto line = (y + xtext->pixel_offset) / xtext->fontsize;
+		const auto line_and_offset = std::div(y + xtext->pixel_offset, xtext->fontsize);
+		const auto line = line_and_offset.quot; //(y + xtext->pixel_offset) / xtext->fontsize;
 		auto ent = gtk_xtext_nth(xtext, line + (int)gtk_adjustment_get_value(xtext->adj), subline);
 		if (!ent)
 			return nullptr;
 
 		if (off)
-			*off = gtk_xtext_find_x(xtext, x, *ent, subline, line, out_of_bounds);
+			*off = ent->right_layout()->index_for_location({
+			 static_cast<std::uint32_t>(x - xtext->buffer->indent()),
+			 static_cast<std::uint32_t>(line_and_offset.rem) }); //gtk_xtext_find_x(xtext, x, *ent, subline, line, out_of_bounds);
 
 		if (ret_subline)
 			*ret_subline = subline;
@@ -1304,6 +1312,10 @@ namespace{
 		/* set the calculated values (this overwrites the default values if we're on the same ent) */
 		ent_start->mark_start = offset_start;
 		ent_end->mark_end = offset_end;
+		std::array<xtext::text_range, 1> start_marks{ { ent_start->mark_start, ent_start->mark_end } };
+		ent_start->right_layout()->set_marks(start_marks);
+		std::array<xtext::text_range, 1> end_marks{ { ent_end->mark_start, ent_end->mark_end } };
+		ent_end->right_layout()->set_marks(end_marks);
 
 		/* set all the mark_ fields of the ents within the selection */
 		if (ent_start != ent_end)
@@ -1313,7 +1325,10 @@ namespace{
 			{
 				ent->mark_start = 0;
 				ent->mark_end = ent->str.size();
+				std::array<xtext::text_range, 1> marks{ { 0, ent->mark_end } };
+				ent->right_layout()->set_marks(marks);
 				ent = ent->next;
+				
 			}
 		}
 
@@ -3042,7 +3057,7 @@ namespace{
 				if (ent.indent < MARGIN)
 					ent.indent = MARGIN;
 			}
-			ent.set_width(buf->left_rendered_width(), buf->right_rendered_width());
+			//ent.set_width(buf->left_rendered_width(), buf->right_rendered_width());
 		}
 
 		gtk_xtext_calc_lines(buf, false);
@@ -3205,19 +3220,33 @@ namespace{
 		const auto width = allocation.width - MARGIN;
 		const auto height = allocation.height;
 		const auto lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
-
+		const auto rendering_stamps = xtext->buffer->is_time_stamped();
+		const auto indent = xtext->buffer->indent();
+		const auto render = xtext->backend->make_renderer(cr);
+		render->begin_rendering();
+		const auto left_render_x = static_cast<std::uint32_t>( rendering_stamps ? xtext->stamp_width + MARGIN : MARGIN);
 		while (ent)
 		{
-			line += gtk_xtext_render_line(xtext, cr, ent, line, lines_max,
+			const auto y = static_cast<std::uint32_t>( (xtext->fontsize * line) /* + xtext->font->ascent*/ - xtext->pixel_offset);
+			if (rendering_stamps && ent->stamp_layout()) {
+				render->render_layout_at({ MARGIN, y }, ent->stamp_layout());
+			}
+			if (ent->left_layout()) {
+				render->render_layout_at({ MARGIN, y }, ent->left_layout());
+			}
+			render->render_layout_at({ indent, y }, ent->right_layout());
+			line += ent->line_count();
+
+			/*line += gtk_xtext_render_line(xtext, cr, ent, line, lines_max,
 				subline, width);
-			subline = 0;
+			subline = 0;*/
 
 			if (line >= lines_max)
 				break;
 
 			ent = ent->next;
 		}
-
+		render->end_rendering();
 		line = (xtext->fontsize * line) - xtext->pixel_offset;
 
 		/* draw the separator line */
@@ -3722,8 +3751,12 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 
 	if (right_text.back() == '\n')
 		right_text.remove_suffix(1);
-
-	textentry ent(xtext->backend->make_layout(right_text, ~0), xtext->backend->make_layout(left_text, ~0));
+	std::unique_ptr<xtext::layout> stamp_layout;
+	if (buf->is_time_stamped()) {
+		const auto time_str = xtext_get_stamp_str(stamp);
+		stamp_layout = xtext->backend->make_layout(xtext::ustring{ time_str.cbegin(), time_str.cend() }, ~0);
+	}
+	textentry ent(xtext->backend->make_layout(right_text, ~0), xtext->backend->make_layout(left_text, ~0), std::move(stamp_layout));
 	ent.str.reserve(left_text.length() + right_text.length() + 2);
 	ent.str.append(left_text.cbegin(), left_text.cend());
 	ent.str.push_back(' ');

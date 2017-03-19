@@ -80,6 +80,12 @@ namespace xtext {
 		center,
 		right
 	};
+
+	struct point2d {
+		std::uint32_t x;
+		std::uint32_t y;
+	};
+	
 	/**
 	 Represents a single rectangle paragraph of text
 	 */
@@ -87,12 +93,21 @@ namespace xtext {
 		virtual ~layout() = default;
 		virtual std::uint32_t width() const noexcept = 0;
 		virtual std::uint32_t line_count() const noexcept = 0;
+		virtual std::uint32_t index_for_location(point2d loc) = 0;
 		virtual std::string_view text() const noexcept = 0;
 		virtual void set_width(std::uint32_t new_width) = 0;
 		virtual void set_marks(gsl::span<text_range> marks) = 0;
 		virtual void set_alignment(align align_to) = 0;
 		virtual void clear_marks() = 0;
 	};
+	
+	struct renderer {
+		virtual ~renderer() = default;
+		virtual void begin_rendering() = 0;
+		virtual void end_rendering() = 0;
+		virtual void render_layout_at(point2d loc, layout* target) = 0;
+	};
+
 	struct xtext_backend
 	{
 		virtual ~xtext_backend() = default;
@@ -105,7 +120,7 @@ namespace xtext {
 		virtual void set_palette(const gsl::span<GdkColor, XTEXT_COLS> colors) = 0;
 
 		virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const xtext::ustring_ref& text) = 0;
-		virtual bool set_target(GdkWindow* window, GdkRegion* target_region, GdkRectangle rect) = 0;
+		virtual std::unique_ptr<renderer> make_renderer(cairo_t * cr) = 0;
 		virtual std::unique_ptr<layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) = 0;
 	};
 

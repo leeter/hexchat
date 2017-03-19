@@ -382,6 +382,19 @@ class pangocairo_backend : public common_backend
 			return pango_layout_get_line_count(m_layout.get());
 		}
 
+		std::uint32_t index_for_location(xtext::point2d loc) {
+			int index = 0, trailing = 0;
+			if (!pango_layout_xy_to_index(
+				m_layout.get(),
+				loc.x * PANGO_SCALE,
+				loc.y * PANGO_SCALE,
+				&index,
+				&trailing)) {
+				return -1;
+			}
+			return index;
+		}
+
 		void set_width(std::uint32_t new_width) override final {
 			m_max_width = new_width;
 			pango_layout_set_width(m_layout.get(), new_width * PANGO_SCALE);
@@ -432,7 +445,28 @@ class pangocairo_backend : public common_backend
 
 	auto font_size() const noexcept { return ascent + descent; }
 
-	
+	struct pangocairo_render: public xtext::renderer{
+		cairo_t * cr;
+
+		pangocairo_render(cairo_t* cr)
+			:cr(cr){}
+
+		void begin_rendering() override final {}
+		void end_rendering() override final {};
+		void render_layout_at(xtext::point2d loc, xtext::layout* target) override final {
+			const auto p_layout = dynamic_cast<pango_layout*>(target);
+
+			if (!p_layout) {
+				return;
+			}
+
+			cairo_stack stack{ cr };
+			cairo_new_path(cr);
+			cairo_move_to(cr, loc.x, loc.y);
+
+			pango_cairo_show_layout(cr, p_layout->layout());
+		}
+	};
 
 public:
 	pangocairo_backend(GtkWidget *parentWidget)
@@ -561,11 +595,11 @@ public:
 		return pango_layout_get_line_count(layout.layout());
 	}
 
-	bool set_target(GdkWindow* window, GdkRegion* target_region, GdkRectangle rect) override final {
-		return false;
+	std::unique_ptr<xtext::renderer> make_renderer(cairo_t * cr) override final {
+		return std::make_unique<pangocairo_render>(cr);
 	}
 
-	virtual std::unique_ptr<xtext::layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) override final {
+	std::unique_ptr<xtext::layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) override final {
 		return std::make_unique<pango_layout>(this, text, max_width, nullptr);
 	}
 };
@@ -628,7 +662,9 @@ ustring strip_color(const ustring_ref &text, std::vector<offlen_t> *slp,
 		const int mbl = charlen(itr); /* multi-byte length */
 		if (mbl > std::distance(itr, end))
 			break; // bad UTF-8
-
+		if (rcol > 0 && (itr + 1) == end) {
+			break;
+		}
 		if (rcol > 0 &&
 			(std::isdigit<char>(*itr, locale) ||
 			 (*itr == ',' && std::isdigit<char>(itr[1], locale) &&
