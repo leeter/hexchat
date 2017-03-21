@@ -75,7 +75,6 @@ namespace {
 			m_layout(std::move(layout)),
 			m_left_layout(std::move(left_layout)),
 			m_stampLayout(std::move(stamp_layout)),
-			str_width(m_layout->width()),
 			mark_start(),
 			mark_end(),
 			indent(),
@@ -91,7 +90,6 @@ namespace {
 			}
 		}
 
-		gint16 str_width;
 		gint16 mark_start;
 		gint16 mark_end;
 		// the actual width in pixels for the entry to render, this may be wider than needed
@@ -101,13 +99,11 @@ namespace {
 		textentry *next;
 		textentry *prev;
 		GList *marks;	/* List of found strings */
-		std::vector<xtext::offlen_t> slp;
-		std::vector<int> sublines;
 		xtext::ustring str;
 
 	public:
 		int pixel_width() const noexcept {
-			return str_width;
+			return m_layout->width(); //str_width;
 		}
 
 		std::string_view stripped_text() const noexcept {
@@ -125,6 +121,11 @@ namespace {
 			}
 		}
 
+		void set_marks(xtext::text_range range) {
+
+			std::array<xtext::text_range, 1> marks{ range };
+		}
+
 		std::uint32_t line_count() const noexcept {
 			return m_layout->line_count();
 		}
@@ -139,6 +140,21 @@ namespace {
 
 		xtext::layout * stamp_layout() const noexcept {
 			return m_stampLayout.get();
+		}
+
+		void invalidate(gsl::not_null<xtext::xtext_backend*> backend) {
+			m_layout->invalidate(backend);
+			if (m_left_layout) {
+				m_left_layout->invalidate(backend);
+				const auto current_width = m_left_layout->width();
+				m_left_layout->set_width(~0);
+				const auto one_line_width = m_left_layout->width();
+				m_left_layout->set_width(current_width);
+				m_left_text_width = one_line_width;
+			}
+			if (m_stampLayout) {
+				m_stampLayout->invalidate(backend);
+			}
 		}
 	};
 
@@ -366,6 +382,7 @@ public:
 			return;
 		}
 		this->m_parent = xtext;
+		this->invalidate();
 	}
 
 	/* force scrolling off */
@@ -397,12 +414,14 @@ public:
 		}
 		this->dontscroll();	/* force scrolling off, WHY? */
 		this->m_indent = new_indent;
-		invalidate();
+		for (auto & ent : entries) {
+			ent.set_width(left_rendered_width(), right_rendered_width());
+		}
 	}
 
 	void invalidate() {
 		for (auto & ent : entries) {
-			ent.set_width(left_rendered_width(), right_rendered_width());
+			ent.invalidate(m_parent->backend);
 		}
 		gtk_widget_queue_draw(GTK_WIDGET(m_parent));
 	}
@@ -473,7 +492,6 @@ namespace{
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
 		GtkAdjustment *vadj);
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf, bool);
-	static int gtk_xtext_find_subline(const textentry &ent, int line);
 	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
 	[[deprecated("uses the scratch buffer, use xtext::strip_color instead")]]
 	static unsigned char *
@@ -620,55 +638,6 @@ namespace{
 		PangoFontMetricsPtr metrics{ pango_context_get_metrics(context, xtext->font->font, lang) };
 		xtext->font->ascent = pango_font_metrics_get_ascent(metrics.get()) / PANGO_SCALE;
 		xtext->font->descent = pango_font_metrics_get_descent(metrics.get()) / PANGO_SCALE;
-	}
-
-	/**
-	 Gets the width of a line in the context of an xtext
-	 */
-	static int backend_get_text_width_emph(GtkXText *xtext, const ustring_ref & str, int emphasis)
-	{
-		if (str.empty())
-			return 0;
-
-		if ((emphasis & EMPH_HIDDEN))
-			return 0;
-		emphasis &= (EMPH_ITAL | EMPH_BOLD);
-
-		int width = 0;
-		pango_layout_set_attributes(xtext->layout, attr_lists[emphasis]);
-		for (auto itr = str.cbegin(), end = str.cend(); itr != end;)
-		{
-			const auto mbl = charlen(itr);
-			int deltaw;
-			if (*itr < 128)
-				deltaw = fontwidths[emphasis][*itr];
-			else
-			{
-				
-				pango_layout_set_text(xtext->layout, reinterpret_cast<const char*>(&(*itr)), mbl);
-				pango_layout_get_pixel_size(xtext->layout, &deltaw, nullptr);
-			}
-			width += deltaw;
-			if (mbl < std::distance(itr, end))
-				itr += mbl;
-			else
-				break;
-		}
-
-		return width;
-	}
-
-	static int backend_get_text_width_slp(GtkXText *xtext, const guchar *str, const std::vector<xtext::offlen_t> & slp)
-	{
-		int width = 0;
-
-		for (const auto & meta : slp)
-		{
-			width += backend_get_text_width_emph(xtext, ustring_ref(str, meta.len), meta.emph);
-			str += meta.len;
-		}
-
-		return width;
 	}
 
 	static void
@@ -967,109 +936,6 @@ namespace{
 		return ret;
 	}
 
-	static int
-		find_x(GtkXText *xtext, const textentry &ent, int x, int subline, int indent)
-	{
-		int xx = indent;
-		int suboff = 0;
-
-		/* Skip to the first chunk of stuff for the subline */
-		std::vector<xtext::offlen_t>::const_iterator meta, hid = ent.slp.cend();
-		if (subline > 0)
-		{
-			suboff = ent.sublines[subline - 1];
-			decltype(meta) end = ent.slp.cend();
-			for (meta = ent.slp.cbegin(); meta != end; ++meta)
-			{
-				if (meta->off + meta->len > suboff)
-					break;
-			}
-		}
-		else
-		{
-			suboff = 0;
-			meta = ent.slp.cbegin();
-		}
-		/* Step to the first character of the subline */
-		int off = meta->off;
-		int len = meta->len;
-		if (meta->emph & EMPH_HIDDEN)
-			hid = meta;
-		while (len > 0)
-		{
-			if (off >= suboff)
-				break;
-			const auto mbl = charlen(ent.str.c_str() + off);
-			len -= mbl;
-			off += mbl;
-		}
-		if (len < 0)
-			return ent.str.size();		/* Bad char -- return max offset. */
-
-		/* Step through characters to find the one at the x position */
-		auto wid = x - indent;
-		len = meta->len - (off - meta->off);
-		while (wid > 0)
-		{
-			const auto mbl = charlen(ent.str.c_str() + off);
-			const auto mbw = backend_get_text_width_emph(xtext, ustring_ref(ent.str.c_str() + off, mbl), meta->emph);
-			wid -= mbw;
-			xx += mbw;
-			if (xx >= x)
-				return off;
-			len -= mbl;
-			off += mbl;
-			if (len <= 0)
-			{
-				if (meta->emph & EMPH_HIDDEN)
-					hid = meta;
-				++meta;
-				if (meta == ent.slp.cend())
-					return ent.str.size();
-				off = meta->off;
-				len = meta->len;
-			}
-		}
-
-		/* If previous chunk exists and is marked hidden, regard it as unhidden */
-		if (hid != ent.slp.cend() && meta != ent.slp.cend() && hid + 1 == meta)
-		{
-			off = hid->off;
-		}
-
-		/* Return offset of character at x within subline */
-		return off;
-	}
-
-	static int
-		gtk_xtext_find_x(GtkXText * xtext, int x, const textentry & ent, int subline,
-		int line, gboolean& out_of_bounds)
-	{
-		const unsigned char *str;
-		const auto indent = subline < 1 ? ent.indent : xtext->buffer->indent();
-
-		if (line > gtk_adjustment_get_page_size(xtext->adj) || line < 0)
-		{
-			out_of_bounds = true;
-			return 0;
-		}
-
-		str = ent.str.c_str() + gtk_xtext_find_subline(ent, subline);
-		if (str >= ent.str.c_str() + ent.str.size())
-			return 0;
-
-		/* Let user select left a few pixels to grab hidden text e.g. '<' */
-		if (x < indent - xtext->space_width)
-		{
-			out_of_bounds = true;
-			return (str - ent.str.c_str());
-		}
-
-		out_of_bounds = false;
-
-		return find_x(xtext, ent, x, subline, indent);
-	}
-
 	static textentry *
 		gtk_xtext_find_char(GtkXText * xtext, int x, int y, int *off,
 		gboolean &out_of_bounds, int *ret_subline)
@@ -1084,14 +950,14 @@ namespace{
 		auto ent = gtk_xtext_nth(xtext, line + (int)gtk_adjustment_get_value(xtext->adj), subline);
 		if (!ent)
 			return nullptr;
-
+		const auto index = ent->right_layout()->index_for_location({
+			static_cast<std::uint32_t>(x - xtext->buffer->indent()),
+			static_cast<std::uint32_t>(line_and_offset.rem) });
 		if (off)
-			*off = ent->right_layout()->index_for_location({
-			 static_cast<std::uint32_t>(x - xtext->buffer->indent()),
-			 static_cast<std::uint32_t>(line_and_offset.rem) }); //gtk_xtext_find_x(xtext, x, *ent, subline, line, out_of_bounds);
+			*off = index; //gtk_xtext_find_x(xtext, x, *ent, subline, line, out_of_bounds);
 
-		if (ret_subline)
-			*ret_subline = subline;
+		if (ret_subline && index != -1)
+			*ret_subline = ent->right_layout()->line_from_index(index);
 
 		return ent;
 	}
@@ -2153,12 +2019,9 @@ namespace{
 		int i = 0;
 		int rcol = 0, bgcol = 0;
 		bool hidden = false;
-		unsigned char *new_str;
+		unsigned char *new_str = outbuf;
 		auto beginning = text.cbegin();
-		if (outbuf == nullptr)
-			new_str = static_cast<unsigned char*>(g_malloc0(text.size() + 2));
-		else
-			new_str = outbuf;
+		
 
 		c.off1 = 0;
 		c.len1 = 0;
@@ -2235,108 +2098,10 @@ namespace{
 		return new_str;
 	}
 
-	/* gives width of a string, excluding the mIRC codes */
-	static int gtk_xtext_text_width_ent(GtkXText *xtext, textentry &ent)
-	{
-		ent.slp.clear();
-		const auto new_buf = xtext::strip_color(ent.str, &ent.slp, 2);
-	 
-		const auto width //= xtext->backend->get_string_width(ent.str, 2);
-		   = backend_get_text_width_slp(xtext, new_buf.c_str(), ent.slp);
-
-		for (auto &meta : ent.slp)
-		{
-			meta.width = backend_get_text_width_emph(
-			    xtext,
-			    ustring_ref(ent.str.c_str() + meta.off, meta.len),
-			    meta.emph);
-		}
-		return width;
-	}
-
 	int gtk_xtext_text_width(GtkXText *xtext, const xtext::ustring_ref & text)
 	{	
 		return xtext->backend->get_string_width(text, !xtext->ignore_hidden);
 	}
-
-	void gtk_xtext_draw_underline(GtkXText *xtext, int dest_x, int dest_y,
-				      int x, int y, int str_width,
-				      bool drawable, cairo_t *cr)
-	{
-		cairo_stack cr_stack{ cr };
-		cairo_new_path(cr);
-		// used to check if the pixmap existed, why does this matter?
-		if (drawable)
-			y = dest_y + xtext->font->ascent + 1;
-		else
-		{
-			y++;
-			dest_x = x;
-		}
-		/* draw directly to window, it's out of the range of our
-		* DB */
-		gdk_cairo_set_source_color(cr, bridge_get_foreground(xtext->style));
-		const auto mid_pixel_y = y + 0.5;
-		cairo_move_to(cr, dest_x, mid_pixel_y);
-		cairo_line_to(cr, dest_x + str_width - 1, mid_pixel_y);
-		cairo_set_line_width(cr, 1.0);
-		cairo_stroke(cr);
-	}
-
-	/* actually draw text to screen (one run with the same color/attribs) */
-	//static int gtk_xtext_render_flush(GtkXText *xtext, cairo_t*cr, int x, int y,
-	//				  const ustring_ref& str, int *emphasis)
-	//{
-	//	if (xtext->dont_render || str.empty() || xtext->hidden)
-	//		return 0;
-
-	//	const auto str_width = backend_get_text_width_emph(
-	//	    xtext, str, *emphasis);
-
-	//	if (xtext->dont_render2)
-	//		return str_width;
-
-	//	/* roll-your-own clipping (avoiding XftDrawString is always
-	//	 * good!) */
-	//	if (x > xtext->clip_x2 || x + str_width < xtext->clip_x)
-	//		return str_width;
-	//	if (y - xtext->font->ascent > xtext->clip_y2 ||
-	//	    (y - xtext->font->ascent) + xtext->fontsize < xtext->clip_y)
-	//		return str_width;
-
-	//	int dest_x = 0, dest_y = 0;
-	//	if (xtext->render_hilights_only)
-	//	{
-	//		if (!xtext->in_hilight) /* is it a hilight prefix? */
-	//			return str_width;
-	//		if (!xtext->un_hilight) /* doing a hilight? no need to
-	//					   draw the text */
-	//		{
-	//			gtk_xtext_draw_underline(xtext, dest_x, dest_y, x, y, str_width, false, cr);
-	//			return str_width;
-	//		}
-	//	}
-
-	//	/*auto pix = gdk_pixmap_new(xtext->draw_buf, str_width,
-	//			     xtext->fontsize, xtext->depth);
-	//	if (pix)
-	//	{
-	//		dest_x = x;
-	//		dest_y = y - xtext->font->ascent;
-
-	//		gdk_gc_set_ts_origin(xtext->bgc, xtext->ts_x - x,
-	//				     xtext->ts_y - dest_y);
-
-	//		x = 0;
-	//		y = xtext->font->ascent;
-	//		xtext->draw_buf = pix;
-	//	}*/
-
-	//	backend_draw_text_emph(xtext, cr, x, y - xtext->font->ascent,
-	//			       str, str_width,
-	//			       *emphasis);
-	//	return str_width;
-	//}
 
 	static void
 		gtk_xtext_reset(GtkXText * xtext, bool mark, bool attribs)
@@ -2759,157 +2524,7 @@ namespace{
 
 		return ret;
 	}
-#endif
 
-	/* walk through str until this line doesn't fit anymore */
-
-	static int
-		find_next_wrap(GtkXText * xtext, const textentry & ent, const unsigned char str[],
-		int win_width, int indent)
-	{
-		/* single liners */
-		if (win_width >= ent.pixel_width() + ent.indent)
-			return ent.str.size();
-
-		auto last_space = str;
-		auto orig_str = str;
-		int str_width = indent;
-		int rcol = 0, bgcol = 0;
-		bool hidden = false;
-		int ret;
-		int limit_offset = 0;
-		int emphasis = 0;
-		std::locale locale;
-		/* it does happen! */
-		if (win_width < 1)
-		{
-			ret = ent.str.size() - std::distance(ent.str.c_str(), str);
-			goto done;
-		}
-
-		/* Find emphasis value for the offset that is the first byte of our string */
-		for (const auto & meta : ent.slp)
-		{
-			auto start = ent.str.c_str() + meta.off;
-			auto end = start + meta.len;
-			if (str >= start && str < end)
-			{
-				emphasis = meta.emph;
-				break;
-			}
-		}
-
-		for (;;)
-		{
-			if (rcol > 0 && (std::isdigit<char>(*str, locale) || (*str == ',' && std::isdigit<char>(str[1], locale) && !bgcol)))
-			{
-				if (str[1] != ',') rcol--;
-				if (*str == ',')
-				{
-					rcol = 2;
-					bgcol = 1;
-				}
-				limit_offset++;
-				str++;
-			}
-			else
-			{
-				rcol = bgcol = 0;
-				switch (*str)
-				{
-				case ATTR_COLOR:
-					rcol = 2;
-				case ATTR_BEEP:
-				case ATTR_RESET:
-				case ATTR_REVERSE:
-				case ATTR_BOLD:
-				case ATTR_UNDERLINE:
-				case ATTR_ITALICS:
-					if (*str == ATTR_RESET)
-						emphasis = 0;
-					if (*str == ATTR_ITALICS)
-						emphasis ^= EMPH_ITAL;
-					if (*str == ATTR_BOLD)
-						emphasis ^= EMPH_BOLD;
-					limit_offset++;
-					str++;
-					break;
-				case ATTR_HIDDEN:
-					if (xtext->ignore_hidden)
-						goto def;
-					hidden = !hidden;
-					limit_offset++;
-					str++;
-					break;
-				default:
-				def :
-				{
-					int mbl = static_cast<int>(charlen(str));
-					int char_width = backend_get_text_width_emph(xtext, ustring_ref(str, mbl), emphasis);
-					if (!hidden) str_width += char_width;
-					if (str_width > win_width)
-					{
-						if (xtext->wordwrap)
-						{
-							if (std::distance(last_space, str) > WORDWRAP_LIMIT + limit_offset)
-								ret = std::distance(orig_str, str); /* fall back to character wrap */
-							else
-							{
-								if (*last_space == ' ')
-									last_space++;
-								ret = std::distance(orig_str, last_space);
-								if (ret == 0) /* fall back to character wrap */
-									ret = std::distance(orig_str, str);
-							}
-							goto done;
-						}
-						ret = std::distance(orig_str, str);
-						goto done;
-					}
-
-					/* keep a record of the last space, for word wrapping */
-					if (is_del(*str))
-					{
-						last_space = str;
-						limit_offset = 0;
-					}
-
-					/* progress to the next char */
-					str += mbl;
-				} // switch statement scope
-
-				}
-			}
-
-			if (str >= ent.str.c_str() + ent.str.size())
-			{
-				ret = std::distance(orig_str, str);
-				break; // goto done;
-			}
-		}
-
-	done:
-
-		/* must make progress */
-		if (ret < 1)
-			ret = 1;
-
-		return ret;
-	}
-
-	/* find the offset, in bytes, that wrap number 'line' starts at */
-	int gtk_xtext_find_subline(const textentry &ent, int line)
-	{
-		int rlen = 0;
-
-		if (line > 0 && line <= ent.sublines.size())
-		{
-			rlen = ent.sublines[line - 1];
-			if (rlen == 0)
-				rlen = ent.str.size();
-		}
-		return rlen;
-	}
 
 	/* horrible hack for drawing time stamps */
 	void gtk_xtext_render_stamp(GtkXText * xtext, cairo_t* cr,
@@ -3035,6 +2650,8 @@ namespace{
 		return taken;
 	}
 
+#endif
+
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf,
 					    bool do_str_width)
 	{
@@ -3045,10 +2662,6 @@ namespace{
 		 */
 		for (auto &ent : buf->entries)
 		{
-			if (do_str_width)
-			{
-				ent.str_width = xtext->backend->get_string_width(ent.str, 2);
-			}
 			if (ent.left_len != -1)
 			{
 				ent.indent = (buf->indent() -
@@ -3081,7 +2694,7 @@ namespace{
 			0, 
 			[buf](auto val, auto& next) {
 			next.set_width(buf->left_rendered_width(), buf->right_rendered_width());
-			return val + next.line_count(); //gtk_xtext_lines_taken(buf, next);
+			return val + next.line_count();
 		});
 
 		buf->pagetop_ent = nullptr;
@@ -3670,7 +3283,6 @@ namespace{
 		if (stamp == 0)
 			ent.stamp = std::time(nullptr);
 		const auto xtext = buf->current_xtext();
-		ent.str_width = gtk_xtext_text_width_ent(xtext, ent);
 		ent.mark_start = -1;
 		ent.mark_end = -1;
 		ent.next = nullptr;
@@ -4229,6 +3841,7 @@ gtk_xtext_set_palette(GtkXText * xtext, const gsl::span<GdkColor, XTEXT_COLS> pa
 {
 	std::copy_n(palette.cbegin(), XTEXT_COLS, std::begin(xtext->palette));
 	xtext->backend->set_palette(palette);
+	xtext->buffer->invalidate();
 	if (gtk_widget_get_realized(GTK_WIDGET(xtext)))
 	{
 		xtext_set_fg(xtext, XTEXT_FG);

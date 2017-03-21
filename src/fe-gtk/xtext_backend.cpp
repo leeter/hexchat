@@ -174,10 +174,15 @@ class pangocairo_backend : public common_backend
 		xtext::PangoAttrListPtr m_attrList;
 		xtext::ustring m_original_text;
 		std::vector<xtext::text_range> m_marks;
-
+	public:
 		// rebuilds the layout and attributes
-		void invalidate()
+		void invalidate(gsl::not_null<xtext::xtext_backend*> backend) override final
 		{
+			const auto local_backend = dynamic_cast<pangocairo_backend*>(backend.get());
+			if (!local_backend) {
+				return;
+			}
+			m_backend = local_backend;
 			xtext::PangoLayoutPtr temp_layout{
 				pango_layout_copy(m_backend->layout.get()) };
 			xtext::PangoAttrListPtr attr_list{ pango_attr_list_new() };
@@ -365,11 +370,11 @@ class pangocairo_backend : public common_backend
 			m_layout = std::move(temp_layout);
 			m_attrList = std::move(attr_list);
 		}
-	public:
+
 		pango_layout(pangocairo_backend* backend, xtext::ustring_ref text, std::uint32_t width, gsl::span<xtext::text_range> marks)
 			:m_max_width(width), m_backend(backend), m_original_text(text), m_marks(marks.cbegin(), marks.cend()){
 			
-			invalidate();
+			invalidate(m_backend);
 		}
 
 		std::uint32_t width() const noexcept override final {
@@ -382,7 +387,7 @@ class pangocairo_backend : public common_backend
 			return pango_layout_get_line_count(m_layout.get());
 		}
 
-		std::uint32_t index_for_location(xtext::point2d loc) {
+		int index_for_location(xtext::point2d loc) override final {
 			int index = 0, trailing = 0;
 			if (!pango_layout_xy_to_index(
 				m_layout.get(),
@@ -395,6 +400,12 @@ class pangocairo_backend : public common_backend
 			return index;
 		}
 
+		int line_from_index(std::uint32_t index) override final {
+			int line = 0;
+			pango_layout_index_to_line_x(m_layout.get(), index, false, &line, nullptr);
+			return line;
+		}
+
 		void set_width(std::uint32_t new_width) override final {
 			m_max_width = new_width;
 			pango_layout_set_width(m_layout.get(), new_width * PANGO_SCALE);
@@ -403,12 +414,12 @@ class pangocairo_backend : public common_backend
 		void set_marks(gsl::span<xtext::text_range> marks) override final {
 			m_marks.clear();
 			m_marks.insert(m_marks.begin(), marks.cbegin(), marks.cend());
-			invalidate();
+			invalidate(m_backend);
 		}
 
 		void clear_marks() override final {
 			m_marks.clear();
-			invalidate();
+			invalidate(m_backend);
 		}
 
 		PangoLayout* layout() {

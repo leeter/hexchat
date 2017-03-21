@@ -85,7 +85,7 @@ namespace xtext {
 		std::uint32_t x;
 		std::uint32_t y;
 	};
-	
+	struct xtext_backend;
 	/**
 	 Represents a single rectangle paragraph of text
 	 */
@@ -93,12 +93,14 @@ namespace xtext {
 		virtual ~layout() = default;
 		virtual std::uint32_t width() const noexcept = 0;
 		virtual std::uint32_t line_count() const noexcept = 0;
-		virtual std::uint32_t index_for_location(point2d loc) = 0;
+		virtual int index_for_location(::xtext::point2d loc) = 0;
+		virtual int line_from_index(std::uint32_t index) = 0;
 		virtual std::string_view text() const noexcept = 0;
 		virtual void set_width(std::uint32_t new_width) = 0;
 		virtual void set_marks(gsl::span<text_range> marks) = 0;
 		virtual void set_alignment(align align_to) = 0;
 		virtual void clear_marks() = 0;
+		virtual void invalidate(gsl::not_null<::xtext::xtext_backend*> backend) = 0;
 	};
 	
 	struct renderer {
