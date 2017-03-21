@@ -146,6 +146,7 @@ namespace {
 			m_layout->invalidate(backend);
 			if (m_left_layout) {
 				m_left_layout->invalidate(backend);
+				m_left_layout->set_alignment(xtext::right);
 				const auto current_width = m_left_layout->width();
 				m_left_layout->set_width(~0);
 				const auto one_line_width = m_left_layout->width();
@@ -492,7 +493,6 @@ namespace{
 	static void gtk_xtext_scroll_adjustments(GtkXText *xtext, GtkAdjustment *hadj,
 		GtkAdjustment *vadj);
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf, bool);
-	/* static char *gtk_xtext_conv_color (unsigned char *text, int len, int *newlen); */
 	[[deprecated("uses the scratch buffer, use xtext::strip_color instead")]]
 	static unsigned char *
 		gtk_xtext_strip_color(const ustring_ref & text, unsigned char *outbuf,
