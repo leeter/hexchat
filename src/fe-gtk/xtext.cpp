@@ -415,11 +415,14 @@ public:
 		}
 		this->dontscroll();	/* force scrolling off, WHY? */
 		this->m_indent = new_indent;
+		recalc_widths();
+	}
+
+	void recalc_widths() {
 		for (auto & ent : entries) {
 			ent.set_width(left_rendered_width(), right_rendered_width());
 		}
 	}
-
 	void invalidate() {
 		for (auto & ent : entries) {
 			ent.invalidate(m_parent->backend);
@@ -429,7 +432,7 @@ public:
 
 	void set_width(std::uint32_t width) {
 		m_window_width = width;
-		invalidate();
+		recalc_widths();
 	}
 
 	std::uint32_t width() const noexcept {
@@ -885,7 +888,7 @@ namespace{
 	static void gtk_xtext_size_allocate(GtkWidget *widget,
 					    GtkAllocation *allocation)
 	{
-		GtkXText *xtext = GTK_XTEXT(widget);
+		const auto xtext = GTK_XTEXT(widget);
 		const auto height_only = allocation->width == xtext->buffer->width();
 
 		gtk_widget_set_allocation(widget, allocation);
@@ -3674,7 +3677,6 @@ void xtext_buffer::set_time_stamping(time_stamping new_stamping)
 	}
 	this->time_stamp = new_stamping;
 	this->needs_recalc = true;
-	this->invalidate();
 }
 
 GError* xtext_buffer::set_search_regex(gtk_xtext_search_flags flags, const boost::string_ref & str)
