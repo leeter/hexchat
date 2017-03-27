@@ -105,6 +105,9 @@
     <ClInclude Include="xtext_backend.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="COMAssist.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="resources.c">

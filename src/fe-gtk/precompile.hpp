@@ -86,6 +86,7 @@
 #include <gsl.h>
 #ifdef WIN32
 #include <gdk/gdkwin32.h>
+#include <cairo/cairo-win32.h>
 #endif
 #include "gtk_helpers.hpp"
 

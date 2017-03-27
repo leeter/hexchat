@@ -121,8 +121,8 @@ namespace xtext {
 
 		virtual void set_palette(const gsl::span<GdkColor, XTEXT_COLS> colors) = 0;
 
-		virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const xtext::ustring_ref& text) = 0;
-		virtual std::unique_ptr<renderer> make_renderer(cairo_t * cr) = 0;
+		//virtual int render_at(cairo_t* cr, int x, int y, int width, int indent, int mark_start, int mark_end, align alignment, const xtext::ustring_ref& text) = 0;
+		virtual std::unique_ptr<renderer> make_renderer(cairo_t * cr, const GdkRectangle& rect) = 0;
 		virtual std::unique_ptr<layout> make_layout(const xtext::ustring_ref text, std::uint32_t max_width) = 0;
 	};
 

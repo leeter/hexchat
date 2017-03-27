@@ -239,6 +239,7 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <ClInclude Include="banlist.hpp" />
     <ClInclude Include="chanlist.hpp" />
     <ClInclude Include="chanview.hpp" />
+    <ClInclude Include="COMAssist.hpp" />
     <ClInclude Include="custom-list.hpp" />
     <ClInclude Include="editlist.hpp" />
     <ClInclude Include="fe-gtk.hpp" />

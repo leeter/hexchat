@@ -2838,7 +2838,8 @@ namespace{
 		const auto lines_max = ((height + xtext->pixel_offset) / xtext->fontsize) + 1;
 		const auto rendering_stamps = xtext->buffer->is_time_stamped();
 		const auto indent = xtext->buffer->indent();
-		const auto render = xtext->backend->make_renderer(cr);
+		const auto render = xtext->backend->make_renderer(cr, allocation);
+		
 		render->begin_rendering();
 		const auto left_render_x = static_cast<std::uint32_t>( rendering_stamps ? xtext->stamp_width + MARGIN : MARGIN);
 		while (ent)
