@@ -266,7 +266,7 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 }
 
 static void
-tab_scroll_right_down_clicked(GtkWidget */*widget*/, chanview *cv)
+tab_scroll_right_down_clicked(GtkWidget * /*widget*/, chanview *cv)
 {
 	GtkAdjustment *adj;
 	gint viewport_size;
@@ -337,7 +337,7 @@ tab_scroll_cb(GtkWidget *widget, GdkEventScroll *event, gpointer cv)
 }
 
 static void
-cv_tabs_xclick_cb(GtkWidget */*button*/, chanview *cv)
+cv_tabs_xclick_cb(GtkWidget * /*button*/, chanview *cv)
 {
 	cv->cb_xbutton(cv, cv->focused, cv->focused->tag, cv->focused->userdata);
 }
@@ -436,7 +436,7 @@ cv_tabs_init(chanview *cv)
 }
 
 static void
-cv_tabs_postinit(chanview */*cv*/)
+cv_tabs_postinit(chanview * /*cv*/)
 {
 }
 

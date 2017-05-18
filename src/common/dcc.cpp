@@ -68,6 +68,7 @@ using SOCKET = int;
 #include "hexchatc.hpp"
 #include "filesystem.hpp"
 #include "session.hpp"
+#include "base64.hpp"
 
 #ifdef USE_DCC64
 #define BIG_STR_TO_INT(x) std::strtoull(x,nullptr,10)
@@ -272,7 +273,7 @@ dcc_connect_sok (::dcc::DCC *dcc)
 
 	auto sok = socket (AF_INET, SOCK_STREAM, 0);
 	if (sok == INVALID_SOCKET)
-		return -1;
+		return INVALID_SOCKET;
 
 	addr.sin_family = AF_INET;
 	if (DCC_USE_PROXY ())
@@ -280,7 +281,7 @@ dcc_connect_sok (::dcc::DCC *dcc)
 		if (!dcc_lookup_proxy (prefs.hex_net_proxy_host, &addr))
 		{
 			closesocket (sok);
-			return -1;
+			return INVALID_SOCKET;
 		}
 		addr.sin_port = htons (static_cast<std::uint16_t>(prefs.hex_net_proxy_port));
 	}
@@ -311,10 +312,10 @@ dcc_close (::dcc::DCC *dcc, ::hexchat::dcc_state dccstat, bool destroy)
 		dcc->iotag = 0;
 	}
 
-	if (dcc->sok != -1)
+	if (dcc->sok != INVALID_SOCKET)
 	{
 		closesocket (dcc->sok);
-		dcc->sok = -1;
+		dcc->sok = INVALID_SOCKET;
 	}
 
 	dcc_remove_from_sum (dcc);
@@ -467,7 +468,7 @@ dcc_read_chat(GIOChannel * /*source*/, GIOCondition /*condition*/, ::dcc::DCC *d
 		}
 
 		if (!dcc->iotag)
-			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
+			dcc->iotag = fe_input_add(gsl::narrow_cast<int>(dcc->sok), FIA_READ | FIA_EX, (GIOFunc)dcc_read_chat, dcc);
 
 		len = recv(dcc->sok, lbuf, sizeof(lbuf) - 2, 0);
 		if (len < 1)
@@ -522,7 +523,7 @@ dcc_calc_average_cps(::dcc::DCC *dcc)
 	if (sec < 1)
 		sec = 1;
 	if (dcc->type == ::dcc::DCC::dcc_type::TYPE_SEND)
-		dcc->cps = (dcc->ack - dcc->resumable) / sec;
+		dcc->cps = gsl::narrow_cast<int>((dcc->ack - dcc->resumable) / sec);
 	else
 		dcc->cps = gsl::narrow_cast<int>((dcc->pos - dcc->resumable) / sec);
 }
@@ -599,7 +600,7 @@ dcc_read(GIOChannel * /*source*/, GIOCondition /*condition*/, ::dcc::DCC *dcc)
 		}
 
 		if (!dcc->iotag)
-			dcc->iotag = fe_input_add(dcc->sok, FIA_READ | FIA_EX, (GIOFunc)dcc_read, dcc);
+			dcc->iotag = fe_input_add(gsl::narrow_cast<int>(dcc->sok), FIA_READ | FIA_EX, (GIOFunc)dcc_read, dcc);
 
 		n = recv(dcc->sok, buf, sizeof(buf), 0);
 		if (n < 1)
@@ -1137,7 +1138,6 @@ dcc_http_proxy_traverse(GIOChannel *source, GIOCondition /*condition*/, ::dcc::D
 	if (proxy->phase == 0)
 	{
 		char buf[256];
-		char auth_data[128];
 		char auth_data2[68];
 		int n, n2;
 
@@ -1147,8 +1147,8 @@ dcc_http_proxy_traverse(GIOChannel *source, GIOCondition /*condition*/, ::dcc::D
 		{
 			n2 = snprintf(auth_data2, sizeof(auth_data2), "%s:%s",
 				prefs.hex_net_proxy_user, prefs.hex_net_proxy_pass);
-			base64_encode(auth_data, auth_data2, n2);
-			n += snprintf(buf + n, sizeof(buf) - n, "Proxy-Authorization: Basic %s\r\n", auth_data);
+			const auto result = util::transforms::encode_base64(auth_data2, n2);
+			n += snprintf(buf + n, sizeof(buf) - n, "Proxy-Authorization: Basic %s\r\n", result.c_str());
 		}
 		n += snprintf(buf + n, sizeof(buf) - n, "\r\n");
 		proxy->buffersize = n;
@@ -1505,7 +1505,7 @@ dcc_listen_init(::dcc::DCC *dcc, session *sess)
 		return false;
 
 	len = sizeof(SAddr);
-	getsockname(dcc->serv->sok, (struct sockaddr *) &SAddr, &len);
+	//getsockname(dcc->serv->sok, (struct sockaddr *) &SAddr, &len);
 
 	SAddr.sin_family = AF_INET;
 

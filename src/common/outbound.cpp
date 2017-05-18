@@ -872,7 +872,7 @@ cmd_debug (struct session *sess, char *[], char *[])
 	for (serv_itr v{ serv_list }, end; v != end; ++v)
 	{
 		std::ostringstream out;
-		out << boost::format(_("%p %-5d %s\n")) % &(*v) % v->sok % v->m_servername;
+//		out << boost::format(_("%p %-5d %s\n")) % &(*v) % v->sok % v->m_servername;
 		PrintText (sess, out.str());
 	}
 
@@ -1741,7 +1741,7 @@ cmd_gate (struct session *sess, char *word[], char *[])
 #endif
 		server_fill_her_up (*serv);
 		if (*port)
-			serv->connect (server_name, atoi (port), true);
+			serv->connect (server_name, gsl::narrow_cast<std::uint16_t>(atoi (port)), true);
 		else
 			serv->connect (server_name, 23, true);
 		return true;
@@ -2978,7 +2978,7 @@ cmd_reconnect (struct session *sess, char *word[], char *[])
 		if (*word[4+offset])
 			safe_strcpy (serv->m_password, word[4+offset], sizeof (serv->m_password));
 		if (*word[3+offset])
-			serv->port = atoi (word[3+offset]);
+			serv->port = gsl::narrow_cast<std::uint16_t>(atoi (word[3+offset]));
 		safe_strcpy (serv->m_hostname, word[2+offset], sizeof (serv->m_hostname));
 		serv->auto_reconnect (true, -1);
 	}
@@ -3024,13 +3024,13 @@ cmd_send (struct session *sess, char *word[], char *word_eol[])
 	struct sockaddr_in SAddr = { 0 };
 
 	auto addr = dcc::dcc_get_my_address ();
-	if (addr == 0)
-	{
-		/* use the one from our connected server socket */
-		socklen_t len = sizeof (SAddr);
-		getsockname (sess->server->sok, (struct sockaddr *) &SAddr, &len);
-		addr = SAddr.sin_addr.s_addr;
-	}
+	//if (addr == 0)
+	//{
+	//	/* use the one from our connected server socket */
+	//	socklen_t len = sizeof (SAddr);
+	//	//getsockname (sess->server->sok, (struct sockaddr *) &SAddr, &len);
+	//	addr = SAddr.sin_addr.s_addr;
+	//}
 	addr = ntohl (addr);
 	char buffer[TBUFSIZE];
 	if ((addr & 0xffff0000) == 0xc0a80000 ||	/* 192.168.x.x */
@@ -3241,11 +3241,11 @@ cmd_server (struct session *sess, char *word[], char *word_eol[])
 
 	if (*port)
 	{
-		serv->connect (server_name, atoi (port), false);
+		serv->connect (server_name, gsl::narrow_cast<std::uint16_t>(atoi (port)), false);
 	} else
 	{
 		/* -1 for default port */
-		serv->connect (server_name, -1, false);
+		serv->connect (server_name, ~0, false);
 	}
 
 	/* try to associate this connection with a listed network */

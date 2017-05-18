@@ -1431,7 +1431,7 @@ void format_event (session *sess, int index, char **args, char *dst, size_t dsts
 		dst[0] = 0;
 }
 
-std::string format_event(session & sess, size_t eventIndex, const gsl::span<std::string> args) {
+std::string format_event(session & /*sess*/, size_t eventIndex, const gsl::span<std::string> args) {
 	if (eventIndex > pntevts.size())
 		throw std::invalid_argument(u8"Invalid index");
 	auto numargs = te[eventIndex].num_args & 0x7f;

@@ -724,15 +724,15 @@ servlist_connect (session *sess, ircnet &net, bool join)
 #ifdef USE_OPENSSL
 			serv->use_ssl = true;
 #endif
-			serv->connect (ircserv->hostname, atoi (port + 2), false);
+			serv->connect (ircserv->hostname, gsl::narrow_cast<std::uint16_t>(atoi (port + 2)), false);
 		} else
 		{
-			serv->connect (ircserv->hostname, atoi (port + 1), false);
+			serv->connect (ircserv->hostname, gsl::narrow_cast<std::uint16_t>(atoi (port + 1)), false);
 		}
 
 		*port = '/';
 	} else
-		serv->connect (ircserv->hostname, -1, false);
+		serv->connect (ircserv->hostname, ~0u, false);
 
 	serv->set_encoding (net.encoding);
 }

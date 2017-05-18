@@ -268,22 +268,24 @@ powershell -File "$(SolutionDir)..\win32\version-template.ps1" "$(SolutionDir)..
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4351;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4351;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest  /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest  /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level4</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level4</WarningLevel>
     </ClCompile>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SDKDDKVer.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest  /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Zc:rvalueCast /Zc:throwingNew /std:c++latest  /D_HAS_AUTO_PTR_ETC=1 /D_HAS_CXX17=1 %(AdditionalOptions)</AdditionalOptions>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level4</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -63,7 +63,7 @@ public:
 	void imbue(const std::locale&);
 public:
 	/*  server control operations (in server*.c) */
-	void connect(char *hostname, int port, bool no_login);
+	void connect(char *hostname, std::uint16_t s_port, bool nologin);
 	void disconnect(struct session *, bool sendquit, int err);
 	cleanup_result cleanup();
 	void flush_queue();
@@ -116,19 +116,19 @@ public:
 	void save_away_message(const std::string& nick, const boost::optional<std::string>& message);
 
 	std::unordered_set<session*> sessions;
-	int port;
-	int sok;					/* is equal to sok4 or sok6 (the one we are using) */
-	int sok4;					/* tcp4 socket */
-	int sok6;					/* tcp6 socket */
-	int proxy_type;
-	int proxy_sok;				/* Additional information for MS Proxy beast */
-	int proxy_sok4;
-	int proxy_sok6;
+	std::uint16_t port;
+	//int sok;					/* is equal to sok4 or sok6 (the one we are using) */
+	//int sok4;					/* tcp4 socket */
+	//int sok6;					/* tcp6 socket */
+	//int proxy_type;
+	//int proxy_sok;				/* Additional information for MS Proxy beast */
+	//int proxy_sok4;
+	//int proxy_sok6;
 	int id;					/* unique ID number (for plugin API) */
 	std::unique_ptr<io::tcp::connection> server_connection;
 #ifdef USE_OPENSSL
-	SSL *ssl;
-	int ssl_do_connect_tag;
+	/*SSL *ssl;
+	int ssl_do_connect_tag;*/
 #else
 	void *ssl;
 #endif

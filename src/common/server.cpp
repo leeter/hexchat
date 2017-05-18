@@ -169,7 +169,7 @@ server_send_real (server &serv, const boost::string_ref & buf)
 
 	url_check_line(buf);
 
-	return tcp_send_real (serv.ssl, serv.sok, serv.encoding ? serv.encoding->c_str() : nullptr, serv.using_irc,
+	return tcp_send_real (nullptr, -1, serv.encoding ? serv.encoding->c_str() : nullptr, serv.using_irc,
 		buf.data(), buf.size(), &serv);
 }
 
@@ -485,11 +485,11 @@ server_stopconnecting (server * serv)
 #endif
 
 #ifdef USE_OPENSSL
-	if (serv->ssl_do_connect_tag)
+	/*if (serv->ssl_do_connect_tag)
 	{
 		fe_timeout_remove (serv->ssl_do_connect_tag);
 		serv->ssl_do_connect_tag = 0;
-	}
+	}*/
 #endif
 
 	fe_progressbar_end (serv);
@@ -1150,7 +1150,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 }
 
 /* send a "print text" command to the parent process - MUST END IN \n! */
-
+#if 0
 static void
 proxy_error (int fd, char *msg)
 {
@@ -1342,54 +1342,6 @@ traverse_wingate (int /*print_fd*/, int sok, char *serverAddr, int port)
 
 /* stuff for HTTP auth is here */
 
-static void
-three_to_four (const char *from, char *to)
-{
-	static const char tab64[64]=
-	{
-		'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
-		'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',
-		'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v',
-		'w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/'
-	};
-
-	to[0] = tab64 [ (from[0] >> 2) & 63 ];
-	to[1] = tab64 [ ((from[0] << 4) | (from[1] >> 4)) & 63 ];
-	to[2] = tab64 [ ((from[1] << 2) | (from[2] >> 6)) & 63 ];
-	to[3] = tab64 [ from[2] & 63 ];
-}
-
-void
-base64_encode (char *to, const char *from, unsigned int len)
-{
-	while (len >= 3)
-	{
-		three_to_four (from, to);
-		len -= 3;
-		from += 3;
-		to += 4;
-	}
-	if (len)
-	{
-		char three[3] = {0,0,0};
-		unsigned int i;
-		for (i = 0; i < len; i++)
-		{
-			three[i] = *from++;
-		}
-		three_to_four (three, to);
-		if (len == 1)
-		{
-			to[2] = to[3] = '=';
-		}
-		else if (len == 2)
-		{
-			to[3] = '=';
-		}
-		to += 4;
-	};
-	to[0] = 0;
-}
 
 static int
 http_read_line (int print_fd, int sok, char *buf, int len)
@@ -1467,6 +1419,7 @@ traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port)
 
 	return 1;
 }
+#endif
 
 /* this is the child process making the connection attempt */
 
@@ -1500,13 +1453,11 @@ void server_error(server * serv, const boost::system::error_code & error)
 
 
 void
-server::connect (char *hostname, int port, bool no_login)
+server::connect (char *hostname, std::uint16_t s_port, bool nologin)
 {
 	int read_des[2] = { 0 };
-	//unsigned int pid;
-	session *sess = this->server_session;
 	boost::asio::io_service io_service;
-	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, port);
+	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, s_port);
 	if (resolved.first){
 		server_error(this, resolved.first);
 		return;
@@ -1522,7 +1473,7 @@ server::connect (char *hostname, int port, bool no_login)
 	this->reset_to_defaults();
 	this->connecting = true;
 	this->port = port;
-	this->no_login = no_login;
+	this->no_login = nologin;
 
 	fe_server_event(this, fe_serverevents::CONNECTING, 0);
 	fe_set_away (*this);
@@ -1711,18 +1662,18 @@ server::server()
 	:death_timer(0),
 	p_cmp(),
 	port(),
-	sok(),					/* is equal to sok4 or sok6 (the one we are using) */
-	sok4(),					/* tcp4 socket */
-	sok6(),					/* tcp6 socket */
-	proxy_type(),
-	proxy_sok(),				/* Additional information for MS Proxy beast */
-	proxy_sok4(),
-	proxy_sok6(),
+	//sok(),					/* is equal to sok4 or sok6 (the one we are using) */
+	//sok4(),					/* tcp4 socket */
+	//sok6(),					/* tcp6 socket */
+	//proxy_type(),
+	//proxy_sok(),				/* Additional information for MS Proxy beast */
+	//proxy_sok4(),
+	//proxy_sok6(),
 	id(),				/* unique ID number (for plugin API) */
-	ssl(),
+	/*ssl(),
 #ifdef USE_OPENSSL
 	ssl_do_connect_tag(),
-#endif
+#endif*/
 	m_childread(),
 	m_childwrite(),
 	m_childpid(),
@@ -1811,7 +1762,7 @@ server_new (void)
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up(*serv);
 	serv->id = id++;
-	serv->sok = -1;
+	/*serv->sok = -1;*/
 	strcpy (serv->m_nick, prefs.hex_irc_nick1);
 	serv->reset_to_defaults();
 
