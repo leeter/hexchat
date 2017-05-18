@@ -51,7 +51,7 @@ static GtkTreeModel *get_store (void)
 	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (editlist_win), "view")));
 }
 
-static void editlist_save (GtkWidget *igad, gchar *file)
+static void editlist_save (GtkWidget * /*igad*/, gchar *file)
 {
 	GtkTreeModel *store = get_store();
 	GtkTreeIter iter;
@@ -126,7 +126,7 @@ static void editlist_load (GtkListStore *store, const std::vector<popup>& list)
 	}
 }
 
-static void editlist_delete (GtkWidget *wid, gpointer)
+static void editlist_delete (GtkWidget * /*wid*/, gpointer)
 {
 	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
@@ -144,7 +144,7 @@ static void editlist_delete (GtkWidget *wid, gpointer)
 	}
 }
 
-static void editlist_add (GtkWidget *wid, gpointer)
+static void editlist_add (GtkWidget * /*wid*/, gpointer)
 {
 	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
@@ -159,13 +159,13 @@ static void editlist_add (GtkWidget *wid, gpointer)
 	gtk_tree_view_set_cursor (view, path.get(), col, TRUE);
 }
 
-static void editlist_close (GtkWidget *wid, gpointer)
+static void editlist_close (GtkWidget * /*wid*/, gpointer)
 {
 	gtk_widget_destroy (editlist_win);
 	editlist_win = NULL;
 }
 
-static void editlist_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpointer data)
+static void editlist_edited (GtkCellRendererText * /*render*/, gchar *pathstr, gchar *new_text, gpointer data)
 {
 	GtkTreeModel *model = get_store ();
 	GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
@@ -176,7 +176,7 @@ static void editlist_edited (GtkCellRendererText *render, gchar *pathstr, gchar 
 	gtk_list_store_set (GTK_LIST_STORE (model), &iter, column, new_text, -1);
 }
 
-static gboolean editlist_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer)
+static gboolean editlist_keypress (GtkWidget * /*wid*/, GdkEventKey *evt, gpointer)
 {
 	GtkTreeView *view = static_cast<GtkTreeView*>(g_object_get_data(G_OBJECT(editlist_win), "view"));
 	bool handled = false;

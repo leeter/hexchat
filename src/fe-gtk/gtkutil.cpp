@@ -43,7 +43,7 @@ struct file_req
 };
 
 static void
-gtkutil_file_req_destroy (GtkWidget * wid, struct file_req *freq)
+gtkutil_file_req_destroy (GtkWidget * /*wid*/, struct file_req *freq)
 {
 	std::unique_ptr<file_req> freq_ptr{ freq };
 	freq->callback (freq->userdata, NULL);
@@ -117,7 +117,7 @@ gtkutil_check_file (const char filename[], struct file_req *freq)
 }
 
 static void
-gtkutil_file_req_done (GtkWidget * wid, struct file_req *freq)
+gtkutil_file_req_done (GtkWidget * /*wid*/, struct file_req *freq)
 {
 	GSList *files, *cur;
 	GtkFileChooser *fs = GTK_FILE_CHOOSER (freq->dialog);
@@ -243,7 +243,7 @@ gtkutil_file_req(const char *title, filereqcallback callback, void *userdata, co
 }
 
 static gboolean
-gtkutil_esc_destroy (GtkWidget * win, GdkEventKey * key, gpointer userdata)
+gtkutil_esc_destroy (GtkWidget * win, GdkEventKey * key, gpointer /*userdata*/)
 {
 	GtkWidget *wid;
 
@@ -271,7 +271,7 @@ gtkutil_destroy_on_esc (GtkWidget *win)
 }
 
 void
-gtkutil_destroy (GtkWidget * igad, GtkWidget * dgad)
+gtkutil_destroy (GtkWidget * /*igad*/, GtkWidget * dgad)
 {
 	gtk_widget_destroy (dgad);
 }
@@ -298,7 +298,7 @@ gtkutil_get_str_response (GtkDialog *dialog, gint arg1, gpointer entry)
 }
 
 static void
-gtkutil_str_enter (GtkWidget *entry, GtkWidget *dialog)
+gtkutil_str_enter (GtkWidget * /*entry*/, GtkWidget *dialog)
 {
 	gtk_dialog_response (GTK_DIALOG (dialog), GTK_RESPONSE_ACCEPT);
 }
@@ -375,7 +375,7 @@ gtkutil_get_number_response (GtkDialog *dialog, gint arg1, gpointer spin)
 }
 
 static void
-gtkutil_get_bool_response (GtkDialog *dialog, gint arg1, gpointer spin)
+gtkutil_get_bool_response (GtkDialog *dialog, gint arg1, gpointer /*spin*/)
 {
 	void (*callback) (int value, void *user_data);
 	void *user_data;
@@ -543,6 +543,8 @@ gtkutil_set_icon (GtkWidget *win)
 	 * (sub)windows, but OFC only on Windows. GTK <3
 	 */
 	gtk_window_set_icon (GTK_WINDOW (win), pix_hexchat);
+#else
+	UNREFERENCED_PARAMETER(win);
 #endif
 }
 

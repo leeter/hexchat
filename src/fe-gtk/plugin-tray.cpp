@@ -202,6 +202,9 @@ fe_tray_set_balloon (const char *title, const char *text)
 
 	g_object_unref (notification);
 #endif
+#else
+	UNREFERENCED_PARAMETER(title);
+	UNREFERENCED_PARAMETER(text);
 #endif
 }
 
@@ -437,13 +440,13 @@ tray_toggle_visibility (bool force_hide)
 }
 
 static void
-tray_menu_restore_cb (GtkWidget *item, gpointer userdata)
+tray_menu_restore_cb (GtkWidget * /*item*/, gpointer /*userdata*/)
 {
 	tray_toggle_visibility (false);
 }
 
 static void
-tray_menu_notify_cb (GObject *tray, GParamSpec *pspec, gpointer user_data)
+tray_menu_notify_cb (GObject * /*tray*/, GParamSpec * /*pspec*/, gpointer /*user_data*/)
 {
 	if (sticon)
 	{
@@ -471,7 +474,7 @@ tray_menu_try_restore ()
 }
 
 static void
-tray_menu_quit_cb (GtkWidget *item, gpointer userdata)
+tray_menu_quit_cb (GtkWidget * /*item*/, gpointer /*userdata*/)
 {
 	mg_open_quit_dialog (FALSE);
 }
@@ -506,7 +509,7 @@ tray_find_away_status (void)
 }
 
 static void
-tray_foreach_server (GtkWidget *item, char *cmd)
+tray_foreach_server (GtkWidget * /*item*/, char *cmd)
 {
 	for (auto list = serv_list; list; list = list->next)
 	{
@@ -546,7 +549,7 @@ blink_item (unsigned int *setting, GtkWidget *menu, char *label)
 }
 
 static void
-tray_menu_destroy (GtkWidget *menu, gpointer userdata)
+tray_menu_destroy (GtkWidget *menu, gpointer /*userdata*/)
 {
 	gtk_widget_destroy (menu);
 	g_object_unref (menu);
@@ -557,14 +560,14 @@ tray_menu_destroy (GtkWidget *menu, gpointer userdata)
 
 #ifdef WIN32
 static gboolean
-tray_menu_enter_cb (GtkWidget *menu)
+tray_menu_enter_cb (GtkWidget * /*menu*/)
 {
 	tray_menu_inactivetime = 0;
 	return false;
 }
 
 static gboolean
-tray_menu_left_cb (GtkWidget *menu)
+tray_menu_left_cb (GtkWidget * /*menu*/)
 {
 	tray_menu_inactivetime = g_get_real_time ();
 	return false;
@@ -582,7 +585,7 @@ tray_check_hide (GtkWidget *menu)
 
 void setup_open(void);
 static gboolean
-tray_menu_settings (GtkWidget * wid, gpointer none)
+tray_menu_settings (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	setup_open ();
 	return false;
@@ -685,7 +688,7 @@ tray_init (void)
 }
 
 static int
-tray_hilight_cb(const char *const word[], void *userdata)
+tray_hilight_cb(const char *const word[], void * /*userdata*/)
 {
 	/*if (tray_status == TS_HIGHLIGHT)
 		return HEXCHAT_EAT_NONE;*/
@@ -712,7 +715,7 @@ tray_hilight_cb(const char *const word[], void *userdata)
 }
 
 static int
-tray_message_cb(const char *const word[], void *userdata)
+tray_message_cb(const char *const word[], void * /*userdata*/)
 {
 	if (/*tray_status == TS_MESSAGE ||*/ tray_status == TS_HIGHLIGHT)
 		return HEXCHAT_EAT_NONE;
@@ -765,7 +768,7 @@ tray_priv (const char *from, const char *text)
 }
 
 static int
-tray_priv_cb(const char *const word[], void *userdata)
+tray_priv_cb(const char *const word[], void * /*userdata*/)
 {
 	tray_priv (word[1], word[2]);
 
@@ -773,7 +776,7 @@ tray_priv_cb(const char *const word[], void *userdata)
 }
 
 static int
-tray_invited_cb(const char *const word[], void *userdata)
+tray_invited_cb(const char *const word[], void * /*userdata*/)
 {
 	if (!prefs.hex_away_omit_alerts || tray_find_away_status () != 1)
 		tray_priv (word[2], "Invited");
@@ -782,7 +785,7 @@ tray_invited_cb(const char *const word[], void *userdata)
 }
 
 static int
-tray_dcc_cb(const char *const word[], void *userdata)
+tray_dcc_cb(const char *const word[], void * /*userdata*/)
 {
 /*	if (tray_status == TS_FILEOFFER)
 		return HEXCHAT_EAT_NONE;*/
@@ -812,7 +815,7 @@ tray_dcc_cb(const char *const word[], void *userdata)
 }
 
 static int
-tray_focus_cb(const char *const word[], void *userdata)
+tray_focus_cb(const char *const* /*word*/, void * /*userdata*/)
 {
 	tray_stop_flash ();
 	tray_reset_counts ();
@@ -848,7 +851,7 @@ tray_apply_setup (void)
 
 int
 tray_plugin_init(hexchat_plugin * plugin_handle, char **plugin_name,
-				char **plugin_desc, char **plugin_version, char *arg)
+				char **plugin_desc, char **plugin_version, char * /*arg*/)
 {
 	/* we need to save this for use with any hexchat_* functions */
 	ph = plugin_handle;
@@ -882,7 +885,7 @@ tray_plugin_init(hexchat_plugin * plugin_handle, char **plugin_name,
 }
 
 int
-tray_plugin_deinit (hexchat_plugin *plugin_handle)
+tray_plugin_deinit (hexchat_plugin * /*plugin_handle*/)
 {
 #ifdef WIN32
 	tray_cleanup ();

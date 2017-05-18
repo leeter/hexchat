@@ -168,13 +168,13 @@ server::p_join_list (GSList *favorites)
 	favchannel *fav;
 	std::string chanlist;
 	std::string keylist;
-	GSList *favlist;
+	GSList *favslist;
 
-	favlist = favorites;
+	favslist = favorites;
 
-	while (favlist)
+	while (favslist)
 	{
-		fav = static_cast<favchannel*>(favlist->data);
+		fav = static_cast<favchannel*>(favslist->data);
 
 		len += fav->name.size();
 		if (fav->key)
@@ -219,11 +219,11 @@ server::p_join_list (GSList *favorites)
 		}
 
 		first_item = false;
-		favlist = favlist->next;
+		favslist = favslist->next;
 	}
 
 	irc_join_list_flush (this, chanlist, keylist, send_keys);
-	g_slist_free (favlist);
+	g_slist_free (favslist);
 }
 
 void
@@ -1436,7 +1436,7 @@ get_timezone(void)
 	time_utc = mktime (&tm_utc);
 	time_local = mktime (&tm_local);
 
-	return time_utc - time_local;
+	return gsl::narrow_cast<int>(time_utc - time_local);
 }
 
 /* Handle time-server tags.

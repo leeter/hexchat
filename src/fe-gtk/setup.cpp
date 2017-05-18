@@ -1356,7 +1356,7 @@ setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 static void
 setup_color_cb (GtkWidget *button, gpointer userdata)
 {
-	GtkWidget *dialog, *cancel_button, *ok_button, *help_button;
+	GtkWidget *dialog, *cancl_button, *ok_button, *help_button;
 	GtkColorSelectionDialog *cdialog;
 	GdkColor *color;
 
@@ -1365,14 +1365,14 @@ setup_color_cb (GtkWidget *button, gpointer userdata)
 	dialog = gtk_color_selection_dialog_new (_("Select color"));
 	cdialog = GTK_COLOR_SELECTION_DIALOG (dialog);
 
-	g_object_get (G_OBJECT(cdialog), "cancel-button", &cancel_button,
+	g_object_get (G_OBJECT(cdialog), "cancel-button", &cancl_button,
 									"ok-button", &ok_button,
 									"help-button", &help_button, nullptr);
 
 	gtk_widget_hide (help_button);
 	g_signal_connect (G_OBJECT (ok_button), "clicked",
 							G_CALLBACK (setup_color_ok_cb), dialog);
-	g_signal_connect (G_OBJECT (cancel_button), "clicked",
+	g_signal_connect (G_OBJECT (cancl_button), "clicked",
 							G_CALLBACK (gtkutil_destroy), dialog);
 	g_object_set_data (G_OBJECT (ok_button), "c", color);
 	g_object_set_data (G_OBJECT (ok_button), "b", button);
@@ -1380,7 +1380,7 @@ setup_color_cb (GtkWidget *button, gpointer userdata)
 	gtk_color_selection_set_current_color (GTK_COLOR_SELECTION (gtk_color_selection_dialog_get_color_selection (cdialog)), color);
 	gtk_widget_show (dialog);
 
-	g_object_unref (cancel_button);
+	g_object_unref (cancl_button);
 	g_object_unref (ok_button);
 	g_object_unref (help_button);
 }
@@ -1975,7 +1975,7 @@ unslash (char *dir)
 }
 
 void
-setup_apply_real (int new_pix, int do_ulist, int do_layout)
+setup_apply_real (int /*new_pix*/, int do_ulist, int do_layout)
 {
 	GSList *list;
 	session *sess;

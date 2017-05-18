@@ -27,7 +27,12 @@
 #include <cinttypes>
 #include "proto-irc.hpp"
 #include "serverfwd.hpp"
-
+#ifndef WIN32
+using SOCKET = int;
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
+#endif
 namespace hexchat{
 
 	enum class dcc_state {
@@ -69,7 +74,7 @@ struct DCC
 	struct proxy_state *proxy;
 	guint32 addr;					/* the 32bit IP number, host byte order */
 	int fp;							/* file pointer */
-	int sok;
+	SOCKET sok;
 	int iotag;						/* reading io tag */
 	int wiotag;						/* writing/sending io tag */
 	int port;

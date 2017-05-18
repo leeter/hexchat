@@ -365,7 +365,7 @@ fe_timeout_remove (int tag)
 
 static void
 log_handler (const gchar   *log_domain,
-			   GLogLevelFlags log_level,
+			   GLogLevelFlags /*log_level*/,
 			   const gchar   *message,
 			   gpointer)
 {
@@ -374,13 +374,13 @@ log_handler (const gchar   *log_domain,
 	/* if (getenv ("HEXCHAT_WARNING_IGNORE")) this gets ignored sometimes, so simply just disable all warnings */
 		return;
 
-	sess = find_dialog (*static_cast<server*>(serv_list->data), "(warnings)");
+	/*sess = find_dialog (*static_cast<server*>(serv_list->data), "(warnings)");
 	if (!sess)
 		sess = new_ircwindow(static_cast<server*>(serv_list->data), "(warnings)", session::SESS_DIALOG, 0);
 
 	PrintTextf (sess, "%s\t%s\n", log_domain, message);
 	if (getenv ("HEXCHAT_WARNING_ABORT"))
-		abort ();
+		abort ();*/
 }
 
 #endif
@@ -844,7 +844,7 @@ dcc_saveas_cb (dcc::DCC *dcc, char *file)
 }
 
 void
-fe_confirm (const char *message, void (*yesproc)(void *), void (*noproc)(void *), void *ud)
+fe_confirm (const char *message, void (* /*yesproc*/)(void *), void (* /*noproc*/)(void *), void *ud)
 {
 	/* warning, assuming fe_confirm is used by DCC only! */
 	dcc::DCC *dcc = static_cast<dcc::DCC*>(ud);

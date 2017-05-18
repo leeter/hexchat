@@ -276,7 +276,7 @@ mg_set_access_icon (session_gui *gui, GdkPixbuf *pix, gboolean away)
 }
 
 static gboolean
-mg_inputbox_focus (GtkWidget *widget, GdkEventFocus *event, session_gui *gui)
+mg_inputbox_focus (GtkWidget * /*widget*/, GdkEventFocus * /*event*/, session_gui *gui)
 {
 	if (gui->is_tab)
 		return false;
@@ -339,7 +339,7 @@ mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 }
 
 static gboolean
-mg_spellcheck_cb (SexySpellEntry *entry, gchar *word, gpointer data)
+mg_spellcheck_cb (SexySpellEntry * /*entry*/, const gchar *word, gpointer /*data*/)
 {
 	/* This can cause freezes on long words, nicks arn't very long anyway. */
 	if (std::strlen (word) > 20)
@@ -772,7 +772,7 @@ mg_decide_userlist (session *sess, gboolean switch_to_current)
 }
 
 static void
-mg_userlist_toggle_cb (GtkWidget *button, gpointer userdata)
+mg_userlist_toggle_cb (GtkWidget * /*button*/, gpointer /*userdata*/)
 {
 	prefs.hex_gui_ulist_hide = !prefs.hex_gui_ulist_hide;
 	mg_decide_userlist (current_sess, false);
@@ -974,7 +974,7 @@ mg_switch_page (int relative, int num)
 /* a toplevel IRC window was destroyed */
 
 static void
-mg_topdestroy_cb (GtkWidget *win, session *sess)
+mg_topdestroy_cb (GtkWidget * /*win*/, session *sess)
 {
 /*	printf("enter mg_topdestroy. sess %p was destroyed\n", sess);*/
 
@@ -1084,7 +1084,7 @@ mg_tab_close (session *sess)
 }
 
 static void
-mg_menu_destroy (GtkWidget *menu, gpointer userdata)
+mg_menu_destroy (GtkWidget *menu, gpointer /*userdata*/)
 {
 	gtk_widget_destroy (menu);
 	g_object_unref (menu);
@@ -1306,7 +1306,7 @@ mg_close_gen (chan *ch, GtkWidget *box)
 /* the "X" close button has been pressed (tab-view) */
 
 static void
-mg_xbutton_cb (chanview *cv, chan *ch, int tag, gpointer userdata)
+mg_xbutton_cb (chanview * /*cv*/, chan *ch, int tag, gpointer userdata)
 {
 	if (tag == TAG_IRC)	/* irc tab */
 		mg_close_sess(static_cast<session*>(userdata));
@@ -1340,7 +1340,7 @@ mg_link_gentab (chan *ch, GtkWidget *box)
 }
 
 static void
-mg_detach_tab_cb (GtkWidget *item, chan *ch)
+mg_detach_tab_cb (GtkWidget * /*item*/, chan *ch)
 {
 	if (chan_get_tag (ch) == TAG_IRC)	/* IRC tab */
 	{
@@ -1354,14 +1354,14 @@ mg_detach_tab_cb (GtkWidget *item, chan *ch)
 }
 
 static void
-mg_destroy_tab_cb (GtkWidget *item, chan *ch)
+mg_destroy_tab_cb (GtkWidget * /*item*/, chan *ch)
 {
 	/* treat it just like the X button press */
 	mg_xbutton_cb(static_cast<chanview*>(mg_gui->chanview), ch, chan_get_tag(ch), chan_get_userdata(ch));
 }
 
 static void
-mg_color_insert (GtkWidget *item, gpointer userdata)
+mg_color_insert (GtkWidget * /*item*/, gpointer userdata)
 {
 	char buf[32];
 	char *text;
@@ -1380,11 +1380,11 @@ mg_color_insert (GtkWidget *item, gpointer userdata)
 		default:
 			text = "\017"; break;
 		}
-		key_action_insert (current_sess->gui->input_box, 0, text, 0, 0);
+		key_action_insert (current_sess->gui->input_box, nullptr, text, nullptr, nullptr);
 	} else
 	{
-		sprintf (buf, "\003%02d", num);
-		key_action_insert (current_sess->gui->input_box, 0, buf, 0, 0);
+		snprintf (buf, sizeof(buf), "\003%02d", num);
+		key_action_insert (current_sess->gui->input_box, nullptr, buf, nullptr, nullptr);
 	}
 }
 
@@ -1418,7 +1418,7 @@ mg_submenu (GtkWidget *menu, char *text)
 }
 
 static void
-mg_create_color_menu (GtkWidget *menu, session *sess)
+mg_create_color_menu (GtkWidget *menu)
 {
 	GtkWidget *submenu;
 	GtkWidget *subsubmenu;
@@ -1456,7 +1456,7 @@ static void
 mg_set_guint8 (GtkCheckMenuItem *item, chanopt_val *setting)
 {
 	session *sess = current_sess;
-	chanopt_val logging = sess->chanopts["text_logging"];
+	//chanopt_val logging = sess->chanopts["text_logging"];
 
 	*setting = SET_OFF;
 	if (gtk_check_menu_item_get_active (item))
@@ -1601,10 +1601,10 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 			if (fname)
 			{
 				/* dcc_send() expects utf-8 */
-				glib_string p{ g_filename_to_utf8(fname.get(), -1, 0, 0, 0) };
-				if (p)
+				glib_string gp{ g_filename_to_utf8(fname.get(), -1, 0, 0, 0) };
+				if (gp)
 				{
-					dcc::dcc_send (sess, target, p.get(), prefs.hex_dcc_max_send_cps, 0);
+					dcc::dcc_send (sess, target, gp.get(), prefs.hex_dcc_max_send_cps, 0);
 				}
 			}
 		}
@@ -1617,9 +1617,9 @@ mg_dnd_drop_file (session *sess, const char target[], const char uri[])
 }
 
 static void
-mg_dialog_dnd_drop (GtkWidget * widget, GdkDragContext * context, gint x,
-						  gint y, GtkSelectionData * selection_data, guint info,
-						  guint32 time, gpointer ud)
+mg_dialog_dnd_drop (GtkWidget * /*widget*/, GdkDragContext * /*context*/, gint /*x*/,
+						  gint /*y*/, GtkSelectionData * selection_data, guint /*info*/,
+						  guint32 /*time*/, gpointer /*ud*/)
 {
 	if (current_sess->type == session::SESS_DIALOG)
 		/* sess->channel is really the nickname of dialogs */
@@ -1702,7 +1702,7 @@ mg_create_userlistbuttons (GtkWidget *box)
 }
 
 static void
-mg_topic_cb (GtkWidget *entry, gpointer userdata)
+mg_topic_cb (GtkWidget *entry, gpointer /*userdata*/)
 {
 	session *sess = current_sess;
 	if (sess->channel[0] && sess->server->connected && sess->type == session::SESS_CHANNEL)
@@ -1719,7 +1719,7 @@ likely be */
 }
 
 static void
-mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
+mg_tabwindow_kill_cb (GtkWidget * /*win*/, gpointer /*userdata*/)
 {
 	GSList *list, *next;
 	session *sess;
@@ -2032,7 +2032,7 @@ mg_create_link_buttons (GtkWidget *box, gpointer userdata)
 }*/
 
 static void
-mg_dialog_button_cb (GtkWidget *wid, const char *cmd)
+mg_dialog_button_cb (GtkWidget */*wid*/, const char *cmd)
 {
 	if (!current_sess)
 		return;
@@ -2116,7 +2116,7 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 /* check if a word is clickable */
 
 static int
-mg_word_check (GtkWidget * xtext, const char *word)
+mg_word_check (GtkWidget * /*xtext*/, const char *word)
 {
 	session *sess = current_sess;
 	auto ret = url_check_word (word);
@@ -2404,19 +2404,19 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 }
 
 static void
-mg_vpane_cb (GtkPaned *pane, GParamSpec *param, session_gui *gui)
+mg_vpane_cb (GtkPaned *pane, GParamSpec * /*param*/, session_gui * /*gui*/)
 {
 	prefs.hex_gui_pane_divider_position = gtk_paned_get_position (pane);
 }
 
 static void
-mg_leftpane_cb (GtkPaned *pane, GParamSpec *param, session_gui *gui)
+mg_leftpane_cb (GtkPaned *pane, GParamSpec * /*param*/, session_gui * /*gui*/)
 {
 	prefs.hex_gui_pane_left_size = gtk_paned_get_position (pane);
 }
 
 static void
-mg_rightpane_cb (GtkPaned *pane, GParamSpec *param, session_gui *gui)
+mg_rightpane_cb (GtkPaned *pane, GParamSpec * /*param*/, session_gui * /*gui*/)
 {
 	int handle_size;
 	GtkAllocation allocation;
@@ -2507,7 +2507,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 }
 
 static void
-mg_change_nick (int cancel, char *text, gpointer userdata)
+mg_change_nick (int cancel, const char *text, gpointer /*userdata*/)
 {
 	if (!cancel)
 	{
@@ -2518,7 +2518,7 @@ mg_change_nick (int cancel, char *text, gpointer userdata)
 }
 
 static void
-mg_nickclick_cb (GtkWidget *button, gpointer userdata)
+mg_nickclick_cb (GtkWidget * /*button*/, gpointer /*userdata*/)
 {
 	fe_get_str (_("Enter new nickname:"), current_sess->server->m_nick,
 		(GSourceFunc)mg_change_nick, (void *)1);
@@ -2687,9 +2687,9 @@ mg_change_layout (int type)
 }
 
 static void
-mg_inputbox_rightclick (GtkEntry *entry, GtkWidget *menu)
+mg_inputbox_rightclick (GtkEntry * /*entry*/, GtkWidget *menu)
 {
-	mg_create_color_menu (menu, nullptr);
+	mg_create_color_menu (menu);
 }
 
 /* Search bar adapted from Conspire's by William Pitcock */
@@ -2752,25 +2752,25 @@ search_handle_event(int search_type, session *sess)
 }
 
 static void
-search_handle_change(GtkWidget *wid, session *sess)
+search_handle_change(GtkWidget * /*wid*/, session *sess)
 {
 	search_handle_event(SEARCH_CHANGE, sess);
 }
 
 static void
-search_handle_refresh(GtkWidget *wid, session *sess)
+search_handle_refresh(GtkWidget * /*wid*/, session *sess)
 {
 	search_handle_event(SEARCH_REFRESH, sess);
 }
 
 void
-mg_search_handle_previous(GtkWidget *wid, session *sess)
+mg_search_handle_previous(GtkWidget * /*wid*/, session *sess)
 {
 	search_handle_event(SEARCH_PREVIOUS, sess);
 }
 
 void
-mg_search_handle_next(GtkWidget *wid, session *sess)
+mg_search_handle_next(GtkWidget * /*wid*/, session *sess)
 {
 	search_handle_event(SEARCH_NEXT, sess);
 }
@@ -2803,7 +2803,7 @@ mg_search_toggle(session *sess)
 }
 
 static gboolean
-search_handle_esc (GtkWidget *win, GdkEventKey *key, session *sess)
+search_handle_esc (GtkWidget * /*win*/, GdkEventKey *key, session *sess)
 {
 	if (key->keyval == GDK_KEY_Escape)
 		mg_search_toggle(sess);
@@ -2920,7 +2920,7 @@ mg_create_entry (session *sess, GtkWidget *box)
 }
 
 static void
-mg_switch_tab_cb (chanview *cv, chan *ch, int tag, gpointer ud)
+mg_switch_tab_cb (chanview * /*cv*/, chan *ch, int tag, gpointer ud)
 {
 	chan *old;
 	session *sess = static_cast<session*>(ud);
@@ -3226,7 +3226,7 @@ mg_apply_setup (void)
 }
 
 static chan *
-mg_add_generic_tab (const boost::string_ref name, const char *title, void *family, GtkWidget *box)
+mg_add_generic_tab (const boost::string_ref name, const char *title, void * /*family*/, GtkWidget *box)
 {
 	gtk_notebook_append_page (GTK_NOTEBOOK (mg_gui->note_book), box, nullptr);
 	gtk_widget_show (box);
@@ -3468,7 +3468,7 @@ mg_changui_new (session &sess, restore_gui *res, bool tab, bool focus)
 
 GtkWidget *
 mg_create_generic_tab (const char *name, const char *title, bool force_toplevel,
-							  int link_buttons,
+							  int /*link_buttons*/,
 							  GCallback close_callback, void *userdata,
 							  int width, int height, GtkWidget **vbox_ret,
 							  void *family)
@@ -3675,7 +3675,7 @@ mg_drag_begin_cb (GtkWidget *widget, GdkDragContext *context, gpointer)
 }
 
 void
-mg_drag_end_cb (GtkWidget *widget, GdkDragContext *context, gpointer userdata)
+mg_drag_end_cb (GtkWidget *widget, GdkDragContext *context, gpointer /*userdata*/)
 {
 	/* ignore file drops */
 	if (!mg_is_gui_target (context))
@@ -3687,7 +3687,7 @@ mg_drag_end_cb (GtkWidget *widget, GdkDragContext *context, gpointer userdata)
 /* drop complete */
 
 gboolean
-mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint time, gpointer user_data)
+mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int /*x*/, int y, guint /*time*/, gpointer /*user_data*/)
 {
 	/* ignore file drops */
 	if (!mg_is_gui_target (context))
@@ -3711,8 +3711,8 @@ mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint
 }
 /* draw highlight rectangle in the destination */
 
-gboolean mg_drag_motion_cb(GtkWidget *widget, GdkDragContext *context, int x,
-			   int y, guint time, gpointer scbar)
+gboolean mg_drag_motion_cb(GtkWidget *widget, GdkDragContext *context, int /*x*/,
+			   int y, guint /*time*/, gpointer scbar)
 {
 	/* ignore file drops */
 	if (!mg_is_gui_target(context))

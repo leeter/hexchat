@@ -46,19 +46,19 @@ joind_radio2_cb (GtkWidget *radio, server *serv)
 }
 
 static void
-joind_entryenter_cb (GtkWidget *entry, GtkWidget *ok)
+joind_entryenter_cb (GtkWidget * /*entry*/, GtkWidget *ok)
 {
 	gtk_widget_grab_focus (ok);
 }
 
 static void
-joind_entryfocus_cb (GtkWidget *entry, GdkEventFocus *event, server *serv)
+joind_entryfocus_cb (GtkWidget * /*entry*/, GdkEventFocus * /*event*/, server *serv)
 {
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (serv->gui->joind_radio2), TRUE);
 }
 
 static void
-joind_destroy_cb (GtkWidget *win, server *serv)
+joind_destroy_cb (GtkWidget * /*win*/, server *serv)
 {
 	if (is_server (serv))
 		serv->gui->joind_win = NULL;

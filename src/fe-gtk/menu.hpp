@@ -26,7 +26,7 @@ void nick_command_parse(session *sess, const boost::string_ref &cmd, const boost
 
 GtkWidget *menu_create_main (void *accel_group, bool bar, int away, int toplevel, GtkWidget **menu_widgets);
 void menu_urlmenu (GdkEventButton * event, const std::string& url);
-void menu_chanmenu (session *sess, GdkEventButton * event, char *chan);
+void menu_chanmenu (session *sess, GdkEventButton * event, const char *chan);
 void menu_addfavoritemenu (server *serv, GtkWidget *menu, const char channel[], bool istree);
 void menu_addconnectmenu (server *serv, GtkWidget *menu);
 void menu_nickmenu (session *sess, GdkEventButton * event, const std::string &nick, int num_sel);

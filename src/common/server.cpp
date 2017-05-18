@@ -100,7 +100,7 @@ extern pxProxyFactory *libproxy_factory;
    send via SSL. server/dcc both use this function. */
 
 int
-tcp_send_real (void */*ssl*/, int /*sok*/, const char *encoding, int using_irc, const char *buf, int len, server * serv)
+tcp_send_real (void * /*ssl*/, int /*sok*/, const char *encoding, int using_irc, const char *buf, int len, server * serv)
 {
 	if (!serv->server_connection)
 		return 1; // throw?

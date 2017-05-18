@@ -320,7 +320,7 @@ public:
 		,m_pallet(pallet)
 	{}
 
-	STDMETHODIMP IsPixelSnappingDisabled(void * clientDrawingContext, BOOL * isDisabled) noexcept override final
+	STDMETHODIMP IsPixelSnappingDisabled(void * /*clientDrawingContext*/, BOOL * isDisabled) noexcept override final
 	{
 		if (!isDisabled) {
 			return E_POINTER;
@@ -348,12 +348,12 @@ public:
 	}
 
 	STDMETHODIMP DrawGlyphRun(
-		void * clientDrawingContext,
+		void * /*clientDrawingContext*/,
 		FLOAT baselineOriginX,
 		FLOAT baselineOriginY,
 		DWRITE_MEASURING_MODE measuringMode,
 		DWRITE_GLYPH_RUN const * glyphRun,
-		DWRITE_GLYPH_RUN_DESCRIPTION const * glyphRunDescription,
+		DWRITE_GLYPH_RUN_DESCRIPTION const * /*glyphRunDescription*/,
 		IUnknown * clientDrawingEffect)
 	{
 		return comhelp::NoExceptBoundary([&, this] {
@@ -387,7 +387,7 @@ public:
 	}
 
 	STDMETHODIMP DrawUnderline(
-		void * clientDrawingContext,
+		void * /*clientDrawingContext*/,
 		FLOAT baselineOriginX,
 		FLOAT baselineOriginY,
 		DWRITE_UNDERLINE const * underline,
@@ -407,7 +407,7 @@ public:
 	}
 
 	STDMETHODIMP DrawStrikethrough(
-		void * clientDrawingContext,
+		void * /*clientDrawingContext*/,
 		FLOAT baselineOriginX,
 		FLOAT baselineOriginY,
 		DWRITE_STRIKETHROUGH const * strikethrough,
@@ -426,13 +426,13 @@ public:
 	}
 
 	STDMETHODIMP DrawInlineObject(
-		void * clientDrawingContext,
-		FLOAT originX,
-		FLOAT originY,
-		IDWriteInlineObject * inlineObject,
-		BOOL isSideways,
-		BOOL isRightToLeft,
-		IUnknown * clientDrawingEffect) noexcept override final
+		void * /*clientDrawingContext*/,
+		FLOAT /*originX*/,
+		FLOAT /*originY*/,
+		IDWriteInlineObject * /*inlineObject*/,
+		BOOL /*isSideways*/,
+		BOOL /*isRightToLeft*/,
+		IUnknown * /*clientDrawingEffect*/) noexcept override final
 	{
 		return E_NOTIMPL;
 		/*return comhelp::NoExceptBoundary([&] {
@@ -621,7 +621,7 @@ struct d2d_backend : public xtext::xtext_backend
 		}
 	};
 
-	d2d_backend(GtkWidget *parentWidget)
+	d2d_backend(GtkWidget * /*parentWidget*/)
 	{
 		_com_util::CheckError(D2D1CreateFactory(
 			D2D1_FACTORY_TYPE_SINGLE_THREADED,
@@ -659,8 +659,8 @@ struct d2d_backend : public xtext::xtext_backend
 		}
 	}
 
-	int get_string_width(const xtext::ustring_ref& text, int strip_hidden) override final {
-		dwrite_layout layout(this, text, ~0, nullptr);
+	int get_string_width(const xtext::ustring_ref& text, int /*strip_hidden*/) override final {
+		dwrite_layout layout(this, text, ~0U, nullptr);
 		return layout.width();
 	}
 

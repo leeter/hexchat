@@ -163,7 +163,7 @@ fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive)
 
 static void
 dcc_prepare_row_chat (dcc::DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
-							 gboolean update_only)
+							 gboolean /*update_only*/)
 {
 	static char pos[16], siz[16];
 	char *date;
@@ -369,7 +369,7 @@ dcc_update_send (dcc::DCC *dcc)
 }
 
 static void
-close_dcc_file_window (GtkWindow *win, gpointer data)
+close_dcc_file_window (GtkWindow * /*win*/, gpointer /*data*/)
 {
 	dccfwin.window = NULL;
 }
@@ -517,7 +517,7 @@ dcc_get_selected (void)
 }
 
 static void
-resume_clicked (GtkWidget * wid, gpointer none)
+resume_clicked (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	char buf[512];
@@ -555,7 +555,7 @@ resume_clicked (GtkWidget * wid, gpointer none)
 }
 
 static void
-abort_clicked (GtkWidget * wid, gpointer none)
+abort_clicked (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	GSList *start, *list;
@@ -573,7 +573,7 @@ abort_clicked (GtkWidget * wid, gpointer none)
 }
 
 static void
-accept_clicked (GtkWidget * wid, gpointer none)
+accept_clicked (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	GSList *start, *list;
@@ -589,7 +589,7 @@ accept_clicked (GtkWidget * wid, gpointer none)
 }
 
 static void
-clear_completed (GtkWidget * wid, gpointer none)
+clear_completed (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	GSList *completed;
@@ -656,7 +656,7 @@ dcc_details_populate (dcc::DCC *dcc)
 }
 
 static void
-dcc_row_cb (GtkTreeSelection *sel, gpointer user_data)
+dcc_row_cb (GtkTreeSelection * /*sel*/, gpointer /*user_data*/)
 {
 	dcc::DCC *dcc;
 	GSList *list;
@@ -701,8 +701,8 @@ dcc_row_cb (GtkTreeSelection *sel, gpointer user_data)
 }
 
 static void
-dcc_dclick_cb (GtkTreeView *view, GtkTreePath *path,
-					GtkTreeViewColumn *column, gpointer data)
+dcc_dclick_cb (GtkTreeView * /*view*/, GtkTreePath * /*path*/,
+					GtkTreeViewColumn * /*column*/, gpointer /*data*/)
 {
 	dcc::DCC *dcc;
 	GSList *list;
@@ -763,7 +763,7 @@ dcc_detail_label (char *text, GtkWidget *box, int num)
 }
 
 static void
-dcc_exp_cb (GtkWidget *exp, GtkWidget *box)
+dcc_exp_cb (GtkWidget * /*exp*/, GtkWidget *box)
 {
 	if (gtk_widget_get_visible (box))
 	{
@@ -786,7 +786,7 @@ dcc_toggle (GtkWidget *item, gpointer data)
 }
 
 static gboolean
-dcc_configure_cb (GtkWindow *win, GdkEventConfigure *event, gpointer data)
+dcc_configure_cb (GtkWindow *win, GdkEventConfigure * /*event*/, gpointer /*data*/)
 {
 	/* remember the window size */
 	gtk_window_get_size (win, &win_width, &win_height);
@@ -923,7 +923,7 @@ dcc_chat_get_selected (void)
 }
 
 static void
-accept_chat_clicked (GtkWidget * wid, gpointer none)
+accept_chat_clicked (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	GSList *start, *list;
@@ -938,7 +938,7 @@ accept_chat_clicked (GtkWidget * wid, gpointer none)
 }
 
 static void
-abort_chat_clicked (GtkWidget * wid, gpointer none)
+abort_chat_clicked (GtkWidget * /*wid*/, gpointer /*none*/)
 {
 	dcc::DCC *dcc;
 	GSList *start, *list;
@@ -1002,7 +1002,7 @@ dcc_chat_fill_win (void)
 }
 
 static void
-dcc_chat_row_cb (GtkTreeSelection *sel, gpointer user_data)
+dcc_chat_row_cb (GtkTreeSelection * /*sel*/, gpointer /*user_data*/)
 {
 	dcc::DCC *dcc;
 	GSList *list;
@@ -1033,8 +1033,8 @@ dcc_chat_row_cb (GtkTreeSelection *sel, gpointer user_data)
 }
 
 static void
-dcc_chat_dclick_cb (GtkTreeView *view, GtkTreePath *path,
-						  GtkTreeViewColumn *column, gpointer data)
+dcc_chat_dclick_cb (GtkTreeView * /*view*/, GtkTreePath * /*path*/,
+						  GtkTreeViewColumn * /*column*/, gpointer /*data*/)
 {
 	accept_chat_clicked (0, 0);
 }

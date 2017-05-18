@@ -48,7 +48,7 @@
 
 namespace {
 static void
-close_rawlog (GtkWidget *wid, server *serv)
+close_rawlog (GtkWidget * /*wid*/, server *serv)
 {
 	if (is_server (serv))
 		serv->gui->rawlog_window = nullptr;
@@ -76,7 +76,7 @@ rawlog_save (server *serv, char *file)
 }
 
 static int
-rawlog_clearbutton (GtkWidget * wid, server *serv)
+rawlog_clearbutton (GtkWidget * /*wid*/, server *serv)
 {
 	auto buffer = xtext_get_current_buffer(GTK_XTEXT(serv->gui->rawlog_textlist));
 	gtk_xtext_clear (buffer, 0);
@@ -84,14 +84,14 @@ rawlog_clearbutton (GtkWidget * wid, server *serv)
 }
 
 static int
-rawlog_savebutton (GtkWidget * wid, server *serv)
+rawlog_savebutton (GtkWidget * /*wid*/, server *serv)
 {
 	gtkutil_file_req (_("Save As..."), (filereqcallback)rawlog_save, serv, NULL, NULL, FRF_WRITE);
 	return FALSE;
 }
 
 static gboolean
-rawlog_key_cb (GtkWidget * wid, GdkEventKey * key, gpointer userdata)
+rawlog_key_cb (GtkWidget * /*wid*/, GdkEventKey * key, gpointer userdata)
 {
 	/* Copy rawlog selection to clipboard when Ctrl+Shift+C is pressed,
 	 * but make sure not to copy twice, i.e. when auto-copy is enabled.
@@ -133,7 +133,7 @@ open_rawlog (struct server *serv)
 	serv->gui->rawlog_textlist = gtk_xtext_new (colors, false);
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), serv->gui->rawlog_textlist);
 	auto xtext = GTK_XTEXT(serv->gui->rawlog_textlist);
-	auto buffer = xtext_get_current_buffer(xtext);
+	/*auto buffer = xtext_get_current_buffer(xtext);*/
 	gtk_xtext_set_font (xtext, prefs.hex_text_font);
 	gtk_xtext_set_ignore_hidden(xtext, true);
 

@@ -63,7 +63,7 @@ notify_closegui (void)
  * from a GdkColor * in the model  -Vince
  */
 static void
-notify_treecell_property_mapper (GtkTreeViewColumn *col, GtkCellRenderer *cell,
+notify_treecell_property_mapper (GtkTreeViewColumn * /*col*/, GtkCellRenderer *cell,
 								 GtkTreeModel *model, GtkTreeIter *iter,
 								 gpointer data)
 {
@@ -80,7 +80,7 @@ notify_treecell_property_mapper (GtkTreeViewColumn *col, GtkCellRenderer *cell,
 }
 
 static void
-notify_row_cb (GtkTreeSelection *sel, GtkTreeView *view)
+notify_row_cb (GtkTreeSelection * /*sel*/, GtkTreeView *view)
 {
 	GtkTreeIter iter;
 	struct notify_per_server *servnot;
@@ -130,13 +130,13 @@ notify_treeview_new (GtkWidget *box)
 }
 
 static void
-notify_add_clicked(GtkWidget * igad)
+notify_add_clicked(GtkWidget * /*igad*/)
 {
 	::hexchat::fe::notify::fe_notify_ask("", nullptr);
 }
 
 static void
-notify_opendialog_clicked(GtkWidget * igad)
+notify_opendialog_clicked(GtkWidget * /*igad*/)
 {
 	GtkTreeIter iter;
 	struct notify_per_server *servnot;
@@ -150,7 +150,7 @@ notify_opendialog_clicked(GtkWidget * igad)
 }
 
 static void
-notify_remove_clicked(GtkWidget * igad)
+notify_remove_clicked(GtkWidget * /*igad*/)
 {
 	GtkTreeModel *model;
 	GtkTreeIter iter;
@@ -205,7 +205,7 @@ notifygui_add_cb(GtkDialog *dialog, gint response, gpointer entry)
 }
 
 static void
-notifygui_add_enter(GtkWidget *entry, GtkWidget *dialog)
+notifygui_add_enter(GtkWidget * /*entry*/, GtkWidget *dialog)
 {
 	gtk_dialog_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 }

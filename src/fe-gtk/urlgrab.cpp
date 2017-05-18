@@ -41,7 +41,7 @@ static GtkWidget *urlgrabberwindow = 0;
 
 static gboolean
 url_treeview_url_clicked_cb (GtkWidget *view, GdkEventButton *event,
-							 gpointer data)
+							 gpointer /*data*/)
 {
 	GtkTreeIter iter;
 	gchar *url;
@@ -116,7 +116,7 @@ url_button_clear (void)
 }
 
 static void
-url_button_copy (GtkWidget *widget, gpointer data)
+url_button_copy (GtkWidget * /*widget*/, gpointer data)
 {
 	GtkTreeView *view = GTK_TREE_VIEW (data);
 	GtkTreeIter iter;

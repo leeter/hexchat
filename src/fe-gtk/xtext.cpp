@@ -123,7 +123,7 @@ namespace {
 
 		void set_marks(xtext::text_range range) {
 
-			std::array<xtext::text_range, 1> marks{ range };
+			std::array<xtext::text_range, 1> vmarks{ range };
 		}
 
 		std::uint32_t line_count() const noexcept {
@@ -148,7 +148,7 @@ namespace {
 				m_left_layout->invalidate(backend);
 				m_left_layout->set_alignment(xtext::right);
 				const auto current_width = m_left_layout->width();
-				m_left_layout->set_width(~0);
+				m_left_layout->set_width(~0U);
 				const auto one_line_width = m_left_layout->width();
 				m_left_layout->set_width(current_width);
 				m_left_text_width = one_line_width;
@@ -941,7 +941,7 @@ namespace{
 
 	static textentry *
 		gtk_xtext_find_char(GtkXText * xtext, int x, int y, int *off,
-		gboolean &out_of_bounds, int *ret_subline)
+		gboolean &/*out_of_bounds*/, int *ret_subline)
 	{
 		/* Adjust y value for negative rounding, double to int */
 		if (y < 0)
@@ -1369,15 +1369,15 @@ namespace{
 		/* avoid turning the cursor into a hand for non-url part of the word */
 		if (xtext->urlcheck_function && xtext->urlcheck_function(GTK_WIDGET(xtext), reinterpret_cast<const char*>(word)))
 		{
-			int start, end;
-			url_last(&start, &end);
+			int ustart, uend;
+			url_last(&ustart, &uend);
 
 			/* make sure we're not before the start of the match */
-			if (len_to_offset < start)
+			if (len_to_offset < ustart)
 				return 0;
 
 			/* and not after it */
-			if (len_to_offset - start >= end - start)
+			if (len_to_offset - ustart >= uend - ustart)
 				return 0;
 		}
 
@@ -2656,7 +2656,7 @@ namespace{
 #endif
 
 	static void gtk_xtext_recalc_widths(xtext_buffer *buf,
-					    bool do_str_width)
+					    bool /*do_str_width*/)
 	{
 		const auto xtext = buf->current_xtext();
 		const auto buf_indent = buf->indent();
@@ -3370,9 +3370,9 @@ void gtk_xtext_append_indent(xtext_buffer *buf, ustring_ref left_text, ustring_r
 	std::unique_ptr<xtext::layout> stamp_layout;
 	if (buf->is_time_stamped()) {
 		const auto time_str = xtext_get_stamp_str(stamp);
-		stamp_layout = xtext->backend->make_layout(xtext::ustring{ time_str.cbegin(), time_str.cend() }, ~0);
+		stamp_layout = xtext->backend->make_layout(xtext::ustring{ time_str.cbegin(), time_str.cend() }, ~0U);
 	}
-	textentry ent(xtext->backend->make_layout(right_text, ~0), xtext->backend->make_layout(left_text, ~0), std::move(stamp_layout));
+	textentry ent(xtext->backend->make_layout(right_text, ~0), xtext->backend->make_layout(left_text, ~0U), std::move(stamp_layout));
 	ent.str.reserve(left_text.length() + right_text.length() + 2);
 	ent.str.append(left_text.cbegin(), left_text.cend());
 	ent.str.push_back(' ');
@@ -4013,8 +4013,8 @@ gtk_xtext_search(GtkXText * xtext, const gchar *text, gtk_xtext_search_flags fla
 			ent = static_cast<textentry *>(gl ? gl->data : buf->text_first);
 			for (; ent; ent = ent->next)
 			{
-				auto gl = gtk_xtext_search_textentry(buf, *ent);
-				gtk_xtext_search_textentry_add(buf, ent, gl, false);
+				auto gli = gtk_xtext_search_textentry(buf, *ent);
+				gtk_xtext_search_textentry_add(buf, ent, gli, false);
 			}
 		}
 		buf->search_flags = flags;

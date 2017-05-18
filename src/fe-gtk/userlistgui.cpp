@@ -373,9 +373,9 @@ fe_userlist_clear (session &sess)
 }
 
 static void
-userlist_dnd_drop (GtkTreeView *widget, GdkDragContext *context,
+userlist_dnd_drop (GtkTreeView *widget, GdkDragContext * /*context*/,
 						 gint x, gint y, GtkSelectionData *selection_data,
-						 guint info, guint ttime, gpointer userdata)
+						 guint /*info*/, guint /*ttime*/, gpointer /*userdata*/)
 {
 	struct User *user;
 	GtkTreePath *path;
@@ -396,8 +396,8 @@ userlist_dnd_drop (GtkTreeView *widget, GdkDragContext *context,
 }
 
 static gboolean
-userlist_dnd_motion (GtkTreeView *widget, GdkDragContext *context, gint x,
-							gint y, guint ttime, gpointer tree)
+userlist_dnd_motion (GtkTreeView *widget, GdkDragContext * /*context*/, gint x,
+							gint y, guint /*ttime*/, gpointer tree)
 {
 	if (!tree)
 		return FALSE;
@@ -415,7 +415,7 @@ userlist_dnd_motion (GtkTreeView *widget, GdkDragContext *context, gint x,
 }
 
 static gboolean
-userlist_dnd_leave (GtkTreeView *widget, GdkDragContext *context, guint ttime)
+userlist_dnd_leave (GtkTreeView *widget, GdkDragContext * /*context*/, guint /*ttime*/)
 {
 	gtk_tree_selection_unselect_all (gtk_tree_view_get_selection (widget));
 	return TRUE;
@@ -462,7 +462,7 @@ userlist_add_columns (GtkTreeView * treeview)
 }
 
 static gint
-userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
+userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer /*userdata*/)
 {
 	if (!event)
 		return FALSE;
@@ -514,7 +514,7 @@ userlist_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer userdata)
 }
 
 static gboolean
-userlist_key_cb (GtkWidget *wid, GdkEventKey *evt, gpointer userdata)
+userlist_key_cb (GtkWidget * /*wid*/, GdkEventKey *evt, gpointer /*userdata*/)
 {
 	if (evt->keyval >= GDK_KEY_asterisk && evt->keyval <= GDK_KEY_z)
 	{

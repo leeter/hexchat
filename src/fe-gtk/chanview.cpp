@@ -266,7 +266,7 @@ tab_scroll_left_up_clicked(GtkWidget *, chanview *cv)
 }
 
 static void
-tab_scroll_right_down_clicked(GtkWidget *widget, chanview *cv)
+tab_scroll_right_down_clicked(GtkWidget */*widget*/, chanview *cv)
 {
 	GtkAdjustment *adj;
 	gint viewport_size;
@@ -337,7 +337,7 @@ tab_scroll_cb(GtkWidget *widget, GdkEventScroll *event, gpointer cv)
 }
 
 static void
-cv_tabs_xclick_cb(GtkWidget *button, chanview *cv)
+cv_tabs_xclick_cb(GtkWidget */*button*/, chanview *cv)
 {
 	cv->cb_xbutton(cv, cv->focused, cv->focused->tag, cv->focused->userdata);
 }
@@ -436,7 +436,7 @@ cv_tabs_init(chanview *cv)
 }
 
 static void
-cv_tabs_postinit(chanview *cv)
+cv_tabs_postinit(chanview */*cv*/)
 {
 }
 
@@ -582,7 +582,7 @@ tab_add_real(chanview *cv, GtkWidget *tab, chan *ch)
 }
 
 static gboolean
-tab_ignore_cb(GtkWidget *widget, GdkEventCrossing *event, gpointer user_data)
+tab_ignore_cb(GtkWidget * /*widget*/, GdkEventCrossing * /*event*/, gpointer /*user_data*/)
 {
 	return TRUE;
 }
@@ -626,13 +626,13 @@ tab_toggled_cb(GtkToggleButton *tab, chan *ch)
 }
 
 static gboolean
-tab_click_cb(GtkWidget *wid, GdkEventButton *event, chan *ch)
+tab_click_cb(GtkWidget * /*wid*/, GdkEventButton *event, chan *ch)
 {
 	return ch->cv->cb_contextmenu(ch->cv, ch, ch->tag, ch->userdata, event);
 }
 
 static void *
-cv_tabs_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
+cv_tabs_add(chanview *cv, chan *ch, const char *name, GtkTreeIter * /*parent*/)
 {
 	GtkWidget *but;
 
@@ -710,7 +710,7 @@ int usernum)
 }
 
 static int
-tab_check_focus_cb(GtkWidget *tab, int num, int unused)
+tab_check_focus_cb(GtkWidget *tab, int num, int /*unused*/)
 {
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(tab)))
 		return num;
@@ -873,13 +873,13 @@ cv_tabs_rename(chan *ch, const char name[])
 }
 
 static gboolean
-cv_tabs_is_collapsed(chan *ch)
+cv_tabs_is_collapsed(chan * /*ch*/)
 {
 	return FALSE;
 }
 
 static chan *
-cv_tabs_get_parent(chan *ch)
+cv_tabs_get_parent(chan * /*ch*/)
 {
 	return nullptr;
 }
@@ -897,7 +897,7 @@ struct treeview
 
 static void 	/* row-activated, when a row is double clicked */
 cv_tree_activated_cb(GtkTreeView *view, GtkTreePath *path,
-GtkTreeViewColumn *column, gpointer data)
+GtkTreeViewColumn * /*column*/, gpointer /*data*/)
 {
 	if (gtk_tree_view_row_expanded(view, path))
 		gtk_tree_view_collapse_row(view, path);
@@ -942,7 +942,7 @@ cv_tree_click_cb(GtkTreeView *tree, GdkEventButton *event, chanview *cv)
 }
 
 static gboolean
-cv_tree_scroll_event_cb(GtkWidget *widget, GdkEventScroll *event, gpointer user_data)
+cv_tree_scroll_event_cb(GtkWidget * /*widget*/, GdkEventScroll *event, gpointer /*user_data*/)
 {
 	if (prefs.hex_gui_tab_scrollchans)
 	{
@@ -1060,7 +1060,7 @@ cv_tree_postinit(chanview *cv)
 }
 
 static void *
-cv_tree_add(chanview *cv, chan *ch, const char *name, GtkTreeIter *parent)
+cv_tree_add(chanview *cv, chan * /*ch*/, const char * /*name*/, GtkTreeIter *parent)
 {
 	GtkTreePath *path;
 
@@ -1162,7 +1162,7 @@ cv_tree_remove(chan *)
 }
 
 static void
-move_row(chan *ch, int delta, GtkTreeIter *parent)
+move_row(chan *ch, int delta, GtkTreeIter * /*parent*/)
 {
 	GtkTreeStore *store = ch->cv->store;
 	GtkTreeIter *src = &ch->iter;
@@ -1412,7 +1412,7 @@ chanview_destroy (chanview *cv)
 }
 
 static void
-chanview_box_destroy_cb (GtkWidget *box, chanview *cv)
+chanview_box_destroy_cb (GtkWidget * /*box*/, chanview *cv)
 {
 	cv->box = nullptr;
 	chanview_destroy (cv);

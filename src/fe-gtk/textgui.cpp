@@ -272,7 +272,7 @@ pevent_load_req_cb (void * /*arg1*/, char *file)
 }
 
 static void
-pevent_load_cb (GtkWidget * wid, void * /*data*/)
+pevent_load_cb (GtkWidget * /*wid*/, void * /*data*/)
 {
 	gtkutil_file_req (_("Print Texts File"), pevent_load_req_cb, NULL, NULL, NULL, 0);
 }

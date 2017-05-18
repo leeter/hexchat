@@ -1441,7 +1441,7 @@ std::string format_event(session & sess, size_t eventIndex, const gsl::span<std:
 		throw std::invalid_argument(message);
 	}
 
-	const std::string& display_evt = pntevts[eventIndex];
+	//const std::string& display_evt = pntevts[eventIndex];
 	auto arg_index = args.cbegin();
 	return{};
 }
@@ -1531,7 +1531,7 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 			x += d;
 			if (x > 255)
 				goto a_range_error;
-			o[output_index++] = x;
+			o[output_index++] = gsl::narrow_cast<char>(x);
 			continue;
 
 		 a_len_error:
@@ -1578,10 +1578,10 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 
 	std::string obuf(clen, '\0');
 	auto o_index = obuf.begin();
-	for (const auto& evt : events)
+	for (const auto& event : events)
 	{
-		std::copy(evt.cbegin(), evt.cend(), o_index);
-		o_index += evt.size();
+		std::copy(event.cbegin(), event.cend(), o_index);
+		o_index += event.size();
 	}
 
 	max_arg = max;
@@ -1631,7 +1631,7 @@ int text_color_of(const boost::string_ref &name) noexcept
 void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d,
 			  time_t timestamp)
 {
-	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, sess->chanopts["text_strip"]) ? 0xFFFFFFFF : 0);
+	unsigned int stripcolor_args = (chanopt_is_set (prefs.hex_text_stripcolor_msg, gsl::narrow_cast<std::uint8_t>(sess->chanopts["text_strip"])) ? 0xFFFFFFFF : 0);
 	char tbuf[NICKLEN + 4] = {};
 	auto astr = gsl::to_string(a);
 	auto bstr = gsl::to_string(b);
@@ -1668,7 +1668,7 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	case XP_TE_PARTREASON:
 	case XP_TE_QUIT:
 		/* implement ConfMode / Hide Join and Part Messages */
-		if (chanopt_is_set (prefs.hex_irc_conf_mode, sess->chanopts["text_hidejoinpart"]))
+		if (chanopt_is_set (prefs.hex_irc_conf_mode, gsl::narrow_cast<std::uint8_t>(sess->chanopts["text_hidejoinpart"])))
 			return;
 		break;
 
@@ -1677,9 +1677,9 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	case XP_TE_DPRIVMSG:
 	case XP_TE_PRIVACTION:
 	case XP_TE_DPRIVACTION:
-		if (chanopt_is_set (prefs.hex_input_beep_priv, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_priv, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_beep"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound::beep (*sess);
-		if (chanopt_is_set (prefs.hex_input_flash_priv, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_priv, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_taskbar"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		/* why is this one different? because of plugin-tray.c's hooks! ugly */
 		if (sess->chanopts["alert_tray"] == SET_ON)
@@ -1689,9 +1689,9 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	/* ===Highlighted message=== */
 	case XP_TE_HCHANACTION:
 	case XP_TE_HCHANMSG:
-		if (chanopt_is_set (prefs.hex_input_beep_hilight, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_hilight, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_beep"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound::beep (*sess);
-		if (chanopt_is_set (prefs.hex_input_flash_hilight, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_hilight, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_taskbar"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		if (sess->chanopts["alert_tray"] == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);
@@ -1700,9 +1700,9 @@ void text_emit (int index, gsl::not_null<session *>sess, gsl::cstring_span<> a, 
 	/* ===Channel message=== */
 	case XP_TE_CHANACTION:
 	case XP_TE_CHANMSG:
-		if (chanopt_is_set (prefs.hex_input_beep_chans, sess->chanopts["alert_beep"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_beep_chans, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_beep"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			sound::beep (*sess);
-		if (chanopt_is_set (prefs.hex_input_flash_chans, sess->chanopts["alert_taskbar"]) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
+		if (chanopt_is_set (prefs.hex_input_flash_chans, gsl::narrow_cast<std::uint8_t>(sess->chanopts["alert_taskbar"])) && (!prefs.hex_away_omit_alerts || !sess->server->is_away))
 			fe_flash_window (sess);
 		if (sess->chanopts["alert_tray"] == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);

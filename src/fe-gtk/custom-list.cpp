@@ -289,7 +289,7 @@ custom_list_finalize (GObject * object)
  *****************************************************************************/
 
 static GtkTreeModelFlags
-custom_list_get_flags (GtkTreeModel * tree_model)
+custom_list_get_flags (GtkTreeModel * /*tree_model*/)
 {
 	return (GTK_TREE_MODEL_LIST_ONLY /*| GTK_TREE_MODEL_ITERS_PERSIST */ );
 }
@@ -303,7 +303,7 @@ custom_list_get_flags (GtkTreeModel * tree_model)
  *****************************************************************************/
 
 static gint
-custom_list_get_n_columns (GtkTreeModel * tree_model)
+custom_list_get_n_columns (GtkTreeModel * /*tree_model*/)
 {
 	return 3;/*CUSTOM_LIST (tree_model)->n_columns;*/
 }
@@ -362,12 +362,12 @@ custom_list_get_iter (GtkTreeModel * tree_model,
  *****************************************************************************/
 
 static GtkTreePath *
-custom_list_get_path (GtkTreeModel * tree_model, GtkTreeIter * iter)
+custom_list_get_path (GtkTreeModel * /*tree_model*/, GtkTreeIter * iter)
 {
 	GtkTreePath *path;
 	chanlistrow *record;
 
-	record = (chanlistrow *) iter->user_data;
+	record = reinterpret_cast<chanlistrow *>(iter->user_data);
 
 	path = gtk_tree_path_new ();
 	gtk_tree_path_append_index (path, record->pos);
@@ -486,7 +486,7 @@ custom_list_iter_children (GtkTreeModel * tree_model,
  *****************************************************************************/
 
 static gboolean
-custom_list_iter_has_child (GtkTreeModel * tree_model, GtkTreeIter * iter)
+custom_list_iter_has_child (GtkTreeModel * /*tree_model*/, GtkTreeIter * /*iter*/)
 {
 	return FALSE;
 }
@@ -556,8 +556,8 @@ custom_list_iter_nth_child (GtkTreeModel * tree_model,
  *****************************************************************************/
 
 static gboolean
-custom_list_iter_parent (GtkTreeModel * tree_model,
-								 GtkTreeIter * iter, GtkTreeIter * child)
+custom_list_iter_parent (GtkTreeModel * /*tree_model*/,
+								 GtkTreeIter * /*iter*/, GtkTreeIter * /*child*/)
 {
 	return FALSE;
 }
@@ -603,24 +603,24 @@ custom_list_sortable_set_sort_column_id (GtkTreeSortable * sortable,
 }
 
 static void
-custom_list_sortable_set_sort_func (GtkTreeSortable * sortable,
-												gint sort_col_id,
-												GtkTreeIterCompareFunc sort_func,
-												gpointer user_data,
-												GDestroyNotify destroy_func)
+custom_list_sortable_set_sort_func (GtkTreeSortable * /*sortable*/,
+												gint /*sort_col_id*/,
+												GtkTreeIterCompareFunc /*sort_func*/,
+												gpointer /*user_data*/,
+												GDestroyNotify /*destroy_func*/)
 {
 }
 
 static void
-custom_list_sortable_set_default_sort_func (GtkTreeSortable * sortable,
-														  GtkTreeIterCompareFunc sort_func,
-														  gpointer user_data,
-														  GDestroyNotify destroy_func)
+custom_list_sortable_set_default_sort_func (GtkTreeSortable * /*sortable*/,
+														  GtkTreeIterCompareFunc /*sort_func*/,
+														  gpointer /*user_data*/,
+														  GDestroyNotify /*destroy_func*/)
 {
 }
 
 static gboolean
-custom_list_sortable_has_default_sort_func (GtkTreeSortable * sortable)
+custom_list_sortable_has_default_sort_func (GtkTreeSortable * /*sortable*/)
 {
 	return FALSE;
 }

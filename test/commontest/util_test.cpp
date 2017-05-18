@@ -83,15 +83,15 @@ BOOST_AUTO_TEST_CASE(strip_color2_empty_string)
 
 BOOST_AUTO_TEST_CASE(strip_color2_remove_attrib)
 {
-	const char *input = "\00309\007abcdef\00309\007\017\026\002\037\035";
-	const char *expected = "\00309abcdef\00309";
+	const char *input = "\u000309\007abcdef\u000309\007\017\026\002\037\035";
+	const char *expected = "\u000309abcdef\u000309";
 	auto result = strip_color2(input, STRIP_ATTRIB);
 	BOOST_REQUIRE_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(strip_color2_remove_color)
 {
-	const char *input = "\00309\007abcdef\00309\007\017\026\002\037\035";
+	const char *input = "\u000309\007abcdef\u000309\007\017\026\002\037\035";
 	const char *expected = "\007abcdef\007\017\026\002\037\035";
 	auto result = strip_color2(input, STRIP_COLOR);
 	BOOST_REQUIRE_EQUAL(result, expected);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(strip_color2_remove_color)
 
 BOOST_AUTO_TEST_CASE(strip_color2_remove_all)
 {
-	const char *input = "\00309\007abcdef\00309\007\017\026\002\037\035";
+	const char *input = "\u000309\007abcdef\u000309\007\017\026\002\037\035";
 	const char *expected = "abcdef";
 	auto result = strip_color2(input, STRIP_ALL);
 	BOOST_REQUIRE_EQUAL(result, expected);

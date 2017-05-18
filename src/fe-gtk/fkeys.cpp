@@ -60,6 +60,7 @@
 #include "../common/filesystem.hpp"
 #include "../common/session.hpp"
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
 #include "gtkutil.hpp"
 #include "menu.hpp"
 #include "xtext.hpp"
@@ -189,7 +190,7 @@ static const struct key_action key_actions[KEY_MAX_ACTIONS + 1] = {
 	 N_("The \002Run Command\002 action runs the data in Data 1 as if it had been typed into the entry box where you pressed the key sequence. Thus it can contain text (which will be sent to the channel/person), commands or user commands. When run all \002\\n\002 characters in Data 1 are used to deliminate separate commands so it is possible to run more than one command. If you want a \002\\\002 in the actual text run then enter \002\\\\\002")},
 	{key_action_page_switch, "Change Page",
 	 N_("The \002Change Page\002 command switches between pages in the notebook. Set Data 1 to the page you want to switch to. If Data 2 is set to anything then the switch will be relative to the current position. Set Data 1 to auto to switch to the page with the most recent and important activity (queries first, then channels with hilight, channels with dialogue, channels with other data)")},
-	{key_action_insert, "Insert in Buffer",
+	{ key_action_insert, "Insert in Buffer",
 	 N_("The \002Insert in Buffer\002 command will insert the contents of Data 1 into the entry where the key sequence was pressed at the current cursor position")},
 	{key_action_scroll_page, "Scroll Page",
 	 N_("The \002Scroll Page\002 command scrolls the text widget up or down one page or one line. Set Data 1 to either Top, Bottom, Up, Down, +1 or -1.")},
@@ -430,8 +431,8 @@ key_dialog_print_text (GtkXText *xtext,const char text[])
 }
 
 static void
-key_dialog_set_key (GtkCellRendererAccel *accel, gchar *pathstr, guint accel_key, 
-					GdkModifierType accel_mods, guint hardware_keycode, gpointer userdata) NOEXCEPT
+key_dialog_set_key (GtkCellRendererAccel * /*accel*/, gchar *pathstr, guint accel_key, 
+					GdkModifierType accel_mods, guint /*hardware_keycode*/, gpointer /*userdata*/) noexcept
 {
 	GtkTreeModel *model = get_store ();
 	GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
@@ -450,7 +451,7 @@ key_dialog_set_key (GtkCellRendererAccel *accel, gchar *pathstr, guint accel_key
 }
 
 static void
-key_dialog_combo_changed (GtkCellRendererCombo *combo, gchar *pathstr,
+key_dialog_combo_changed (GtkCellRendererCombo * /*combo*/, gchar *pathstr,
 						GtkTreeIter *new_iter, gpointer data)
 {
 	auto xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
@@ -475,7 +476,7 @@ key_dialog_combo_changed (GtkCellRendererCombo *combo, gchar *pathstr,
 }
 
 static void
-key_dialog_entry_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new_text, gpointer data) NOEXCEPT
+key_dialog_entry_edited (GtkCellRendererText * /*render*/, gchar *pathstr, gchar *new_text, gpointer data) noexcept
 {
 	GtkTreeModel *model = get_store ();
 	GtkTreePathPtr path(gtk_tree_path_new_from_string (pathstr));
@@ -487,7 +488,7 @@ key_dialog_entry_edited (GtkCellRendererText *render, gchar *pathstr, gchar *new
 }
 
 static gboolean
-key_dialog_keypress (GtkWidget *wid, GdkEventKey *evt, gpointer userdata) NOEXCEPT
+key_dialog_keypress (GtkWidget * /*wid*/, GdkEventKey *evt, gpointer /*userdata*/) noexcept
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	bool handled = false;
@@ -605,7 +606,7 @@ key_dialog_save (GtkWidget *wid, gpointer)
 }
 
 static void
-key_dialog_add (GtkWidget *wid, gpointer) NOEXCEPT
+key_dialog_add (GtkWidget * /*wid*/, gpointer) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
@@ -621,7 +622,7 @@ key_dialog_add (GtkWidget *wid, gpointer) NOEXCEPT
 }
 
 static void
-key_dialog_delete (GtkWidget *wid, gpointer) NOEXCEPT
+key_dialog_delete (GtkWidget * /*wid*/, gpointer) NOEXCEPT
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(key_dialog), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
@@ -1090,7 +1091,7 @@ key_action_handle_command (GtkWidget *, GdkEventKey *, char *d1,
  * XXX: Consider moving this in a different file?
  */
 static int
-session_check_is_tab(session *sess) NOEXCEPT
+session_check_is_tab(session *sess) noexcept
 {
 	if (!sess || !sess->gui)
 		return false;
@@ -1099,7 +1100,7 @@ session_check_is_tab(session *sess) NOEXCEPT
 }
 
 static int
-key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
+key_action_page_switch (GtkWidget * /*wid*/, GdkEventKey * /*evt*/, char *d1,
 								char *d2, struct session *sess)
 {
 	if (!d1)
@@ -1155,8 +1156,8 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 }
 
 int
-key_action_insert (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
-						 struct session *sess)
+key_action_insert (GtkWidget * wid, GdkEventKey * /*evt*/, char *d1, char * /*d2*/,
+						 struct session * /*sess*/)
 {
 	if (!d1)
 		return 1;
@@ -1169,8 +1170,8 @@ key_action_insert (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
 
 /* handles PageUp/Down keys */
 static int
-key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
-								char *d2, struct session *sess)
+key_action_scroll_page (GtkWidget * /*wid*/, GdkEventKey * /*evt*/, char *d1,
+								char * /*d2*/, struct session *sess)
 {
 	enum scroll_type { PAGE_TOP, PAGE_BOTTOM, PAGE_UP, PAGE_DOWN, LINE_UP, LINE_DOWN };
 	int type = PAGE_DOWN;
@@ -1237,8 +1238,8 @@ key_action_scroll_page (GtkWidget * wid, GdkEventKey * evt, char *d1,
 }
 
 static int
-key_action_set_buffer (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
-							  struct session *sess)
+key_action_set_buffer (GtkWidget * wid, GdkEventKey * /*evt*/, char *d1, char * /*d2*/,
+							  struct session * /*sess*/)
 {
 	if (!d1)
 		return 1;
@@ -1252,7 +1253,7 @@ key_action_set_buffer (GtkWidget * wid, GdkEventKey * evt, char *d1, char *d2,
 }
 
 static int
-key_action_history_up (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
+key_action_history_up (GtkWidget * wid, GdkEventKey * /*ent*/, char * /*d1*/, char * /*d2*/,
 							  struct session *sess)
 {
 	auto new_line = sess->hist.up(SPELL_ENTRY_GET_TEXT (wid));
@@ -1266,8 +1267,8 @@ key_action_history_up (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
 }
 
 static int
-key_action_history_down (GtkWidget * wid, GdkEventKey * ent, char *d1,
-								 char *d2, struct session *sess)
+key_action_history_down (GtkWidget * wid, GdkEventKey * /*ent*/, char * /*d1*/,
+								 char * /*d2*/, struct session *sess)
 {
 	auto new_line = sess->hist.down();
 	if (new_line.second)
@@ -1366,26 +1367,26 @@ namespace{
 
 
 static int
-key_action_tab_comp(GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
+key_action_tab_comp(GtkWidget *t, GdkEventKey * /*entry*/, char *d1, char * /*d2*/,
 struct session *sess)
 {
-	int len = 0, elen = 0, i = 0, cursor_pos, ent_start = 0, comp = 0,
+	int elen = 0, cursor_pos, ent_start = 0, comp = 0,
 		prefix_len, skip_len = 0;
 	bool found = false, is_nick = false, is_cmd = false, has_nick_prefix = false;
 	char ent[CHANLEN], *postfix = nullptr, *result, *ch;
 	GList *list = nullptr, *tmp_list = nullptr;
-	const char *text;
-	std::string buf;
+	
 	GCompletionPtr gcomp;
 	/* force the IM Context to reset */
 	SPELL_ENTRY_SET_EDITABLE(t, false);
 	SPELL_ENTRY_SET_EDITABLE(t, true);
 
-	text = SPELL_ENTRY_GET_TEXT(t);
+	const auto text = SPELL_ENTRY_GET_TEXT(t);
 	if (text[0] == 0)
 		return 1;
 
-	len = g_utf8_strlen(text, -1); /* must be null terminated */
+	std::string buf;
+	auto len = g_utf8_strlen(text, -1); /* must be null terminated */
 
 	cursor_pos = SPELL_ENTRY_GET_POS(t);
 
@@ -1633,8 +1634,8 @@ key_action_comp_chng (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
 
 
 static int
-key_action_replace (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
-						  struct session *sess)
+key_action_replace (GtkWidget * wid, GdkEventKey * /*ent*/, char * /*d1*/, char * /*d2*/,
+						  struct session * /*sess*/)
 {
 	replace_handle (wid);
 	return 1;
@@ -1642,40 +1643,40 @@ key_action_replace (GtkWidget * wid, GdkEventKey * ent, char *d1, char *d2,
 
 
 static int
-key_action_move_tab_left (GtkWidget * wid, GdkEventKey * ent, char *d1,
-								  char *d2, struct session *sess)
+key_action_move_tab_left (GtkWidget * /*wid*/, GdkEventKey * /*ent*/, char * /*d1*/,
+								  char * /*d2*/, struct session *sess)
 {
 	mg_move_tab (sess, +1);
 	return 2;						  /* don't allow default action */
 }
 
 static int
-key_action_move_tab_right (GtkWidget * wid, GdkEventKey * ent, char *d1,
-									char *d2, struct session *sess)
+key_action_move_tab_right (GtkWidget * /*wid*/, GdkEventKey * /*ent*/, char * /*d1*/,
+									char * /*d2*/, struct session *sess)
 {
 	mg_move_tab (sess, -1);
 	return 2;						  /* -''- */
 }
 
 static int
-key_action_move_tab_family_left (GtkWidget * wid, GdkEventKey * ent, char *d1,
-								  char *d2, struct session *sess)
+key_action_move_tab_family_left (GtkWidget * /*wid*/, GdkEventKey * /*ent*/, char * /*d1*/,
+								  char * /*d2*/, struct session *sess)
 {
 	mg_move_tab_family (sess, +1);
 	return 2;						  /* don't allow default action */
 }
 
 static int
-key_action_move_tab_family_right (GtkWidget * wid, GdkEventKey * ent, char *d1,
-									char *d2, struct session *sess)
+key_action_move_tab_family_right (GtkWidget * /*wid*/, GdkEventKey * /*ent*/, char * /*d1*/,
+									char * /*d2*/, struct session *sess)
 {
 	mg_move_tab_family (sess, -1);
 	return 2;						  /* -''- */
 }
 
 static int
-key_action_put_history (GtkWidget * wid, GdkEventKey * ent, char *d1,
-									char *d2, struct session *sess)
+key_action_put_history (GtkWidget * wid, GdkEventKey * /*ent*/, char * /*d1*/,
+									char * /*d2*/, struct session *sess)
 {
 	sess->hist.add(SPELL_ENTRY_GET_TEXT (wid));
 	SPELL_ENTRY_SET_TEXT (wid, "");

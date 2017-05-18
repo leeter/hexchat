@@ -80,7 +80,7 @@ ignore_get_flags (GtkTreeModel *model, GtkTreeIter *iter)
 }
 
 static void
-mask_edited (GtkCellRendererText *render, gchar *path, gchar *newStr, gpointer dat)
+mask_edited (GtkCellRendererText * /*render*/, gchar *path, gchar *newStr, gpointer /*dat*/)
 {
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
@@ -109,7 +109,7 @@ mask_edited (GtkCellRendererText *render, gchar *path, gchar *newStr, gpointer d
 }
 
 static void
-option_toggled (GtkCellRendererToggle *render, gchar *path, gpointer data)
+option_toggled (GtkCellRendererToggle * /*render*/, gchar *path, gpointer data)
 {
 	GtkListStore *store = GTK_LIST_STORE (get_store ());
 	GtkTreeIter iter;
@@ -139,7 +139,6 @@ ignore_treeview_new (GtkWidget *box)
 	GtkWidget *view;
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *render;
-	int col_id;
 
 	store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING,
 								G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
@@ -164,13 +163,12 @@ ignore_treeview_new (GtkWidget *box)
 	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 0), TRUE);
 
 	/* attach to signals and customise columns */
-	for (col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
+	for (int col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
 		 col_id++)
 	{
 		GList *list = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (col));
-		GList *tmp;
 
-		for (tmp = list; tmp; tmp = tmp->next)
+		for (auto tmp = list; tmp; tmp = tmp->next)
 		{
 			render = static_cast<GtkCellRenderer*>(tmp->data);
 			if (col_id > 0)	/* it's a toggle button column */
@@ -197,7 +195,7 @@ ignore_treeview_new (GtkWidget *box)
 }
 
 static void
-ignore_delete_entry_clicked (GtkWidget * wid, struct session *sess)
+ignore_delete_entry_clicked (GtkWidget * /*wid*/, struct session * /*sess*/)
 {
 	GtkTreeView *view = static_cast<GtkTreeView *>(g_object_get_data(G_OBJECT(ignorewin), "view"));
 	GtkListStore *store = GTK_LIST_STORE (gtk_tree_view_get_model (view));
@@ -220,7 +218,7 @@ ignore_delete_entry_clicked (GtkWidget * wid, struct session *sess)
 }
 
 static void
-ignore_store_new (int cancel, char *mask, gpointer data)
+ignore_store_new (int cancel, char *mask, gpointer /*data*/)
 {
 	if (cancel)
 		return;
@@ -275,7 +273,7 @@ ignore_clear_cb (GtkDialog *dialog, gint response)
 }
 
 static void
-ignore_clear_entry_clicked (GtkWidget * wid)
+ignore_clear_entry_clicked (GtkWidget * /*wid*/)
 {
 	auto dialog = gtk_message_dialog_new (NULL, static_cast<GtkDialogFlags>(0),
 								GTK_MESSAGE_QUESTION, GTK_BUTTONS_OK_CANCEL,
@@ -287,7 +285,7 @@ ignore_clear_entry_clicked (GtkWidget * wid)
 }
 
 static void
-ignore_new_entry_clicked (GtkWidget * wid, struct session *sess)
+ignore_new_entry_clicked (GtkWidget * /*wid*/, struct session * /*sess*/)
 {
 	fe_get_str (_("Enter mask to ignore:"), "nick!userid@host.com",
 		(GSourceFunc)ignore_store_new, NULL);
