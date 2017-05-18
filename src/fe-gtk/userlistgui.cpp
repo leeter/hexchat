@@ -66,14 +66,14 @@ get_user_icon (server *serv, struct User *user)
 	}
 
 	/* find out how many levels above Op this user is */
-	auto pre = serv->nick_prefixes.find_first_of('@');
+	auto pre = serv->m_nick_prefixes.find_first_of('@');
 	if (pre != std::string::npos && pre)
 	{
 		pre--;
 		int level = 0;
 		for (;;)
 		{
-			if (serv->nick_prefixes[pre] == user->prefix[0])
+			if (serv->m_nick_prefixes[pre] == user->prefix[0])
 			{
 				switch (level)
 				{

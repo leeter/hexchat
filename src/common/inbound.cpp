@@ -311,7 +311,7 @@ is_hilight (gsl::cstring_span<> from, gsl::cstring_span<> text, session *sess, s
 		gsl::narrow_cast<boost::string_ref::size_type, decltype(text)::size_type>(text.size()) 
 	}, STRIP_ALL);
 
-	if (alert_match_text(temp, serv.nick) ||
+	if (alert_match_text(temp, serv.m_nick) ||
 		alert_match_text(temp, prefs.hex_irc_extra_hilight) ||
 		alert_match_word(temp, prefs.hex_irc_nick_hilight))
 	{
@@ -499,10 +499,10 @@ inbound_newnick (server &serv, char *nick, char *newnick, int quiet,
 					  const message_tags_data *tags_data)
 {
 	bool me = false;
-	if (!serv.p_cmp (nick, serv.nick))
+	if (!serv.p_cmp (nick, serv.m_nick))
 	{
 		me = true;
-		safe_strcpy (serv.nick, newnick, NICKLEN);
+		safe_strcpy (serv.m_nick, newnick, NICKLEN);
 	}
 
 	for (auto sess : serv.sessions)
@@ -630,7 +630,7 @@ inbound_ukick (server &serv, char *chan, char *kicker, char *reason,
 	session *sess = find_channel (serv, chan);
 	if (sess)
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv.nick, gsl::ensure_z(chan), gsl::ensure_z(kicker),
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv.m_nick, gsl::ensure_z(chan), gsl::ensure_z(kicker),
 			gsl::ensure_z(reason), 0, tags_data->timestamp);
 		clear_channel (*sess);
 		if (prefs.hex_irc_auto_rejoin)
@@ -649,10 +649,10 @@ inbound_upart (server &serv, char *chan, char *ip, char *reason,
 	if (sess)
 	{
 		if (*reason)
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_UPARTREASON, sess, serv.nick, gsl::ensure_z(ip), gsl::ensure_z(chan),
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_UPARTREASON, sess, serv.m_nick, gsl::ensure_z(ip), gsl::ensure_z(chan),
 				gsl::ensure_z(reason), 0, tags_data->timestamp);
 		else
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_UPART, sess, serv.nick, gsl::ensure_z(ip), gsl::ensure_z(chan), nullptr,
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_UPART, sess, serv.m_nick, gsl::ensure_z(ip), gsl::ensure_z(chan), nullptr,
 										  0, tags_data->timestamp);
 		clear_channel (*sess);
 	}
@@ -905,7 +905,7 @@ inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip, int id,
 		sess = find_channel (serv, ptr);
 
 	/* /notice [mode-prefix]#channel should end up in that channel */
-	if (!sess && serv.nick_prefixes.find_first_of(ptr[0]) != std::string::npos)
+	if (!sess && serv.m_nick_prefixes.find_first_of(ptr[0]) != std::string::npos)
 	{
 		ptr++;
 		sess = find_channel (serv, ptr);
@@ -1089,7 +1089,7 @@ check_autojoin_channels (server &serv)
 			strcpy(sess->waitchannel, sess->willjoinchannel);
 			sess->willjoinchannel[0] = 0;
 
-			const auto fav = servlist_favchan_find(serv.network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
+			const auto fav = servlist_favchan_find(serv.m_network, sess->waitchannel, nullptr);	/* Is this channel in our favorites? */
 
 																						/* session->channelkey is initially unset for channels joined from the favorites. You have to fill them up manually from favorites settings. */
 			if (fav)
@@ -1131,7 +1131,7 @@ check_autojoin_channels (server &serv)
 		}
 	}
 
-	serv.joindelay_tag = 0;
+	serv.m_joindelay_tag = 0;
 	fe_server_event(&serv, fe_serverevents::LOGGEDIN, i);
 	return false;
 }
@@ -1143,13 +1143,13 @@ inbound_next_nick (session *sess, char *nick, int error,
 	server *serv = sess->server;
 	ircnet *net;
 	glib_string newnick_ptr;
-	serv->nickcount++;
+	serv->m_nickcount++;
 
-	switch (serv->nickcount)
+	switch (serv->m_nickcount)
 	{
 	case 2: {
 		std::string newnick = prefs.hex_irc_nick2;
-		net = serv->network;
+		net = serv->m_network;
 		/* use network specific "Second choice"? */
 		if (net && !(net->flags & FLAG_USE_GLOBAL) && net->nick2)
 		{
@@ -1283,7 +1283,7 @@ set_default_modes (server &serv)
 
 	if (modes[1] != '\0')
 	{
-		serv.p_mode (serv.nick, modes);
+		serv.p_mode (serv.m_nick, modes);
 	}
 }
 
@@ -1293,7 +1293,7 @@ inbound_login_start (session *sess, char *nick, char *servname,
 {
 	if (!sess->server)
 		throw std::runtime_error("Invalid server reference");
-	inbound_newnick (*(sess->server), sess->server->nick, nick, true, tags_data);
+	inbound_newnick (*(sess->server), sess->server->m_nick, nick, true, tags_data);
 	sess->server->set_name(servname);
 	/*if (sess->type == session::SESS_SERVER)
 		log_open_or_close (sess);*/
@@ -1321,7 +1321,7 @@ inbound_uaway (server &serv)
 	serv.away_time = time (nullptr);
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, user_status::away);
+	inbound_set_all_away_status (serv, serv.m_nick, user_status::away);
 }
 
 void
@@ -1331,7 +1331,7 @@ inbound_uback (server &serv)
 	serv.reconnect_away = false;
 	fe_set_away (serv);
 
-	inbound_set_all_away_status (serv, serv.nick, user_status::present);
+	inbound_set_all_away_status (serv, serv.m_nick, user_status::present);
 }
 
 void
@@ -1450,7 +1450,7 @@ static bool
 inbound_nickserv_login (const server &serv)
 {
 	/* this could grow ugly, but let's hope there won't be new NickServ types */
-	switch (serv.loginmethod)
+	switch (serv.m_loginmethod)
 	{
 		case LOGIN_MSG_NICKSERV:
 		case LOGIN_NICKSERV:
@@ -1478,32 +1478,32 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 		if (prefs.hex_dcc_ip_from_server && serv.use_who)
 		{
 			serv.skip_next_userhost = true;
-			serv.p_get_ip_uh (serv.nick);	/* sends USERHOST mynick */
+			serv.p_get_ip_uh (serv.m_nick);	/* sends USERHOST mynick */
 		}
 		set_default_modes (serv);
 
-		if (serv.network)
+		if (serv.m_network)
 		{
 			/* there may be more than 1, separated by \n */
-			for(auto cmdlist = serv.network->commandlist; cmdlist; cmdlist = g_slist_next(cmdlist))
+			for(auto cmdlist = serv.m_network->commandlist; cmdlist; cmdlist = g_slist_next(cmdlist))
 			{
 				auto cmd = static_cast<commandentry*>(cmdlist->data);
 				inbound_exec_eom_cmd (cmd->command, sess);
 			}
 
 			/* send nickserv password */
-			if (serv.network->pass && inbound_nickserv_login (serv))
+			if (serv.m_network->pass && inbound_nickserv_login (serv))
 			{
-				serv.p_ns_identify (serv.network->pass);
+				serv.p_ns_identify (serv.m_network->pass);
 			}
 		}
 
 		/* wait for join if command or nickserv set */
-		if (serv.network && prefs.hex_irc_join_delay
-			&& ((serv.network->pass && inbound_nickserv_login (serv))
-				|| serv.network->commandlist))
+		if (serv.m_network && prefs.hex_irc_join_delay
+			&& ((serv.m_network->pass && inbound_nickserv_login (serv))
+				|| serv.m_network->commandlist))
 		{
-			serv.joindelay_tag = fe_timeout_add(prefs.hex_irc_join_delay * 1000, (GSourceFunc)check_autojoin_channels, &serv);
+			serv.m_joindelay_tag = fe_timeout_add(prefs.hex_irc_join_delay * 1000, (GSourceFunc)check_autojoin_channels, &serv);
 		}
 		else
 		{
@@ -1533,11 +1533,11 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 void
 inbound_identified (server &serv)	/* 'MODE +e MYSELF' on freenode */
 {
-	if (serv.joindelay_tag)
+	if (serv.m_joindelay_tag)
 	{
 		/* stop waiting, just auto JOIN now */
-		fe_timeout_remove (serv.joindelay_tag);
-		serv.joindelay_tag = 0;
+		fe_timeout_remove (serv.m_joindelay_tag);
+		serv.m_joindelay_tag = 0;
 		check_autojoin_channels (serv);
 	}
 }
@@ -1590,7 +1590,7 @@ inbound_cap_ack (server &serv, char *nick, char *extensions,
 		serv.sent_saslauth = false;
 
 #ifdef USE_OPENSSL
-		if (serv.loginmethod == LOGIN_SASLEXTERNAL)
+		if (serv.m_loginmethod == LOGIN_SASLEXTERNAL)
 		{
 			serv.sasl_mech = MECH_EXTERNAL;
 			tcp_send (serv, "AUTHENTICATE EXTERNAL\r\n");
@@ -1682,8 +1682,8 @@ inbound_cap_ls (server &serv, char *nick, char *extensions_str,
 		
 		/* if the SASL password is set AND auth mode is set to SASL, request SASL auth */
 		if (!strcmp (extension, "sasl")
-			&& ((serv.loginmethod == LOGIN_SASL && strlen (serv.password) != 0)
-			|| (serv.loginmethod == LOGIN_SASLEXTERNAL && serv.have_cert)))
+			&& ((serv.m_loginmethod == LOGIN_SASL && strlen (serv.m_password) != 0)
+			|| (serv.m_loginmethod == LOGIN_SASLEXTERNAL && serv.have_cert)))
 		{
 			strcat (buffer, "sasl ");
 			want_cap = true;
@@ -1759,7 +1759,7 @@ inbound_sasl_supportedmechs (server &serv, char *list)
 void
 inbound_sasl_authenticate (server &serv, char *data)
 {
-		ircnet *net = serv.network;
+		ircnet *net = serv.m_network;
 		char *user;
 		const char *mech = sasl_mechanisms[serv.sasl_mech];
 
@@ -1779,14 +1779,14 @@ inbound_sasl_authenticate (server &serv, char *data)
 		switch (serv.sasl_mech)
 		{
 		case MECH_PLAIN:
-			pass = auth::sasl::encode_sasl_pass_plain (user, serv.password);
+			pass = auth::sasl::encode_sasl_pass_plain (user, serv.m_password);
 			break;
 #ifdef USE_OPENSSL
 		case MECH_BLOWFISH:
-			pass = auth::sasl::encode_sasl_pass_blowfish (user, serv.password, data);
+			pass = auth::sasl::encode_sasl_pass_blowfish (user, serv.m_password, data);
 			break;
 		case MECH_AES:
-			pass = auth::sasl::encode_sasl_pass_aes (user, serv.password, data);
+			pass = auth::sasl::encode_sasl_pass_aes (user, serv.m_password, data);
 			break;
 		case MECH_EXTERNAL:
 			pass = "+";

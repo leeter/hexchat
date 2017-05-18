@@ -79,10 +79,10 @@ send_channel_modes (session *sess, const std::vector<std::string> &word, int wpo
 	server *serv = sess->server;
 
 	/* sanity check. IRC RFC says three per line. */
-	if (serv->modes_per_line < 3)
-		serv->modes_per_line = 3;
+	if (serv->m_modes_per_line < 3)
+		serv->m_modes_per_line = 3;
 	if (modes_per_line < 1)
-		modes_per_line = serv->modes_per_line;
+		modes_per_line = serv->m_modes_per_line;
 
 	/* RFC max, minus length of "MODE %s " and "\r\n" and 1 +/- sign */
 	/* 512 - 6 - 2 - 1 - strlen(chan) */
@@ -135,7 +135,7 @@ send_channel_modes (session *sess, const std::vector<std::string> &word, int wpo
 bool
 server::is_channel_name(const boost::string_ref & chan) const
 {
-	return this->chantypes.find_first_of(chan[0]) != std::string::npos;
+	return this->m_chantypes.find_first_of(chan[0]) != std::string::npos;
 }
 
 /* is the given char a valid nick mode char? e.g. @ or + */
@@ -143,13 +143,13 @@ server::is_channel_name(const boost::string_ref & chan) const
 static int
 is_prefix_char (const server & serv, char c)
 {
-	auto pos = serv.nick_prefixes.find_first_of(c);
+	auto pos = serv.m_nick_prefixes.find_first_of(c);
 	if (pos != std::string::npos)
 		return pos;
 
 	if (serv.bad_prefix)
 	{
-		if (serv.bad_nick_prefixes.find_first_of(c) != std::string::npos)
+		if (serv.m_bad_nick_prefixes.find_first_of(c) != std::string::npos)
 		/* valid prefix char, but mode unknown */
 			return -2;
 	}
@@ -164,7 +164,7 @@ get_nick_prefix (const server * serv, unsigned int access)
 {
 	for (int pos = 0; pos < USERACCESS_SIZE; pos++)
 	{
-		char c = serv->nick_prefixes[pos];
+		char c = serv->m_nick_prefixes[pos];
 		if (c == 0)
 			break;
 		if (access & (1 << pos))
@@ -213,11 +213,11 @@ mode_access (const server * serv, char mode, char *prefix)
 {
 	int pos = 0;
 
-	while (serv->nick_modes[pos])
+	while (serv->m_nick_modes[pos])
 	{
-		if (serv->nick_modes[pos] == mode)
+		if (serv->m_nick_modes[pos] == mode)
 		{
-			*prefix = serv->nick_prefixes[pos];
+			*prefix = serv->m_nick_prefixes[pos];
 			return pos;
 		}
 		pos++;
@@ -397,7 +397,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* is this a nick mode? */
-	if (serv.nick_modes.find_first_of(mode) != std::string::npos)
+	if (serv.m_nick_modes.find_first_of(mode) != std::string::npos)
 	{
 		/* update the user in the userlist */
 		userlist_update_mode (sess, /*nickname */ arg, mode, sign);
@@ -408,7 +408,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 	}
 
 	/* Is q a chanmode on this server? */
-	for (char cm : serv.chanmodes)
+	for (auto cm : serv.m_chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -535,7 +535,7 @@ handle_single_mode (mode_run &mr, char sign, char mode, char *nick,
 
  genmode:
 	/* Received umode +e. If we're waiting to send JOIN then send now! */
-	if (mode == 'e' && sign == '+' && !serv.p_cmp (chan, serv.nick))
+	if (mode == 'e' && sign == '+' && !serv.p_cmp (chan, serv.m_nick))
 		inbound_identified (serv);
 
 	if (!quiet)
@@ -560,7 +560,7 @@ mode_has_arg (const server & serv, char sign, char mode)
 	int type;
 
 	/* if it's a nickmode, it must have an arg */
-	if (serv.nick_modes.find_first_of(mode) != std::string::npos)
+	if (serv.m_nick_modes.find_first_of(mode) != std::string::npos)
 		return true;
 
 	type = mode_chanmode_type (serv, mode);
@@ -588,7 +588,7 @@ mode_chanmode_type (const server & serv, char mode)
 	int type = 0;
 	bool found = false;
 
-	for(auto &cm : serv.chanmodes)
+	for(auto &cm : serv.m_chanmodes)
 	{
 		if (cm == ',')
 		{
@@ -781,16 +781,16 @@ inbound_005 (server & serv, gsl::span<char*> word)
 		auto span = gsl::cstring_span<>(wordVal, std::strlen(wordVal));
 		if (boost::starts_with(span, "MODES="))
 		{
-			serv.modes_per_line = std::stoi(gsl::to_string(span.subspan(6)));
+			serv.m_modes_per_line = std::stoi(gsl::to_string(span.subspan(6)));
 		}
 		else if (boost::starts_with(span, "CHANTYPES="))
 		{
-			serv.chantypes.clear();
-			serv.chantypes = gsl::to_string(span.subspan(10));
+			serv.m_chantypes.clear();
+			serv.m_chantypes = gsl::to_string(span.subspan(10));
 		}
 		else if (boost::starts_with(span, "CHANMODES="))
 		{
-			serv.chanmodes = gsl::to_string(span.subspan(10));
+			serv.m_chanmodes = gsl::to_string(span.subspan(10));
 		}
 		else if (boost::starts_with(span, "PREFIX="))
 		{
@@ -799,15 +799,15 @@ inbound_005 (server & serv, gsl::span<char*> word)
 			if (parenLoc != prefixSpan.cend())
 			{
 				const auto pre = std::distance(prefixSpan.cbegin(), parenLoc);
-				serv.nick_prefixes = gsl::to_string(prefixSpan.subspan(pre + 1));
-				serv.nick_modes = gsl::to_string(span.subspan(8, pre - 1));
+				serv.m_nick_prefixes = gsl::to_string(prefixSpan.subspan(pre + 1));
+				serv.m_nick_modes = gsl::to_string(span.subspan(8, pre - 1));
 			}
 			else
 			{
 				/* bad! some ircds don't give us the modes. */
 				/* in this case, we use it only to strip /NAMES */
 				serv.bad_prefix = true;
-				serv.bad_nick_prefixes = gsl::to_string(span.subspan(7));
+				serv.m_bad_nick_prefixes = gsl::to_string(span.subspan(7));
 			}
 		}
 		else if (boost::starts_with(span, "WATCH="))

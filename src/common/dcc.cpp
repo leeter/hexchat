@@ -283,7 +283,7 @@ dcc_connect_sok (::dcc::DCC *dcc)
 			closesocket (sok);
 			return -1;
 		}
-		addr.sin_port = htons (prefs.hex_net_proxy_port);
+		addr.sin_port = htons (static_cast<std::uint16_t>(prefs.hex_net_proxy_port));
 	}
 	else
 	{
@@ -442,7 +442,7 @@ dcc_chat_line(::dcc::DCC *dcc, char *line)
 		po = strchr(line + 8, '\001');
 		if (po)
 			po[0] = 0;
-		inbound_action(sess, dcc->serv->nick, dcc->nick, "", line + 8, false,
+		inbound_action(sess, dcc->serv->m_nick, dcc->nick, "", line + 8, false,
 			false, &no_tags);
 	}
 	else

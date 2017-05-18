@@ -1093,7 +1093,7 @@ servlist_connect_cb (GtkWidget * /*button*/, gpointer)
 	for (auto list = sess_list; list; list = g_slist_next(list))
 	{
 		auto sess = static_cast<session*>(list->data);
-		if (sess->server->network == selected_net)
+		if (sess->server->m_network == selected_net)
 		{
 			servlist_sess = sess;
 			if (sess->server->connected)

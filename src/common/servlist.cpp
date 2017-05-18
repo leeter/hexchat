@@ -92,9 +92,9 @@ ircnet::~ircnet()
 	/* for safety */
 	for(auto & serv : glib_helper::glist_iterable<server>(serv_list))
 	{
-		if (serv.network == this)
+		if (serv.m_network == this)
 		{
-			serv.network = nullptr;
+			serv.m_network = nullptr;
 		}
 	}
 }
@@ -679,28 +679,28 @@ servlist_connect (session *sess, ircnet &net, bool join)
 
 	if (net.logintype)
 	{
-		serv->loginmethod = net.logintype;
+		serv->m_loginmethod = net.logintype;
 	}
 	else
 	{
-		serv->loginmethod = LOGIN_DEFAULT_REAL;
+		serv->m_loginmethod = LOGIN_DEFAULT_REAL;
 	}
 
-	serv->password[0] = 0;
+	serv->m_password[0] = 0;
 
 	if (net.pass)
 	{
-		safe_strcpy (serv->password, net.pass, sizeof (serv->password));
+		safe_strcpy (serv->m_password, net.pass, sizeof (serv->m_password));
 	}
 
 	if (net.flags & FLAG_USE_GLOBAL)
 	{
-		strcpy (serv->nick, prefs.hex_irc_nick1);
+		strcpy (serv->m_nick, prefs.hex_irc_nick1);
 	}
 	else
 	{
 		if (net.nick)
-			safe_strcpy(serv->nick, net.nick->c_str());
+			safe_strcpy(serv->m_nick, net.nick->c_str());
 	}
 
 	serv->dont_use_proxy = (net.flags & FLAG_USE_PROXY) ? false : true;
@@ -711,7 +711,7 @@ servlist_connect (session *sess, ircnet &net, bool join)
 		(net.flags & FLAG_ALLOW_INVALID) ? true : false;
 #endif
 
-	serv->network = &net;
+	serv->m_network = &net;
 
 	port = strrchr (ircserv->hostname, '/');
 	if (port)
@@ -781,11 +781,11 @@ bool servlist_auto_connect (session *sess)
 static gint
 servlist_cycle_cb (server *serv)
 {
-	if (serv->network)
+	if (serv->m_network)
 	{
 		PrintTextf (serv->server_session,
-			_("Cycling to next server in %s...\n"), serv->network->name.c_str());
-		servlist_connect(serv->server_session, *serv->network, true);
+			_("Cycling to next server in %s...\n"), serv->m_network->name.c_str());
+		servlist_connect(serv->server_session, *serv->m_network, true);
 	}
 
 	return 0;
@@ -793,7 +793,7 @@ servlist_cycle_cb (server *serv)
 
 bool servlist_cycle (server *serv)
 {
-	auto net = serv->network;
+	auto net = serv->m_network;
 	if (!net)
 	{
 		return false;
@@ -818,7 +818,7 @@ bool servlist_cycle (server *serv)
 		del = 500;				  /* so it doesn't block the gui */
 
 	if (del)
-		serv->recondelay_tag = fe_timeout_add(del, (GSourceFunc)servlist_cycle_cb, serv);
+		serv->m_recondelay_tag = fe_timeout_add(del, (GSourceFunc)servlist_cycle_cb, serv);
 	else
 		servlist_connect(serv->server_session, *net, true);
 
@@ -1347,10 +1347,10 @@ joinlist_find_chan (favchannel *curr_item, const char *channel)
 
 bool joinlist_is_in_list (server *serv,  const char channel[])
 {
-	if (!serv->network || !serv->network->favchanlist)
+	if (!serv->m_network || !serv->m_network->favchanlist)
 	{
 		return false;
 	}
 
-	return g_slist_find_custom(serv->network->favchanlist, channel, (GCompareFunc)joinlist_find_chan) != nullptr;
+	return g_slist_find_custom(serv->m_network->favchanlist, channel, (GCompareFunc)joinlist_find_chan) != nullptr;
 }

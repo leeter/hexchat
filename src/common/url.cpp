@@ -216,7 +216,7 @@ static bool
 match_nick (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
-	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
+	const std::string & nick_prefixes = serv ? serv->m_nick_prefixes : NICKPRE;
 
 	if (!regex_match (re_nick (), word, start, end))
 		return false;
@@ -244,8 +244,8 @@ static bool
 match_channel (const char *word, int *start, int *end)
 {
 	const server *serv = current_sess->server;
-	const std::string & chan_prefixes = serv ? serv->chantypes : CHANPRE;
-	const std::string & nick_prefixes = serv ? serv->nick_prefixes : NICKPRE;
+	const std::string & chan_prefixes = serv ? serv->m_chantypes : CHANPRE;
+	const std::string & nick_prefixes = serv ? serv->m_nick_prefixes : NICKPRE;
 
 	if (!regex_match (re_channel (), word, start, end))
 		return false;

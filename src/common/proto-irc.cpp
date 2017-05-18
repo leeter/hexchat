@@ -65,22 +65,22 @@ server::p_login(const std::string& user, const std::string& realname)
 	tcp_send(*this, "CAP LS\r\n");		/* start with CAP LS as Charybdis sasl.txt suggests */
 	this->sent_capend = false;	/* track if we have finished */
 
-	if (this->password[0] && this->loginmethod == LOGIN_PASS)
+	if (this->m_password[0] && this->m_loginmethod == LOGIN_PASS)
 	{
-		tcp_sendf (*this, "PASS %s\r\n", this->password);
+		tcp_sendf (*this, "PASS %s\r\n", this->m_password);
 	}
 
 	tcp_sendf (*this,
 				  "NICK %s\r\n"
 				  "USER %s %s %s :%s\r\n",
-				  this->nick, user.c_str(), user.c_str(), this->servername, realname.c_str());
+				  this->m_nick, user.c_str(), user.c_str(), this->m_servername, realname.c_str());
 }
 
 static void
 irc_nickserv(server &serv, const std::string& cmd, const std::string& arg1, const std::string& arg2, const std::string& arg3)
 {
 	/* are all ircd authors idiots? */
-	switch (serv.loginmethod)
+	switch (serv.m_loginmethod)
 	{
 		case LOGIN_MSG_NICKSERV:
 			tcp_sendf(serv, "PRIVMSG NICKSERV :%s %s%s%s\r\n", cmd.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str());
@@ -109,7 +109,7 @@ irc_nickserv(server &serv, const std::string& cmd, const std::string& arg1, cons
 void
 server::p_ns_identify(const std::string &pass)
 {
-	switch (this->loginmethod)
+	switch (this->m_loginmethod)
 	{
 		case LOGIN_CHALLENGEAUTH:
 			tcp_sendf (*this, "PRIVMSG %s :CHALLENGE\r\n", CHALLENGEAUTH_NICK);	/* request a challenge from Q */
@@ -127,7 +127,7 @@ server::p_ns_identify(const std::string &pass)
 void
 server::p_ns_ghost(const std::string& usname, const std::string& pass)
 {
-	if (this->loginmethod != LOGIN_CHALLENGEAUTH)
+	if (this->m_loginmethod != LOGIN_CHALLENGEAUTH)
 	{
 		irc_nickserv (*this, "GHOST", usname, " ", pass);
 	}
@@ -335,18 +335,18 @@ server::p_cycle(const std::string& channel, const std::string& key)
 }
 
 void
-server::p_kick(const std::string& channel, const std::string &nick, const std::string & reason)
+server::p_kick(const std::string& channel, const std::string &nickname, const std::string & reason)
 {
 	if (!reason.empty())
-		tcp_sendf (*this, "KICK %s %s :%s\r\n", channel.c_str(), nick.c_str(), reason.c_str());
+		tcp_sendf (*this, "KICK %s %s :%s\r\n", channel.c_str(), nickname.c_str(), reason.c_str());
 	else
-		tcp_sendf (*this, "KICK %s %s\r\n", channel.c_str(), nick.c_str());
+		tcp_sendf (*this, "KICK %s %s\r\n", channel.c_str(), nickname.c_str());
 }
 
 void
-server::p_invite (const std::string & channel, const std::string & nick)
+server::p_invite (const std::string & channel, const std::string & nickname)
 {
-	tcp_sendf (*this, "INVITE %s %s\r\n", nick.c_str(), channel.c_str());
+	tcp_sendf (*this, "INVITE %s %s\r\n", nickname.c_str(), channel.c_str());
 }
 
 void
@@ -551,14 +551,14 @@ process_numeric (session * sess, int n,
 
 	case 4:	/* check the ircd type */
 		serv.use_listargs = false;
-		serv.modes_per_line = 3;		/* default to IRC RFC */
+		serv.m_modes_per_line = 3;		/* default to IRC RFC */
 		if (strncmp (word[5], "bahamut", 7) == 0)				/* DALNet */
 		{
 			serv.use_listargs = true;		/* use the /list args */
 		} else if (strncmp (word[5], "u2.10.", 6) == 0)		/* Undernet */
 		{
 			serv.use_listargs = true;		/* use the /list args */
-			serv.modes_per_line = 6;		/* allow 6 modes per line */
+			serv.m_modes_per_line = 6;		/* allow 6 modes per line */
 		} else if (strncmp (word[5], "glx2", 4) == 0)
 		{
 			serv.use_listargs = true;		/* use the /list args */
@@ -590,7 +590,7 @@ process_numeric (session * sess, int n,
 			if (eq)
 			{
 				*eq = 0;
-				if (!serv.p_cmp (word[4] + 1, serv.nick))
+				if (!serv.p_cmp (word[4] + 1, serv.m_nick))
 				{
 					char *at = strrchr (eq + 1, '@');
 					if (at)
@@ -786,7 +786,7 @@ process_numeric (session * sess, int n,
 
 	case 341:						  /* INVITE ACK */
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_UINVITE, sess, gsl::ensure_z(word[4]), gsl::ensure_z(word[5]),
-									  serv.servername, nullptr, 0, tags_data->timestamp);
+									  serv.m_servername, nullptr, 0, tags_data->timestamp);
 		break;
 
 	case 352:						  /* WHO */
@@ -1041,20 +1041,20 @@ process_numeric (session * sess, int n,
 
 	def:
 		{
-			session *sess;
+			session *lsess;
 		
 			if (serv.is_channel_name (word[4]))
 			{
-				sess = find_channel (serv, word[4]);
-				if (!sess)
-					sess = serv.server_session;
+				lsess = find_channel (serv, word[4]);
+				if (!lsess)
+					lsess = serv.server_session;
 			}
-			else if ((sess=find_dialog (serv,word[4]))) /* user with an open dialog */
+			else if ((lsess =find_dialog (serv,word[4]))) /* user with an open dialog */
 				;
 			else
-				sess=serv.server_session;
+				lsess =serv.server_session;
 			
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, gsl::ensure_z(text), gsl::ensure_z(word[1]), gsl::ensure_z(word[2]),
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, lsess, gsl::ensure_z(text), gsl::ensure_z(word[1]), gsl::ensure_z(word[2]),
 										  nullptr, 0, tags_data->timestamp);
 		}
 	}
@@ -1115,7 +1115,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					realname++;
 				if (*chan == ':')
 					chan++;
-				if (!serv.p_cmp (nick, serv.nick))
+				if (!serv.p_cmp (nick, serv.m_nick))
 					inbound_ujoin (serv, chan, nick, ip, tags_data);
 				else
 					inbound_join (serv, chan, nick, ip, account, realname,
@@ -1131,7 +1131,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				{
 					if (*reason == ':')
 						reason++;
-					if (!strcmp (kicked, serv.nick))
+					if (!strcmp (kicked, serv.m_nick))
 						inbound_ukick (serv, word[3], nick, reason, tags_data);
 					else
 						inbound_kick (serv, word[3], kicked, nick, reason, tags_data);
@@ -1169,7 +1169,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					chan++;
 				if (*reason == ':')
 					reason++;
-				if (!strcmp (nick, serv.nick))
+				if (!strcmp (nick, serv.m_nick))
 					inbound_upart (serv, chan, ip, reason, tags_data);
 				else
 					inbound_part (serv, chan, nick, ip, reason, tags_data);
@@ -1200,7 +1200,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 
 	else if (len >= 5)
 	{
-		std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
+		const std::uint32_t t = wordl((std::uint8_t)type[0], (std::uint8_t)type[1], (std::uint8_t)type[2], (std::uint8_t)type[3]); 	
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
@@ -1215,11 +1215,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			
 			if (word[4][0] == ':')
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, gsl::ensure_z(word[4] + 1), nick,
-											  serv.servername, nullptr, 0,
+											  serv.m_servername, nullptr, 0,
 											  tags_data->timestamp);
 			else
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, gsl::ensure_z(word[4]), nick,
-											  serv.servername, nullptr, 0,
+											  serv.m_servername, nullptr, 0,
 											  tags_data->timestamp);
 				
 			return;
@@ -1237,11 +1237,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 #ifdef USE_OPENSSL
 				if (!strncmp (text, "CHALLENGE ", 10))		/* QuakeNet CHALLENGE upon our request */
 				{
-					auto response = challengeauth_response (serv.network->user ? serv.network->user : prefs.hex_irc_user_name, serv.password, word[5]);
+					auto response = challengeauth_response (serv.m_network->user ? serv.m_network->user : prefs.hex_irc_user_name, serv.m_password, word[5]);
 
 					tcp_sendf (serv, "PRIVMSG %s :CHALLENGEAUTH %s %s %s\r\n",
 						CHALLENGEAUTH_NICK,
-						serv.network->user ? serv.network->user : prefs.hex_irc_user_name,
+						serv.m_network->user ? serv.m_network->user : prefs.hex_irc_user_name,
 						response.c_str(),
 						CHALLENGEAUTH_ALGO);
 					return;									/* omit the CHALLENGE <hash> ALGOS message */
@@ -1266,13 +1266,12 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 		case wordl('P','R','I','V'):
 			{
 				char *to = word[3];
-				int len;
 				bool id = false;	/* identified */
 				if (*to)
 				{
 					/* Handle limited channel messages, for now no special event */
-					if (serv.chantypes.find_first_of(to[0]) == std::string::npos
-						&& serv.nick_prefixes.find_first_of(to[0]) != std::string::npos)
+					if (serv.m_chantypes.find_first_of(to[0]) == std::string::npos
+						&& serv.m_nick_prefixes.find_first_of(to[0]) != std::string::npos)
 						to++;
 						
 					text = word_eol[4];
@@ -1287,10 +1286,10 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 						} else if (*text == '-')
 							text++;
 					}
-					len = strlen (text);
-					if (text[0] == 1 && text[len - 1] == 1)	/* ctcp */
+					const auto text_len = strlen (text);
+					if (text[0] == 1 && text[text_len - 1] == 1)	/* ctcp */
 					{
-						text[len - 1] = 0;
+						text[text_len - 1] = 0;
 						text++;
 						if (g_ascii_strncasecmp (text, "ACTION", 6) != 0)
 							flood_check(nick, ip, serv, sess, flood_check_type::CTCP);
@@ -1398,7 +1397,7 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 		if (*buf == ':')
 			buf++;
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, gsl::ensure_z(buf),
-									  sess->server->servername, nullptr, nullptr, 0,
+									  sess->server->m_servername, nullptr, nullptr, 0,
 									  tags_data->timestamp);
 		return;
 	}
@@ -1408,7 +1407,7 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 		return;
 	}
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, gsl::ensure_z(buf), sess->server->servername,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, gsl::ensure_z(buf), sess->server->m_servername,
 		gsl::ensure_z(rawname), nullptr, 0, tags_data->timestamp);
 }
 

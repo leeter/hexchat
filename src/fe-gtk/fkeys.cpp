@@ -1429,10 +1429,10 @@ struct session *sess)
 		ent_start++;
 		is_cmd = true;
 	}
-	else if (sess->server->chantypes.find_first_of(text[ent_start]) == std::string::npos)
+	else if (sess->server->m_chantypes.find_first_of(text[ent_start]) == std::string::npos)
 	{
 		is_nick = true;
-		if (sess->server->nick_prefixes.find_first_of(text[ent_start]) != std::string::npos)
+		if (sess->server->m_nick_prefixes.find_first_of(text[ent_start]) != std::string::npos)
 		{
 			if (ent_start == 0)
 			{

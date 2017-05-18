@@ -135,7 +135,7 @@ nick_command_parse(session *sess, const boost::string_ref & cmd, const boost::st
 
 	auto_insert (buf, (const unsigned char*)cmd.data(), 0, 0, allnick.data(), sess->channel, "",
 		sess->server->get_network(true).data(), host.c_str(),
-					 sess->server->nick, nick.data(), account);
+					 sess->server->m_nick, nick.data(), account);
 
 	nick_command(sess, &buf[0]);
 }
@@ -1010,13 +1010,13 @@ menu_chanmenu (struct session *sess, GdkEventButton * event, char *chan)
 static void
 menu_delfav_cb (GtkWidget *item, server *serv)
 {
-	servlist_autojoinedit (static_cast<ircnet*>(serv->network), str_copy.get(), false);
+	servlist_autojoinedit (static_cast<ircnet*>(serv->m_network), str_copy.get(), false);
 }
 
 static void
 menu_addfav_cb (GtkWidget *item, server *serv)
 {
-	servlist_autojoinedit(static_cast<ircnet*>(serv->network), str_copy.get(), true);
+	servlist_autojoinedit(static_cast<ircnet*>(serv->m_network), str_copy.get(), true);
 }
 
 void
@@ -1024,7 +1024,7 @@ menu_addfavoritemenu (server *serv, GtkWidget *menu, const char channel[], bool 
 {
 	const char *str;
 	
-	if (!serv->network)
+	if (!serv->m_network)
 		return;
 
 	if (channel != str_copy.get())
@@ -1050,24 +1050,24 @@ menu_addfavoritemenu (server *serv, GtkWidget *menu, const char channel[], bool 
 static void
 menu_delautoconn_cb (GtkWidget *item, server *serv)
 {
-	((ircnet*)serv->network)->flags &= ~FLAG_AUTO_CONNECT;
+	((ircnet*)serv->m_network)->flags &= ~FLAG_AUTO_CONNECT;
 	servlist_save ();
 }
 
 static void
 menu_addautoconn_cb (GtkWidget *item, server *serv)
 {
-	((ircnet*)serv->network)->flags |= FLAG_AUTO_CONNECT;
+	((ircnet*)serv->m_network)->flags |= FLAG_AUTO_CONNECT;
 	servlist_save ();
 }
 
 void
 menu_addconnectmenu (server *serv, GtkWidget *menu)
 {
-	if (!serv->network)
+	if (!serv->m_network)
 		return;
 
-	if (((ircnet*)serv->network)->flags & FLAG_AUTO_CONNECT)
+	if (((ircnet*)serv->m_network)->flags & FLAG_AUTO_CONNECT)
 	{
 		menu_toggle_item (_("_Auto-Connect"), menu, G_CALLBACK(menu_delautoconn_cb), serv, true);
 	}
@@ -1319,7 +1319,7 @@ menu_disconnect (GtkWidget *, gpointer)
 static void
 menu_reconnect (GtkWidget *, gpointer)
 {
-	if (current_sess->server->hostname[0])
+	if (current_sess->server->m_hostname[0])
 		handle_command (current_sess, "RECONNECT", false);
 	else
 		fe_serverlist_open (current_sess);

@@ -117,7 +117,7 @@ int chanopt_command (session *sess, char *word[])
 
 	if (!quiet)
 		PrintTextf (sess, "\002Network\002: %s \002Channel\002: %s\n",
-						sess->server->network ? sess->server->get_network (true).data() : _("<none>"),
+						sess->server->m_network ? sess->server->get_network (true).data() : _("<none>"),
 						sess->channel[0] ? sess->channel : _("<none>"));
 
 	for(const auto & op : chanopt)

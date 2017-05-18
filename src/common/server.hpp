@@ -88,7 +88,7 @@ public:
 	void p_user_list(const std::string & channel);
 	void p_away_status(const std::string & channel){ p_user_list(channel); }
 	void p_whois(const std::string& nicks);
-	void p_get_ip(const std::string &nick){ p_user_list(nick); }
+	void p_get_ip(const std::string &nickname){ p_user_list(nickname); }
 	void p_get_ip_uh(const std::string &nick);
 	void p_set_back();
 	void p_set_away(const std::string & reason);
@@ -132,32 +132,32 @@ public:
 #else
 	void *ssl;
 #endif
-	int childread;
-	int childwrite;
-	int childpid;
-	int iotag;
-	int recondelay_tag;				/* reconnect delay timeout */
-	int joindelay_tag;				/* waiting before we send JOIN */
-	char hostname[128];				/* real ip number */
-	char servername[128];			/* what the server says is its name */
-	char password[86];
-	char nick[NICKLEN];
-	char linebuf[2048];				/* RFC says 512 chars including \r\n */
-	std::string last_away_reason;
-	int pos;								/* current position in linebuf */
-	int nickcount;
-	int loginmethod;					/* see login_types[] */
+	int m_childread;
+	int m_childwrite;
+	int m_childpid;
+	int m_iotag;
+	int m_recondelay_tag;				/* reconnect delay timeout */
+	int m_joindelay_tag;				/* waiting before we send JOIN */
+	char m_hostname[128];				/* real ip number */
+	char m_servername[128];			/* what the server says is its name */
+	char m_password[86];
+	char m_nick[NICKLEN];
+	char m_linebuf[2048];				/* RFC says 512 chars including \r\n */
+	std::string m_last_away_reason;
+	int m_pos;								/* current position in linebuf */
+	int m_nickcount;
+	int m_loginmethod;					/* see login_types[] */
 
-	std::string chantypes;					/* for 005 numeric - free me */
-	std::string chanmodes;					/* for 005 numeric - free me */
-	std::string nick_prefixes;				/* e.g. "*@%+" */
-	std::string nick_modes;             /* e.g. "aohv" */
-	std::string bad_nick_prefixes;		/* for ircd that doesn't give the modes */
-	int modes_per_line;				/* 6 on undernet, 4 on efnet etc... */
+	std::string m_chantypes;					/* for 005 numeric - free me */
+	std::string m_chanmodes;					/* for 005 numeric - free me */
+	std::string m_nick_prefixes;				/* e.g. "*@%+" */
+	std::string m_nick_modes;             /* e.g. "aohv" */
+	std::string m_bad_nick_prefixes;		/* for ircd that doesn't give the modes */
+	int m_modes_per_line;				/* 6 on undernet, 4 on efnet etc... */
 
-	ircnet *network;						/* points to entry in servlist.c or NULL! */
+	ircnet *m_network;						/* points to entry in servlist.c or NULL! */
 
-	std::priority_queue<std::pair<int, std::string> > outbound_queue;
+	std::priority_queue<std::pair<int, std::string> > m_outbound_queue;
 	time_t next_send;						/* cptr->since in ircu */
 	time_t prev_now;					/* previous now-time */
 	int sendq_len;						/* queue size */

@@ -391,7 +391,7 @@ fe_set_title (session &sess)
 		break;
 	case session::SESS_SERVER:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s",
-			sess.server->nick, sess.server->get_network(true).data());
+			sess.server->m_nick, sess.server->get_network(true).data());
 		break;
 	case session::SESS_CHANNEL:
 		/* don't display keys in the titlebar */
@@ -399,14 +399,14 @@ fe_set_title (session &sess)
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s (%s)",
-						 sess.server->nick, sess.server->get_network(true).data(),
+						 sess.server->m_nick, sess.server->get_network(true).data(),
 						 sess.channel, sess.current_modes.c_str());
 		}
 		else
 		{
 			snprintf (tbuf, sizeof (tbuf),
 						 DISPLAY_NAME": %s @ %s / %s",
-						 sess.server->nick, sess.server->get_network(true).data(),
+						 sess.server->m_nick, sess.server->get_network(true).data(),
 						 sess.channel);
 		}
 		if (prefs.hex_gui_win_ucount)
@@ -417,7 +417,7 @@ fe_set_title (session &sess)
 	case session::SESS_NOTICES:
 	case session::SESS_SNOTICES:
 		snprintf (tbuf, sizeof (tbuf), DISPLAY_NAME": %s @ %s (notices)",
-			sess.server->nick, sess.server->get_network(true).data());
+			sess.server->m_nick, sess.server->get_network(true).data());
 		break;
 	default:
 	def:
@@ -878,8 +878,8 @@ mg_populate (session *sess)
 	fe_set_title (*sess);
 
 	/* this one flickers, so only change if necessary */
-	if (strcmp (sess->server->nick, gtk_button_get_label (GTK_BUTTON (gui->nick_label))) != 0)
-		gtk_button_set_label (GTK_BUTTON (gui->nick_label), sess->server->nick);
+	if (strcmp (sess->server->m_nick, gtk_button_get_label (GTK_BUTTON (gui->nick_label))) != 0)
+		gtk_button_set_label (GTK_BUTTON (gui->nick_label), sess->server->m_nick);
 
 	/* this is slow, so make it a timeout event */
 	if (!gui->is_tab)
@@ -898,7 +898,7 @@ mg_populate (session *sess)
 	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
 	{
 		/* Hide if mode not supported */
-		if (sess->server && sess->server->chanmodes.find_first_of(chan_flags[i]) == std::string::npos)
+		if (sess->server && sess->server->m_chanmodes.find_first_of(chan_flags[i]) == std::string::npos)
 			gtk_widget_hide (sess->gui->flag_wid[i]);
 		else
 			gtk_widget_show (sess->gui->flag_wid[i]);
@@ -936,7 +936,7 @@ mg_populate (session *sess)
 	gtk_widget_set_sensitive (gui->menu_item[MENU_ID_AWAY], sess->server->connected);
 	gtk_widget_set_sensitive (gui->menu_item[MENU_ID_JOIN], sess->server->end_of_motd);
 	gtk_widget_set_sensitive (gui->menu_item[MENU_ID_DISCONNECT],
-									  sess->server->connected || sess->server->recondelay_tag);
+									  sess->server->connected || sess->server->m_recondelay_tag);
 
 	mg_set_topic_tip (sess);
 
@@ -2520,7 +2520,7 @@ mg_change_nick (int cancel, char *text, gpointer userdata)
 static void
 mg_nickclick_cb (GtkWidget *button, gpointer userdata)
 {
-	fe_get_str (_("Enter new nickname:"), current_sess->server->nick,
+	fe_get_str (_("Enter new nickname:"), current_sess->server->m_nick,
 		(GSourceFunc)mg_change_nick, (void *)1);
 }
 
@@ -2888,7 +2888,7 @@ mg_create_entry (session *sess, GtkWidget *box)
 	gui->nick_box = gtk_hbox_new (false, 0);
 	gtk_box_pack_start (GTK_BOX (hbox), gui->nick_box, false, false, 0);
 
-	gui->nick_label = but = gtk_button_new_with_label (sess->server->nick);
+	gui->nick_label = but = gtk_button_new_with_label (sess->server->m_nick);
 	gtk_button_set_relief (GTK_BUTTON (but), GTK_RELIEF_NONE);
 	gtk_widget_set_can_focus (but, false);
 	gtk_box_pack_end (GTK_BOX (gui->nick_box), but, false, false, 0);

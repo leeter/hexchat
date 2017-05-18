@@ -100,7 +100,7 @@ extern pxProxyFactory *libproxy_factory;
    send via SSL. server/dcc both use this function. */
 
 int
-tcp_send_real (void *ssl, int sok, const char *encoding, int using_irc, const char *buf, int len, server * serv)
+tcp_send_real (void */*ssl*/, int /*sok*/, const char *encoding, int using_irc, const char *buf, int len, server * serv)
 {
 	if (!serv->server_connection)
 		return 1; // throw?
@@ -189,9 +189,9 @@ tcp_send_queue (server *serv)
 	time_t now = time(0);
 
 	/* try priority 2,1,0 */
-	while (!serv->outbound_queue.empty())
+	while (!serv->m_outbound_queue.empty())
 	{
-		auto & top = serv->outbound_queue.top();
+		auto & top = serv->m_outbound_queue.top();
 
 		if (serv->next_send < now)
 			serv->next_send = now;
@@ -213,7 +213,7 @@ tcp_send_queue (server *serv)
 
 		server_send_real(*serv, top.second);
 
-		serv->outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
+		serv->m_outbound_queue.pop(); // = g_slist_remove (serv->outbound_queue, buf);
 	}
 	return 0;						  /* remove the timeout handler */
 }
@@ -221,7 +221,7 @@ tcp_send_queue (server *serv)
 int
 tcp_send_len (server &serv, const boost::string_ref & buf)
 {
-	bool noqueue = serv.outbound_queue.empty();
+	bool noqueue = serv.m_outbound_queue.empty();
 
 	if (!prefs.hex_net_throttle)
 		return server_send_real (serv, buf);
@@ -245,7 +245,7 @@ tcp_send_len (server &serv, const boost::string_ref & buf)
 			priority = 0;
 	}
 
-	serv.outbound_queue.emplace(std::make_pair(priority, buf.to_string()));
+	serv.m_outbound_queue.emplace(std::make_pair(priority, buf.to_string()));
 	serv.sendq_len += buf.size(); /* tcp_send_queue uses strlen */
 
 	if (tcp_send_queue (&serv) && noqueue)
@@ -393,24 +393,24 @@ server_read_cb(server * serv, const std::string & message, size_t length)
 			break;
 
 		case '\n':
-			serv->linebuf[serv->pos] = 0;
-			server_inline(serv, serv->linebuf, serv->pos);
-			serv->pos = 0;
+			serv->m_linebuf[serv->m_pos] = 0;
+			server_inline(serv, serv->m_linebuf, serv->m_pos);
+			serv->m_pos = 0;
 			break;
 
 		default:
-			serv->linebuf[serv->pos] = message[i];
-			if (serv->pos >= (sizeof(serv->linebuf) - 1))
+			serv->m_linebuf[serv->m_pos] = message[i];
+			if (serv->m_pos >= (sizeof(serv->m_linebuf) - 1))
 				std::perror(
 				_("*** HEXCHAT WARNING: Buffer overflow - shit server!"));
 			else
-				serv->pos++;
+				serv->m_pos++;
 		}
 	}
 }
 
 static void
-server_connected1(server * serv, const boost::system::error_code & error)
+server_connected1(server * serv, const boost::system::error_code & /*error*/)
 {
 	prefs.wait_on_exit = TRUE;
 	serv->ping_recv = boost::chrono::steady_clock::now();
@@ -421,9 +421,9 @@ server_connected1(server * serv, const boost::system::error_code & error)
 	{
 		EMIT_SIGNAL(XP_TE_CONNECTED, serv->server_session, nullptr, nullptr, nullptr,
 			nullptr, 0);
-		if (serv->network)
+		if (serv->m_network)
 		{
-			ircnet* net = serv->network;
+			ircnet* net = serv->m_network;
 			serv->p_login((!(net->flags & FLAG_USE_GLOBAL) &&
 				(net->user)) ?
 				(net->user) :
@@ -444,23 +444,23 @@ server_connected1(server * serv, const boost::system::error_code & error)
 			nullptr, nullptr, 0);
 	}
 
-	serv->set_name(serv->servername);
+	serv->set_name(serv->m_servername);
 	fe_server_event(serv, fe_serverevents::CONNECT, 0);
 }
 
 static void
 server_stopconnecting (server * serv)
 {
-	if (serv->iotag)
+	if (serv->m_iotag)
 	{
-		fe_input_remove (serv->iotag);
-		serv->iotag = 0;
+		fe_input_remove (serv->m_iotag);
+		serv->m_iotag = 0;
 	}
 
-	if (serv->joindelay_tag)
+	if (serv->m_joindelay_tag)
 	{
-		fe_timeout_remove (serv->joindelay_tag);
-		serv->joindelay_tag = 0;
+		fe_timeout_remove (serv->m_joindelay_tag);
+		serv->m_joindelay_tag = 0;
 	}
 
 #ifndef WIN32
@@ -757,10 +757,10 @@ timeout_auto_reconnect (server *serv)
 {
 	if (is_server (serv))  /* make sure it hasnt been closed during the delay */
 	{
-		serv->recondelay_tag = 0;
+		serv->m_recondelay_tag = 0;
 		if (!serv->connected && !serv->connecting && serv->server_session)
 		{
-			serv->connect (serv->hostname, serv->port, false);
+			serv->connect (serv->m_hostname, serv->port, false);
 		}
 	}
 	return 0;			  /* returning 0 should remove the timeout handler */
@@ -803,21 +803,21 @@ server::auto_reconnect (bool send_quit, int err)
 		this->reconnect_away = this->is_away;
 
 	/* is this server in a reconnect delay? remove it! */
-	if (this->recondelay_tag)
+	if (this->m_recondelay_tag)
 	{
-		fe_timeout_remove (this->recondelay_tag);
-		this->recondelay_tag = 0;
+		fe_timeout_remove (this->m_recondelay_tag);
+		this->m_recondelay_tag = 0;
 	}
 
-	this->recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, this);
+	this->m_recondelay_tag = fe_timeout_add(del, (GSourceFunc)timeout_auto_reconnect, this);
 	fe_server_event(this, fe_serverevents::RECONDELAY, del);
 }
 
 void
 server::flush_queue ()
 {
-	decltype(this->outbound_queue) empty;
-	std::swap(this->outbound_queue, empty);
+	decltype(this->m_outbound_queue) empty;
+	std::swap(this->m_outbound_queue, empty);
 	this->sendq_len = 0;
 	fe_set_throttle (this);
 }
@@ -1016,17 +1016,17 @@ server::cleanup ()
 		this->death_timer = 0;
 	}
 
-	if (this->iotag)
+	if (this->m_iotag)
 	{
-		fe_timeout_remove(this->iotag);
+		fe_timeout_remove(this->m_iotag);
 		//fe_input_remove (this->iotag);
-		this->iotag = 0;
+		this->m_iotag = 0;
 	}
 
-	if (this->joindelay_tag)
+	if (this->m_joindelay_tag)
 	{
-		fe_timeout_remove (this->joindelay_tag);
-		this->joindelay_tag = 0;
+		fe_timeout_remove (this->m_joindelay_tag);
+		this->m_joindelay_tag = 0;
 	}
 
 //#ifdef USE_OPENSSL
@@ -1062,10 +1062,10 @@ server::cleanup ()
 	}
 
 	/* is this server in a reconnect delay? remove it! */
-	if (this->recondelay_tag)
+	if (this->m_recondelay_tag)
 	{
-		fe_timeout_remove (this->recondelay_tag);
-		this->recondelay_tag = 0;
+		fe_timeout_remove (this->m_recondelay_tag);
+		this->m_recondelay_tag = 0;
 		return cleanup_result::reconnecting;
 	}
 	if (this->server_connection)
@@ -1115,7 +1115,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 		notc_msg (sess);
 		return;
 	case cleanup_result::still_connecting:							  /* it was in the process of connecting */
-		sprintf (tbuf, "%d", sess->server->childpid);
+		sprintf (tbuf, "%d", sess->server->m_childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, nullptr, nullptr, nullptr, 0);
 		return;
 	case cleanup_result::reconnecting:
@@ -1140,10 +1140,10 @@ server::disconnect (session * sess, bool sendquit, int err)
 		list = list->next;
 	}
 
-	serv->pos = 0;
+	serv->m_pos = 0;
 	serv->motd_skipped = false;
 	serv->no_login = false;
-	serv->servername[0] = 0;
+	serv->m_servername[0] = 0;
 	serv->lag_sent = 0;
 
 	notify_cleanup ();
@@ -1178,7 +1178,7 @@ traverse_socks (int print_fd, int sok, char *serverAddr, int port)
 	struct sock_connect sc = { 0 };
 	sc.version = 4;
 	sc.type = 1;
-	sc.port = htons(port);
+	sc.port = htons(static_cast<std::uint16_t>(port));
 	sc.address = inet_addr(serverAddr);
 
 	safe_strcpy(sc.username, prefs.hex_irc_user_name);
@@ -1247,13 +1247,13 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 		len_u = strlen (prefs.hex_net_proxy_user);
 		len_p = strlen (prefs.hex_net_proxy_pass);
 		buf[0] = 1;
-		buf[1] = len_u;
+		buf[1] = gsl::narrow_cast<unsigned char>(len_u);
 		auto buf_itr = buf.begin();
 		std::copy(
 			std::begin(prefs.hex_net_proxy_user),
 			std::end(prefs.hex_net_proxy_user),
 			buf_itr + 2);
-		buf[2 + len_u] = len_p;
+		buf[2 + len_u] = gsl::narrow_cast<unsigned char>(len_p);
 		std::copy(
 			std::begin(prefs.hex_net_proxy_pass), 
 			std::end(prefs.hex_net_proxy_pass), 
@@ -1289,7 +1289,7 @@ traverse_socks5 (int print_fd, int sok, const std::string & serverAddr, int port
 		auto it = sc2.begin() + 5;
 		::std::copy(serverAddr.cbegin(), serverAddr.cend(), it);
 		it += serverAddr.length();
-		*((unsigned short *)&(*it)) = htons(port);
+		*((unsigned short *)&(*it)) = htons(gsl::narrow_cast<std::uint16_t>(port));
 		send(sok, (char*)&sc2[0], packetlen, 0);
 	}
 
@@ -1330,7 +1330,7 @@ read_error:
 }
 
 static int
-traverse_wingate (int print_fd, int sok, char *serverAddr, int port)
+traverse_wingate (int /*print_fd*/, int sok, char *serverAddr, int port)
 {
 	char buf[128];
 
@@ -1513,7 +1513,7 @@ server::connect (char *hostname, int port, bool no_login)
 	}
 	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
 	this->server_connection->on_connect.connect([this](const auto & error) { server_connected1(this, error); });
-	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->servername, hostname.c_str()); });
+	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->m_servername, hostname.c_str()); });
 	this->server_connection->on_error.connect([this](const auto& error) { server_error(this, error); });
 	this->server_connection->on_message.connect([this](const auto & message, auto length) { server_read_cb(this, message, length); });
 	this->server_connection->on_ssl_handshakecomplete.connect([this](auto ctx) { ssl_print_cert_info(this, ctx); });
@@ -1527,7 +1527,7 @@ server::connect (char *hostname, int port, bool no_login)
 	fe_server_event(this, fe_serverevents::CONNECTING, 0);
 	fe_set_away (*this);
 	this->flush_queue ();
-	this->iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
+	this->m_iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
 #if 0
 #ifdef USE_OPENSSL
 	if (!ctx && this->use_ssl)
@@ -1723,22 +1723,22 @@ server::server()
 #ifdef USE_OPENSSL
 	ssl_do_connect_tag(),
 #endif
-	childread(),
-	childwrite(),
-	childpid(),
-	iotag(),
-	recondelay_tag(),				/* reconnect delay timeout */
-	joindelay_tag(),				/* waiting before we send JOIN */
-	hostname(),				/* real ip number */
-	servername(),			/* what the server says is its name */
-	password(),
-	nick(),
-	linebuf(),
-	pos(),								/* current position in linebuf */
-	nickcount(),
-	loginmethod(),
-	modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
-	network(),						/* points to entry in servlist.c or NULL! */
+	m_childread(),
+	m_childwrite(),
+	m_childpid(),
+	m_iotag(),
+	m_recondelay_tag(),				/* reconnect delay timeout */
+	m_joindelay_tag(),				/* waiting before we send JOIN */
+	m_hostname(),				/* real ip number */
+	m_servername(),			/* what the server says is its name */
+	m_password(),
+	m_nick(),
+	m_linebuf(),
+	m_pos(),								/* current position in linebuf */
+	m_nickcount(),
+	m_loginmethod(),
+	m_modes_per_line(),			/* 6 on undernet, 4 on efnet etc... */
+	m_network(),						/* points to entry in servlist.c or NULL! */
 	next_send(),						/* cptr->since in ircu */
 	prev_now(),					/* previous now-time */
 	sendq_len(),						/* queue size */
@@ -1812,7 +1812,7 @@ server_new (void)
 	server_fill_her_up(*serv);
 	serv->id = id++;
 	serv->sok = -1;
-	strcpy (serv->nick, prefs.hex_irc_nick1);
+	strcpy (serv->m_nick, prefs.hex_irc_nick1);
 	serv->reset_to_defaults();
 
 	serv_list = g_slist_prepend (serv_list, serv);
@@ -1831,17 +1831,17 @@ is_server (server *serv)
 void
 server::reset_to_defaults()
 {
-	this->chantypes.clear();
-	this->chanmodes.clear();
-	this->nick_prefixes.clear();
-	this->nick_modes.clear();
+	this->m_chantypes.clear();
+	this->m_chanmodes.clear();
+	this->m_nick_prefixes.clear();
+	this->m_nick_modes.clear();
 
-	this->chantypes = "#&!+";
-	this->chanmodes = "beI,k,l";
-	this->nick_prefixes = "@%+";
-	this->nick_modes = "ohv";
+	this->m_chantypes = "#&!+";
+	this->m_chanmodes = "beI,k,l";
+	this->m_nick_prefixes = "@%+";
+	this->m_nick_modes = "ohv";
 
-	this->nickcount = 1;
+	this->m_nickcount = 1;
 	this->end_of_motd = false;
 	this->is_away = false;
 	this->supports_watch = false;
@@ -1865,15 +1865,15 @@ boost::string_ref
 server::get_network (bool fallback) const
 {
 	/* check the network list */
-	if (this->network)
-		return this->network->name;
+	if (this->m_network)
+		return this->m_network->name;
 
 	/* check the network name given in 005 NETWORK=... */
 	if (this->server_session && *this->server_session->channel)
 		return this->server_session->channel;
 
 	if (fallback)
-		return this->servername; // DANGER WE NEED TO FIX THE CALLERS
+		return this->m_servername; // DANGER WE NEED TO FIX THE CALLERS
 
 	return boost::string_ref{};
 }
@@ -1884,12 +1884,12 @@ server::set_name (const std::string& name)
 	std::string name_to_set = name;
 
 	if (name.empty())
-		name_to_set = this->hostname;
+		name_to_set = this->m_hostname;
 
 	/* strncpy parameters must NOT overlap */
-	if (name != this->servername)
+	if (name != this->m_servername)
 	{
-		safe_strcpy (this->servername, name.c_str());
+		safe_strcpy (this->m_servername, name.c_str());
 	}
 
 	for (auto sess : this->sessions)
@@ -1899,9 +1899,9 @@ server::set_name (const std::string& name)
 
 	if (this->server_session->type == session::SESS_SERVER)
 	{
-		if (this->network)
+		if (this->m_network)
 		{
-			safe_strcpy (this->server_session->channel, this->network->name.c_str());
+			safe_strcpy (this->server_session->channel, this->m_network->name.c_str());
 		} else
 		{
 			safe_strcpy (this->server_session->channel, name.c_str());

@@ -361,18 +361,18 @@ cmd_away (struct session *sess, char *[], char *word_eol[])
 	{
 		if (sess->server->is_away)
 		{
-			if (!sess->server->last_away_reason.empty())
-				PrintTextf (sess, boost::format(_("Already marked away: %s\n")) % sess->server->last_away_reason);
+			if (!sess->server->m_last_away_reason.empty())
+				PrintTextf (sess, boost::format(_("Already marked away: %s\n")) % sess->server->m_last_away_reason);
 			return false;
 		}
 		std::string prefs_reason(prefs.hex_away_reason);
-		reason = sess->server->reconnect_away ? sess->server->last_away_reason : prefs_reason;
+		reason = sess->server->reconnect_away ? sess->server->m_last_away_reason : prefs_reason;
 	}
 	sess->server->p_set_away (reason);
 
-	if (sess->server->last_away_reason != reason)
+	if (sess->server->m_last_away_reason != reason)
 	{
-			sess->server->last_away_reason = reason;
+			sess->server->m_last_away_reason = reason;
 	}
 
 	if (!sess->server->connected)
@@ -393,7 +393,7 @@ cmd_back (struct session *sess, char *[], char *[])
 		PrintText (sess, _("Already marked back.\n"));
 	}
 
-	sess->server->last_away_reason.clear();
+	sess->server->m_last_away_reason.clear();
 	return true;
 }
 
@@ -872,7 +872,7 @@ cmd_debug (struct session *sess, char *[], char *[])
 	for (serv_itr v{ serv_list }, end; v != end; ++v)
 	{
 		std::ostringstream out;
-		out << boost::format(_("%p %-5d %s\n")) % &(*v) % v->sok % v->servername;
+		out << boost::format(_("%p %-5d %s\n")) % &(*v) % v->sok % v->m_servername;
 		PrintText (sess, out.str());
 	}
 
@@ -2377,7 +2377,7 @@ split_up_text(struct session &sess, char*text, int cmd_length, char *split_text)
 	size_t max = 512; /* rfc 2812 */
 	max -= 3; /* :, !, @ */
 	max -= cmd_length;
-	max -= std::strlen (sess.server->nick);
+	max -= std::strlen (sess.server->m_nick);
 	max -= std::strlen (sess.channel);
 	if (sess.me && sess.me->hostname)
 		max -= sess.me->hostname->size();
@@ -2429,7 +2429,7 @@ static std::vector<std::string_view> split_up_text(struct session &sess, const s
 	size_t max = 512; /* rfc 2812 */
 	max -= 3; /* :, !, @ */
 	max -= cmd_length;
-	max -= std::strlen(sess.server->nick);
+	max -= std::strlen(sess.server->m_nick);
 	max -= std::strlen(sess.channel);
 	if (sess.me && sess.me->hostname)
 		max -= sess.me->hostname->size();
@@ -2485,7 +2485,7 @@ cmd_me (struct session *sess, char *[], char *word_eol[])
 	if (dcc::dcc_write_chat (sess->channel, buffer))
 	{
 		/* print it to screen */
-		inbound_action (sess, sess->channel, sess->server->nick, "", act, true, false,
+		inbound_action (sess, sess->channel, sess->server->m_nick, "", act, true, false,
 							 &no_tags);
 	} else
 	{
@@ -2496,7 +2496,7 @@ cmd_me (struct session *sess, char *[], char *word_eol[])
 			{
 				sess->server->p_action (sess->channel, split_text);
 				/* print it to screen */
-				inbound_action (sess, sess->channel, sess->server->nick, "",
+				inbound_action (sess, sess->channel, sess->server->m_nick, "",
 									 split_text, true, false,
 									 &no_tags);
 
@@ -2508,7 +2508,7 @@ cmd_me (struct session *sess, char *[], char *word_eol[])
 
 			sess->server->p_action (sess->channel, act + offset);
 			/* print it to screen */
-			inbound_action (sess, sess->channel, sess->server->nick, "",
+			inbound_action (sess, sess->channel, sess->server->m_nick, "",
 								 act + offset, true, false, &no_tags);
 		} else
 		{
@@ -2525,7 +2525,7 @@ cmd_mode (struct session *sess, char *word[], char *word_eol[])
 	/* +channel channels are dying, let those servers whine about modes.
 	 * return info about current channel if available and no info is given */
 	if ((*word[2] == '+') || (*word[2] == 0) || (!sess->server->is_channel_name(word[2]) &&
-				!(rfc_casecmp(sess->server->nick, word[2]) == 0)))
+				!(rfc_casecmp(sess->server->m_nick, word[2]) == 0)))
 	{
 		if(sess->channel[0] == 0)
 			return false;
@@ -2614,7 +2614,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 				while ((split_text = split_up_text (*sess, msg + offset, cmd_length, split_text)))
 				{
 					inbound_chanmsg (*(newsess->server), nullptr, newsess->channel,
-										  newsess->server->nick, gsl::ensure_z(split_text), true, false,
+										  newsess->server->m_nick, gsl::ensure_z(split_text), true, false,
 										  &no_tags);
 
 					if (*split_text)
@@ -2623,7 +2623,7 @@ cmd_msg (struct session *sess, char *word[], char *word_eol[])
 					g_free(split_text);
 				}
 				inbound_chanmsg (*(newsess->server), nullptr, newsess->channel,
-									  newsess->server->nick, gsl::ensure_z(msg + offset), true, false,
+									  newsess->server->m_nick, gsl::ensure_z(msg + offset), true, false,
 									  &no_tags);
 			}
 			else
@@ -2688,7 +2688,7 @@ cmd_nick (struct session *sess, char *word[], char *[])
 		else
 		{
 			message_tags_data no_tags = message_tags_data();
-			inbound_newnick (*(sess->server), sess->server->nick, nick, true,
+			inbound_newnick (*(sess->server), sess->server->m_nick, nick, true,
 								  &no_tags);
 		}
 		return true;
@@ -2867,7 +2867,7 @@ cmd_query (struct session *sess, char *word[], char *word_eol[])
 			{
 				sess->server->p_message (nick, split_text);
 				inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
-								 nick_sess->server->nick, gsl::ensure_z(split_text), true, false,
+								 nick_sess->server->m_nick, gsl::ensure_z(split_text), true, false,
 								 &no_tags);
 
 				if (*split_text)
@@ -2877,7 +2877,7 @@ cmd_query (struct session *sess, char *word[], char *word_eol[])
 			}
 			sess->server->p_message (nick, msg + offset);
 			inbound_chanmsg (*nick_sess->server, nick_sess, nick_sess->channel,
-							 nick_sess->server->nick, gsl::ensure_z(msg + offset), true, false,
+							 nick_sess->server->m_nick, gsl::ensure_z(msg + offset), true, false,
 							 &no_tags);
 		}
 
@@ -2891,7 +2891,7 @@ cmd_quiet (struct session *sess, char *word[], char *[])
 {
 	server *serv = sess->server;
 
-	if (serv->chanmodes.find_first_of('q') == std::string::npos)
+	if (serv->m_chanmodes.find_first_of('q') == std::string::npos)
 	{
 		PrintText (sess, _("Quiet is not supported by this server."));
 		return true;
@@ -2915,7 +2915,7 @@ cmd_unquiet (struct session *sess, char *word[], char *[])
 {
 	/* Allow more than one mask in /unban -- tvk */
 	
-	if (sess->server->chanmodes.find_first_of('q') == std::string::npos)
+	if (sess->server->m_chanmodes.find_first_of('q') == std::string::npos)
 	{
 		PrintText (sess, _("Quiet is not supported by this server."));
 		return true;
@@ -2976,10 +2976,10 @@ cmd_reconnect (struct session *sess, char *word[], char *[])
 #endif
 
 		if (*word[4+offset])
-			safe_strcpy (serv->password, word[4+offset], sizeof (serv->password));
+			safe_strcpy (serv->m_password, word[4+offset], sizeof (serv->m_password));
 		if (*word[3+offset])
 			serv->port = atoi (word[3+offset]);
-		safe_strcpy (serv->hostname, word[2+offset], sizeof (serv->hostname));
+		safe_strcpy (serv->m_hostname, word[2+offset], sizeof (serv->m_hostname));
 		serv->auto_reconnect (true, -1);
 	}
 	else
@@ -3187,7 +3187,7 @@ cmd_server (struct session *sess, char *word[], char *word_eol[])
 	if (!(*server_name))
 		return false;
 
-	sess->server->network = nullptr;
+	sess->server->m_network = nullptr;
 
 	/* dont clear it for /servchan */
 	if (g_ascii_strncasecmp (word_eol[1], "SERVCHAN ", 9))
@@ -3212,8 +3212,8 @@ cmd_server (struct session *sess, char *word[], char *word_eol[])
 
 	if (*pass)
 	{
-		safe_strcpy (serv->password, pass, sizeof (serv->password));
-		serv->loginmethod = LOGIN_PASS;
+		safe_strcpy (serv->m_password, pass, sizeof (serv->m_password));
+		serv->m_loginmethod = LOGIN_PASS;
 	}
 	else
 	{
@@ -3221,12 +3221,12 @@ cmd_server (struct session *sess, char *word[], char *word_eol[])
 		net = servlist_net_find_from_server (server_name);
 		if (net && net->pass && *net->pass)
 		{
-			safe_strcpy (serv->password, net->pass, sizeof (serv->password));
-			serv->loginmethod = net->logintype;
+			safe_strcpy (serv->m_password, net->pass, sizeof (serv->m_password));
+			serv->m_loginmethod = net->logintype;
 		}
 		else /* Otherwise ensure no password is sent */
 		{
-			serv->password[0] = 0;
+			serv->m_password[0] = 0;
 		}
 	}
 
@@ -3249,9 +3249,9 @@ cmd_server (struct session *sess, char *word[], char *word_eol[])
 	}
 
 	/* try to associate this connection with a listed network */
-	if (!serv->network)
+	if (!serv->m_network)
 		/* search for this hostname in the entire server list */
-		serv->network = servlist_net_find_from_server (server_name);
+		serv->m_network = servlist_net_find_from_server (server_name);
 		/* may return nullptr, but that's OK */
 
 	return true;
@@ -3408,7 +3408,7 @@ find_server_from_hostname (const char hostname[])
 	for (auto list = serv_list; list; list = g_slist_next(list))
 	{
 		auto serv = static_cast<server*>(list->data);
-		if (!g_ascii_strcasecmp (hostname, serv->hostname) && serv->connected)
+		if (!g_ascii_strcasecmp (hostname, serv->m_hostname) && serv->connected)
 			return serv;
 	}
 
@@ -3421,7 +3421,7 @@ find_server_from_net (void *net)
 	for (auto list = serv_list; list; list = g_slist_next(list))
 	{
 		auto serv = static_cast<server*>(list->data);
-		if (serv->network == net && serv->connected)
+		if (serv->m_network == net && serv->connected)
 			return serv;
 	}
 
@@ -3595,7 +3595,7 @@ cmd_wallchan (struct session *sess, char *[],
 				message_tags_data no_tags = message_tags_data();
 
 				inbound_chanmsg (*sess->server, nullptr, sess->channel,
-									  sess->server->nick, gsl::ensure_z(word_eol[2]), true, false, 
+									  sess->server->m_nick, gsl::ensure_z(word_eol[2]), true, false,
 									  &no_tags);
 				sess->server->p_message (sess->channel, word_eol[2]);
 			}
@@ -4217,7 +4217,7 @@ user_command (session * sess, const std::string & cmd, char *word[],
 	char buf[2048] = { };
 	if (!auto_insert({ buf, sizeof buf }, (const unsigned char*)cmd.c_str(), word, word_eol, "", sess->channel, "",
 		sess->server->get_network(true).data(), "",
-							sess->server->nick, "", ""))
+							sess->server->m_nick, "", ""))
 	{
 		PrintText (sess, _("Bad arguments for user command.\n"));
 		return;
@@ -4287,7 +4287,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		if (dcc)
 		{
 			inbound_chanmsg (*sess->server, nullptr, sess->channel,
-				sess->server->nick, newcmd, true, false, &no_tags);
+				sess->server->m_nick, newcmd, true, false, &no_tags);
 			set_topic (*sess, net_ip (dcc->addr), net_ip (dcc->addr));
 			return;
 		}
@@ -4301,7 +4301,7 @@ handle_say (session *sess, char *text, bool check_spch)
 
 		while ((split_text = split_up_text(*sess, &newcmd[0] + offset, cmd_length, split_text)))
 		{
-			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
+			inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->m_nick,
 								  gsl::ensure_z(split_text), true, false, &no_tags);
 			sess->server->p_message (sess->channel, split_text);
 			
@@ -4312,7 +4312,7 @@ handle_say (session *sess, char *text, bool check_spch)
 		}
 
 		auto nmgSpan = gsl::cstring_span<>(newcmd).subspan(offset);
-		inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->nick,
+		inbound_chanmsg (*sess->server, sess, sess->channel, sess->server->m_nick,
 			nmgSpan, true, false, &no_tags);
 		sess->server->p_message(sess->channel, to_string_ref(nmgSpan));
 	} else
@@ -4376,7 +4376,7 @@ namespace
 
 std::string command_insert_vars (session &sess,  const std::string& cmd)
 {
-	ircnet *mynet = sess.server->network;
+	ircnet *mynet = sess.server->m_network;
 	static const boost::regex replacevals("%(n|p|r|u)");
 
 	if (!mynet)										/* shouldn't really happen */

@@ -419,7 +419,7 @@ userlist_add (struct session *sess, const char name[], const char hostname[],
 		user->hostname = std::string(hostname);
 	user->nick = (name + prefix_chars);
 	/* is it me? */
-	if (!sess->server->compare (user->nick, sess->server->nick))
+	if (!sess->server->compare (user->nick, sess->server->m_nick))
 		user->me = true;
 	/* extended join info */
 	if (sess->server->have_extjoin)

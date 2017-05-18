@@ -280,7 +280,7 @@ bool session_logger::write(const std::string &text, time_t ts)
 	{
 		_impl =
 			std::make_unique<session_logger_impl>(log_create_pathname(
-			_parent.server->servername, _parent.channel,
+			_parent.server->m_servername, _parent.channel,
 			_parent.server->get_network(false).data()));
 	}
 

@@ -155,7 +155,7 @@ supports_exempt (banlist_info &banl, int i)
 	if (serv->have_except)
 		goto yes;
 
-	for(char cm : serv->chanmodes)
+	for(char cm : serv->m_chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -178,7 +178,7 @@ supports_invite (banlist_info &banl, int i)
 	if (serv->have_invite)
 		goto yes;
 
-	for (char cm : serv->chanmodes)
+	for (char cm : serv->m_chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -198,7 +198,7 @@ supports_quiet (banlist_info &banl, int i)
 	server *serv = banl.sess->server;
 	int bit = 1<<i;
 
-	for (char cm : serv->chanmodes)
+	for (char cm : serv->m_chanmodes)
 	{
 		if (cm == ',')
 			break;
@@ -438,7 +438,7 @@ banlist_do_refresh (banlist_info *banl)
 	{
 		GtkListStore *store;
 		std::ostringstream stream(DISPLAY_NAME": Ban List (", std::ios::ate);
-		stream << sess->channel << ", " << sess->server->servername << ")";
+		stream << sess->channel << ", " << sess->server->m_servername << ")";
 		mg_set_title (banl->window, stream.str().c_str());
 
 		store = get_store (sess);
@@ -812,7 +812,7 @@ banlist_opengui (struct session *sess)
 	banl->checked = 1<<MODE_BAN;
 
 	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME ": Ban List (%s)"),
-					sess->server->servername);
+					sess->server->m_servername);
 
 	banl->window = mg_create_generic_tab ("BanList", tbuf, false,
 		true, G_CALLBACK(banlist_closegui), banl, 550, 200, &vbox, sess->server);

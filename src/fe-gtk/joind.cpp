@@ -240,8 +240,8 @@ joind_show_dialog (server *serv)
 	g_signal_connect (G_OBJECT (okbutton1), "clicked",
 							G_CALLBACK (joind_ok_cb), serv);
 							
-	if (serv->network)
-		if (g_ascii_strcasecmp(((ircnet*)serv->network)->name.c_str(), "freenode") == 0)
+	if (serv->m_network)
+		if (g_ascii_strcasecmp(((ircnet*)serv->m_network)->name.c_str(), "freenode") == 0)
 		{
 			gtk_entry_set_text (GTK_ENTRY (entry1), "#hexchat");
 		}

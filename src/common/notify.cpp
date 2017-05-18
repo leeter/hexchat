@@ -169,7 +169,7 @@ static void notify_announce_offline (server & serv, notify_per_server &servnot,
 	{
 		auto net = serv.get_network(true).to_string();
 		session *sess = serv.front_session;
-		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, mutable_nick, serv.servername,
+		EMIT_SIGNAL_TIMESTAMP(XP_TE_NOTIFYOFFLINE, sess, mutable_nick, serv.m_servername,
 			net, nullptr, 0,
 			tags_data.timestamp);
 	}
@@ -190,7 +190,7 @@ static void notify_announce_online (server & serv, notify_per_server &servnot,
 	servnot.laston = notify_per_server::clock::now();
 	const auto mutable_nick = nick.to_string();
 	const auto mutable_net = serv.get_network(true).to_string();
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, mutable_nick, serv.servername,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYONLINE, sess, mutable_nick, serv.m_servername,
 					 mutable_net, nullptr, 0,
 					 tags_data.timestamp);
 	fe_notify_update (&mutable_nick);

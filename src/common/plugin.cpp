@@ -1060,8 +1060,8 @@ hexchat_find_context (hexchat_plugin *ph, const char *servname, const char *chan
 		auto netname = serv->get_network (true);
 
 		if (servname == nullptr ||
-			 rfc_casecmp (servname, serv->servername) == 0 ||
-			 g_ascii_strcasecmp (servname, serv->hostname) == 0 ||
+			 rfc_casecmp (servname, serv->m_servername) == 0 ||
+			 g_ascii_strcasecmp (servname, serv->m_hostname) == 0 ||
 			 g_ascii_strcasecmp (servname, netname.data()) == 0)
 		{
 			if (channel == nullptr)
@@ -1137,7 +1137,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 	{
 	case 0x2de2ee: /* away */
 		if (sess->server->is_away)
-			return sess->server->last_away_reason.c_str();
+			return sess->server->m_last_away_reason.c_str();
 		return nullptr;
 
 	case 0x2c0b7d03: /* channel */
@@ -1154,7 +1154,7 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		}
 
 	case 0x30f5a8: /* host */
-		return sess->server->hostname;
+		return sess->server->m_hostname;
 
 	case 0x1c0e99c1: /* inputbox */
 		return fe_get_inputbox_contents (sess);
@@ -1166,18 +1166,18 @@ hexchat_get_info (hexchat_plugin *ph, const char *id)
 		return sess->server->get_network(false).data();
 
 	case 0x339763: /* nick */
-		return sess->server->nick;
+		return sess->server->m_nick;
 
 	case 0x4889ba9b: /* password */
 	case 0x438fdf9: /* nickserv */
-		if (sess->server->network)
-			return sess->server->network->pass;
+		if (sess->server->m_network)
+			return sess->server->m_network->pass;
 		return nullptr;
 
 	case 0xca022f43: /* server */
 		if (!sess->server->connected)
 			return nullptr;
-		return sess->server->servername;
+		return sess->server->m_servername;
 
 	case 0x696cd2f: /* topic */
 		return sess->topic.c_str();
@@ -1452,17 +1452,17 @@ hexchat_list_str (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x8cea5e7c: /* channelkey */
 			return ((session *)data)->channelkey;
 		case 0x577e0867: /* chantypes */
-			return ((session *)data)->server->chantypes.c_str();
+			return ((session *)data)->server->m_chantypes.c_str();
 		case 0x38b735af: /* context */
 			return static_cast<const char*>(data);	/* this is a session * */
 		case 0x6de15a2e: /* network */
 			return ((session *)data)->server->get_network(false).data();
 		case 0x8455e723: /* nickprefixes */
-			return ((session *)data)->server->nick_prefixes.c_str();
+			return ((session *)data)->server->m_nick_prefixes.c_str();
 		case 0x829689ad: /* nickmodes */
-			return ((session *)data)->server->nick_modes.c_str();
+			return ((session *)data)->server->m_nick_modes.c_str();
 		case 0xca022f43: /* server */
-			return ((session *)data)->server->servername;
+			return ((session *)data)->server->m_servername;
 		}
 		break;
 
@@ -1612,7 +1612,7 @@ hexchat_list_int (hexchat_plugin *ph, hexchat_list *xlist, const char *name)
 		case 0x1a192: /* lag */
 			return ((struct session *)data)->server->lag;
 		case 0x1916144c: /* maxmodes */
-			return ((struct session *)data)->server->modes_per_line;
+			return ((struct session *)data)->server->m_modes_per_line;
 		case 0x66f1911: /* queue */
 			return ((struct session *)data)->server->sendq_len;
 		case 0x368f3a:	/* type */

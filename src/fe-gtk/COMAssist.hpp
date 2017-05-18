@@ -73,7 +73,7 @@ namespace comhelp {
 	};
 
 	template<typename T>
-	std::enable_if_t<std::is_callable<typename T()>::value, HRESULT>
+	std::enable_if_t<std::is_callable_v<typename T()>, HRESULT>
 		NoExceptBoundary(T&& fn) noexcept {
 		try {
 			fn();
@@ -90,7 +90,7 @@ namespace comhelp {
 		std::atomic<ULONG> ref_count = 0ul;
 		
 		template<typename Iface>
-		typename std::enable_if<std::is_abstract<typename Iface>::value, bool>::type isValid(REFIID riid) noexcept
+		typename std::enable_if<std::is_abstract_v<typename Iface>, bool>::type isValid(REFIID riid) noexcept
 		{
 			return riid == __uuidof(typename Iface);
 		}
