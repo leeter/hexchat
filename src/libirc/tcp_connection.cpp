@@ -30,8 +30,9 @@
 #include "tcp_connection.hpp"
 
 #ifdef WIN32
+#include "win_tls_stream.hpp"
 #include "w32crypt_seed.hpp"
-#endif
+#else
 
 namespace{
 
@@ -305,6 +306,7 @@ namespace{
 	}
 	
 }
+#endif
 
 namespace io{
 	namespace tcp{
@@ -317,6 +319,7 @@ namespace io{
 			auto result = res.resolve(query, ec);
 			return std::make_pair(ec, result);
 		}
+#ifndef WIN32
 
 		std::unique_ptr<connection>
 			connection::create_connection(connection_security security, boost::asio::io_service& io_service)
@@ -330,6 +333,7 @@ namespace io{
 			}
 			return std::make_unique<tcp_connection>(new context());
 		}
+#endif
 	}
 }
 
