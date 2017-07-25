@@ -112,7 +112,7 @@ public:
 	// BUGBUG return const!!!
 	boost::optional<session&> find_channel(const boost::string_ref &chan);
 	bool is_channel_name(const boost::string_ref &chan) const;
-	boost::optional<const std::pair<bool, std::string>& > get_away_message(const std::string & nick) const NOEXCEPT;
+	boost::optional<const std::pair<bool, std::string>& > get_away_message(const std::string & nick) const noexcept;
 	void save_away_message(const std::string& nick, const boost::optional<std::string>& message);
 
 	std::unordered_set<session*> sessions;

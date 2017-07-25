@@ -20,9 +20,6 @@
     <ClInclude Include="tcp_connection.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="w32crypt_seed.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="tcpfwd.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -67,12 +64,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tcp_connection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="w32crypt_seed.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

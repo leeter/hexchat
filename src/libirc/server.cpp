@@ -104,12 +104,7 @@ namespace irc
 
 	server server::connect(::io::tcp::connection_security sec, const boost::string_ref& hostname, std::uint16_t port)
 	{
-		boost::asio::io_service io_service;
-		auto resolved = io::tcp::resolve_endpoints(io_service, hostname.to_string(), port);
-		if (resolved.first){
-			boost::asio::detail::throw_error(resolved.first, "resolve");
-		}
-		auto connection = io::tcp::connection::create_connection(sec, io_service);
+		auto connection = io::tcp::connection::create_connection(sec);
 		auto impl = std::make_unique<server_impl>(std::move(connection));
 		return{ std::move(impl) };
 	}

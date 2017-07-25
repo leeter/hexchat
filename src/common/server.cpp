@@ -133,30 +133,9 @@ tcp_send_real (void * /*ssl*/, int /*sok*/, const char *encoding, int using_irc,
 	if (locale)
 	{
 		serv->server_connection->enqueue_message(locale.get());
-#if 0
-		len = loc_len;
-#ifdef USE_OPENSSL
-		if (!ssl)
-			ret = send (sok, locale, len, 0);
-		else
-			ret = _SSL_send (static_cast<SSL*>(ssl), locale, len);
-#else
-		ret = send (sok, locale, len, 0);
-#endif
-#endif
 	} else
 	{
 		serv->server_connection->enqueue_message(buf);
-#if 0
-#ifdef USE_OPENSSL
-		if (!ssl)
-			ret = send (sok, buf, len, 0);
-		else
-			ret = _SSL_send (static_cast<SSL*>(ssl), buf, len);
-#else
-		ret = send (sok, buf, len, 0);
-#endif
-#endif
 	}
 
 	return ret;
@@ -767,31 +746,27 @@ timeout_auto_reconnect (server *serv)
 }
 
 void
-server::auto_reconnect (bool send_quit, int err)
+server::auto_reconnect(bool send_quit, int err)
 {
-	session *s;
-	GSList *list;
-	int del;
-
 	if (this->server_session == nullptr)
 		return;
 
-	list = sess_list;
+	auto list = sess_list;
 	while (list)				  /* make sure auto rejoin can work */
 	{
-		s = static_cast<session*>(list->data);
+		auto s = static_cast<session*>(list->data);
 		if (s->type == session::SESS_CHANNEL && s->channel[0])
 		{
-			strcpy (s->waitchannel, s->channel);
-			strcpy (s->willjoinchannel, s->channel);
+			strcpy(s->waitchannel, s->channel);
+			strcpy(s->willjoinchannel, s->channel);
 		}
 		list = list->next;
 	}
 
 	if (this->connected)
-		this->disconnect (this->server_session, send_quit, err);
+		this->disconnect(this->server_session, send_quit, err);
 
-	del = prefs.hex_net_reconnect_delay * 1000;
+	auto del = prefs.hex_net_reconnect_delay * 1000;
 	if (del < 1000)
 		del = 500;				  /* so it doesn't block the gui */
 
@@ -800,8 +775,9 @@ server::auto_reconnect (bool send_quit, int err)
 #else
 	if (err == -1 || err == 0 || err == WSAECONNRESET || err == WSAETIMEDOUT)
 #endif
+	{
 		this->reconnect_away = this->is_away;
-
+	}
 	/* is this server in a reconnect delay? remove it! */
 	if (this->m_recondelay_tag)
 	{
@@ -1087,10 +1063,10 @@ server_kill(session *sess)
 void
 server::disconnect (session * sess, bool sendquit, int err)
 {
+	if (!sess) {
+		return;
+	}
 	server *serv = sess->server;
-	GSList *list;
-	char tbuf[64];
-	bool shutup = false;
 
 	/* send our QUIT reason */
 	if (sendquit && serv->connected)
@@ -1107,7 +1083,8 @@ server::disconnect (session * sess, bool sendquit, int err)
 		// flush any outgoing messages
 		this->server_connection->poll();
 	}
-
+	char tbuf[64];
+	bool shutup = false;
 	/* close all sockets & io tags */
 	switch (serv->cleanup ())
 	{
@@ -1124,7 +1101,7 @@ server::disconnect (session * sess, bool sendquit, int err)
 
 	serv->flush_queue ();
 
-	list = sess_list;
+	auto list = sess_list;
 	while (list)
 	{
 		sess = (struct session *) list->data;
@@ -1422,12 +1399,13 @@ traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port)
 #endif
 
 /* this is the child process making the connection attempt */
-
+#ifndef WIN32
 static gboolean
-io_poll(io::tcp::connection * connection){
+io_poll(io::tcp::connection * connection) {
 	connection->poll();
 	return TRUE;
 }
+#endif // !WIN32
 
 void server_error(server * serv, const boost::system::error_code & error)
 {
@@ -1455,20 +1433,19 @@ void server_error(server * serv, const boost::system::error_code & error)
 void
 server::connect (char *hostname, std::uint16_t s_port, bool nologin)
 {
-	int read_des[2] = { 0 };
-	boost::asio::io_service io_service;
+	/*boost::asio::io_service io_service;
 	auto resolved = io::tcp::resolve_endpoints(io_service, hostname, s_port);
 	if (resolved.first){
 		server_error(this, resolved.first);
 		return;
-	}
-	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none, io_service );
+	}*/
+	this->server_connection = io::tcp::connection::create_connection(this->use_ssl ? io::tcp::connection_security::no_verify : io::tcp::connection_security::none);
 	this->server_connection->on_connect.connect([this](const auto & error) { server_connected1(this, error); });
 	this->server_connection->on_valid_connection.connect([this](const std::string & hostname){ safe_strcpy(this->m_servername, hostname.c_str()); });
 	this->server_connection->on_error.connect([this](const auto& error) { server_error(this, error); });
 	this->server_connection->on_message.connect([this](const auto & message, auto length) { server_read_cb(this, message, length); });
 	this->server_connection->on_ssl_handshakecomplete.connect([this](auto ctx) { ssl_print_cert_info(this, ctx); });
-	this->server_connection->connect(resolved.second);
+	this->server_connection->connect(hostname, s_port);
 	
 	this->reset_to_defaults();
 	this->connecting = true;
@@ -1478,131 +1455,8 @@ server::connect (char *hostname, std::uint16_t s_port, bool nologin)
 	fe_server_event(this, fe_serverevents::CONNECTING, 0);
 	fe_set_away (*this);
 	this->flush_queue ();
-	this->m_iotag = fe_timeout_add(50, (GSourceFunc)&io_poll, this->server_connection.get());
-#if 0
-#ifdef USE_OPENSSL
-	if (!ctx && this->use_ssl)
-	{
-		if (!(serv->ctx = _SSL_context_init (ssl_cb_info, FALSE)))
-		{
-			fprintf (stderr, "_SSL_context_init failed\n");
-			exit (1);
-		}
-	}
-#endif
-
-	if (!hostname[0])
-		return;
-
-	if (port < 0)
-	{
-		/* use default port for this server type */
-		port = 6667;
-#ifdef USE_OPENSSL
-		if (this->use_ssl)
-			port = 6697;
-#endif
-	}
-	port &= 0xffff;	/* wrap around */
-
-	if (this->connected || this->connecting || this->recondelay_tag)
-		this->disconnect (sess, true, -1);
-
-	fe_progressbar_start (sess);
-
-	EMIT_SIGNAL (XP_TE_SERVERLOOKUP, sess, hostname, nullptr, nullptr, nullptr, 0);
-
-	safe_strcpy (this->servername, hostname, sizeof (this->servername));
-	/* overlap illegal in strncpy */
-	if (hostname != this->hostname)
-		safe_strcpy (this->hostname, hostname, sizeof (this->hostname));
-
-#ifdef USE_OPENSSL
-	if (this->use_ssl)
-	{
-		char *cert_file;
-		this->have_cert = false;
-
-		/* first try network specific cert/key */
-		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
-					 get_xdir (), this->get_network (true));
-		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-		{
-			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-				this->have_cert = true;
-		}
-		else
-		{
-			/* if that doesn't exist, try <config>/certs/client.pem */
-			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", nullptr);
-			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-			{
-				if (SSL_CTX_use_PrivateKey_file(ctx, cert_file, SSL_FILETYPE_PEM) == 1)
-					this->have_cert = true;
-			}
-		}
-		g_free (cert_file);
-	}
-#endif
-
-	this->reset_to_defaults();
-	this->connecting = true;
-	this->port = port;
-	this->no_login = no_login;
-
-	fe_server_event (this, fe_serverevents::CONNECTING, 0);
-	fe_set_away (this);
-	this->flush_queue ();
-
-#ifdef WIN32
-	if (_pipe (read_des, 4096, _O_BINARY) < 0)
-#else
-	if (pipe (read_des) < 0)
-#endif
-		return;
-#ifdef __EMX__ /* os/2 */
-	setmode (read_des[0], O_BINARY);
-	setmode (read_des[1], O_BINARY);
-#endif
-	this->childread = read_des[0];
-	this->childwrite = read_des[1];
-
-	/* create both sockets now, drop one later */
-	net_sockets (&this->sok4, &this->sok6);
-	this->proxy_sok4 = -1;
-	this->proxy_sok6 = -1;
-
-#ifdef WIN32
-	std::thread server_thread(server_child, this);
-	pid = GetThreadId(server_thread.native_handle());
-	server_thread.detach();
-#else
-#ifdef LOOKUPD
-	/* CL: net_resolve calls rand() when LOOKUPD is set, so prepare a different
-	 * seed for each child. This method gives a bigger variation in seed values
-	 * than calling srand(time(0)) in the child itself.
-	 */
-	rand();
-#endif
-	switch (pid = fork ())
-	{
-	case -1:
-		return;
-
-	case 0:
-		/* this is the child */
-		setuid (getuid ());
-		server_child (this);
-		_exit (0);
-	}
-#endif
-	this->childpid = pid;
-#ifdef WIN32
-	this->iotag = fe_input_add(this->childread, FIA_READ | FIA_FD, (GIOFunc)server_read_child,
-#else
-	this->iotag = fe_input_add (this->childread, FIA_READ, (GIOFunc)server_read_child,
-#endif
-										 this);
+#ifndef WIN32
+	this->m_iotag = fe_timeout_add(500, (GSourceFunc)&io_poll, this->server_connection.get());
 #endif
 }
 
@@ -1862,8 +1716,8 @@ server::set_name (const std::string& name)
 }
 
 boost::optional<const std::pair<bool, std::string>& >
-server::get_away_message(const std::string & nick) const NOEXCEPT
-		{
+server::get_away_message(const std::string & nick) const noexcept
+{
 	auto res = this->away_map.find(nick);
 	if (res == this->away_map.cend())
 		return boost::none;

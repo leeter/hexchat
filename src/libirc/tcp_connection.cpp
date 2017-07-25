@@ -15,6 +15,7 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
+#ifndef WIN32
 #define OPENSSL_NO_SSL2
 #define OPENSSL_NO_SSL3
 #include <atomic>
@@ -29,10 +30,7 @@
 #include <boost/asio/ssl.hpp>
 #include "tcp_connection.hpp"
 
-#ifdef WIN32
-#include "win_tls_stream.hpp"
-#include "w32crypt_seed.hpp"
-#else
+
 
 namespace{
 
@@ -75,10 +73,18 @@ namespace{
 			return socket_.lowest_layer().is_open();
 		}
 
-		void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
+		void connect(const std::string_view & host, std::uint16_t port)
 		{
-			boost::asio::ip::tcp::resolver::iterator current_iterator = endpoint_iterator;
-			boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
+			boost::asio::ip::tcp::resolver::query query{ static_cast<std::string>(host), std::to_string(port) };
+			boost::asio::ip::tcp::resolver res{ this->ctx_->io_service };
+			boost::system::error_code ec;
+			auto endpoint_iterator = res.resolve(query, ec);
+			if (!ec) {
+				this->on_error(ec);
+				return;
+			}
+			auto current_iterator = endpoint_iterator;
+			boost::asio::ip::tcp::endpoint endpoint = *current_iterator;
 			socket_.lowest_layer().async_connect(endpoint,
 				[this, endpoint_iterator, current_iterator](const auto & error) mutable {
 				this->do_connect(error, ++endpoint_iterator, current_iterator);
@@ -306,7 +312,6 @@ namespace{
 	}
 	
 }
-#endif
 
 namespace io{
 	namespace tcp{
@@ -319,21 +324,18 @@ namespace io{
 			auto result = res.resolve(query, ec);
 			return std::make_pair(ec, result);
 		}
-#ifndef WIN32
 
 		std::unique_ptr<connection>
-			connection::create_connection(connection_security security, boost::asio::io_service& io_service)
+			connection::create_connection(connection_security security)
 		{
 			if (security == connection_security::enforced || security == connection_security::no_verify)
 			{
-#ifdef WIN32
-				w32::crypto::seed_openssl_random();
-#endif
 				return std::make_unique<ssl_connection>(new ssl_context(security == connection_security::enforced ? boost::asio::ssl::verify_peer : boost::asio::ssl::verify_none));
 			}
 			return std::make_unique<tcp_connection>(new context());
 		}
-#endif
+
 	}
 }
+#endif
 

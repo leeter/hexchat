@@ -26,6 +26,7 @@
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
 #include <openssl/ssl.h>
+#include <string_view>
 #include "tcpfwd.hpp"
 
 namespace io
@@ -33,9 +34,9 @@ namespace io
 	namespace tcp{
 		class connection{
 		public:
-			static std::unique_ptr<connection> create_connection(connection_security security, boost::asio::io_service& io_service);
+			static std::unique_ptr<connection> create_connection(connection_security security);
 			virtual void enqueue_message(const std::string & message) = 0;
-			virtual void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator) = 0;
+			virtual void connect(const std::string_view & host, std::uint16_t port) = 0;
 			virtual bool connected() const = 0;
 			virtual void poll() = 0;
 			virtual ~connection(){}
@@ -46,7 +47,7 @@ namespace io
 			boost::signals2::signal<void(const SSL*)> on_ssl_handshakecomplete;
 		};
 
-		std::pair<boost::system::error_code, boost::asio::ip::tcp::resolver::iterator> resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
+		//std::pair<boost::system::error_code, boost::asio::ip::tcp::resolver::iterator> resolve_endpoints(boost::asio::io_service& io_service, const std::string & host, unsigned short port);
 	}
 }
 #endif
