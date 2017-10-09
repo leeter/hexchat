@@ -21,13 +21,6 @@
 #define NOMINMAX
 #endif
 #include "precompile.hpp"
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iterator>
-#include <sstream>
-#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -104,26 +97,6 @@ struct key_binding
 	{}
 	key_binding(key_binding&&) noexcept = default;
 	key_binding& operator=(key_binding&&) noexcept = default;
-	/*key_binding(key_binding && other) NOEXCEPT
-		:keyval(),
-		mod(),
-		action()
-	{
-		*this = std::forward<key_binding&&>(other);
-	}
-	
-	key_binding& operator=(key_binding && other) NOEXCEPT
-	{
-		if (this != &other)
-		{
-			std::swap(this->data1, other.data1);
-			std::swap(this->data2, other.data2);
-			std::swap(this->keyval, other.keyval);
-			std::swap(this->mod, other.mod);
-			std::swap(this->action, other.action);
-		}
-		return *this;
-	}*/
 private:
 	key_binding(const key_binding &) = delete;
 	key_binding& operator=(const key_binding&) = delete;
@@ -268,7 +241,7 @@ key_init ()
 }
 
 static inline int
-key_get_action_from_string (const std::string & text)
+key_get_action_from_string (const std::string_view text)
 {
 	for (int i = 0; i < KEY_MAX_ACTIONS + 1; i++)
 	{
@@ -279,13 +252,6 @@ key_get_action_from_string (const std::string & text)
 	}
 
 	return 0;
-}
-
-static void
-key_free (gpointer data) NOEXCEPT
-{
-	g_return_if_fail(data != nullptr);
-	std::unique_ptr<key_binding> kb(static_cast<key_binding*>(data));
 }
 
 /* Ok, here are the NOTES
@@ -413,13 +379,13 @@ enum
 static GtkWidget *key_dialog = nullptr;
 
 static GtkTreeModel *
-get_store (void) NOEXCEPT
+get_store (void) noexcept
 {
 	return gtk_tree_view_get_model (static_cast<GtkTreeView*>(g_object_get_data (G_OBJECT (key_dialog), "view")));
 }
 
 static void
-key_dialog_print_text (GtkXText *xtext,const char text[])
+key_dialog_print_text (GtkXText *xtext,const char* text)
 {
 	unsigned int old = prefs.hex_stamp_text;
 	prefs.hex_stamp_text = 0;	/* temporarily disable stamps */
@@ -813,35 +779,40 @@ key_dialog_show ()
 static int
 key_save_kbs (void)
 {
-	int fd = hexchat_open_file ("keybindings.conf", O_CREAT | O_TRUNC | O_WRONLY,
-									 0x180, XOF_DOMODE);
-	if (fd < 0)
-		return 1;
-	
-	char buf[512];
-	write (fd, buf, snprintf (buf, 510, "# HexChat key bindings config file\n\n"));
+	namespace bfs = boost::filesystem;
+	const auto path = io::fs::make_config_path(u8"keybindings.conf");
 
+	if (!io::fs::create_file_with_mode(path, 0x180)) {
+		return 1;
+	}
+	bfs::ofstream outfile(path, std::ios::trunc | std::ios::out | std::ios::binary);
+	if (!outfile && (outfile << u8"# HexChat key bindings config file\n\n")) {
+		return 1;
+	}
+	const auto accel_fmt = boost::format(u8"ACCEL=%s\n%s\n");
 	for (auto & kb : keybind_list)
 	{
 		glib_string accel_text(gtk_accelerator_name (kb.keyval, kb.mod));
 
-		snprintf (buf, 510, "ACCEL=%s\n%s\n", accel_text.get(), key_actions[kb.action].name);
-		write (fd, buf, strlen (buf));
+		outfile << boost::format(accel_fmt) % accel_text.get() % key_actions[kb.action].name;
 
-		if (kb.data1 && kb.data1[0])
-			write (fd, buf, snprintf (buf, 510, "D1:%s\n", kb.data1.get()));
-		else
-			write (fd, "D1!\n", 4);
+		if (kb.data1 && kb.data1[0]) {
+			outfile << boost::format(u8"D1:%s\n") % kb.data1.get();
+		}
+		else {
+			outfile << u8"D1!\n";
+		}
 
-		if (kb.data2 && kb.data2[0])
-			write (fd, buf, snprintf (buf, 510, "D2:%s\n", kb.data2.get()));
-		else
-			write (fd, "D2!\n", 4);
+		if (kb.data2 && kb.data2[0]) {
+			outfile << boost::format(u8"D2:%s\n") % kb.data2.get();
+		}
+		else {
+			outfile << u8"D2!\n";
+		}
 
-		write (fd, "\n", 1);
+		outfile << '\n';
 	}
 
-	close (fd);
 	return 0;
 }
 
@@ -1285,7 +1256,7 @@ static struct gcomp_data old_gcomp;
 
 /* work on the data, ie return only channels */
 static int
-double_chan_cb (session *lsess, GList **list) NOEXCEPT
+double_chan_cb (session *lsess, GList **list) noexcept
 {
 	if (lsess->type == session::SESS_CHANNEL)
 		*list = g_list_prepend(*list, lsess->channel);
@@ -1294,7 +1265,7 @@ double_chan_cb (session *lsess, GList **list) NOEXCEPT
 
 /* convert a slist -> list. */
 static GList *
-chanlist_double_list (GSList *inlist) NOEXCEPT
+chanlist_double_list (GSList *inlist) noexcept
 {
 	GList *list = nullptr;
 	g_slist_foreach(inlist, (GFunc)double_chan_cb, &list);
@@ -1315,14 +1286,6 @@ cmdlist_double_list (const std::vector<popup> & inlist)
 	return list;
 }
 
-static char *
-gcomp_nick_func (char *data)
-{
-	if (data)
-		return &(reinterpret_cast<User *>(data)->nick)[0];
-	return "";
-}
-
 void
 key_action_tab_clean(void)
 {
@@ -1333,29 +1296,15 @@ key_action_tab_clean(void)
 	}
 }
 
-
-/* For use in sorting the user list for completion */
-static int
-talked_recent_cmp (struct User *a, struct User *b) NOEXCEPT
-{
-	if (a->lasttalk < b->lasttalk)
-		return -1;
-
-	if (a->lasttalk > b->lasttalk)
-		return 1;
-
-	return 0;
-}
-
 /* Used in the followig completers */
 static const size_t COMP_BUF = 2048;
 
-static glong len_to_offset(const char str[], glong len) NOEXCEPT
+static glong len_to_offset(const char str[], glong len) noexcept
 {
 	return g_utf8_pointer_to_offset(str, str + len);
 }
 
-static glong offset_to_len(const char str[], glong offset) NOEXCEPT
+static glong offset_to_len(const char str[], glong offset) noexcept
 {
 	return g_utf8_offset_to_pointer(str, offset) - str;
 }
@@ -1464,9 +1413,17 @@ struct session *sess)
 		gcomp.reset(g_completion_new(nullptr));
 		if (is_nick)
 		{
-			std::vector < User* > tmp_vec { sess->usertree_alpha };
+			std::vector < User* > tmp_vec{ sess->usertree_alpha };
 			if (prefs.hex_completion_sort == 1)	/* sort in last-talk order? */
-				std::sort(tmp_vec.begin(), tmp_vec.end(), talked_recent_cmp);
+				std::sort(tmp_vec.begin(), tmp_vec.end(), [](const User* a, const User* b) {
+					if (a->lasttalk < b->lasttalk)
+						return -1;
+
+					if (a->lasttalk > b->lasttalk)
+						return 1;
+
+					return 0;
+				});
 			for (auto usr : tmp_vec)
 			{
 				tmp_list = g_list_prepend(tmp_list, const_cast<char*>(usr->nick.c_str()));

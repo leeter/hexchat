@@ -1397,7 +1397,7 @@ hexchat_list_fields (hexchat_plugin *, const char *name)
 time_t
 hexchat_list_time (hexchat_plugin *, hexchat_list *xlist, const char *name)
 {
-	guint32 hash = str_hash (name);
+	const guint32 hash = str_hash (name);
 	gpointer data;
 
 	switch (xlist->type)
@@ -1761,28 +1761,71 @@ static int
 hexchat_pluginpref_set_str_real(hexchat_plugin *pl, const char *var, const char *value, set_mode mode) /* mode: 0 = delete, 1 = save */
 {
 	namespace bfs = boost::filesystem;
+	using namespace std::string_literals;
 	glib_string canon(g_strdup(static_cast<hexchat_plugin_internal*>(pl)->name.c_str()));
 	canonalize_key (canon.get());
 	glib_string confname(g_strdup_printf ("addon_%s.conf", canon.get()));
 	glib_string confname_tmp(g_strdup_printf ("%s.new", confname.get()));
-	auto fhOut = hexchat_open_file (confname_tmp.get(), O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	
-	if (fhOut == -1)		/* unable to save, abort */
-	{
+	bfs::ofstream outfile(confname_tmp.get(), std::ios::binary | std::ios::trunc | std::ios::out);
+	if (!outfile) {
 		return false;
 	}
-	auto fpIn = hexchat_fopen_file(confname.get(), "r", 0);
+	boost::system::error_code ec;
+	bfs::permissions(confname_tmp.get(), bfs::owner_read | bfs::owner_write, ec);
+	if (!ec) {
+		return false;
+	}
+	
+	/*auto fpIn = hexchat_fopen_file(confname.get(), "r", 0);*/
 	auto config_dir = bfs::path(config::config_dir());
 	auto confpath = config_dir / confname.get();
 	auto confoldpath = config_dir / confname_tmp.get();
-	if (fpIn == nullptr)	/* no previous config file, no parsing */
+	/* existing config file, preserve settings and find & replace current var value if any */
+	if (bfs::ifstream infile(confname.get(), std::ios::binary | std::ios::in); infile) {
+		bool prevSetting = false;
+		/* add one space, this way it works against var - var2 checks too */
+		const auto var_and_space = var + " "s;
+		for (std::string line; std::getline(infile, line, '\n'); )
+		{
+			if (line.find_first_of(var_and_space) != std::string::npos)
+			{
+				/* overwrite the existing matching setting if we are in save mode */
+				/* erase the setting in delete mode (write nothing) */
+				if (mode == set_mode::save) {
+					glib_string escaped_value(g_strescape(value, nullptr));
+					outfile << boost::format(u8"%s = %s\n") % var % escaped_value.get();
+				}
+				prevSetting = true;
+			} else {
+				outfile << line << '\n';
+			}
+		}
+
+		if (!prevSetting && mode == set_mode::save)	/* var doesn't exist currently, append if we're in save mode */
+		{
+			glib_string escaped_value(g_strescape (value, nullptr));
+			outfile << boost::format(u8"%s = %s\n") % var % escaped_value.get();
+		}
+
+		outfile.flush();
+		outfile.close();
+
+#ifdef WIN32
+		g_unlink (confpath.string().c_str());
+#endif
+
+		boost::system::error_code ec;
+		bfs::rename(confoldpath, confpath, ec);
+
+		return !ec ? true : false;
+	} else	/* no previous config file, no parsing */
 	{
 		if (mode == set_mode::save)
 		{
 			glib_string escaped_value(g_strescape (value, nullptr));
-			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
-			write (fhOut, buffer.get(), strlen (buffer.get()));
-			close (fhOut);
+			outfile << boost::format(u8"%s = %s\n") % var % escaped_value.get();
+			outfile.flush();
+			outfile.close();
 
 #ifdef WIN32
 			g_unlink (confpath.string().c_str());
@@ -1794,62 +1837,9 @@ hexchat_pluginpref_set_str_real(hexchat_plugin *pl, const char *var, const char 
 		else
 		{
 			/* mode = 0, we want to delete but the config file and thus the given setting does not exist, we're ready */
-			close (fhOut);
+			//close (fhOut);
 			return true;
 		}
-	}
-	else	/* existing config file, preserve settings and find & replace current var value if any */
-	{
-		bool prevSetting = false;
-		char line_buffer[512] = { 0 };		/* the same as in cfg_put_str */
-		char *line_bufp = line_buffer;
-		auto var_len = std::strlen(var);
-
-		while (fscanf (fpIn, " %[^\n]", line_bufp) != EOF)	/* read whole lines including whitespaces */
-		{
-			glib_string buffer_tmp(g_strdup_printf ("%s ", var));	/* add one space, this way it works against var - var2 checks too */
-			glib_string buffer;
-			if (strncmp (buffer_tmp.get(), line_buffer, var_len + 1) == 0)	/* given setting already exists */
-			{
-				if (mode == set_mode::save)									/* overwrite the existing matching setting if we are in save mode */
-				{
-					glib_string escaped_value(g_strescape (value, nullptr));
-					buffer.reset(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
-				}
-				else										/* erase the setting in delete mode */
-				{
-					buffer.reset(g_strdup (""));
-				}
-
-				prevSetting = true;
-			}
-			else
-			{
-				buffer.reset(g_strdup_printf ("%s\n", line_buffer));	/* preserve the existing different settings */
-			}
-
-			write (fhOut, buffer.get(), strlen (buffer.get()));
-		}
-
-		fclose (fpIn);
-
-		if (!prevSetting && mode == set_mode::save)	/* var doesn't exist currently, append if we're in save mode */
-		{
-			glib_string escaped_value(g_strescape (value, nullptr));
-			glib_string buffer(g_strdup_printf ("%s = %s\n", var, escaped_value.get()));
-			write (fhOut, buffer.get(), strlen (buffer.get()));
-		}
-
-		close (fhOut);
-
-#ifdef WIN32
-		g_unlink (confpath.string().c_str());
-#endif
-
-		boost::system::error_code ec;
-		bfs::rename(confoldpath, confpath, ec);
-
-		return !ec ? true : false;
 	}
 }
 

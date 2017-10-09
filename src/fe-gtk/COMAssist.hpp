@@ -73,7 +73,7 @@ namespace comhelp {
 	};
 
 	template<typename T>
-	std::enable_if_t<std::is_callable_v<typename T()>, HRESULT>
+	std::enable_if_t<std::is_invocable_v<typename T()>, HRESULT>
 		NoExceptBoundary(T&& fn) noexcept {
 		try {
 			fn();

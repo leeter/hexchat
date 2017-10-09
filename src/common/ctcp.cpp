@@ -168,12 +168,12 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 				if (!chansess)
 					chansess = sess;
 
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSNDC, chansess, gsl::ensure_z(word[5]),
-					gsl::ensure_z(nick), gsl::ensure_z(to), nullptr, nullptr, tags_data->timestamp);
+				text_emit (XP_TE_CTCPSNDC, chansess, gsl::ensure_z(word[5]),
+					gsl::ensure_z(nick), gsl::ensure_z(to), nullptr, tags_data->timestamp);
 			} else
 			{
-				EMIT_SIGNAL_TIMESTAMP (XP_TE_CTCPSND, sess->server->front_session,
-					gsl::ensure_z(word[5]), gsl::ensure_z(nick), nullptr, nullptr, 0,
+				text_emit (XP_TE_CTCPSND, sess->server->front_session,
+					gsl::ensure_z(word[5]), gsl::ensure_z(nick), nullptr, nullptr,
 											  tags_data->timestamp);
 			}
 

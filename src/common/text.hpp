@@ -55,6 +55,9 @@ int pevt_build_string(const std::string& input, std::string & output, int &max_a
 int pevent_load (boost::string_ref filename);
 void pevent_make_pntevts (void);
 int text_color_of(const boost::string_ref & name) noexcept;
+/**
+ * Emits a signal to print to the screen
+ */
 void text_emit(int index, gsl::not_null<session *> sess, gsl::cstring_span<> a, gsl::cstring_span<> b, gsl::cstring_span<> c, gsl::cstring_span<> d,
 		time_t timestamp);
 [[deprecated]]

@@ -34,20 +34,20 @@ void inbound_part (const server &serv, char *chan, char *user, char *ip, char *r
 						 const message_tags_data *tags_data);
 void inbound_upart (server &serv, char *chan, char *ip, char *reason,
 						  const message_tags_data *tags_data);
-void inbound_ukick (server &serv, char *chan, char *kicker, char *reason,
+void inbound_ukick (server &serv, const char *chan, const char *kicker, const char *reason,
 						  const message_tags_data *tags_data);
-void inbound_kick (const server &serv, char *chan, char *user, char *kicker,
-						 char *reason, const message_tags_data *tags_data);
+void inbound_kick (const server &serv, const char *chan, const char *user, const char *kicker,
+						const char *reason, const message_tags_data *tags_data);
 void inbound_notice (server &serv, char *to, char *nick, char *msg, char *ip,
 							int id, const message_tags_data *tags_data);
 void inbound_quit (server &serv, char *nick, char *ip, char *reason,
 						 const message_tags_data *tags_data);
 void inbound_topicnew (const server &serv, char *nick, char *chan, char *topic,
 							  const message_tags_data *tags_data);
-void inbound_join (const server &serv, char *chan, char *user, char *ip, 
-						 char *account, char *realname, 
+void inbound_join (const server &serv, const char *chan, const char *user, const char *ip, 
+						 const char *account, const char *realname, 
 						 const message_tags_data *tags_data);
-void inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
+void inbound_ujoin (server &serv, const char *chan, const char *nick, const char *ip,
 						  const message_tags_data *tags_data);
 void inbound_topictime (server &serv, char *chan, char *nick, time_t stamp,
 								const message_tags_data *tags_data);

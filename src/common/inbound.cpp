@@ -564,7 +564,7 @@ find_session_from_waitchannel (gsl::cstring_span<> chan, const server &serv)
 }
 
 void
-inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
+inbound_ujoin (server &serv, const char *chan, const char *nick, const char *ip,
 					const message_tags_data *tags_data)
 {
 	session *sess;
@@ -624,7 +624,7 @@ inbound_ujoin (server &serv, char *chan, char *nick, char *ip,
 }
 
 void
-inbound_ukick (server &serv, char *chan, char *kicker, char *reason,
+inbound_ukick (server &serv, const char *chan, const char *kicker, const char *reason,
 					const message_tags_data *tags_data)
 {
 	session *sess = find_channel (serv, chan);
@@ -740,8 +740,8 @@ inbound_topicnew (const server &serv, char *nick, char *chan, char *topic,
 }
 
 void
-inbound_join (const server &serv, char *chan, char *user, char *ip, char *account,
-				  char *realname, const message_tags_data *tags_data)
+inbound_join (const server &serv, const char *chan, const char *user, const char *ip, const char *account,
+				  const char *realname, const message_tags_data *tags_data)
 {
 	session *sess = find_channel (serv, chan);
 	if (sess)
@@ -754,11 +754,10 @@ inbound_join (const server &serv, char *chan, char *user, char *ip, char *accoun
 }
 
 void
-inbound_kick (const server &serv, char *chan, char *user, char *kicker, char *reason,
+inbound_kick (const server &serv, const char *chan, const char *user, const char *kicker, const char *reason,
 				  const message_tags_data *tags_data)
 {
-	session *sess = find_channel (serv, chan);
-	if (sess)
+	if (session *sess = find_channel(serv, chan); sess)
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_KICK, sess, gsl::ensure_z(kicker), gsl::ensure_z(user), gsl::ensure_z(chan), gsl::ensure_z(reason), 0,
 									  tags_data->timestamp);

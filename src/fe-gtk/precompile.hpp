@@ -78,12 +78,14 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/regex.hpp>
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <libintl.h>
 #include <glib-object.h>
 #include <cairo.h>
 #include <gsl.h>
+
 #ifdef WIN32
 #include <gdk/gdkwin32.h>
 #include <cairo/cairo-win32.h>

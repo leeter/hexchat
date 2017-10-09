@@ -278,11 +278,7 @@ struct _GtkXText {
 	xtext::xtext_backend * backend;
 };
 
-//#ifndef __INTELLISENSE__
 G_DEFINE_TYPE(GtkXText, gtk_xtext, GTK_TYPE_WIDGET)
-//#else
-//static GtkWidgetClass* gtk_xtext_parent_class;
-//#endif
 
 /*
 Represents the a common state set for the xtext including all of the entries, usually only one per
@@ -660,7 +656,7 @@ namespace{
 	static void gtk_xtext_adjustment_set(xtext_buffer *buf,
 					     bool fire_signal)
 	{
-		auto xtext = buf->current_xtext();
+		const auto xtext = buf->current_xtext();
 		GtkAdjustment *adj = xtext->adj;
 
 		if (xtext->buffer != buf)
@@ -1928,7 +1924,7 @@ namespace{
 	{
 		g_return_val_if_fail(widget, true);
 		g_return_val_if_fail(GTK_IS_XTEXT(widget), true);
-		auto adj = xtext_get_adjustments(GTK_XTEXT(widget));
+		const auto adj = xtext_get_adjustments(GTK_XTEXT(widget));
 		auto adj_value = gtk_adjustment_get_value(adj);
 		const auto page_increment_dec = gtk_adjustment_get_page_increment(adj) / 10.0;
 		if (event->direction == GDK_SCROLL_UP) /* mouse wheel pageUp */
@@ -2765,7 +2761,7 @@ namespace{
 	{
 		cairo_stack cr_stack{ cr };
 
-		GtkWidget * widget = GTK_WIDGET(xtext);
+		GtkWidget *const widget = GTK_WIDGET(xtext);
 		GtkAllocation allocation;
 		gtk_widget_get_allocation(widget, &allocation);
 

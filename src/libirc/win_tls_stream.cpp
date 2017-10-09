@@ -41,29 +41,43 @@ namespace wsc = winrt::Windows::Security::Cryptography;
 namespace wf = winrt::Windows::Foundation;
 
 namespace {
-	enum class connect_error {
+	enum class connect_error:std::uint32_t {
 		success,
 		retry,
 		next
 	};
 }
+namespace winrt::impl {
+	template <>
+	struct name<connect_error>
+	{
+		static constexpr auto & value{ L"connect_error" };
+		static constexpr auto & data{ "u4" };
+	};
 
-namespace winrt::ABI::Windows::Foundation {
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0111")) __declspec(novtable) AsyncActionProgressHandler<connect_error> : impl_AsyncActionProgressHandler<connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0112")) __declspec(novtable) AsyncActionWithProgressCompletedHandler<connect_error> : impl_AsyncActionWithProgressCompletedHandler<connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0113")) __declspec(novtable) AsyncOperationProgressHandler<connect_error, connect_error> : impl_AsyncOperationProgressHandler<connect_error, connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0114")) __declspec(novtable) AsyncOperationWithProgressCompletedHandler<connect_error, connect_error> : impl_AsyncOperationWithProgressCompletedHandler<connect_error, connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0115")) __declspec(novtable) AsyncOperationCompletedHandler<connect_error> : impl_AsyncOperationCompletedHandler<connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0116")) __declspec(novtable) IAsyncActionWithProgress<connect_error> : impl_IAsyncActionWithProgress<connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0117")) __declspec(novtable) IAsyncOperation<connect_error> : impl_IAsyncOperation<connect_error> {};
-	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0118")) __declspec(novtable) IAsyncOperationWithProgress<connect_error, connect_error> : impl_IAsyncOperationWithProgress<connect_error, connect_error> {};
+	template <>
+	struct category<connect_error>
+	{
+		using type = basic_category;
+	};
 }
+//namespace winrt::ABI::Windows::Foundation {
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0111")) __declspec(novtable) AsyncActionProgressHandler<connect_error> : impl_AsyncActionProgressHandler<connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0112")) __declspec(novtable) AsyncActionWithProgressCompletedHandler<connect_error> : impl_AsyncActionWithProgressCompletedHandler<connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0113")) __declspec(novtable) AsyncOperationProgressHandler<connect_error, connect_error> : impl_AsyncOperationProgressHandler<connect_error, connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0114")) __declspec(novtable) AsyncOperationWithProgressCompletedHandler<connect_error, connect_error> : impl_AsyncOperationWithProgressCompletedHandler<connect_error, connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0115")) __declspec(novtable) AsyncOperationCompletedHandler<connect_error> : impl_AsyncOperationCompletedHandler<connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0116")) __declspec(novtable) IAsyncActionWithProgress<connect_error> : impl_IAsyncActionWithProgress<connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0117")) __declspec(novtable) IAsyncOperation<connect_error> : impl_IAsyncOperation<connect_error> {};
+//	template <> struct __declspec(uuid("3a14233f-a037-4ac0-a0ad-c4bb0bbf0118")) __declspec(novtable) IAsyncOperationWithProgress<connect_error, connect_error> : impl_IAsyncOperationWithProgress<connect_error, connect_error> {};
+//}
 namespace {
 
-	std::string narrow(const std::wstring & to_narrow)
+	std::string narrow(const std::wstring_view & to_narrow)
 	{
+		const auto wide = std::wstring(to_narrow);
 		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
-		return converter.to_bytes(to_narrow);
+		return converter.to_bytes(wide);
 	}
 
 	std::wstring widen(const std::string & to_widen)
@@ -113,8 +127,6 @@ namespace {
 			this->on_error(boost::system::error_code(hr.code(), boost::system::get_system_category()));
 		}
 
-		
-
 		winrt::Windows::Foundation::IAsyncOperation<connect_error> connectAsync(const wn::EndpointPair & target)
 		try
 		{
@@ -126,8 +138,8 @@ namespace {
 			co_return connect_error::success;
 		}
 		catch (const winrt::hresult_error & hr) {
-			auto socketInfo = this->m_socket.Information();
-			auto certificateErrors = socketInfo.ServerCertificateErrors();
+			const auto socketInfo = this->m_socket.Information();
+			const auto certificateErrors = socketInfo.ServerCertificateErrors();
 			if (m_security == io::tcp::connection_security::no_verify
 				&& certificateErrors.Size() != 0
 				&& socketInfo.ServerCertificateErrorSeverity() == wns::SocketSslErrorSeverity::Ignorable) {
@@ -150,7 +162,7 @@ namespace {
 		}
 
 		void connect(const std::string_view & host, std::uint16_t port) override final {
-			auto control = m_socket.Control();
+			const auto control = m_socket.Control();
 			control.KeepAlive(true);
 			// disable nagel
 			control.NoDelay(true);
@@ -184,11 +196,12 @@ namespace {
 		winrt::Windows::Foundation::IAsyncAction read()
 		try
 		{
-			wss::Buffer buffer(512u);
-			auto resultBuffer = co_await this->m_socket.InputStream().ReadAsync(buffer, 512u, wss::InputStreamOptions::Partial);
-			auto reader = wss::DataReader::FromBuffer(resultBuffer);
+			constexpr auto buffer_size = 512u;
+			wss::Buffer buffer(buffer_size);
+			const auto resultBuffer = co_await this->m_socket.InputStream().ReadAsync(buffer, buffer_size, wss::InputStreamOptions::Partial);
+			const auto reader = wss::DataReader::FromBuffer(resultBuffer);
 			reader.InputStreamOptions(wss::InputStreamOptions::Partial);
-			const auto to_read = std::min(reader.UnconsumedBufferLength(), 512u);
+			const auto to_read = std::min(reader.UnconsumedBufferLength(), buffer_size);
 			if (to_read == 0) {
 				co_return;
 			}

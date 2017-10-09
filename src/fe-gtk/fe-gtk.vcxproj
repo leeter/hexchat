@@ -228,10 +228,14 @@ powershell "Get-Content -Encoding UTF8 '$(SolutionDir)..\src\fe-gtk\hexchat.rc.u
     <Link>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</LargeAddressAware>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LargeAddressAware>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/guard:cf %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/guard:cf %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Link>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</LargeAddressAware>
       <LargeAddressAware Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LargeAddressAware>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/guard:cf %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/guard:cf %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
       <AdditionalManifestFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)manifest.xml %(AdditionalManifestFiles)</AdditionalManifestFiles>

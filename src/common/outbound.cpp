@@ -2298,28 +2298,45 @@ cmd_list (struct session *sess, char *[], char *word_eol[])
 gboolean
 load_perform_file (session *sess, const char file[])
 {
+	namespace bfs = boost::filesystem;
 	char tbuf[1024 + 4];
-	char *nl;
-	FILE *fp;
-
-	fp = hexchat_fopen_file (file, "r", 0);		/* load files from config dir */
-	if (!fp)
+	/* load files from config dir */
+	bfs::ifstream infile(file, std::ios::in || std::ios::binary);
+	if (!infile) {
 		return false;
-
-	tbuf[1024] = 0;
-	while (fgets (tbuf, 1024, fp))
-	{
-		nl = strchr (tbuf, '\n');
-		if (nl == tbuf) /* skip empty commands */
-			continue;
-		if (nl)
-			*nl = 0;
-		if (tbuf[0] == prefs.hex_input_command_char[0])
-			handle_command (sess, tbuf + 1, true);
-		else
-			handle_command (sess, tbuf, true);
 	}
-	fclose (fp);
+	for (std::string line; std::getline(infile, line, '\n');) {
+		std::fill(std::begin(tbuf), std::end(tbuf), '\0');
+		if (line.empty() || line.length()  > sizeof(tbuf)) {
+			continue;
+		}
+		std::copy(line.cbegin(), line.cend(), std::begin(tbuf));
+		if (line[0] == prefs.hex_input_command_char[0]) {
+			handle_command(sess, tbuf + 1, true);
+		}
+		else {
+			handle_command(sess, tbuf, true);
+		}
+	}
+	return true;
+	//auto fp = hexchat_fopen_file (file, "r", 0);		
+	//if (!fp)
+	//	return false;
+
+	//tbuf[1024] = 0;
+	//while (fgets (tbuf, 1024, fp))
+	//{
+	//	nl = strchr (tbuf, '\n');
+	//	if (nl == tbuf) /* skip empty commands */
+	//		continue;
+	//	if (nl)
+	//		*nl = 0;
+	//	if (tbuf[0] == prefs.hex_input_command_char[0])
+	//		handle_command (sess, tbuf + 1, true);
+	//	else
+	//		handle_command (sess, tbuf, true);
+	//}
+	//fclose (fp);
 	return true;
 }
 

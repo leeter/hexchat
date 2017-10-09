@@ -44,6 +44,7 @@
     <ClInclude Include="modes.hpp" />
     <ClInclude Include="network.hpp" />
     <ClInclude Include="notify.hpp" />
+    <ClInclude Include="os_config.hpp" />
     <ClInclude Include="outbound.hpp" />
     <ClInclude Include="plugin-timer.hpp" />
     <ClInclude Include="plugin.hpp" />
