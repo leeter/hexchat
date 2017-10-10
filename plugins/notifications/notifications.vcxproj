@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.props" Condition="Exists('..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -14,7 +15,7 @@
     <ProjectGuid>{C53145CC-D021-40C9-B97C-0249AB9A43C9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>notifications</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -75,7 +76,8 @@
       <AdditionalIncludeDirectories>..\..\src\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
-      <AdditionalOptions>/std:c++latest /Zc:rvalueCast /Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++latest /permissive- /Zc:rvalueCast /Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +109,8 @@
       <AdditionalIncludeDirectories>..\..\src\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
-      <AdditionalOptions>/std:c++latest /Zc:rvalueCast /Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++latest /permissive- /Zc:rvalueCast /Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,8 +132,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="notifications.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.targets" Condition="Exists('..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.props'))" />
+    <Error Condition="!Exists('..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\win32\packages\cppwinrt.2017.8.25.1\build\native\cppwinrt.targets'))" />
+  </Target>
 </Project>

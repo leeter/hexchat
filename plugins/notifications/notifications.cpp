@@ -1,5 +1,5 @@
 /* HexChat
-* Copyright (c) 2014-2015 Leetsoftwerx
+* Copyright (c) 2014-2017 Leetsoftwerx
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -34,11 +34,8 @@
 
 #include <Windows.h>
 #include <VersionHelpers.h>
-#include <wrl.h>
-
-#include <windows.ui.notifications.h>
-
-#include <comdef.h>
+#include <winrt/Windows.UI.Notifications.h>
+#include <winrt/Windows.Data.Xml.Dom.h>
 
 #include "hexchat-plugin.h"
 
@@ -75,15 +72,16 @@ enum class hilight_source : std::uintptr_t
 
 WinStatus get_window_status() noexcept
 {
+	using namespace std::string_view_literals;
 	const char *st = hexchat_get_info(ph, "win_status");
 
 	if (!st)
 		return WinStatus::WS_HIDDEN;
 
-	if (!std::strcmp(st, "active"))
+	if (u8"active"sv == st)
 		return WinStatus::WS_FOCUSED;
 
-	if (!std::strcmp(st, "hidden"))
+	if (u8"hidden"sv == st)
 		return WinStatus::WS_HIDDEN;
 
 	return WinStatus::WS_NORMAL;
@@ -99,11 +97,6 @@ std::wstring widen(const std::string &to_widen)
 std::string narrow(const std::wstring &to_narrow)
 {
 	return utf8converter{}.to_bytes(to_narrow);
-}
-
-std::string narrow(const wchar_t *begin, const wchar_t *end)
-{
-	return utf8converter{}.to_bytes(begin, end);
 }
 
 static void save_prefs() noexcept
@@ -139,109 +132,54 @@ static void show_notification(const std::string &title,
 			      const std::string &message) 
 try
 {
-	namespace WRL = Microsoft::WRL;
-	namespace awun = ABI::Windows::UI::Notifications;
-	namespace xml = ABI::Windows::Data::Xml::Dom;
-	using IXmlNodePtr = WRL::ComPtr<xml::IXmlNode>;
+	namespace awun = winrt::Windows::UI::Notifications;
+	namespace xml = winrt::Windows::Data::Xml::Dom;
+	using namespace std::string_view_literals;
+	const auto notification_xml = 
+		awun::ToastNotificationManager::GetTemplateContent(awun::ToastTemplateType::ToastText04);
 
-	WRL::ComPtr<awun::IToastNotificationManagerStatics> statics;
-	_com_util::CheckError(Windows::Foundation::GetActivationFactory(
-		WRL::Wrappers::HStringReference(
-			RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
-		&statics));
-	WRL::ComPtr<xml::IXmlDocument> notification_xml;
-	_com_util::CheckError(
-		statics->GetTemplateContent(
-			awun::ToastTemplateType::ToastTemplateType_ToastText04,
-			&notification_xml));
-	WRL::ComPtr<xml::IXmlNodeList> node_list;
-	_com_util::CheckError(notification_xml->GetElementsByTagName(
-		WRL::Wrappers::HStringReference(L"text").Get(),
-		&node_list
-	));
+	const auto node_list = notification_xml.GetElementsByTagName(L"text"sv);
 	
-	
-
 	// Title first
 	{
-		auto wide_title = widen(title);
-		WRL::ComPtr<xml::IXmlText> title_text;
-		_com_util::CheckError(
-			notification_xml->CreateTextNode(
-				WRL::Wrappers::HStringReference(wide_title.data(), wide_title.size()).Get(),
-				&title_text));
-		IXmlNodePtr title_text_node;
-		_com_util::CheckError(title_text.As(&title_text_node));
-		IXmlNodePtr title_node;
-		_com_util::CheckError(node_list->Item(0, &title_node));
-		IXmlNodePtr ret_dummy;
-		_com_util::CheckError(title_node->AppendChild(title_text_node.Get(), &ret_dummy));
+		const auto wide_title = widen(title);
+		const auto title_text = notification_xml.CreateTextNode(wide_title);
+		node_list.GetAt(0).AppendChild(title_text);
 	}
 	
 
 	// Subtitle
 	{
-		auto wide_subtitle = widen(subtitle);
-		WRL::ComPtr<xml::IXmlText> subtitle_text;
-		_com_util::CheckError(
-			notification_xml->CreateTextNode(
-				WRL::Wrappers::HStringReference(wide_subtitle.data(), wide_subtitle.size()).Get(),
-				&subtitle_text));
-		IXmlNodePtr subtitle_text_node;
-		_com_util::CheckError(subtitle_text.As(&subtitle_text_node));
-		IXmlNodePtr subtitle_node;
-		_com_util::CheckError(node_list->Item(1, &subtitle_node));
-		IXmlNodePtr ret_dummy;
-		_com_util::CheckError(subtitle_node->AppendChild(subtitle_text_node.Get(), &ret_dummy));
+		const auto wide_subtitle = widen(subtitle);
+		const auto subtitle_text = notification_xml.CreateTextNode(wide_subtitle);
+		node_list.GetAt(1).AppendChild(subtitle_text);
 	}
 
 	// then the message
 	{
-		auto wide_message = widen(message);
-		WRL::ComPtr<xml::IXmlText> message_text;
-		_com_util::CheckError(
-			notification_xml->CreateTextNode(
-				WRL::Wrappers::HStringReference(wide_message.data(), wide_message.size()).Get(),
-				&message_text));
-		IXmlNodePtr message_text_node;
-		_com_util::CheckError(message_text.As(&message_text_node));
-		IXmlNodePtr message_node;
-		_com_util::CheckError(node_list->Item(2, &message_node));
-		IXmlNodePtr ret_dummy;
-		_com_util::CheckError(message_node->AppendChild(message_text_node.Get(), &ret_dummy));
+		const auto wide_message = widen(message);
+		const auto message_text = notification_xml.CreateTextNode(wide_message);
+		node_list.GetAt(2).AppendChild(message_text);
 	}
 
-	WRL::ComPtr<awun::IToastNotificationFactory> notification_factory;
-
-	_com_util::CheckError(Windows::Foundation::GetActivationFactory(
-		WRL::Wrappers::HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(),
-		&notification_factory
-	));
-
-	WRL::ComPtr<awun::IToastNotification> notification;
-	_com_util::CheckError(notification_factory->CreateToastNotification(notification_xml.Get(), &notification));
-
-	WRL::ComPtr<awun::IToastNotifier> notifier;
-	_com_util::CheckError(statics->CreateToastNotifierWithId(
-		WRL::Wrappers::HStringReference(AppId).Get(),
-		&notifier
-	));
+	const awun::ToastNotification notification(notification_xml);
+	const auto notifier = awun::ToastNotificationManager::CreateToastNotifier(AppId);
 	
-	notifier->Show(notification.Get());
+	notifier.Show(notification);
 }
-catch (const _com_error& ex)
+catch (const winrt::hresult_error& ex)
 {
-	auto description = ex.Description();
-	auto what = std::wstring(description, description.length());
+	const auto description = ex.message();
+	const auto what = narrow(std::wstring(description));
 
-	hexchat_printf(ph, "An Error Occurred Printing a Notification "
+	hexchat_printf(ph, u8"An Error Occurred Printing a Notification "
 			   "HRESULT: %#X : %s",
-		       static_cast<unsigned long>(ex.Error()),
-		       narrow(what).c_str());
+		       static_cast<unsigned long>(ex.code()),
+		       what.c_str());
 }
 catch (const std::range_error &) 
 {
-	hexchat_print(ph, "Invalid conversion from UTF8");
+	hexchat_print(ph, u8"Invalid conversion from UTF8");
 }
 
 static bool should_handle(void *source) noexcept
@@ -263,7 +201,7 @@ static bool should_handle(void *source) noexcept
 
 static int handle_hilight(const char *const word[], void *source) noexcept
 {
-
+	using namespace std::string_view_literals;
 	if (!should_handle(source) ||
 	    (hexchat_get_context(ph) ==
 		 hexchat_find_context(ph, nullptr, nullptr) &&
@@ -284,8 +222,8 @@ static int handle_hilight(const char *const word[], void *source) noexcept
 	    hexchat_strip(ph, word[2], static_cast<int>(std::strlen(word[2])),
 			  7 /*STRIP_ALL*/),
 	    sanitizer_del);
-	auto sanitized_str = std::string{sanitized.get()};
-	show_notification(server_name + " - " + channel, word[1],
+	const auto sanitized_str = std::string{sanitized.get()};
+	show_notification(server_name + u8" - " + channel, word[1],
 			  sanitized_str);
 
 	return HEXCHAT_EAT_NONE;
@@ -297,7 +235,7 @@ static bool parse_set(const char val[])
 		 !std::atoi(val));
 }
 
-static constexpr char *get_bool_str(bool val) { return val ? "ON" : "OFF"; }
+static constexpr const char *get_bool_str(bool val) noexcept { return val ? "ON" : "OFF"; }
 
 int notifications_cmd_cb(const char *const word[], const char *const[],
 			 void *) noexcept
@@ -341,17 +279,13 @@ int notifications_cmd_cb(const char *const word[], const char *const[],
 int hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name,
 			char **plugin_desc, char **plugin_version,
 			char *) noexcept
-{
+try{
 	if (!IsWindows8Point1OrGreater())
 	{
 		return false;
 	}
 
-	auto hr = Windows::Foundation::Initialize(RO_INIT_SINGLETHREADED);
-	if (FAILED(hr))
-	{
-		return false;
-	}
+	winrt::init_apartment(winrt::apartment_type::single_threaded);
 
 	ph = plugin_handle;
 
@@ -362,16 +296,16 @@ int hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name,
 
 	hexchat_hook_print(ph, u8"Channel Msg Hilight", HEXCHAT_PRI_NORM,
 			   handle_hilight,
-			   reinterpret_cast<void *>(hilight_source::channel));
+			   static_cast<void *>(static_cast<std::uintptr_t>(hilight_source::channel)));
 	hexchat_hook_print(ph, u8"Channel Action Hilight", HEXCHAT_PRI_NORM,
 			   handle_hilight,
-			   reinterpret_cast<void *>(hilight_source::action));
+			   reinterpret_cast<void *>(static_cast<std::uintptr_t>(hilight_source::action)));
 	hexchat_hook_print(
 	    ph, u8"Private Action to Dialog", HEXCHAT_PRI_NORM, handle_hilight,
 	    reinterpret_cast<void *>(hilight_source::priv_action));
 	hexchat_hook_print(ph, u8"Private Message to Dialog", HEXCHAT_PRI_NORM,
 			   handle_hilight,
-			   reinterpret_cast<void *>(hilight_source::priv));
+			   reinterpret_cast<void *>(static_cast<std::uintptr_t>(hilight_source::priv)));
 
 	command_hook = hexchat_hook_command(
 	    ph, u8"NOTIFICATIONS", HEXCHAT_PRI_NORM, notifications_cmd_cb,
@@ -381,12 +315,15 @@ int hexchat_plugin_init(hexchat_plugin *plugin_handle, char **plugin_name,
 
 	return true; /* return 1 for success */
 }
+catch (winrt::hresult_error &) {
+	return false;
+}
 
-int hexchat_plugin_deinit(void) noexcept
+int hexchat_plugin_deinit() noexcept
 {
 	save_prefs();
 	// ensure release before we deinit the runtime
-	Windows::Foundation::Uninitialize();
+	winrt::uninit_apartment();
 	hexchat_command(ph, u8"MENU DEL \"Window/Set up WinRT Notifications\"");
 	hexchat_unhook(ph, command_hook);
 	hexchat_printf(ph, u8"%s plugin unloaded\n", name);

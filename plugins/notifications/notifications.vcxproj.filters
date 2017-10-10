@@ -23,5 +23,6 @@
     <None Include="notifications.def">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
