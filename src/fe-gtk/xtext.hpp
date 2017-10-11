@@ -56,19 +56,6 @@ enum text_attr{
 #define XTEXT_MAX_COLOR 41
 
 using ustring_ref = std::basic_string_view<unsigned char>;
-/*
-* offsets_t is used for retaining search information.
-* It is stored in the 'data' member of a GList,
-* as chained from ent->marks.  It saves starting and
-* ending+1 offset of a found occurrence.
-*/
-typedef union offsets_u {
-	struct offsets_s {
-		guint16	start;
-		guint16	end;
-	} o;
-	guint32 u;
-} offsets_t;
 
 enum marker_reset_reason {
 	MARKER_WAS_NEVER_SET,
@@ -84,18 +71,6 @@ enum time_stamping : bool {
 };
 
 struct xtext_buffer;
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-struct BridgeStyleContext;
-#endif
-
-//struct _GtkXTextClass
-//{
-//	GtkWidgetClass parent_class;
-//	void(*word_click) (GtkXText * xtext, char *word, GdkEventButton * event);
-//	void(*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
-//	gpointer padding[12];
-//};
 
 GtkWidget *gtk_xtext_new(const gsl::span<GdkColor, XTEXT_COLS> palette, bool separator);
 void gtk_xtext_append(xtext_buffer *buf, boost::string_ref text, time_t stamp);

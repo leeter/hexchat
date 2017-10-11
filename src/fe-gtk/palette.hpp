@@ -19,6 +19,8 @@
 
 #ifndef HEXCHAT_PALETTE_HPP
 #define HEXCHAT_PALETTE_HPP
+#include <array>
+#include <gtk/gtk.h>
 
 extern std::array<GdkColor, 48> colors;
 

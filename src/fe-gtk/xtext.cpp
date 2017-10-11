@@ -59,6 +59,19 @@ namespace {
 	CUSTOM_PTR(PangoAttribute, pango_attribute_destroy);
 
 	/*
+	* offsets_t is used for retaining search information.
+	* It is stored in the 'data' member of a GList,
+	* as chained from ent->marks.  It saves starting and
+	* ending+1 offset of a found occurrence.
+	*/
+	typedef union offsets_u {
+		struct offsets_s {
+			guint16	start;
+			guint16	end;
+		} o;
+		guint32 u;
+	} offsets_t;
+	/*
 	Represents one 'line' or entry of text in the xtext, includes sublines (glyph runs of common
 	emphasis)
 	*/
